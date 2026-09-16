@@ -10,9 +10,8 @@ Cloud projesi, Flutter SDK kurulu.
 **Uygulama kimliği (değiştirilemez, yayından sonra sabit):**
 `dev.halilibrahim.cunehat` · sürüm `1.0.0+6` (**hazırlanıyor, henüz
 yüklenmedi**) — ad değişikliği + çalışma zamanı hata denetimi. Son etiketli
-yükleme `v1.0.0+4` (3 Eyl). `+5` 9 Eyl'de yüklemeye hazırlanmıştı ama etiketi
-atılmadı; yüklenip yüklenmediğini Console'dan doğrula, yüklendiyse o commit'i
-(`76683c2`) etiketle. `+6` bu yüzden seçildi: kodların yalnız artması yeter,
+yükleme `v1.0.0+4` (3 Eyl). `+5` 9 Eyl'de yüklendi ve testerlara dağıtıldı
+(16 Eyl'de doğrulandı); etiketi geriye dönük atıldı (`v1.0.0+5` → `76683c2`). `+6` bu yüzden seçildi: kodların yalnız artması yeter,
 atlanan numara zararsız.
 
 **Ad değişikliği — 16 Eylül 2026: ÇuNehat → ÇuHat.** Görünen ad `ÇuHat`,
@@ -54,9 +53,9 @@ politikası URL'i 404 olur.
 | 7 | Data Safety formu | ✅ Dolduruldu |
 | 8a | İçerik derecelendirme + hedef kitle | ✅ Dolduruldu |
 | 8b | App access + finansal özellikler | ✅ Dolduruldu |
-| 8c | **Mağaza girişi (metin + ikon + görseller)** | 🟡 tr-TR + en-US girildi, ama **8 ekran görüntüsünün TAMAMI 9 Eyl'de yeniden çekildi** (`docs/store/screenshots/`) — `+5` ile birlikte Console'a yeniden yüklenmeli, bkz. `store-listing.md` → *Set 9 Eylül 2026'da yeniden çekildi*. **16 Eyl: ad değişti (ÇuNehat → ÇuHat).** Mağaza başlığı `CuHat: Gelir Gider Takibi` (en-US `CuHat: Budget & Expenses`; düz C kararı 30 Ağu'dan sürüyor), uygulama içi ve tanıtım görseli `ÇuHat`. Başlık, uzun açıklamalar ve yeni tanıtım görseli `+6` ile aynı gönderimde girilecek; **önce gizlilik politikası yayına alınır** — bkz. Adım 8 sonundaki karar notu |
+| 8c | **Mağaza girişi (metin + ikon + görseller)** | 🟡 tr-TR + en-US girildi, ama **vitrin seti 16 Eyl'de tazelendi** — rapor ve ekstre kareleri yeniden çekildi (eski rapor karesi silinmiş bir kartı adlandırıyordu), üç çip düzeltildi; sekiz kare `+6` ile birlikte Console'a yüklenmeli, bkz. `store-listing.md` → *7. tur*. **16 Eyl: ad değişti (ÇuNehat → ÇuHat).** Mağaza başlığı `CuHat: Gelir Gider Takibi` (en-US `CuHat: Budget & Expenses`; düz C kararı 30 Ağu'dan sürüyor), uygulama içi ve tanıtım görseli `ÇuHat`. Başlık, uzun açıklamalar ve yeni tanıtım görseli `+6` ile aynı gönderimde girilecek; **önce gizlilik politikası yayına alınır** — bkz. Adım 8 sonundaki karar notu |
 | 8d | **Etiketler (3 tane)** | ✅ Mağaza ayarlarıyla birlikte gönderildi |
-| — | **Cihaz duman testi** | 🟢 **`+4` → `+6` YERİNDE YÜKSELTME PROVASI GEÇTİ (16 Eyl)** — emülatöre upload anahtarıyla imzalı `+4` kuruldu, cüzdan + 50 kategori + PIN yazıldı, `adb install -r` ile `+6` üzerine kuruldu (kaldırma yok): uygulama **kilitli açıldı**, PIN ile girildi, veri yerinde, çekmece `ÇuHat v1.0.0` diyor, logcat'te TypeError/HiveError/FATAL **0** (5232 satır). 8 Eyl'deki `+4`→`+5` provası da geçmişti. ⚠️ **İmza tuzağı:** emülatörde duran eski kurulum debug anahtarlıydı, upload anahtarlı APK üzerine kurulmuyordu (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`) — prova başlangıç durumu da upload anahtarıyla kurulmalı. Kalan maddeler imzaya/donanıma bağlı (Drive girişi, biyometrik, OCR) → yüklemeden sonra telefonda. Bkz. Adım 10 |
+| — | **Cihaz duman testi** | 🟢 **`+4` → `+6` YERİNDE YÜKSELTME PROVASI GEÇTİ (16 Eyl)** — emülatöre upload anahtarıyla imzalı `+4` kuruldu, cüzdan + 50 kategori + PIN yazıldı, `adb install -r` ile `+6` üzerine kuruldu (kaldırma yok): uygulama **kilitli açıldı**, PIN ile girildi, veri yerinde, çekmece `ÇuHat v1.0.0` diyor, logcat'te TypeError/HiveError/FATAL **0** (5232 satır). 8 Eyl'deki `+4`→`+5` provası da geçmişti. ⚠️ **İmza tuzağı:** emülatörde duran eski kurulum debug anahtarlıydı, upload anahtarlı APK üzerine kurulmuyordu (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`) — prova başlangıç durumu da upload anahtarıyla kurulmalı. **Drive girişi, biyometrik ve OCR telefonda çalışıyor** (kullanıcı doğrulaması, 16 Eyl) — Adım 10'un imzaya/donanıma bağlı maddeleri kapandı. Bkz. Adım 10 |
 | 9 | AAB yükle → Play'in SHA-1'i → 3. OAuth istemcisi | ✅ **TAMAM** — üç istemci de doğru; Play sürümünde Drive yedekleme cihazda doğrulandı (29 Ağu) |
 | 11 | Kapalı test 12 tester × 14 gün | ✅ **14 gün doldu** (28 Ağu → 11 Eyl, 13 tester). ⚠️ Şart **başvuru anında** ölçülür: başvurduğunda ≥12 tester opt-in ve önceki 14 gün kesintisiz. Production onayı gelene kadar testerlar programda kalmalı |
 | — | **Monetizasyon kapısı** | ✅ **KRİTİK YOLDAN ÇIKTI (7 Eyl)** — v1.0 **ücretsiz ve reklamsız** yayınlanıyor: IAP yok, paywall yok, monetizasyon kodu yok. Pro 2. aşamada ve yalnız v1.0'da **olmayan** özelliklerden kurulacak. Ödeme/mevzuat tarafı da 2. aşamaya kaldı. Plan repo dışında: `../CuNehat-ozel/monetizasyon-plani.md` |

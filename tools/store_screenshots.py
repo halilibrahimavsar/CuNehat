@@ -75,7 +75,7 @@ SHOT_RADIUS = 44
 # 52 hem saati/pili atar hem 8px pay bırakır. DEĞİŞTİRMEDEN ÖNCE ÖLÇ.
 STATUS_BAR = 52
 
-SRC_DIR = Path.home() / "Masaüstü" / "cunehat emulator shots"
+SRC_DIR = Path.home() / "Masaüstü" / "cuhat screenshots"
 OUT_DIR = Path(__file__).resolve().parent.parent / "docs" / "store" / "screenshots"
 
 
@@ -125,11 +125,14 @@ SHOTS = [
          "Ekstreni at,\n*satırlar hazır* gelsin",
          "Okunan tutarlar ekstrenin kendi bakiyesiyle doğrulanır.",
          slug="banka-ekstresi",
-         chips=("PDF ve Excel", "Fotoğraftan OCR", "Aritmetik doğrulama")),
+         chips=("PDF ve Excel", "Fotoğraftan OCR", "Tekrar tespiti"),
+         # Yeni kare: ilgi çeken bölüm (tekrar paneli) ekranın ortasında,
+         # o yüzden kırpma başlığın hemen altından başlıyor.
+         crop=(330, 2290)),
 
     Shot(3, "03_rapor.png",
          "Paran *nereye*\ngitti?",
-         "Ana ve alt kategori tek çemberde; dönemi kendin seçersin.",
+         "Ana kategori ve altındaki kalemler, önceki dönemle farkıyla.",
          slug="rapor",
          # YENİ KARE. Rapor sayfası iki turda baştan yazıldı (11 commit) ve
          # setin hiçbir yerinde temsil edilmiyordu; yerini portföy karesine
@@ -141,17 +144,19 @@ SHOTS = [
          # görünümü" hatasının aynısı — olmayan özelliği çipe yazmak Play'de
          # yanıltıcı beyandır.
          #
-         # ⚠️ KAYNAK KARE DE BAYAT: `03_rapor.png` sayfa başlığını ve eski
-         # tarih bloğunu ("01 Ağu 2026 - 31 Ağu 2026" + çip satırı) gösteriyor;
-         # o blok tek satırlık ay çubuğuna indi. Yükleme öncesi yeniden
-         # çekilmeli.
-         chips=("Kategori çemberi", "Dönem karşılaştırma", "Gelir–gider akışı")),
+         # ✅ 16 Eyl 2026'da YENİDEN ÇEKİLDİ. Eski kare iki yönden yanlıştı:
+         # çipi silinmiş bir kartı ("Aylık seyir") adlandırıyordu ve ekranın
+         # dönem bloğu `f1baaf5` ile tek satırlık ay çubuğuna inmişti.
+         # Yeni kare alt kategori kırılımını (Fatura → İnternet/Doğalgaz/…)
+         # ve kalem başına önceki dönem farkını gösteriyor; çember aynı
+         # kartın ikinci sekmesi olduğu için şerit artık "çember" demiyor.
+         chips=("Alt kategoriler", "Dönem kıyası", "Günlük akış")),
 
     Shot(4, "04_hedefler.png",
          "Hedefini kur,\n*varlıklarını* bağla",
          "Altın ve hisseni hedefe bağla, ilerlemeyi tek bakışta gör.",
          slug="birikim-hedefleri",
-         chips=("Altın, hisse ve fon", "Canlı fiyat", "Kâr/zarar takibi")),
+         chips=("Altın, hisse, özel varlık", "Canlı fiyat", "Kâr/zarar takibi")),
 
     Shot(5, "05_butce.png",
          # Kare "1 bütçe aşıldı" rozetini ve kırmızı çubuğu GÖSTERİYOR; şerit

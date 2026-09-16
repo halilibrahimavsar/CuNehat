@@ -170,13 +170,14 @@ Kira, abonelik, maaş gibi düzenli hareketleri bir kez tanımla; zamanı gelinc
 hatırlatma gelsin, onayınla deftere işlensin.
 
 BİRİKİM HEDEFLERİ VE YATIRIM TAKİBİ
-Döviz, altın, hisse ve fon pozisyonlarını takip et; istediklerini bir birikim
-hedefine bağla, ilerlemeyi tek bakışta gör. Güncel fiyatlarla değerleme
+Altın, hisse ve kendi tanımladığın varlıkları (döviz, fon, mevduat…) takip et;
+istediklerini bir birikim hedefine bağla, ilerlemeyi tek bakışta gör. Güncel fiyatlarla değerleme
 cüzdanının para biriminde yapılır, kâr/zararını doğru para biriminde görürsün.
 
 RAPORLAR VE GRAFİKLER
-Aylık akış, kategori dağılımı, dönem karşılaştırması. Nereye ne kadar
-harcadığını rakamla ve grafikle gör.
+Aylık akış, kategori dağılımı, dönem karşılaştırması ve en çok harcadığın yerler.
+Bütçelerinin durumu da aynı sayfada. Nereye ne kadar harcadığını rakamla ve
+grafikle gör.
 
 GÜVENLİK
 Parmak izi / yüz tanıma veya PIN ile kilitle. Kilit uygulamanın kendisindedir,
@@ -283,14 +284,15 @@ Define rent, subscriptions or salary once; get reminded when they are due and
 record them into the ledger with a tap.
 
 SAVINGS GOALS AND INVESTMENT TRACKING
-Track currency, gold, stock and fund positions, and tie any of them to a savings
-goal to watch the progress at a glance. Valuation uses live prices and is
+Track gold, stocks and your own custom assets (currency, funds, deposits…), and
+tie any of them to a savings goal to watch the progress at a glance. Valuation uses live prices and is
 reported in your wallet's currency, so profit and loss are shown in the right
 unit.
 
 REPORTS AND CHARTS
-Monthly flow, category breakdown, period comparison. See where your money went,
-in numbers and in charts.
+Monthly flow, category breakdown, period comparison and your top spending places.
+Your budget status sits on the same page. See where your money went, in numbers
+and in charts.
 
 SECURITY
 Lock the app with fingerprint, face unlock or a PIN. The lock belongs to the app
@@ -542,7 +544,24 @@ Security and stability
 
 ---
 
-## Ekran görüntüleri — ✅ ÜRETİLDİ (son çekim 9 Eyl 2026)
+## Ekran görüntüleri — ✅ ÜRETİLDİ (son çekim 16 Eyl 2026)
+
+> **7. tur (16 Eyl 2026) — ad değişikliği denetimi.** İki kare yeniden çekildi,
+> üç çip düzeltildi, kaynak klasör `~/Masaüstü/cuhat screenshots` oldu.
+> * **03 rapor:** eski kare hem silinmiş bir kartı ("Aylık seyir" çipi)
+>   adlandırıyordu hem de dönem bloğu `f1baaf5` ile tek satırlık ay çubuğuna
+>   inmişti. Yeni kare alt kategori kırılımını (Fatura → İnternet/Doğalgaz/…)
+>   ve kalem başına önceki dönem farkını gösteriyor.
+> * **02 ekstre:** 12. ekstre turundan sonra ekran değişmişti. Yeni kare
+>   **elle girilen kayda karşı tekrar tespitini** gösteriyor (kanıt çipleri +
+>   "Tutarı … yap" eylemi) — kategorideki en ayırt edici şey artık kadrajda.
+>   Kırpma 330'dan başlıyor: 400 denendi, yeşil doğrulama kutusunun başlığını
+>   kesip render hatası gibi duruyordu.
+> * **04 hedefler:** "Altın, hisse ve fon" çipi **karşılıksızdı** —
+>   `InvestmentType` yalnız `stock, gold, custom`. "Altın, hisse, özel varlık"
+>   oldu; uzun açıklamadaki "fon" iddiası da iki dilde düzeltildi.
+> * Çipler tek satıra sığmalı: 03'ün ilk hali iki satıra taşıp kareyi
+>   diğerlerinden farklı kılıyordu.
 
 **8 görsel hazır:** `docs/store/screenshots/` (`01_…` – `08_…`). Ham cihaz
 çekimleri `tools/store_screenshots.py` ile 1080×1920 (tam 9:16) tuvale, marka
