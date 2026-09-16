@@ -227,11 +227,22 @@ TR başlıktaki gibi düz `C` ile — iki dilde tek karar.
 ### Short description (limit 80)
 
 ```
-Expense tracker, budgets, debts and bank statement import. Ad-free, private.
+Expense tracker, budgets, debts and bank statement import. Data stays private.
 ```
 
-*76 karakter.* Başlıkta olmayan terimleri taşıyor: tracker, debts, bank
+*78 karakter.* Başlıkta olmayan terimleri taşıyor: tracker, debts, bank
 statement import.
+
+> ⛔ **"Ad-free" ÇIKARILDI (16 Eyl 2026 — Console uyarısı).** Play'in tanıtım
+> uygunluğu kuralı kısa açıklamada **fiyat/tanıtım dilini** yasaklıyor: *"price
+> and promotional information, for example, 'Best,' '#1,' 'Top,' 'New,'
+> 'Discount,' 'Sale,' or 'Million Downloads.'"* — `Ad-free` içindeki *free* bu
+> denetime takılıyor. Uyarı yayını engellemez; uygulamanın Play'de
+> **tanıtılma (featured) uygunluğunu** düşürür. Reklamsızlık uzun açıklamada
+> duruyor, yeri orası. Aynı kural **eylem çağrısı** ("download now"), emoji,
+> tekrarlı noktalama ve vurgu için BÜYÜK HARF kullanımını da yasaklıyor.
+>
+> Türkçe kısa açıklamada bu sınıftan kelime yok — o alan temiz, dokunma.
 
 > **Önceki metin:** `Ad-free personal finance: wallets, budgets, debt tracking.
 > Data stays private.` (78) — Türkçedeki hatanın aynısı, en ağır ikinci alanı
