@@ -59,7 +59,7 @@ politikası URL'i 404 olur.
 | 9 | AAB yükle → Play'in SHA-1'i → 3. OAuth istemcisi | ✅ **TAMAM** — üç istemci de doğru; Play sürümünde Drive yedekleme cihazda doğrulandı (29 Ağu) |
 | 11 | Kapalı test 12 tester × 14 gün | ✅ **14 gün doldu** (28 Ağu → 11 Eyl, 13 tester). ⚠️ Şart **başvuru anında** ölçülür: başvurduğunda ≥12 tester opt-in ve önceki 14 gün kesintisiz. Production onayı gelene kadar testerlar programda kalmalı |
 | — | **Monetizasyon kapısı** | ✅ **KRİTİK YOLDAN ÇIKTI (7 Eyl)** — v1.0 **ücretsiz ve reklamsız** yayınlanıyor: IAP yok, paywall yok, monetizasyon kodu yok. Pro 2. aşamada ve yalnız v1.0'da **olmayan** özelliklerden kurulacak. Ödeme/mevzuat tarafı da 2. aşamaya kaldı. Plan repo dışında: `../CuNehat-ozel/monetizasyon-plani.md` |
-| 12 | Production | 🟡 **Başvuru gönderiliyor (16 Eyl 2026)** — inceleme genelde ≤7 gün. Onay gelince `+6` kapalı testten terfi eder, yalnız **Türkiye** — bkz. Adım 12 |
+| 12 | Production | 🟡 **Başvuru GÖNDERİLDİ** (kullanıcı doğrulaması, 16 Eyl 2026) — onay bekleniyor, inceleme genelde ≤7 gün. Onay gelince `+6` kapalı testten terfi eder, yalnız **Türkiye** — bkz. Adım 12 |
 
 **Kod tarafı sağlık (16 Eyl 2026, `+6` yükleme öncesi ölçüm):**
 `flutter test` **2618/2618** (uygulama) + **179/179** (`unified_flutter_features`),
