@@ -8,11 +8,17 @@ arasındaki sıra kritik, sebebi 9'da açıklanıyor.
 Cloud projesi, Flutter SDK kurulu.
 
 **Uygulama kimliği (değiştirilemez, yayından sonra sabit):**
-`dev.halilibrahim.cunehat` · sürüm `1.0.0+6` (**hazırlanıyor, henüz
-yüklenmedi**) — ad değişikliği + çalışma zamanı hata denetimi. Son etiketli
-yükleme `v1.0.0+4` (3 Eyl). `+5` 9 Eyl'de yüklendi ve testerlara dağıtıldı
-(16 Eyl'de doğrulandı); etiketi geriye dönük atıldı (`v1.0.0+5` → `76683c2`). `+6` bu yüzden seçildi: kodların yalnız artması yeter,
-atlanan numara zararsız.
+`dev.halilibrahim.cunehat` · sürüm `1.0.0+7` (**hazırlanıyor**) — ad
+değişikliği + çalışma zamanı hata denetimi. Son etiketli yükleme `v1.0.0+5`
+(9 Eyl, commit `76683c2`; 16 Eyl'de yüklendiği doğrulandı, etiket geriye dönük
+atıldı).
+
+> ⛔ **`6` YAKILDI — kod, taslağa yüklenince tüketiliyor.** 16 Eyl'de production
+> sürüm taslağına `+6` AAB'si yüklendi; sayfadan kaydetmeden çıkılınca Play o
+> kodu tüketilmiş saydı ve aynı kodu bir daha kabul etmedi. **Ders: sürüm
+> sayfasından "Kaydet" demeden ayrılma.** Ayrıldıysan iki yol var: Production'daki
+> **taslağı sürdür** (yeniden derleme gerekmez) ya da kodu artırıp yeniden derle.
+> `+7` bu yüzden üretildi; atlanan numara zararsız.
 
 **Ad değişikliği — 16 Eylül 2026: ÇuNehat → ÇuHat.** Görünen ad `ÇuHat`,
 mağaza başlığı `CuHat: Gelir Gider Takibi`. Paket adı, Drive yedek öneki,
@@ -25,9 +31,9 @@ politikası URL'i 404 olur.
 > **Sürüm kodları kalıcı tüketilir.** Bir kod herhangi bir kanala bir kez
 > yüklendiyse, o sürüm silinse/atılsa bile geri gelmez. `1` yakıldı (ilk
 > deneme reddedildi), `2`, `3` ve `4` kapalı teste yüklendi (sonuncusu
-> 3 Eyl 2026). `5`'in yüklenip yüklenmediği etiketle
-> kayıtlı değil (bkz. yukarı); `+6` hazırlanıyor ve yüklenene kadar yeni işler
-> aynı `+6` içinde birikebilir, her commit için artırmaya gerek yok.
+> 3 Eyl 2026), `5` 9 Eyl'de kapalı teste yüklendi, `6` 16 Eyl'de production
+> taslağında yakıldı (bkz. yukarıdaki not). `+7` hazırlanıyor ve yüklenene kadar
+> yeni işler aynı `+7` içinde birikebilir, her commit için artırmaya gerek yok.
 >
 > **Hangi kodun yüklendiğini etiketlerden oku, hafızadan değil.** Yüklenen her
 > derlemenin `v<versionName>+<versionCode>` adında açıklamalı bir git etiketi
