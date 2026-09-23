@@ -4068,7 +4068,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get zatenBendeAciklama =>
-      'Bought before using the app; don\'t deduct its cost from the wallet';
+      'Bought before using the app, or the payment is already in your ledger from a bank statement; don\'t deduct its cost again';
 
   @override
   String alimCuzdandanDusulecek(Object amount, Object date) {
@@ -4909,4 +4909,55 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get fisGorselAlinamadi =>
       'Couldn\'t get the image. Check camera and photo permissions.';
+
+  @override
+  String get bankImportDupLinkedByUser => 'Matched by you';
+
+  @override
+  String bankImportDupReasonNear(String delta) {
+    return '$delta off · same category';
+  }
+
+  @override
+  String get bankImportStepAddAnyway => 'Add anyway';
+
+  @override
+  String bankImportLeftoverBanner(int count) {
+    return '$count of your entries may match rows in this statement but weren\'t matched automatically. If it\'s the same movement, match it so the row isn\'t added twice.';
+  }
+
+  @override
+  String get bankImportLeftoverReview => 'Review';
+
+  @override
+  String get bankImportLeftoverSheetTitle => 'Unmatched entries';
+
+  @override
+  String get bankImportLeftoverSheetHint =>
+      'These entries are in your ledger for this statement\'s period but weren\'t matched to any row. If it\'s the same movement, match it and the row won\'t be added. No row is skipped without your approval.';
+
+  @override
+  String get bankImportLeftoverSame => 'Same as this row';
+
+  @override
+  String get bankImportLeftoverNone => 'None of these';
+
+  @override
+  String get bankImportLeftoverCoupling => 'Debt/savings entry';
+
+  @override
+  String get bankImportFilterLeftover => 'Possible match';
+
+  @override
+  String bankImportDoneLeftoverWarning(int count) {
+    return '$count of your entries had no match in the statement. Check for duplicates before syncing the balance — syncing would hide them.';
+  }
+
+  @override
+  String bankImportDupAlternative(String row) {
+    return 'Also looks like: $row';
+  }
+
+  @override
+  String get bankImportDupMoveMatch => 'Match the other row';
 }

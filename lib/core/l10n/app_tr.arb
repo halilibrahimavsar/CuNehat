@@ -2207,7 +2207,7 @@
   "kismiSatisGeriAlindi": "Kısmi satış geri alındı",
   "alimTarihi": "Alım tarihi",
   "zatenBendeBaslik": "Bu varlık zaten bende",
-  "zatenBendeAciklama": "Uygulamadan önce alındı; maliyeti cüzdandan düşülmesin",
+  "zatenBendeAciklama": "Uygulamadan önce alındı ya da ödemesi ekstreden deftere zaten girdi; maliyet cüzdandan tekrar düşülmesin",
   "alimCuzdandanDusulecek": "{amount}, {date} tarihli gider olarak cüzdandan düşülecek.",
   "@alimCuzdandanDusulecek": {
     "placeholders": {
@@ -2692,5 +2692,47 @@
   "errorLogClearConfirmTitle": "Hata günlüğü temizlensin mi?",
   "errorLogClearConfirmDesc": "Kayıtlı tüm hatalar bu cihazdan silinir.",
   "driveErrLocalReadFailure": "Cihazdaki veriler okunamadı. Uygulamayı yeniden başlatıp tekrar deneyin.",
-  "fisGorselAlinamadi": "Görsel alınamadı. Kamera ve fotoğraf izinlerini kontrol edin."
+  "fisGorselAlinamadi": "Görsel alınamadı. Kamera ve fotoğraf izinlerini kontrol edin.",
+  "bankImportDupLinkedByUser": "Senin eşleştirdiğin kayıt",
+  "bankImportDupReasonNear": "{delta} fark · kategori aynı",
+  "@bankImportDupReasonNear": {
+    "placeholders": {
+      "delta": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportStepAddAnyway": "Yine de ekle",
+  "bankImportLeftoverBanner": "{count} kaydın bu ekstrede olası eşi var ama otomatik eşleşmedi. Aynı hareketse eşleştir, satır ikinci kez eklenmesin.",
+  "@bankImportLeftoverBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportLeftoverReview": "İncele",
+  "bankImportLeftoverSheetTitle": "Karşılığı bulunamayan kayıtlar",
+  "bankImportLeftoverSheetHint": "Bu kayıtlar ekstre döneminde defterinde duruyor ama hiçbir satırla otomatik eşleşmedi. Aynı hareketse eşleştir: satır eklenmez. Hiçbir satır sen onaylamadan atlanmaz.",
+  "bankImportLeftoverSame": "Bu satırla aynı",
+  "bankImportLeftoverNone": "Hiçbiri",
+  "bankImportLeftoverCoupling": "Borç/birikim kaydı",
+  "bankImportFilterLeftover": "Olası eş",
+  "bankImportDoneLeftoverWarning": "Ekstrede karşılığı bulunamayan {count} kaydın kaldı. Bakiyeyi eşitlemeden önce tekrar olup olmadığına bak: eşitleme tekrarları gizler.",
+  "@bankImportDoneLeftoverWarning": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportDupAlternative": "Şu satıra da benziyor: {row}",
+  "@bankImportDupAlternative": {
+    "placeholders": {
+      "row": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportDupMoveMatch": "Diğer satırla eşleştir"
 }

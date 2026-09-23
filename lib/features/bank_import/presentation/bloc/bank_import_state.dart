@@ -93,6 +93,12 @@ class BankImportReview extends BankImportState {
   /// yeniden eşle" ile eşleme adımına dönebilir.
   final bool canRemap;
 
+  /// Ekstre döneminde defterde duran ama hiçbir satırla eşleşmemiş, olası
+  /// eşi olan kayıtlar (bkz. `findLedgerLeftovers`). Öneridir: hiçbir satırın
+  /// seçimini değiştirmez; kullanıcı eşleştirir ya da kapatır. Her mutasyonda
+  /// taslaklardan yeniden hesaplanır.
+  final List<LedgerLeftover> leftovers;
+
   const BankImportReview({
     required this.drafts,
     required this.expenseCategories,
@@ -106,9 +112,16 @@ class BankImportReview extends BankImportState {
     this.sourceUnresolvedCells = 0,
     this.fromOcr = false,
     this.canRemap = false,
+    this.leftovers = const [],
   });
 
   int get selectedCount => drafts.where((d) => d.selected).length;
+
+  /// Olası eşi olan karşılıksız kayıtların adayı olan satırlar.
+  Set<int> get leftoverCandidateIndexes => {
+        for (final l in leftovers)
+          for (final c in l.candidates) c.draftIndex,
+      };
   int get duplicateCount => drafts.where((d) => d.isDuplicate).length;
 
   /// Elle girilmiş bir kayda YAKLAŞIK benzediği için (tahminle) seçimsiz
@@ -160,6 +173,7 @@ class BankImportReview extends BankImportState {
     List<ImportDraft>? drafts,
     List<CategoryEntity>? expenseCategories,
     List<CategoryEntity>? incomeCategories,
+    List<LedgerLeftover>? leftovers,
   }) =>
       BankImportReview(
         drafts: drafts ?? this.drafts,
@@ -174,6 +188,7 @@ class BankImportReview extends BankImportState {
         sourceUnresolvedCells: sourceUnresolvedCells,
         fromOcr: fromOcr,
         canRemap: canRemap,
+        leftovers: leftovers ?? this.leftovers,
       );
 }
 
@@ -200,6 +215,12 @@ class BankImportDone extends BankImportState {
   final String userId;
   final double balance;
   final bool hasPastMonthRows;
+
+  /// Kaydederken çözülmemiş kalan "karşılığı bulunamayan kayıt" önerisi
+  /// sayısı. Sıfır değilse bakiye eşitlemesinden önce uyarılır: eşitleme
+  /// açılış bakiyesini kaydırır ve bir tekrarı bakiyede görünmez yapar
+  /// (rapor ise onu yine iki kez sayar).
+  final int unresolvedLeftovers;
   const BankImportDone({
     required this.added,
     this.corrected = 0,
@@ -208,6 +229,7 @@ class BankImportDone extends BankImportState {
     required this.userId,
     required this.balance,
     required this.hasPastMonthRows,
+    this.unresolvedLeftovers = 0,
   });
 }
 

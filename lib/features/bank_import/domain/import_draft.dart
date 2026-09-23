@@ -21,6 +21,13 @@ enum DuplicateKind {
   /// işaretlenir — bakiye zinciri tutan bir ekstrede her satır bakiyeyi
   /// değiştirdiği için tekrar olamaz.
   withinFile,
+
+  /// Kullanıcı eşleştirdi: otomatik tespitin eşik altında bıraktığı bir
+  /// defter kaydını ("karşılığı bulunamayan kayıtlar" önerisinden) bu satırla
+  /// AYNI hareket olarak işaretledi. Tahmin değil karardır; satır düzenlense
+  /// de yeniden eşleştirmede ezilmez (yalnız tür çevrilince düşer — yön
+  /// değişince aynı hareket olamaz).
+  linkedByUser,
 }
 
 /// Elle girilen tutarın banka tutarına nasıl benzediği (yaklaşık eşleşmenin
@@ -40,6 +47,75 @@ enum AmountPattern {
   /// 50'ye ya da 100'e yuvarlanmış (1.478,90 → 1.500) — yalnız büyük
   /// tutarlarda, göreli fark küçük kalsın diye.
   roundedLarge,
+
+  /// Yuvarlama değil ama çok yakın (≤ %5) VE kategori aynı. Otomatik
+  /// eşleşmede ASLA kullanılmaz; yalnız kullanıcıya gösterilen "karşılığı
+  /// bulunamayan kayıt" önerisinde ve kullanıcının onayladığı bağlantıda.
+  near,
+}
+
+/// Ekstre döneminde defterde duran ama hiçbir satırla eşleşmemiş bir kayıt
+/// ve ona benzeyen banka satırları.
+///
+/// Otomatik eşleşme bilinçli olarak temkinlidir: eşik gevşetilirse GERÇEK
+/// bir harcama "tekrar" sanılıp sessizce atlanır. Bedeli, eşik altında kalan
+/// elle kayıtların (yuvarlanmış tutar, günler sonra girilmiş, not boş)
+/// bulunamaması ve ekstre satırının ikinci kez eklenmesiydi. Bu kayıtlar
+/// artık otomatik karar yerine ÖNERİ olarak gösterilir; hiçbir satır
+/// kullanıcı onaylamadan düşmez.
+class LedgerLeftover extends Equatable {
+  final TransactionEntity entry;
+
+  /// Borç/yatırım/transfer kuplajının kaydı (sistem hareketi). Adayı yalnız
+  /// birebir tutarla alır; kategori gerekçesi olmaz.
+  final bool isCoupling;
+
+  /// En güçlüsü önce.
+  final List<LeftoverCandidate> candidates;
+
+  const LedgerLeftover({
+    required this.entry,
+    required this.isCoupling,
+    required this.candidates,
+  });
+
+  @override
+  List<Object?> get props => [entry, isCoupling, candidates];
+}
+
+/// [LedgerLeftover]'ın olası banka satırı ve benzerlik gerekçeleri.
+class LeftoverCandidate extends Equatable {
+  /// Taslağın inceleme listesindeki indeksi.
+  final int draftIndex;
+  final AmountPattern amountPattern;
+
+  /// Taslak tutarı − kaydın tutarı (kuruşa yuvarlı).
+  final double amountDelta;
+  final int dayDistance;
+  final bool categoryMatches;
+  final String? sharedWord;
+  final double score;
+
+  const LeftoverCandidate({
+    required this.draftIndex,
+    required this.amountPattern,
+    required this.amountDelta,
+    required this.dayDistance,
+    required this.categoryMatches,
+    required this.score,
+    this.sharedWord,
+  });
+
+  @override
+  List<Object?> get props => [
+        draftIndex,
+        amountPattern,
+        amountDelta,
+        dayDistance,
+        categoryMatches,
+        sharedWord,
+        score,
+      ];
 }
 
 /// Taslağın defterdeki (ya da dosyadaki) olası eşi ve eşleşmenin
@@ -79,6 +155,17 @@ class DuplicateMatch extends Equatable {
   /// Yaklaşık eşleşmenin gücü; kesin ve dosya içi eşlerde her zaman `true`.
   final bool strong;
 
+  /// Aynı defter kaydına NEREDEYSE aynı güçte benzeyen, hâlâ eşleşmemiş başka
+  /// bir satırın inceleme listesindeki indeksi; yoksa `null`.
+  ///
+  /// Atama açgözlüdür (en güçlü çift önce) ve bir kayıt tek satıra gider.
+  /// Ölçülen tuzak: elle 910 TL "Market" (aynı gün) BİM 913,15'e 4,5 puanla,
+  /// iki gün sonraki MIGROS 910,00'a 5,0 puanla benziyor → kayıt MIGROS'a
+  /// gidiyor, MIGROS atlanıyor ve BİM ikinci kez ekleniyordu. Fark bu kadar
+  /// küçükken karar kullanıcıya bırakılır: eşleşme "güçlü" sayılmaz ve
+  /// panel diğer satırı gösterir.
+  final int? alternativeDraftIndex;
+
   const DuplicateMatch({
     required this.kind,
     required this.existingTitle,
@@ -93,9 +180,35 @@ class DuplicateMatch extends Equatable {
     this.sharedWord,
     this.categoryMatches = false,
     this.strong = true,
+    this.alternativeDraftIndex,
   });
 
+  /// Belirsiz eşleşme: [index]'teki satır da aynı kayda neredeyse aynı güçte
+  /// benziyor (bkz. [alternativeDraftIndex]).
+  DuplicateMatch ambiguousWith(int index) => DuplicateMatch(
+        kind: kind,
+        existingTitle: existingTitle,
+        existingAmount: existingAmount,
+        existingDate: existingDate,
+        existingId: existingId,
+        existingTag: existingTag,
+        existingIsSystem: existingIsSystem,
+        amountDelta: amountDelta,
+        amountPattern: amountPattern,
+        dayDistance: dayDistance,
+        sharedWord: sharedWord,
+        categoryMatches: categoryMatches,
+        strong: false,
+        alternativeDraftIndex: index,
+      );
+
   bool get isApproximate => kind == DuplicateKind.approximate;
+
+  /// Gerekçeleri (tutar kalıbı, gün farkı, ortak kelime, kategori) anlamlı
+  /// olan eşleşme: tahmin ya da kullanıcının onayladığı öneri. Kesin ve dosya
+  /// içi eşlerde gerekçe tek satırdır ("aynı kayıt").
+  bool get hasReasons =>
+      kind == DuplicateKind.approximate || kind == DuplicateKind.linkedByUser;
 
   /// Tutarı ekstredekiyle düzeltmek anlamlı mı: defterde düzenlenebilir bir
   /// kayıt var ve tutarlar gerçekten farklı.
@@ -117,6 +230,7 @@ class DuplicateMatch extends Equatable {
         sharedWord,
         categoryMatches,
         strong,
+        alternativeDraftIndex,
       ];
 }
 

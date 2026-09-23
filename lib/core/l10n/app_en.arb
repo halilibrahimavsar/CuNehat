@@ -2186,7 +2186,7 @@
   "kismiSatisGeriAlindi": "Partial sale undone",
   "alimTarihi": "Purchase date",
   "zatenBendeBaslik": "I already own this asset",
-  "zatenBendeAciklama": "Bought before using the app; don't deduct its cost from the wallet",
+  "zatenBendeAciklama": "Bought before using the app, or the payment is already in your ledger from a bank statement; don't deduct its cost again",
   "alimCuzdandanDusulecek": "{amount} will be deducted from the wallet as an expense dated {date}.",
   "@alimCuzdandanDusulecek": {
     "placeholders": {
@@ -2631,5 +2631,47 @@
   "errorLogClearConfirmTitle": "Clear the error log?",
   "errorLogClearConfirmDesc": "All recorded errors will be removed from this device.",
   "driveErrLocalReadFailure": "Couldn't read the data on this device. Restart the app and try again.",
-  "fisGorselAlinamadi": "Couldn't get the image. Check camera and photo permissions."
+  "fisGorselAlinamadi": "Couldn't get the image. Check camera and photo permissions.",
+  "bankImportDupLinkedByUser": "Matched by you",
+  "bankImportDupReasonNear": "{delta} off · same category",
+  "@bankImportDupReasonNear": {
+    "placeholders": {
+      "delta": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportStepAddAnyway": "Add anyway",
+  "bankImportLeftoverBanner": "{count} of your entries may match rows in this statement but weren't matched automatically. If it's the same movement, match it so the row isn't added twice.",
+  "@bankImportLeftoverBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportLeftoverReview": "Review",
+  "bankImportLeftoverSheetTitle": "Unmatched entries",
+  "bankImportLeftoverSheetHint": "These entries are in your ledger for this statement's period but weren't matched to any row. If it's the same movement, match it and the row won't be added. No row is skipped without your approval.",
+  "bankImportLeftoverSame": "Same as this row",
+  "bankImportLeftoverNone": "None of these",
+  "bankImportLeftoverCoupling": "Debt/savings entry",
+  "bankImportFilterLeftover": "Possible match",
+  "bankImportDoneLeftoverWarning": "{count} of your entries had no match in the statement. Check for duplicates before syncing the balance — syncing would hide them.",
+  "@bankImportDoneLeftoverWarning": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportDupAlternative": "Also looks like: {row}",
+  "@bankImportDupAlternative": {
+    "placeholders": {
+      "row": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportDupMoveMatch": "Match the other row"
 }

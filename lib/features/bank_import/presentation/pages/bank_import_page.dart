@@ -657,6 +657,27 @@ class _Done extends StatelessWidget {
               ctx.l10n.bankImportSyncDialogHint,
               style: Theme.of(ctx).textTheme.bodySmall,
             ),
+            // Eşitleme açılış bakiyesini kaydırır: defterde bir tekrar varsa
+            // bakiye bankayla tutar ama rapor harcamayı yine iki kez sayar —
+            // tekrar görünmez olur. Çözülmemiş öneri varken önce uyarılır.
+            if (state.unresolvedLeftovers > 0) ...[
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.warning_amber_rounded,
+                      size: 18, color: Theme.of(ctx).colorScheme.error),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      ctx.l10n.bankImportDoneLeftoverWarning(
+                          state.unresolvedLeftovers),
+                      style: Theme.of(ctx).textTheme.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 16),
             TextField(
               controller: controller,

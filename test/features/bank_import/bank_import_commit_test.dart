@@ -3,6 +3,7 @@ import 'package:cunehat/core/services/system_activity_guard.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/bank_import/data/category_guesser.dart';
 import 'package:cunehat/features/bank_import/data/column_mapper.dart';
+import 'package:cunehat/features/bank_import/data/draft_dedup.dart';
 import 'package:cunehat/features/bank_import/data/pdf_rasterizer.dart';
 import 'package:cunehat/features/bank_import/data/pdf_statement_parser.dart';
 import 'package:cunehat/features/bank_import/data/raw_table_reader.dart';
@@ -344,6 +345,57 @@ void main() {
           reason: 'aynı harcama iki kez sayılmasın');
     });
 
+    // REGRESYON (M1, 23 Eyl 2026) — gidiş-dönüş: ilk aktarımda yaklaşık
+    // eşleşen elle kayıt düzeltilir, AYNI ekstre yeniden aktarılır. Düzeltme
+    // tarihi ve başlığı korurken bankanın numarasını yazdığı için kayıt
+    // ikinci aktarımda "ekstreden gelmiş" sayılıyor, katı kapıya takılıyor ve
+    // satır seçili gelip harcama ikinci kez ekleniyordu.
+    test('düzeltilen kayıt, aynı ekstre yeniden aktarılınca tekrar sayılır',
+        () async {
+      final cubit = build();
+      when(() => txRepo.updateTransaction(any()))
+          .thenAnswer((_) async => const Right(null));
+      // Not boş (başlık kategori adı), 2 gün sonra ve kuruşsuz girilmiş.
+      final typed = TransactionEntity(
+        id: 'manual-2',
+        userId: 'u1',
+        walletId: 'w1',
+        title: 'Market',
+        tag: 'cat-market',
+        amount: 913,
+        date: DateTime(2026, 9, 7, 9, 10),
+        type: TransactionTypeModel.expense,
+      );
+      final parsed = ImportDraft(
+        date: DateTime(2026, 9, 5),
+        description: 'BIM MAGAZALAR A.S. USKUDAR',
+        amount: 913.15,
+        type: TransactionTypeModel.expense,
+        categoryId: 'cat-market',
+        reference: 'DK-77',
+      );
+
+      final first = markDuplicateDrafts([parsed], [typed]);
+      expect(first.single.duplicateOf?.isApproximate, isTrue);
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: first,
+        ledger: [typed],
+      );
+      cubit.setCorrectExisting(0, true);
+      await cubit.commit();
+      final correctedEntry = verify(() => txRepo.updateTransaction(captureAny()))
+          .captured
+          .single as TransactionEntity;
+
+      final second = markDuplicateDrafts([parsed], [correctedEntry]);
+
+      expect(second.single.isDuplicate, isTrue,
+          reason: 'aynı banka satırı ikinci kez eklenmemeli');
+      expect(second.single.selected, isFalse);
+    });
+
     test('sistem kaydıyla (borç kuplajı) eşleşme düzeltilemez', () async {
       final cubit = build();
       final system = DuplicateMatch(
@@ -374,6 +426,342 @@ void main() {
 
       expect((cubit.state as BankImportReview).drafts.single.correctExisting,
           isFalse);
+    });
+  });
+
+  // REGRESYON (M8, 23 Eyl 2026): incelemede satırın türü/tutarı/açıklaması/
+  // kategorisi değişince tekrar tespiti yeniden KOŞMUYORDU. İşaretsiz tek
+  // "Tutar" sütunlu dosyada satırlar gelir sanılır; ilk tespit onları elle
+  // girilmiş GİDERLERLE hiç karşılaştırmaz (yön farklı). Kullanıcı "Tümünü
+  // gider yap" deyince hiçbiri işaretlenmiyor, hepsi ikinci kez ekleniyordu.
+  group('değişen satır defterle yeniden eşleşir', () {
+    final typed = TransactionEntity(
+      id: 'manual-450',
+      userId: 'u1',
+      walletId: 'w1',
+      title: 'Market',
+      tag: 'cat-market',
+      amount: 450,
+      date: DateTime(2026, 9, 5, 18, 30),
+      type: TransactionTypeModel.expense,
+    );
+    // Dosya işaretsiz → satır GELİR sanıldı; ilk tespit gider kaydıyla
+    // karşılaştırmadığı için eşleşmesiz ve seçili geldi.
+    final parsedAsIncome = ImportDraft(
+      date: DateTime(2026, 9, 5),
+      description: 'DEMKAR GIDA ISTANBUL',
+      amount: 450,
+      type: TransactionTypeModel.income,
+    );
+
+    test('"Tümünü gider yap" sonrası elle kaydın tekrarı işaretlenir', () {
+      final cubit = build();
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [parsedAsIncome],
+        ledger: [typed],
+      );
+
+      cubit.setAllType(TransactionTypeModel.expense);
+
+      final d = (cubit.state as BankImportReview).drafts.single;
+      expect(d.duplicateOf?.existingId, 'manual-450');
+      expect(d.selected, isFalse,
+          reason: 'elle girilmiş harcama ikinci kez eklenmemeli');
+    });
+
+    test('tek satırın türü çevrilince de eşleşir', () {
+      final cubit = build();
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [parsedAsIncome],
+        ledger: [typed],
+      );
+
+      cubit.setDraftType(0, TransactionTypeModel.expense);
+
+      final d = (cubit.state as BankImportReview).drafts.single;
+      expect(d.duplicateOf?.existingId, 'manual-450');
+      expect(d.selected, isFalse);
+    });
+
+    test('tutar düzeltilince (OCR hatası) eşleşme bulunur', () {
+      final cubit = build();
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [
+          ImportDraft(
+            date: DateTime(2026, 9, 5),
+            description: 'DEMKAR GIDA ISTANBUL',
+            amount: 750, // OCR 4'ü 7 okudu
+            type: TransactionTypeModel.expense,
+          ),
+        ],
+        ledger: [typed],
+      );
+
+      cubit.setDraftAmount(0, 450);
+
+      final d = (cubit.state as BankImportReview).drafts.single;
+      expect(d.duplicateOf?.existingId, 'manual-450');
+      expect(d.selected, isFalse);
+    });
+
+    test('başka satırın tükettiği kayıt ikinci kez kullanılmaz', () {
+      final cubit = build();
+      final alreadyMatched = ImportDraft(
+        date: DateTime(2026, 9, 5),
+        description: 'DEMKAR GIDA',
+        amount: 450,
+        type: TransactionTypeModel.expense,
+        selected: false,
+        duplicateOf: DuplicateMatch(
+          kind: DuplicateKind.approximate,
+          existingId: 'manual-450',
+          existingTitle: 'Market',
+          existingAmount: 450,
+          existingDate: DateTime(2026, 9, 5, 18, 30),
+        ),
+      );
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [alreadyMatched, parsedAsIncome],
+        ledger: [typed],
+      );
+
+      cubit.setDraftType(1, TransactionTypeModel.expense);
+
+      final drafts = (cubit.state as BankImportReview).drafts;
+      expect(drafts[0].duplicateOf?.existingId, 'manual-450');
+      expect(drafts[1].isDuplicate, isFalse);
+      expect(drafts[1].selected, isTrue);
+    });
+
+    test('kullanıcının "yine de ekle" kararı aynı kayıtla ezilmez', () {
+      final cubit = build();
+      final keptByUser = ImportDraft(
+        date: DateTime(2026, 9, 5),
+        description: 'DEMKAR GIDA',
+        amount: 450,
+        type: TransactionTypeModel.expense,
+        selected: true, // "farklı işlem" dedi
+        duplicateOf: DuplicateMatch(
+          kind: DuplicateKind.approximate,
+          existingId: 'manual-450',
+          existingTitle: 'Market',
+          existingAmount: 450,
+          existingDate: DateTime(2026, 9, 5, 18, 30),
+        ),
+      );
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [keptByUser],
+        ledger: [typed],
+      );
+
+      cubit.setDraftDescription(0, 'Demkar gıda (manav)');
+
+      final d = (cubit.state as BankImportReview).drafts.single;
+      expect(d.duplicateOf?.existingId, 'manual-450');
+      expect(d.selected, isTrue);
+    });
+  });
+
+  // M3 (23 Eyl 2026): eşik altındaki elle kayıt artık ÖNERİ olarak gösterilir;
+  // hiçbir satır kullanıcı onaylamadan atlanmaz.
+  group('karşılığı bulunamayan kayıt önerisi', () {
+    final typed = TransactionEntity(
+      id: 'm-910',
+      userId: 'u1',
+      walletId: 'w1',
+      title: 'Market',
+      tag: 'cat-market',
+      amount: 910,
+      date: DateTime(2026, 9, 7, 20),
+      type: TransactionTypeModel.expense,
+    );
+    // Küçük işletme: kategori tahmini yok, yuvarlanmış tutar + 2 gün →
+    // otomatik eşleşme eşiğinin altında.
+    final row = ImportDraft(
+      date: DateTime(2026, 9, 5),
+      description: 'DEMKAR GIDA ISTANBUL',
+      amount: 913.15,
+      type: TransactionTypeModel.expense,
+    );
+
+    BankImportCubit seeded() {
+      final cubit = build();
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [row],
+        ledger: [typed],
+      );
+      return cubit;
+    }
+
+    BankImportReview reviewOf(BankImportCubit c) => c.state as BankImportReview;
+
+    test('öneri incelemede görünür; satırın seçimi DEĞİŞMEZ', () {
+      final cubit = seeded();
+      final s = reviewOf(cubit);
+      expect(s.leftovers.single.entry.id, 'm-910');
+      expect(s.leftoverCandidateIndexes, {0});
+      expect(s.drafts.single.selected, isTrue);
+      expect(s.drafts.single.isDuplicate, isFalse);
+    });
+
+    test('"bu satırla aynı" satırı eşleştirir, seçimden düşürür, öneri kalkar',
+        () {
+      final cubit = seeded();
+      cubit.linkLeftover('m-910', 0);
+
+      final s = reviewOf(cubit);
+      final d = s.drafts.single;
+      expect(d.duplicateOf?.kind, DuplicateKind.linkedByUser);
+      expect(d.duplicateOf?.existingId, 'm-910');
+      expect(d.selected, isFalse);
+      expect(s.leftovers, isEmpty);
+    });
+
+    test('bağlanan satırda "tutarı düzelt" elle kaydı düzeltir, yeni kayıt yok',
+        () async {
+      final cubit = seeded();
+      when(() => txRepo.updateTransaction(any()))
+          .thenAnswer((_) async => const Right(null));
+      cubit.linkLeftover('m-910', 0);
+      cubit.setCorrectExisting(0, true);
+
+      await cubit.commit();
+
+      verifyNever(() => txRepo.addTransaction(any()));
+      final written = verify(() => txRepo.updateTransaction(captureAny()))
+          .captured
+          .single as TransactionEntity;
+      expect(written.id, 'm-910');
+      expect(written.amount, 913.15);
+    });
+
+    test('"hiçbiri" öneriyi kapatır, satıra dokunmaz', () {
+      final cubit = seeded();
+      cubit.dismissLeftover('m-910');
+
+      final s = reviewOf(cubit);
+      expect(s.leftovers, isEmpty);
+      expect(s.drafts.single.selected, isTrue);
+      expect(s.drafts.single.isDuplicate, isFalse);
+
+      // Başka bir düzenleme kapatılan öneriyi geri getirmez.
+      cubit.setDraftDescription(0, 'Demkar gıda');
+      expect(reviewOf(cubit).leftovers, isEmpty);
+    });
+
+    test('kullanıcının bağlantısı satır düzenlenince ezilmez', () {
+      final cubit = seeded();
+      cubit.linkLeftover('m-910', 0);
+
+      cubit.setDraftDescription(0, 'Demkar gıda (manav)');
+      cubit.setDraftCategory(0, 'cat-market');
+
+      final d = reviewOf(cubit).drafts.single;
+      expect(d.duplicateOf?.kind, DuplicateKind.linkedByUser);
+      expect(d.selected, isFalse);
+    });
+
+    test('tür çevrilince bağlantı düşer (yön değişince aynı hareket olamaz)',
+        () {
+      final cubit = seeded();
+      cubit.linkLeftover('m-910', 0);
+
+      cubit.setDraftType(0, TransactionTypeModel.income);
+
+      final d = reviewOf(cubit).drafts.single;
+      expect(d.isDuplicate, isFalse);
+      expect(d.selected, isTrue);
+    });
+
+    test('yönü farklı satıra bağlanmaz', () {
+      final cubit = build();
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [
+          row,
+          ImportDraft(
+            date: DateTime(2026, 9, 6),
+            description: 'GELEN HAVALE',
+            amount: 910,
+            type: TransactionTypeModel.income,
+          ),
+        ],
+        ledger: [typed],
+      );
+
+      cubit.linkLeftover('m-910', 1);
+
+      expect(reviewOf(cubit).drafts[1].isDuplicate, isFalse);
+    });
+
+    test('bitiş durumu çözülmemiş öneri sayısını taşır', () async {
+      final cubit = seeded();
+      await cubit.commit();
+
+      expect((cubit.state as BankImportDone).unresolvedLeftovers, 1);
+    });
+  });
+
+  group('belirsiz eşleşmede "diğer satırla eşleştir"', () {
+    test('kayıt diğer satıra taşınır; ilk satır serbest kalır ve seçilir', () {
+      final cubit = build();
+      final manual = TransactionEntity(
+        id: 'm1',
+        userId: 'u1',
+        walletId: 'w1',
+        title: 'Market',
+        tag: 'cat-market',
+        amount: 910,
+        date: DateTime(2026, 9, 5, 19),
+        type: TransactionTypeModel.expense,
+      );
+      final drafts = markDuplicateDrafts([
+        ImportDraft(
+          date: DateTime(2026, 9, 5),
+          description: 'BIM MAGAZALAR',
+          amount: 913.15,
+          type: TransactionTypeModel.expense,
+          categoryId: 'cat-market',
+        ),
+        ImportDraft(
+          date: DateTime(2026, 9, 7),
+          description: 'MIGROS KADIKOY',
+          amount: 910,
+          type: TransactionTypeModel.expense,
+          categoryId: 'cat-market',
+        ),
+      ], [
+        manual
+      ]);
+      expect(drafts[1].duplicateOf?.alternativeDraftIndex, 0);
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: drafts,
+        ledger: [manual],
+      );
+
+      cubit.moveMatch(1, 0);
+
+      final after = (cubit.state as BankImportReview).drafts;
+      expect(after[0].duplicateOf?.kind, DuplicateKind.linkedByUser);
+      expect(after[0].duplicateOf?.existingId, 'm1');
+      expect(after[0].selected, isFalse);
+      expect(after[1].isDuplicate, isFalse);
+      expect(after[1].selected, isTrue);
     });
   });
 

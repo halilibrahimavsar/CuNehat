@@ -7172,7 +7172,7 @@ abstract class AppLocalizations {
   /// No description provided for @zatenBendeAciklama.
   ///
   /// In tr, this message translates to:
-  /// **'Uygulamadan önce alındı; maliyeti cüzdandan düşülmesin'**
+  /// **'Uygulamadan önce alındı ya da ödemesi ekstreden deftere zaten girdi; maliyet cüzdandan tekrar düşülmesin'**
   String get zatenBendeAciklama;
 
   /// No description provided for @alimCuzdandanDusulecek.
@@ -8590,6 +8590,90 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Görsel alınamadı. Kamera ve fotoğraf izinlerini kontrol edin.'**
   String get fisGorselAlinamadi;
+
+  /// No description provided for @bankImportDupLinkedByUser.
+  ///
+  /// In tr, this message translates to:
+  /// **'Senin eşleştirdiğin kayıt'**
+  String get bankImportDupLinkedByUser;
+
+  /// No description provided for @bankImportDupReasonNear.
+  ///
+  /// In tr, this message translates to:
+  /// **'{delta} fark · kategori aynı'**
+  String bankImportDupReasonNear(String delta);
+
+  /// No description provided for @bankImportStepAddAnyway.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yine de ekle'**
+  String get bankImportStepAddAnyway;
+
+  /// No description provided for @bankImportLeftoverBanner.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kaydın bu ekstrede olası eşi var ama otomatik eşleşmedi. Aynı hareketse eşleştir, satır ikinci kez eklenmesin.'**
+  String bankImportLeftoverBanner(int count);
+
+  /// No description provided for @bankImportLeftoverReview.
+  ///
+  /// In tr, this message translates to:
+  /// **'İncele'**
+  String get bankImportLeftoverReview;
+
+  /// No description provided for @bankImportLeftoverSheetTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Karşılığı bulunamayan kayıtlar'**
+  String get bankImportLeftoverSheetTitle;
+
+  /// No description provided for @bankImportLeftoverSheetHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu kayıtlar ekstre döneminde defterinde duruyor ama hiçbir satırla otomatik eşleşmedi. Aynı hareketse eşleştir: satır eklenmez. Hiçbir satır sen onaylamadan atlanmaz.'**
+  String get bankImportLeftoverSheetHint;
+
+  /// No description provided for @bankImportLeftoverSame.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu satırla aynı'**
+  String get bankImportLeftoverSame;
+
+  /// No description provided for @bankImportLeftoverNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hiçbiri'**
+  String get bankImportLeftoverNone;
+
+  /// No description provided for @bankImportLeftoverCoupling.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç/birikim kaydı'**
+  String get bankImportLeftoverCoupling;
+
+  /// No description provided for @bankImportFilterLeftover.
+  ///
+  /// In tr, this message translates to:
+  /// **'Olası eş'**
+  String get bankImportFilterLeftover;
+
+  /// No description provided for @bankImportDoneLeftoverWarning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekstrede karşılığı bulunamayan {count} kaydın kaldı. Bakiyeyi eşitlemeden önce tekrar olup olmadığına bak: eşitleme tekrarları gizler.'**
+  String bankImportDoneLeftoverWarning(int count);
+
+  /// No description provided for @bankImportDupAlternative.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şu satıra da benziyor: {row}'**
+  String bankImportDupAlternative(String row);
+
+  /// No description provided for @bankImportDupMoveMatch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer satırla eşleştir'**
+  String get bankImportDupMoveMatch;
 }
 
 class _AppLocalizationsDelegate

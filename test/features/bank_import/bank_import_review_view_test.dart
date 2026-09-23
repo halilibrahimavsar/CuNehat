@@ -8,7 +8,9 @@ import 'package:cunehat/features/bank_import/domain/import_draft.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state.dart';
 import 'package:cunehat/features/bank_import/presentation/pages/bank_import_review_view.dart';
+import 'package:cunehat/features/bank_import/presentation/widgets/leftover_review_sheet.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/wallet_category_service.dart';
@@ -152,6 +154,7 @@ void main() {
     int sourceUnresolvedCells = 0,
     StatementVerification verification = StatementVerification.none,
     List<CategoryEntity>? expenseCategories,
+    List<LedgerLeftover> leftovers = const [],
   }) =>
       BankImportReview(
         drafts: drafts,
@@ -165,6 +168,7 @@ void main() {
         sourceTruncated: sourceTruncated,
         sourceUnresolvedCells: sourceUnresolvedCells,
         verification: verification,
+        leftovers: leftovers,
       );
 
   Future<void> pump(
@@ -910,5 +914,223 @@ void main() {
       await tester.pumpAndSettle();
       verify(() => cubit.correctAllApproximate()).called(1);
     });
+  });
+
+  // REGRESYON (M2, 23 Eyl 2026): adım adım modda büyük (birincil) düğme hep
+  // "Ekle"ydi. Panel "zaten defterde" derken hızlı ilerleyen kullanıcı
+  // büyük düğmeye basıyor ve satır ikinci kez ekleniyordu.
+  group('adım adım mod — tekrar satırı', () {
+    Future<void> openStepper(WidgetTester tester) async {
+      await tester.tap(find.byIcon(Icons.more_vert_rounded));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tek tek incele'));
+      await tester.pumpAndSettle();
+    }
+
+    setUp(() {
+      when(() => cubit.setDraftSelected(any(), any())).thenReturn(null);
+      when(() => cubit.commit()).thenAnswer((_) async {});
+    });
+
+    testWidgets('birincil düğme ATLA; eklemek ayrı ve açık bir karar',
+        (tester) async {
+      final flagged = _draft(
+        description: 'MIGROS',
+        categoryId: 'Market',
+        duplicate: true,
+      ).copyWith(selected: false);
+      await pump(tester, review(drafts: [flagged, _draft(description: 'B')]));
+      await openStepper(tester);
+
+      expect(find.widgetWithText(FilledButton, 'Atla'), findsOneWidget);
+      expect(find.widgetWithText(FilledButton, 'Ekle'), findsNothing);
+      expect(find.widgetWithText(OutlinedButton, 'Yine de ekle'),
+          findsOneWidget);
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Atla'));
+      await tester.pumpAndSettle();
+      verify(() => cubit.setDraftSelected(0, false)).called(1);
+      verifyNever(() => cubit.setDraftSelected(0, true));
+    });
+
+    testWidgets('tekrar olmayan satırda düzen değişmez (birincil EKLE)',
+        (tester) async {
+      await pump(
+          tester,
+          review(drafts: [
+            _draft(description: 'A', categoryId: 'Market'),
+            _draft(description: 'B', categoryId: 'Market'),
+          ]));
+      await openStepper(tester);
+
+      expect(find.widgetWithText(FilledButton, 'Ekle'), findsOneWidget);
+      expect(find.widgetWithText(OutlinedButton, 'Atla'), findsOneWidget);
+    });
+  });
+
+  // M3 (23 Eyl 2026): eşik altındaki elle kayıt artık görünür bir ÖNERİ;
+  // karar kullanıcınındır ve hiçbir satır onaysız düşmez.
+  group('karşılığı bulunamayan kayıtlar', () {
+    final entry = TransactionEntity(
+      id: 'm-910',
+      userId: 'u1',
+      walletId: 'w1',
+      title: 'Market',
+      tag: 'Market',
+      amount: 910,
+      date: DateTime(2026, 3, 7, 20, 15),
+      type: TransactionTypeModel.expense,
+    );
+    final leftover = LedgerLeftover(
+      entry: entry,
+      isCoupling: false,
+      candidates: const [
+        LeftoverCandidate(
+          draftIndex: 1,
+          amountPattern: AmountPattern.roundedSmall,
+          amountDelta: 3.15,
+          dayDistance: 2,
+          categoryMatches: false,
+          score: 2.5,
+        ),
+      ],
+    );
+    List<ImportDraft> drafts() => [
+          _draft(description: 'MARKET ALISVERISI', categoryId: 'Market'),
+          _draft(
+              description: 'DEMKAR GIDA ISTANBUL', amount: 913.15, day: 5),
+        ];
+
+    setUp(() {
+      when(() => cubit.linkLeftover(any(), any())).thenReturn(null);
+      when(() => cubit.dismissLeftover(any())).thenReturn(null);
+    });
+
+    testWidgets('şerit sayıyla görünür, sayfa kaydı ve adayı gerekçeleriyle '
+        'gösterir; "bu satırla aynı" kararı cubit\'e gider', (tester) async {
+      await pump(tester, review(drafts: drafts(), leftovers: [leftover]));
+
+      expect(find.textContaining('1 kaydın bu ekstrede olası eşi var'),
+          findsOneWidget);
+      await tester.tap(find.text('İncele'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Karşılığı bulunamayan kayıtlar'), findsOneWidget);
+      expect(find.textContaining('“Market”'), findsOneWidget);
+      // Aday satır (sayfada) + gerekçe çipleri.
+      expect(
+          find.descendant(
+            of: find.byType(LeftoverReviewSheet),
+            matching: find.text('DEMKAR GIDA ISTANBUL'),
+          ),
+          findsOneWidget);
+      expect(find.textContaining('yuvarlanmış'), findsOneWidget);
+      expect(find.textContaining('2 gün'), findsOneWidget);
+
+      await tester.tap(find.text('Bu satırla aynı'));
+      await tester.pumpAndSettle();
+      verify(() => cubit.linkLeftover('m-910', 1)).called(1);
+    });
+
+    testWidgets('"hiçbiri" öneriyi kapatır', (tester) async {
+      await pump(tester, review(drafts: drafts(), leftovers: [leftover]));
+      await tester.tap(find.text('İncele'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Hiçbiri'));
+      await tester.pumpAndSettle();
+      verify(() => cubit.dismissLeftover('m-910')).called(1);
+    });
+
+    testWidgets('"Olası eş" süzgeci yalnız aday satırları gösterir',
+        (tester) async {
+      await pump(tester, review(drafts: drafts(), leftovers: [leftover]));
+
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Olası eş (1)'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('MARKET ALISVERISI'), findsNothing);
+      expect(find.text('DEMKAR GIDA ISTANBUL'), findsOneWidget);
+    });
+
+    testWidgets('öneri yoksa şerit ve süzgeç yok', (tester) async {
+      await pump(tester, review(drafts: drafts()));
+      expect(find.text('İncele'), findsNothing);
+      expect(find.textContaining('Olası eş'), findsNothing);
+    });
+
+    testWidgets('dar ekranda (360dp) şerit ve sayfa taşmaz', (tester) async {
+      tester.view.physicalSize = const Size(360, 780);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final coupling = LedgerLeftover(
+        entry: entry.copyWith(
+          id: 'sys-1',
+          title: 'Ödeme: İhtiyaç kredisi (Garanti BBVA)',
+          tag: 'Borç Ödemesi',
+          isSystem: true,
+        ),
+        isCoupling: true,
+        candidates: const [
+          LeftoverCandidate(
+            draftIndex: 1,
+            amountPattern: AmountPattern.exact,
+            amountDelta: 0,
+            dayDistance: 6,
+            categoryMatches: false,
+            sharedWord: 'kredisi',
+            score: 5.25,
+          ),
+        ],
+      );
+      await pump(
+          tester, review(drafts: drafts(), leftovers: [leftover, coupling]));
+      expect(tester.takeException(), isNull);
+
+      await tester.tap(find.text('İncele'));
+      await tester.pumpAndSettle();
+      expect(find.text('Borç/birikim kaydı'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  testWidgets('belirsiz eşleşme diğer satırı gösterir ve taşıma kararı verir',
+      (tester) async {
+    when(() => cubit.moveMatch(any(), any())).thenReturn(null);
+    final bim = _draft(
+        description: 'BIM MAGAZALAR',
+        categoryId: 'Market',
+        amount: 913.15,
+        day: 5);
+    final migros = _draft(
+            description: 'MIGROS KADIKOY',
+            categoryId: 'Market',
+            amount: 910,
+            day: 7)
+        .copyWith(
+      selected: false,
+      duplicateOf: DuplicateMatch(
+        kind: DuplicateKind.approximate,
+        existingId: 'm1',
+        existingTitle: 'Market',
+        existingAmount: 910,
+        existingDate: DateTime(2026, 3, 5, 19),
+        amountPattern: AmountPattern.exact,
+        dayDistance: 2,
+        categoryMatches: true,
+        strong: false,
+        alternativeDraftIndex: 0,
+      ),
+    );
+    await pump(tester, review(drafts: [bim, migros]));
+
+    expect(find.textContaining('Şu satıra da benziyor: BIM MAGAZALAR'),
+        findsOneWidget);
+    await tester.ensureVisible(find.text('Diğer satırla eşleştir'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Diğer satırla eşleştir'));
+    await tester.pumpAndSettle();
+    verify(() => cubit.moveMatch(1, 0)).called(1);
   });
 }

@@ -4058,7 +4058,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get zatenBendeAciklama =>
-      'Uygulamadan önce alındı; maliyeti cüzdandan düşülmesin';
+      'Uygulamadan önce alındı ya da ödemesi ekstreden deftere zaten girdi; maliyet cüzdandan tekrar düşülmesin';
 
   @override
   String alimCuzdandanDusulecek(Object amount, Object date) {
@@ -4882,4 +4882,55 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get fisGorselAlinamadi =>
       'Görsel alınamadı. Kamera ve fotoğraf izinlerini kontrol edin.';
+
+  @override
+  String get bankImportDupLinkedByUser => 'Senin eşleştirdiğin kayıt';
+
+  @override
+  String bankImportDupReasonNear(String delta) {
+    return '$delta fark · kategori aynı';
+  }
+
+  @override
+  String get bankImportStepAddAnyway => 'Yine de ekle';
+
+  @override
+  String bankImportLeftoverBanner(int count) {
+    return '$count kaydın bu ekstrede olası eşi var ama otomatik eşleşmedi. Aynı hareketse eşleştir, satır ikinci kez eklenmesin.';
+  }
+
+  @override
+  String get bankImportLeftoverReview => 'İncele';
+
+  @override
+  String get bankImportLeftoverSheetTitle => 'Karşılığı bulunamayan kayıtlar';
+
+  @override
+  String get bankImportLeftoverSheetHint =>
+      'Bu kayıtlar ekstre döneminde defterinde duruyor ama hiçbir satırla otomatik eşleşmedi. Aynı hareketse eşleştir: satır eklenmez. Hiçbir satır sen onaylamadan atlanmaz.';
+
+  @override
+  String get bankImportLeftoverSame => 'Bu satırla aynı';
+
+  @override
+  String get bankImportLeftoverNone => 'Hiçbiri';
+
+  @override
+  String get bankImportLeftoverCoupling => 'Borç/birikim kaydı';
+
+  @override
+  String get bankImportFilterLeftover => 'Olası eş';
+
+  @override
+  String bankImportDoneLeftoverWarning(int count) {
+    return 'Ekstrede karşılığı bulunamayan $count kaydın kaldı. Bakiyeyi eşitlemeden önce tekrar olup olmadığına bak: eşitleme tekrarları gizler.';
+  }
+
+  @override
+  String bankImportDupAlternative(String row) {
+    return 'Şu satıra da benziyor: $row';
+  }
+
+  @override
+  String get bankImportDupMoveMatch => 'Diğer satırla eşleştir';
 }

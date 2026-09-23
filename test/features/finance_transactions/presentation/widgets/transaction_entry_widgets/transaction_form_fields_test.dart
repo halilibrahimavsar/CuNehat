@@ -2,6 +2,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_picker_sheet.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_fields.dart';
@@ -254,6 +255,70 @@ void main() {
     expect(savedTransaction!.amount, 100.0);
     expect(savedTransaction!.title, 'Lunch out');
     expect(savedTransaction!.tag, 'Food');
+  });
+
+  // REGRESYON (M7, 23 Eyl 2026): form düzenlemede varlığı sıfırdan kuruyordu;
+  // formda OLMAYAN alanlar sessizce siliniyordu. İçe aktarılmış bir işlemin
+  // yalnız kategorisini/notunu değiştirmek bankanın numarasını (`reference`)
+  // kaybettiriyordu — içe aktarımlar arası tekrar tespitinin en güçlü kimliği.
+  testWidgets('düzenleme formda olmayan alanları (banka numarası) korur',
+      (WidgetTester tester) async {
+    when(() => mockCategoryRepository.getCategories(true)).thenAnswer(
+      (_) async => [
+        const CategoryEntity(
+          id: 'Food',
+          name: 'Food',
+          iconName: 'fastfood',
+          isExpense: true,
+        ),
+      ],
+    );
+
+    final imported = TransactionEntity(
+      id: 'tx-1',
+      userId: 'user_123',
+      walletId: 'wallet_123',
+      title: 'BIM MAGAZALAR A.S. USKUDAR',
+      tag: 'Food',
+      amount: 913.15,
+      date: DateTime(2026, 9, 5),
+      type: TransactionTypeModel.expense,
+      reference: 'DK-77',
+    );
+    TransactionEntity? saved;
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        TransactionFormSheet(
+          isExpense: true,
+          walletId: 'wallet_123',
+          userId: 'user_123',
+          initialTransaction: imported,
+          onSave: (tx, freq) => saved = tx,
+          onCancel: () {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final noteTextField = find.byWidgetPredicate(
+      (widget) =>
+          widget is TextField &&
+          widget.decoration?.hintText?.contains('Not') == true,
+    );
+    await tester.enterText(noteTextField, 'Bim');
+    await tester.pumpAndSettle();
+
+    // Düzenleme kipinde düğme "Güncelle" der.
+    await tester.ensureVisible(find.text('Güncelle'));
+    await tester.tap(find.text('Güncelle'));
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(saved, isNotNull);
+    expect(saved!.id, 'tx-1');
+    expect(saved!.title, 'Bim');
+    expect(saved!.reference, 'DK-77',
+        reason: 'formda görünmeyen banka numarası düzenlemede silinmemeli');
   });
 
   testWidgets('can pick date and time using date and time pickers',

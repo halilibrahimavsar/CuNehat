@@ -140,27 +140,40 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
     if (!mounted) return;
 
     final when = _c.dateTime.value;
-    final transaction = TransactionEntity(
-      id: _isEdit ? widget.initialTransaction!.id : null,
-      userId: widget.userId,
-      walletId: widget.walletId,
-      // Başlık boşsa kategori ADINA düşer — kimlik UUID olduğundan
-      // `categoryId`'yi basmak ekrana anlamsız bir dizgi yazardı.
-      title: _c.titleController.text.trim().isEmpty
-          ? (_c.categories.value
-                  .where((c) => c.id == _c.categoryId.value)
-                  .firstOrNull
-                  ?.name ??
-              context.l10n.islem)
-          : _c.titleController.text.trim(),
-      tag: _c.categoryId.value!,
-      amount: _c.parsedAmount!,
-      date: when,
-      type: widget.isExpense
-          ? TransactionTypeModel.expense
-          : TransactionTypeModel.income,
-      receiptFileName: receiptFileName,
-    );
+    // Başlık boşsa kategori ADINA düşer — kimlik UUID olduğundan
+    // `categoryId`'yi basmak ekrana anlamsız bir dizgi yazardı.
+    final title = _c.titleController.text.trim().isEmpty
+        ? (_c.categories.value
+                .where((c) => c.id == _c.categoryId.value)
+                .firstOrNull
+                ?.name ??
+            context.l10n.islem)
+        : _c.titleController.text.trim();
+    final type = widget.isExpense
+        ? TransactionTypeModel.expense
+        : TransactionTypeModel.income;
+    // Düzenlemede formda OLMAYAN alanlar (bankanın numarası vb.) özgün
+    // kayıttan taşınır; sıfırdan kurmak onları sessizce siliyordu.
+    final transaction = _isEdit
+        ? widget.initialTransaction!.edited(
+            title: title,
+            tag: _c.categoryId.value!,
+            amount: _c.parsedAmount!,
+            date: when,
+            type: type,
+            receiptFileName: receiptFileName,
+          )
+        : TransactionEntity(
+            id: null,
+            userId: widget.userId,
+            walletId: widget.walletId,
+            title: title,
+            tag: _c.categoryId.value!,
+            amount: _c.parsedAmount!,
+            date: when,
+            type: type,
+            receiptFileName: receiptFileName,
+          );
     widget.onSave(transaction, _c.recurringFrequency.value);
   }
 

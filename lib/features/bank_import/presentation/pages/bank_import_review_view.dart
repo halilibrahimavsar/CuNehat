@@ -18,13 +18,14 @@ import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state.dart';
 import 'package:cunehat/features/bank_import/presentation/import_category_labels.dart';
 import 'package:cunehat/features/bank_import/presentation/widgets/duplicate_match_panel.dart';
+import 'package:cunehat/features/bank_import/presentation/widgets/leftover_review_sheet.dart';
 import 'package:cunehat/features/bank_import/presentation/widgets/similar_group_sheet.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_picker_sheet.dart';
 
 /// İnceleme listesinde hangi taslakların gösterileceği.
-enum _ReviewFilter { all, uncategorized, duplicates }
+enum _ReviewFilter { all, uncategorized, duplicates, leftoverCandidates }
 
 /// Kategori seçiminin sonucu: seçilen kategori + hangi türe ait olduğu. Toplu
 /// atamada tür de gerekir; kategori yalnız KENDİ türündeki satırlara uygulanır
@@ -83,6 +84,8 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
           _ReviewFilter.all,
         _ReviewFilter.duplicates when _s.duplicateCount == 0 =>
           _ReviewFilter.all,
+        _ReviewFilter.leftoverCandidates when _s.leftovers.isEmpty =>
+          _ReviewFilter.all,
         _ => _filter,
       };
 
@@ -97,6 +100,9 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
   List<(int, ImportDraft)> get _visible {
     final q = _query;
     final filter = _effectiveFilter;
+    final candidates = filter == _ReviewFilter.leftoverCandidates
+        ? _s.leftoverCandidateIndexes
+        : const <int>{};
     final out = <(int, ImportDraft)>[];
     for (var i = 0; i < _s.drafts.length; i++) {
       final d = _s.drafts[i];
@@ -104,6 +110,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
         _ReviewFilter.all => true,
         _ReviewFilter.uncategorized => d.categoryId == null,
         _ReviewFilter.duplicates => d.isDuplicate,
+        _ReviewFilter.leftoverCandidates => candidates.contains(i),
       };
       if (!passesFilter) continue;
       if (!matchesFolded(d.description, q)) continue;
@@ -239,6 +246,10 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
           if (_s.approximateSkippedCount > 0) ...[
             const SizedBox(height: 10),
             _approximateBanner(context, _s.approximateSkippedCount),
+          ],
+          if (_s.leftovers.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            _leftoverBanner(context, _s.leftovers.length),
           ],
           if (warnings.isNotEmpty) ...[
             const SizedBox(height: 10),
@@ -407,6 +418,48 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     );
   }
 
+  /// Ekstre döneminde defterde duran ama hiçbir satırla otomatik eşleşmemiş,
+  /// olası eşi olan kayıtlar. Eşleşmediği için ekstre satırı SEÇİLİ gelir;
+  /// kullanıcı görmeden eklerse aynı harcama iki kez yazılır. Şerit karar
+  /// sayfasını açar (bkz. [LeftoverReviewSheet]).
+  Widget _leftoverBanner(BuildContext context, int count) {
+    final color = Theme.of(context).colorScheme.primary;
+    return InkWell(
+      onTap: () => showLeftoverReviewSheet(
+        context,
+        categoryLabels: _categoryLabels,
+      ),
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.link_rounded, size: 16, color: color),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                context.l10n.bankImportLeftoverBanner(count),
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              context.l10n.bankImportLeftoverReview,
+              style: TextStyle(
+                  fontSize: 12, fontWeight: FontWeight.w800, color: color),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   String _checkLabel(BuildContext context, StatementCheckKind kind) =>
       switch (kind) {
         StatementCheckKind.balanceChain =>
@@ -554,6 +607,11 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                 if (_s.duplicateCount > 0)
                   _filterChip(context, _ReviewFilter.duplicates,
                       '${context.l10n.bankImportFilterDuplicates} (${_s.duplicateCount})'),
+                if (_s.leftovers.isNotEmpty) ...[
+                  const SizedBox(width: 6),
+                  _filterChip(context, _ReviewFilter.leftoverCandidates,
+                      '${context.l10n.bankImportFilterLeftover} (${_s.leftoverCandidateIndexes.length})'),
+                ],
               ],
             ),
           ),
@@ -947,6 +1005,13 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
 
   Widget _duplicatePanel(int i, ImportDraft d) {
     final tag = d.duplicateOf?.existingTag;
+    // Belirsiz eşleşmenin diğer adayı — yalnız hâlâ serbestse (arada başka
+    // bir kayda eşleşmiş ya da kullanıcı bağlamış olabilir).
+    final alt = d.duplicateOf?.alternativeDraftIndex;
+    final altDraft = (alt != null && alt >= 0 && alt < _s.drafts.length)
+        ? _s.drafts[alt]
+        : null;
+    final freeAlternative = altDraft?.duplicateOf == null ? altDraft : null;
     return DuplicateMatchPanel(
       draft: d,
       currency: _currency,
@@ -955,9 +1020,14 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
       existingCategoryLabel: tag == null
           ? null
           : (_categoryLabels[tag] ??
-              ((d.duplicateOf?.existingIsSystem ?? false) ? tag : null)),
+              ((d.duplicateOf?.existingIsSystem ?? false)
+                  ? context.translateSystemTag(tag)
+                  : null)),
       onSelected: (value) => _cubit.setDraftSelected(i, value),
       onCorrect: (value) => _cubit.setCorrectExisting(i, value),
+      alternativeDraft: freeAlternative,
+      onMoveMatch:
+          freeAlternative == null ? null : () => _cubit.moveMatch(i, alt!),
     );
   }
 
@@ -1221,25 +1291,51 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
           minimum: const EdgeInsets.all(12),
           child: Column(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => _stepDecide(false),
-                      child: Text(context.l10n.bankImportStepSkip),
+              // Tekrar sanılan satırda birincil eylem ATLA'dır: hızlı ilerleyen
+              // kullanıcı büyük düğmeye basar ve eskiden bu "Ekle"ydi — panel
+              // "zaten defterde" derken satır ikinci kez ekleniyordu.
+              if (d.isDuplicate && !d.selected)
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        // Kategorisiz satır eklenemez (bkz. [_uncategorizedBanner]).
+                        onPressed: d.categoryId == null
+                            ? null
+                            : () => _stepDecide(true),
+                        child: Text(context.l10n.bankImportStepAddAnyway),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton(
-                      // Kategorisiz satır eklenemez (bkz. [_uncategorizedBanner]).
-                      onPressed:
-                          d.categoryId == null ? null : () => _stepDecide(true),
-                      child: Text(context.l10n.bankImportStepAdd),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () => _stepDecide(false),
+                        child: Text(context.l10n.bankImportStepSkip),
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                )
+              else
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => _stepDecide(false),
+                        child: Text(context.l10n.bankImportStepSkip),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        // Kategorisiz satır eklenemez (bkz. [_uncategorizedBanner]).
+                        onPressed: d.categoryId == null
+                            ? null
+                            : () => _stepDecide(true),
+                        child: Text(context.l10n.bankImportStepAdd),
+                      ),
+                    ),
+                  ],
+                ),
               const SizedBox(height: 8),
               Row(
                 children: [

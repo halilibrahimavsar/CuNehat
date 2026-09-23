@@ -133,6 +133,10 @@ class BankImportCubit extends Cubit<BankImportState>
   /// yalnız tutarını değiştirmek için buradan okur.
   Map<String, TransactionEntity> _ledgerById = const {};
 
+  /// Kullanıcının "hiçbiri" diyerek kapattığı karşılıksız kayıt önerileri
+  /// (defter kimlikleri). Oturum içi: yeni dosyada sıfırlanır.
+  Set<String> _dismissedLeftovers = {};
+
   /// Son CSV/Excel tablosu ve ona uygulanan eşleme. İnceleme ekranından
   /// "sütunları yeniden eşle" dönüşü bunlarla kurulur; PDF/OCR yolunda
   /// (eşlenecek tablo yok) `null`.
@@ -200,6 +204,7 @@ class BankImportCubit extends Cubit<BankImportState>
     _fromOcr = false;
     _lastTable = null;
     _lastMapping = null;
+    _dismissedLeftovers = {};
 
     final DetectedStatementFormat detected;
     try {
@@ -781,8 +786,21 @@ class BankImportCubit extends Cubit<BankImportState>
       sourceUnresolvedCells: _sourceUnresolvedCells,
       fromOcr: _fromOcr,
       canRemap: _lastTable != null && _lastMapping != null,
+      leftovers: _leftoversFor(drafts),
     ));
   }
+
+  /// Ekstre döneminde defterde duran ama hiçbir satırla eşleşmemiş, olası
+  /// eşi olan kayıtlar (bkz. [findLedgerLeftovers]). Taslaklardan türetilir;
+  /// her mutasyonda yeniden hesaplanır ki bir satır eşleşince ya da düzenlenince
+  /// öneriler bayatlamasın.
+  List<LedgerLeftover> _leftoversFor(List<ImportDraft> drafts) =>
+      findLedgerLeftovers(
+        drafts,
+        _ledgerById.values.toList(),
+        rootOf: _rootOf,
+        ignoredEntryIds: _dismissedLeftovers,
+      );
 
   /// Kategorinin ana kategorisi (kökse kendisi). Yaklaşık tekrar tespitinde
   /// "Market" ile "Market › Kasap" aynı kalem sayılsın diye.
@@ -900,30 +918,45 @@ class BankImportCubit extends Cubit<BankImportState>
             x,
       ]);
 
+  // Tür, tutar, açıklama ve kategori tekrar tespitinin girdileridir: her biri
+  // değişince o satır defterle YENİDEN eşleştirilir (bkz. [_rematch]).
+
   void setDraftCategory(int i, String categoryId) => _mutate(
-        (d) => [
+        (d) => _rematch([
           for (var k = 0; k < d.length; k++)
             k == i ? d[k].copyWith(categoryId: categoryId) : d[k]
-        ],
+        ], [i]),
       );
 
   void setDraftAmount(int i, double amount) => _mutate(
-        (d) => [
+        (d) => _rematch([
           for (var k = 0; k < d.length; k++)
             k == i ? d[k].copyWith(amount: amount) : d[k]
-        ],
+        ], [i]),
       );
 
   void setDraftDescription(int i, String description) => _mutate(
-        (d) => [
+        (d) => _rematch([
           for (var k = 0; k < d.length; k++)
             k == i ? d[k].copyWith(description: description) : d[k]
-        ],
+        ], [i]),
       );
 
-  void setDraftType(int i, TransactionTypeModel type) => _mutate((d) => [
+  void setDraftType(int i, TransactionTypeModel type) => _mutate((d) => _rematch([
         for (var k = 0; k < d.length; k++) k == i ? _retyped(d[k], type) : d[k],
-      ]);
+      ], [i]));
+
+  /// [indexes]'teki taslakları incelemenin başında çekilen defterle yeniden
+  /// eşleştirir. Eskiden eşleştirme yalnız bir kez, ayrıştırmadan hemen sonra
+  /// koşuyordu: gelir sanılıp gidere çevrilen ya da tutarı düzeltilen satır,
+  /// elle girilmiş aynı harcamayı hiç görmüyor ve ikinci kez ekleniyordu.
+  List<ImportDraft> _rematch(List<ImportDraft> drafts, Iterable<int> indexes) =>
+      rematchDrafts(
+        drafts,
+        _ledgerById.values.toList(),
+        indexes,
+        rootOf: _rootOf,
+      );
 
   void setAllSelected(bool value) =>
       _mutate((d) => [for (final x in d) _withSelected(x, value)]);
@@ -937,10 +970,13 @@ class BankImportCubit extends Cubit<BankImportState>
   /// çevrilen satırda yeniden tahmin doğrudur — ama zaten doğru türdeki bir
   /// satırı da yeniden tahmin etmek, kullanıcının ELLE seçtiği kategoriyi
   /// sessizce tahminle (çoğu zaman `null` ile) eziyordu.
-  void setAllType(TransactionTypeModel type) => _mutate((d) => [
+  void setAllType(TransactionTypeModel type) => _mutate((d) => _rematch([
         for (final x in d)
           if (x.type == type) x else _retyped(x, type),
-      ]);
+      ], [
+        for (var k = 0; k < d.length; k++)
+          if (d[k].type != type) k,
+      ]));
 
   void setDraftSelected(int i, bool value) => _mutate(
         (d) => [
@@ -958,10 +994,10 @@ class BankImportCubit extends Cubit<BankImportState>
   void applyCategoryToIndexes(Iterable<int> indexes, String categoryId) {
     final target = indexes.toSet();
     if (target.isEmpty) return;
-    _mutate((d) => [
+    _mutate((d) => _rematch([
           for (var k = 0; k < d.length; k++)
             target.contains(k) ? d[k].copyWith(categoryId: categoryId) : d[k],
-        ]);
+        ], target));
   }
 
   /// İnceleme sırasında oluşturulan kategoriyi akışa tanıtır: aday listesine
@@ -987,7 +1023,80 @@ class BankImportCubit extends Cubit<BankImportState>
 
   void _mutate(List<ImportDraft> Function(List<ImportDraft>) f) {
     final s = state;
-    if (s is BankImportReview) emit(s.copyWith(drafts: f(s.drafts)));
+    if (s is! BankImportReview) return;
+    final drafts = f(s.drafts);
+    emit(s.copyWith(drafts: drafts, leftovers: _leftoversFor(drafts)));
+  }
+
+  /// "Karşılığı bulunamayan kayıtlar" önerisinde kullanıcının kararı: defterdeki
+  /// [entryId] kaydı [draftIndex] satırıyla AYNI hareket. Satır seçimden düşer
+  /// (yeni kayıt açılmaz) ve eşleşme [DuplicateKind.linkedByUser] olarak
+  /// gerekçeleriyle panelde görünür; tutar farklıysa "tutarı düzelt" de
+  /// seçilebilir. Yön farklıysa ya da satır zaten bir kayıtla eşleşmişse
+  /// hiçbir şey yapılmaz.
+  void linkLeftover(String entryId, int draftIndex) {
+    final entry = _ledgerById[entryId];
+    if (entry == null) return;
+    _mutate((d) {
+      if (draftIndex < 0 || draftIndex >= d.length) return d;
+      final draft = d[draftIndex];
+      if (draft.duplicateOf != null || draft.isIncome != entry.isIncome) {
+        return d;
+      }
+      final linked = draft.copyWith(
+        duplicateOf: linkedMatch(draft, entry, rootOf: _rootOf),
+        selected: false,
+        correctExisting: false,
+      );
+      return [
+        for (var k = 0; k < d.length; k++) k == draftIndex ? linked : d[k],
+      ];
+    });
+  }
+
+  /// Belirsiz yaklaşık eşleşmede kullanıcının kararı: [from] satırının
+  /// eşleştiği defter kaydı aslında [to] satırıyla aynı hareket (bkz.
+  /// `DuplicateMatch.alternativeDraftIndex`). Kayıt [to]'ya kullanıcı
+  /// bağlantısı olarak taşınır; [from] serbest kalır, seçilir ve başka bir
+  /// kayda benziyorsa yeniden eşleştirilir.
+  void moveMatch(int from, int to) {
+    _mutate((d) {
+      if (from == to ||
+          from < 0 ||
+          to < 0 ||
+          from >= d.length ||
+          to >= d.length) {
+        return d;
+      }
+      final entryId = d[from].duplicateOf?.existingId;
+      final entry = entryId == null ? null : _ledgerById[entryId];
+      final target = d[to];
+      if (entry == null ||
+          target.duplicateOf != null ||
+          target.isIncome != entry.isIncome) {
+        return d;
+      }
+      final moved = [
+        for (var k = 0; k < d.length; k++)
+          if (k == from)
+            d[k].withoutDuplicate().copyWith(selected: true)
+          else if (k == to)
+            target.copyWith(
+              duplicateOf: linkedMatch(target, entry, rootOf: _rootOf),
+              selected: false,
+              correctExisting: false,
+            )
+          else
+            d[k],
+      ];
+      return _rematch(moved, [from]);
+    });
+  }
+
+  /// Öneriyi kapatır ("hiçbiri aynı değil"); satırlara dokunmaz.
+  void dismissLeftover(String entryId) {
+    _dismissedLeftovers = {..._dismissedLeftovers, entryId};
+    _mutate((d) => d);
   }
 
   /// Seçili taslakları mevcut cüzdana yazar ve "tutarı düzelt" denen
@@ -1003,7 +1112,11 @@ class BankImportCubit extends Cubit<BankImportState>
     ];
     if (selected.isEmpty && corrections.isEmpty) {
       emit(await _buildDone(
-          added: 0, totalDrafts: s.drafts.length, committed: const []));
+        added: 0,
+        totalDrafts: s.drafts.length,
+        committed: const [],
+        unresolvedLeftovers: s.leftovers.length,
+      ));
       return;
     }
 
@@ -1055,6 +1168,7 @@ class BankImportCubit extends Cubit<BankImportState>
       totalDrafts: s.drafts.length,
       committed: selected,
       corrected: originals.length,
+      unresolvedLeftovers: s.leftovers.length,
     ));
   }
 
@@ -1124,6 +1238,7 @@ class BankImportCubit extends Cubit<BankImportState>
       expenseCategories: expenseCategories,
       incomeCategories: incomeCategories,
       skippedRows: 0,
+      leftovers: _leftoversFor(drafts),
     ));
   }
 
@@ -1136,6 +1251,7 @@ class BankImportCubit extends Cubit<BankImportState>
     required int totalDrafts,
     required List<ImportDraft> committed,
     int corrected = 0,
+    int unresolvedLeftovers = 0,
   }) async {
     final walletRes = await _metrics.walletRepository.getWalletById(_walletId);
     final balance = walletRes.fold((_) => 0.0, (w) => w?.balance ?? 0.0);
@@ -1155,6 +1271,7 @@ class BankImportCubit extends Cubit<BankImportState>
       userId: _userId,
       balance: balance,
       hasPastMonthRows: hasOutOfMonthRows,
+      unresolvedLeftovers: unresolvedLeftovers,
     );
   }
 }

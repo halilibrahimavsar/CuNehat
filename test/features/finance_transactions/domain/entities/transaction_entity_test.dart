@@ -97,5 +97,44 @@ void main() {
         'reference': null,
       });
     });
+
+    group('edited (düzenleme formu)', () {
+      final imported = entity.copyWith(
+        reference: 'DK-77',
+        receiptFileName: 'fis.jpg',
+      );
+
+      test('formda olmayan alanları özgünden taşır', () {
+        final e = imported.edited(
+          title: 'Bim',
+          tag: 'Market',
+          amount: 913.15,
+          date: DateTime(2026, 6, 3),
+          type: TransactionTypeModel.expense,
+          receiptFileName: 'fis.jpg',
+        );
+        expect(e.id, 'tx_1');
+        expect(e.userId, 'user_1');
+        expect(e.walletId, 'wallet_1');
+        expect(e.isSystem, isFalse);
+        expect(e.reference, 'DK-77');
+        expect(e.title, 'Bim');
+        expect(e.tag, 'Market');
+        expect(e.amount, 913.15);
+      });
+
+      test('fiş kaldırılabilir (copyWith bunu yapamaz)', () {
+        final e = imported.edited(
+          title: imported.title,
+          tag: imported.tag,
+          amount: imported.amount,
+          date: imported.date,
+          type: imported.type,
+          receiptFileName: null,
+        );
+        expect(e.receiptFileName, isNull);
+        expect(e.reference, 'DK-77');
+      });
+    });
   });
 }

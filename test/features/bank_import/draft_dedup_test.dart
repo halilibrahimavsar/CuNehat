@@ -506,6 +506,284 @@ void main() {
       });
     });
   });
+
+  // REGRESYON (M1, 23 Eyl 2026): "Tutarı düzelt" elle kaydın tarihini ve
+  // başlığını korur ama bankanın numarasını yazar. Aynı (ya da çakışan)
+  // referanslı ekstre yeniden aktarılınca kayıt güçlü anahtarı günden,
+  // zayıf anahtarı başlıktan ıskalıyor; yaklaşık katmanda ise referansı
+  // olduğu için "ekstreden gelmiş" sayılıp AYNI GÜN + ortak kelime isteyen
+  // katı kapıya takılıyordu → satır seçili geliyor, harcama ikinci kez
+  // ekleniyordu.
+  group('referansa demirli eşleşme — düzeltilmiş elle kayıt', () {
+    final bankRow = _bank(DateTime(2026, 9, 5), 913.15,
+        'SATIŞ-517040*4626-BİM L508 YUNUS EMRE',
+        reference: 'DK-77');
+
+    TransactionEntity corrected(DateTime at, {double amount = 913.15}) =>
+        _manual('m1', at, amount, 'Market', reference: 'DK-77');
+
+    test('2 gün kaymış, başlığı kategori adı → yine KESİN tekrar', () {
+      final marked =
+          markDuplicateDrafts([bankRow], [corrected(DateTime(2026, 9, 7, 9))]);
+      final d = marked.single;
+      expect(d.selected, isFalse);
+      expect(d.duplicateOf?.kind, DuplicateKind.exact);
+      expect(d.duplicateOf?.existingId, 'm1');
+    });
+
+    test('elle bağlanıp düzeltilen 7 gün kaymış kayıt da bulunur', () {
+      final marked =
+          markDuplicateDrafts([bankRow], [corrected(DateTime(2026, 9, 12))]);
+      expect(marked.single.duplicateOf?.kind, DuplicateKind.exact);
+    });
+
+    test('7 günden uzakta aynı numara demir sayılmaz', () {
+      final marked =
+          markDuplicateDrafts([bankRow], [corrected(DateTime(2026, 9, 13))]);
+      expect(marked.single.isDuplicate, isFalse);
+    });
+
+    test(
+        'içe aktarılmış satırın tutarı elle yuvarlanmışsa (numara aynı) '
+        'yaklaşık eşleşir', () {
+      // Numarası olan kayıt "ekstreden gelmiş" sayılıp katı kapıya (birebir
+      // tutar + aynı gün + ortak kelime) giriyordu; numara AYNIYSA kapı
+      // anlamsız, hareketi numara tanımlıyor.
+      final marked = markDuplicateDrafts(
+          [bankRow], [corrected(DateTime(2026, 9, 6), amount: 913)]);
+      final m = marked.single.duplicateOf!;
+      expect(m.kind, DuplicateKind.approximate);
+      expect(m.amountPattern, AmountPattern.centsDropped);
+      expect(marked.single.selected, isFalse);
+    });
+
+    test('aynı numara ama FARKLI tutar eşleşmez (havale + masraf)', () {
+      // Garanti dekont numarasını operasyon başına verir: masraf satırı ana
+      // havaleyle aynı numarayı taşır. Tutar ayırıcı kalmalı.
+      final marked = markDuplicateDrafts([
+        _bank(DateTime(2026, 9, 5), 12.80, 'KESİNTİ VE EKLERİ',
+            reference: 'DK-77'),
+      ], [
+        corrected(DateTime(2026, 9, 7), amount: 9000),
+      ]);
+      expect(marked.single.isDuplicate, isFalse);
+      expect(marked.single.selected, isTrue);
+    });
+  });
+
+  // M4 (23 Eyl 2026): atama açgözlü ve bir kayıt tek satıra gider. Elle
+  // 910 "Market" aynı gündeki BİM 913,15'e 4,5, iki gün sonraki MIGROS
+  // 910,00'a 5,0 puanla benziyor: kayıt MIGROS'a gidiyor, MIGROS atlanıyor,
+  // BİM ikinci kez ekleniyordu (bir tekrar + bir kayıp, sessiz).
+  group('belirsiz yaklaşık eşleşme', () {
+    test('neredeyse eşit iki aday → güçlü değil, diğer satır gösterilir', () {
+      final marked = markDuplicateDrafts([
+        _bank(DateTime(2026, 9, 5), 913.15, 'BIM MAGAZALAR'),
+        _bank(DateTime(2026, 9, 7), 910.00, 'MIGROS KADIKOY'),
+      ], [
+        _manual('m1', DateTime(2026, 9, 5, 19), 910, 'Market'),
+      ]);
+      final m = marked[1].duplicateOf!;
+      expect(m.existingId, 'm1');
+      expect(m.strong, isFalse);
+      expect(m.alternativeDraftIndex, 0);
+      expect(marked[0].isDuplicate, isFalse);
+      expect(marked[0].selected, isTrue);
+    });
+
+    test('eşiğin hemen altındaki ikinci aday da belirsizlik sayılır', () {
+      // Gerçek Garanti PDF'inde ölçülen şekil: aynı büfeden 23 ve 24
+      // Haziran'da ikişer 40 TL, elle kayıt 26 Haziran'da. 24'ü 4,0 ile
+      // eşleşiyor; asıl eş olabilecek 23'ü 3,5 ile eşiğin altında kalıp hiç
+      // anılmıyordu.
+      final marked = markDuplicateDrafts([
+        _bank(DateTime(2025, 6, 23), 40, 'KARACA OTOMAT', category: null),
+        _bank(DateTime(2025, 6, 24), 40, 'KARACA OTOMAT GIDA', category: null),
+      ], [
+        _manual('m1', DateTime(2025, 6, 26, 19), 40, 'alışveriş'),
+      ], rowsProvenDistinct: true);
+      final m = marked[1].duplicateOf!;
+      expect(m.existingId, 'm1');
+      expect(m.alternativeDraftIndex, 0);
+      expect(marked[0].isDuplicate, isFalse,
+          reason: 'eşik altındaki aday ATANMAZ, yalnız gösterilir');
+    });
+
+    test('açık kazanan varsa belirsizlik yok', () {
+      final marked = markDuplicateDrafts([
+        _bank(DateTime(2026, 9, 5), 913.15, 'BIM MAGAZALAR'),
+        _bank(DateTime(2026, 9, 6), 918.00, 'MIGROS KADIKOY'),
+      ], [
+        _manual('m1', DateTime(2026, 9, 5, 19), 913, 'bim'),
+      ]);
+      expect(marked[0].duplicateOf?.alternativeDraftIndex, isNull);
+      expect(marked[0].duplicateOf?.strong, isTrue);
+    });
+
+    test('yeniden eşleştirmede diğer satır indeksi TAM listeye çevrilir', () {
+      final drafts = [
+        _bank(DateTime(2026, 9, 1), 50, 'X', category: null),
+        _bank(DateTime(2026, 9, 5), 913.15, 'BIM MAGAZALAR'),
+        _bank(DateTime(2026, 9, 7), 910.00, 'MIGROS KADIKOY'),
+      ];
+      final ledger = [_manual('m1', DateTime(2026, 9, 5, 19), 910, 'Market')];
+      final rematched = rematchDrafts(drafts, ledger, [1, 2]);
+      expect(rematched[2].duplicateOf?.alternativeDraftIndex, 1);
+    });
+  });
+
+  // M3 (23 Eyl 2026): otomatik eşik bilinçli olarak temkinli; altında kalan
+  // elle kayıt (yuvarlanmış tutar + günler sonra + not boş) bulunamıyor ve
+  // ekstre satırı İKİNCİ KEZ ekleniyordu. Eşik gevşetilmez (gerçek harcama
+  // sessizce atlanırdı); bunun yerine bu kayıtlar ÖNERİ olarak döner ve hiçbir
+  // satırın seçimi değişmez.
+  group('findLedgerLeftovers — karşılığı bulunamayan kayıtlar', () {
+    // Küçük işletme: sözlük tanımıyor, kategori tahmini yok.
+    final demkar = _bank(DateTime(2026, 9, 5), 913.15, 'DEMKAR GIDA ISTANBUL',
+        category: null);
+
+    test('eşik altındaki elle kayıt öneri olur, satır SEÇİLİ kalır', () {
+      final ledger = [_manual('m1', DateTime(2026, 9, 7, 20), 910, 'Market')];
+      final drafts = markDuplicateDrafts([demkar], ledger);
+      expect(drafts.single.isDuplicate, isFalse,
+          reason: 'otomatik eşleşme eşiği değişmedi');
+      expect(drafts.single.selected, isTrue);
+
+      final leftovers = findLedgerLeftovers(drafts, ledger);
+      final l = leftovers.single;
+      expect(l.entry.id, 'm1');
+      expect(l.isCoupling, isFalse);
+      final c = l.candidates.single;
+      expect(c.draftIndex, 0);
+      expect(c.amountPattern, AmountPattern.roundedSmall);
+      expect(c.dayDistance, 2);
+    });
+
+    test('adayı olmayan kayıt (nakit harcama) listelenmez', () {
+      final ledger = [
+        _manual('cash', DateTime(2026, 9, 6), 35, 'Simit'),
+      ];
+      final drafts = markDuplicateDrafts([demkar], ledger);
+      expect(findLedgerLeftovers(drafts, ledger), isEmpty);
+    });
+
+    test('eşleşmiş (tüketilmiş) kayıt öneri olmaz', () {
+      final ledger = [_manual('m1', DateTime(2026, 9, 5), 913, 'bim')];
+      final drafts = markDuplicateDrafts([
+        _bank(DateTime(2026, 9, 5), 913.15, 'BIM L508'),
+      ], ledger);
+      expect(drafts.single.isDuplicate, isTrue);
+      expect(findLedgerLeftovers(drafts, ledger), isEmpty);
+    });
+
+    test('ekstre dönemi dışındaki kayıt öneri olmaz', () {
+      final ledger = [_manual('old', DateTime(2026, 8, 20), 913, 'Market')];
+      final drafts = markDuplicateDrafts([demkar], ledger);
+      expect(findLedgerLeftovers(drafts, ledger), isEmpty);
+    });
+
+    test('başka ekstreden gelmiş kayıt öneri olmaz (numaralı / banka yazımı)',
+        () {
+      final ledger = [
+        _manual('imp1', DateTime(2026, 9, 6), 913.15, 'Market',
+            reference: 'DK-1'),
+        _manual('imp2', DateTime(2026, 9, 6), 913.15,
+            'POS SATIS DEMKAR GIDA ISTANBUL'),
+      ];
+      final drafts = markDuplicateDrafts([
+        _bank(DateTime(2026, 9, 5), 913.15, 'DEMKAR GIDA ISTANBUL',
+            category: null, reference: 'DK-2'),
+      ], ledger);
+      expect(findLedgerLeftovers(drafts, ledger), isEmpty);
+    });
+
+    test('yuvarlama değil ama %5 içinde + aynı kategori → öneri (near)', () {
+      final ledger = [_manual('m1', DateTime(2026, 9, 6), 890, 'Market')];
+      final drafts = markDuplicateDrafts([
+        _bank(DateTime(2026, 9, 5), 913.15, 'DEMKAR GIDA'),
+      ], ledger);
+      final c = findLedgerLeftovers(drafts, ledger).single.candidates.single;
+      expect(c.amountPattern, AmountPattern.near);
+      expect(c.categoryMatches, isTrue);
+    });
+
+    test('%5 içinde ama kategori tutmuyorsa öneri YOK', () {
+      final ledger = [_manual('m1', DateTime(2026, 9, 6), 890, 'Market')];
+      final drafts = markDuplicateDrafts([demkar], ledger);
+      expect(findLedgerLeftovers(drafts, ledger), isEmpty);
+    });
+
+    test('7 günden uzak satır aday değildir', () {
+      final ledger = [_manual('m1', DateTime(2026, 9, 13), 913, 'Market')];
+      final drafts = markDuplicateDrafts([
+        demkar, // 5 Eyl → 8 gün
+        _bank(DateTime(2026, 9, 12), 20, 'X', category: null),
+      ], ledger);
+      expect(findLedgerLeftovers(drafts, ledger), isEmpty);
+    });
+
+    test('kuplaj kaydı (uygulamadan girilmiş yatırım) birebir tutarla aday alır',
+        () {
+      // Kullanıcı altını uygulamaya 5 gün SONRA "bugün" tarihiyle girmiş;
+      // banka havalesi 5 Eyl'de. Yaklaşık eşleşmenin 3 günlük penceresi dışı.
+      final ledger = [
+        _manual('inv', DateTime(2026, 9, 10), 5000, 'Gram Altın',
+            tag: 'Yatırım Alımı', isSystem: true),
+      ];
+      final drafts = markDuplicateDrafts([
+        _bank(DateTime(2026, 9, 5), 5000, 'KUYUMCU HAVALE', category: null),
+        _bank(DateTime(2026, 9, 9), 4990, 'BASKA BIR SEY', category: null),
+      ], ledger);
+      final l = findLedgerLeftovers(drafts, ledger).single;
+      expect(l.isCoupling, isTrue);
+      expect(l.candidates.map((c) => c.draftIndex), [0],
+          reason: 'kuplaj kaydı yalnız birebir tutarla aday alır');
+    });
+
+    test('yatırım DÜZELTMESİ (bankada karşılığı yok) öneri olmaz', () {
+      final ledger = [
+        _manual('corr', DateTime(2026, 9, 6), 5000, 'düzeltme',
+            tag: 'Yatırım Düzeltmesi', isSystem: true, expense: false),
+      ];
+      final drafts = markDuplicateDrafts([
+        _bank(DateTime(2026, 9, 5), 5000, 'GELEN HAVALE',
+            category: null, expense: false),
+      ], ledger);
+      expect(findLedgerLeftovers(drafts, ledger), isEmpty);
+    });
+
+    test('kapatılan öneri tekrar gelmez', () {
+      final ledger = [_manual('m1', DateTime(2026, 9, 7), 910, 'Market')];
+      final drafts = markDuplicateDrafts([demkar], ledger);
+      expect(
+          findLedgerLeftovers(drafts, ledger, ignoredEntryIds: {'m1'}), isEmpty);
+    });
+
+    test('adaylar güçlüden zayıfa, en fazla 3', () {
+      final ledger = [_manual('m1', DateTime(2026, 9, 5), 910, 'Market')];
+      final drafts = markDuplicateDrafts([
+        _bank(DateTime(2026, 9, 9), 910.40, 'A', category: null),
+        _bank(DateTime(2026, 9, 6), 908.00, 'B', category: null),
+        _bank(DateTime(2026, 9, 8), 912.00, 'C', category: null),
+        _bank(DateTime(2026, 9, 7), 911.00, 'D', category: null),
+      ], ledger);
+      final candidates = findLedgerLeftovers(drafts, ledger).single.candidates;
+      expect(candidates, hasLength(3));
+      expect(candidates.first.draftIndex, 1, reason: 'en yakın gün');
+    });
+
+    test('linkedMatch gerekçeleri taşır', () {
+      final m = linkedMatch(demkar,
+          _manual('m1', DateTime(2026, 9, 7, 20), 910, 'Market'));
+      expect(m.kind, DuplicateKind.linkedByUser);
+      expect(m.existingId, 'm1');
+      expect(m.amountPattern, AmountPattern.roundedSmall);
+      expect(m.amountDelta, 3.15);
+      expect(m.dayDistance, 2);
+      expect(m.canCorrectAmount, isTrue);
+      expect(m.hasReasons, isTrue);
+    });
+  });
 }
 
 // ===================================================== yaklaşık eşleşme

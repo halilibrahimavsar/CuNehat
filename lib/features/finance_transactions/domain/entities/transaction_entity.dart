@@ -80,6 +80,39 @@ class TransactionEntity extends Equatable {
     );
   }
 
+  /// Düzenleme formunun ürettiği kayıt: formun gösterdiği alanlar yeni
+  /// değerlerle, formda OLMAYAN alanlar (kimlik, cüzdan, [isSystem],
+  /// [reference]) bu kayıttan taşınır.
+  ///
+  /// [copyWith] burada yetmez: fişi kaldırmak [receiptFileName]'i `null`'a
+  /// çekmeyi gerektirir, `??` deseni buna izin vermez. Form eskiden varlığı
+  /// sıfırdan kuruyordu ve formda olmayan alanlar sessizce siliniyordu: içe
+  /// aktarılmış bir işlemin yalnız kategorisini değiştirmek bankanın
+  /// numarasını kaybettiriyordu — içe aktarımlar arası tekrar tespitinin en
+  /// güçlü kimliği (bkz. `markDuplicateDrafts`). Yeni alan eklenince buraya
+  /// da eklenmeli.
+  TransactionEntity edited({
+    required String title,
+    required String tag,
+    required double amount,
+    required DateTime date,
+    required TransactionTypeModel type,
+    required String? receiptFileName,
+  }) =>
+      TransactionEntity(
+        id: id,
+        userId: userId,
+        walletId: walletId,
+        title: title,
+        tag: tag,
+        amount: amount,
+        date: date,
+        type: type,
+        isSystem: isSystem,
+        receiptFileName: receiptFileName,
+        reference: reference,
+      );
+
   bool get isIncome => type == TransactionTypeModel.income;
   bool get isExpense => type == TransactionTypeModel.expense;
 

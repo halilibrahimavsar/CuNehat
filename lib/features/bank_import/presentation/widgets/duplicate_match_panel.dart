@@ -30,6 +30,13 @@ class DuplicateMatchPanel extends StatelessWidget {
   /// "Tutarı ekstredekiyle düzelt" kararı.
   final ValueChanged<bool> onCorrect;
 
+  /// Aynı kayda neredeyse aynı güçte benzeyen ve hâlâ eşleşmemiş diğer satır
+  /// (bkz. `DuplicateMatch.alternativeDraftIndex`); yoksa `null`.
+  final ImportDraft? alternativeDraft;
+
+  /// Eşleşmeyi [alternativeDraft]'a taşı.
+  final VoidCallback? onMoveMatch;
+
   const DuplicateMatchPanel({
     super.key,
     required this.draft,
@@ -37,6 +44,8 @@ class DuplicateMatchPanel extends StatelessWidget {
     required this.onSelected,
     required this.onCorrect,
     this.existingCategoryLabel,
+    this.alternativeDraft,
+    this.onMoveMatch,
   });
 
   @override
@@ -47,16 +56,24 @@ class DuplicateMatchPanel extends StatelessWidget {
     final color = switch (match.kind) {
       DuplicateKind.approximate =>
         match.strong ? AppGradients.debt : Colors.orange.shade800,
+      // Kullanıcının kendi kararı: tahmin renginde (turuncu) değil.
+      DuplicateKind.linkedByUser => cs.primary,
       DuplicateKind.exact || DuplicateKind.withinFile => cs.onSurfaceVariant,
     };
     final title = switch (match.kind) {
       DuplicateKind.exact => l10n.bankImportDupExact,
       DuplicateKind.withinFile => l10n.bankImportDupWithinFile,
+      DuplicateKind.linkedByUser => l10n.bankImportDupLinkedByUser,
       DuplicateKind.approximate when match.existingIsSystem =>
         l10n.bankImportDupSystem,
       DuplicateKind.approximate => match.strong
           ? l10n.bankImportDupApproxStrong
           : l10n.bankImportDupApproxPossible,
+    };
+    final icon = switch (match.kind) {
+      DuplicateKind.approximate => Icons.difference_outlined,
+      DuplicateKind.linkedByUser => Icons.link_rounded,
+      DuplicateKind.exact || DuplicateKind.withinFile => Icons.copy_all_rounded,
     };
 
     return Container(
@@ -73,13 +90,7 @@ class DuplicateMatchPanel extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
-                match.isApproximate
-                    ? Icons.difference_outlined
-                    : Icons.copy_all_rounded,
-                size: 16,
-                color: color,
-              ),
+              Icon(icon, size: 16, color: color),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
@@ -102,15 +113,24 @@ class DuplicateMatchPanel extends StatelessWidget {
               style: const TextStyle(fontSize: 12),
             ),
           ],
-          if (match.isApproximate) ...[
+          if (match.hasReasons) ...[
             const SizedBox(height: 6),
             Wrap(
               spacing: 4,
               runSpacing: 4,
               children: [
                 for (final reason in _reasons(context, match))
-                  _ReasonChip(label: reason),
+                  DuplicateReasonChip(label: reason),
               ],
+            ),
+          ],
+          if (alternativeDraft case final alt?) ...[
+            const SizedBox(height: 6),
+            Text(
+              l10n.bankImportDupAlternative(_rowLine(alt)),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
             ),
           ],
           const SizedBox(height: 4),
@@ -120,46 +140,33 @@ class DuplicateMatchPanel extends StatelessWidget {
     );
   }
 
-  /// `“bim” · Market · −913,00 ₺ · 05.09.26 21:40`
-  ///
-  /// Not boş bırakılmış elle kayıtta başlık kategori adına düşer; o durumda
-  /// kategori ikinci kez yazılmaz (“Yakıt” · Yakıt).
-  String _existingLine(BuildContext context, DuplicateMatch m) {
-    final sign = draft.isIncome ? '+' : '−';
-    final date = m.existingDate;
-    final hasTime = date.hour != 0 || date.minute != 0;
-    final label = existingCategoryLabel;
-    final titleIsCategory =
-        label != null && foldTr(label) == foldTr(m.existingTitle);
-    return [
-      '“${m.existingTitle}”',
-      if (label != null && !titleIsCategory) label,
-      '$sign${formatMoney(m.existingAmount, currency: currency)}',
-      hasTime
-          ? '${AppFormatters.dateShort.format(date)} '
-              '${AppFormatters.time.format(date)}'
-          : AppFormatters.dateShort.format(date),
-    ].join(' · ');
-  }
+  /// Banka satırının kısa özeti: `MIGROS … · −910,00 ₺ · 07.09.26`.
+  String _rowLine(ImportDraft d) => [
+        d.description.isEmpty ? '—' : d.description,
+        '${d.isIncome ? '+' : '−'}${formatMoney(d.amount, currency: currency)}',
+        AppFormatters.dateShort.format(d.date),
+      ].join(' · ');
 
-  List<String> _reasons(BuildContext context, DuplicateMatch m) {
-    final l10n = context.l10n;
-    final delta = formatMoney(m.amountDelta.abs(), currency: currency);
-    return [
-      switch (m.amountPattern) {
-        AmountPattern.exact => l10n.bankImportDupReasonSameAmount,
-        AmountPattern.centsDropped => l10n.bankImportDupReasonCents(delta),
-        AmountPattern.roundedSmall ||
-        AmountPattern.roundedLarge =>
-          l10n.bankImportDupReasonRounded(delta),
-      },
-      m.dayDistance == 0
-          ? l10n.bankImportDupReasonSameDay
-          : l10n.bankImportDupReasonDays(m.dayDistance),
-      if (m.sharedWord case final word?) l10n.bankImportDupReasonWord(word),
-      if (m.categoryMatches) l10n.bankImportDupReasonCategory,
-    ];
-  }
+  String _existingLine(BuildContext context, DuplicateMatch m) =>
+      ledgerEntryLine(
+        title: m.existingTitle,
+        categoryLabel: existingCategoryLabel,
+        amount: m.existingAmount,
+        isIncome: draft.isIncome,
+        date: m.existingDate,
+        currency: currency,
+      );
+
+  List<String> _reasons(BuildContext context, DuplicateMatch m) =>
+      duplicateReasonLabels(
+        context,
+        amountPattern: m.amountPattern,
+        amountDelta: m.amountDelta,
+        dayDistance: m.dayDistance,
+        sharedWord: m.sharedWord,
+        categoryMatches: m.categoryMatches,
+        currency: currency,
+      );
 
   /// Şu anki karar + onu değiştiren düğmeler. Satır dar ekranda sarar
   /// (Wrap): düğme etiketleri tutar içerdiği için genişliği öngörülemez.
@@ -180,7 +187,7 @@ class DuplicateMatchPanel extends StatelessWidget {
       else ...[
         _action(
           context,
-          m.isApproximate
+          m.hasReasons
               ? l10n.bankImportDupAddAnyway
               : l10n.bankImportDupAddAnywayExact,
           () => onSelected(true),
@@ -189,6 +196,8 @@ class DuplicateMatchPanel extends StatelessWidget {
           _action(
               context, l10n.bankImportDupCorrect(bank), () => onCorrect(true),
               emphasized: true),
+        if (alternativeDraft != null && onMoveMatch != null)
+          _action(context, l10n.bankImportDupMoveMatch, onMoveMatch!),
       ],
     ];
 
@@ -229,9 +238,70 @@ class DuplicateMatchPanel extends StatelessWidget {
   }
 }
 
-class _ReasonChip extends StatelessWidget {
+/// Defter kaydının tek satırlık özeti:
+/// `“bim” · Market · −913,00 ₺ · 05.09.26 21:40`.
+///
+/// Not boş bırakılmış elle kayıtta başlık kategori adına düşer; o durumda
+/// kategori ikinci kez yazılmaz (“Yakıt” · Yakıt). Saat yalnız kayıtta varsa
+/// (ekstre satırları gün hassasiyetlidir) yazılır.
+String ledgerEntryLine({
+  required String title,
+  required String? categoryLabel,
+  required double amount,
+  required bool isIncome,
+  required DateTime date,
+  required String currency,
+}) {
+  final sign = isIncome ? '+' : '−';
+  final hasTime = date.hour != 0 || date.minute != 0;
+  final titleIsCategory =
+      categoryLabel != null && foldTr(categoryLabel) == foldTr(title);
+  return [
+    '“$title”',
+    if (categoryLabel != null && !titleIsCategory) categoryLabel,
+    '$sign${formatMoney(amount, currency: currency)}',
+    hasTime
+        ? '${AppFormatters.dateShort.format(date)} '
+            '${AppFormatters.time.format(date)}'
+        : AppFormatters.dateShort.format(date),
+  ].join(' · ');
+}
+
+/// Bir eşleşmenin (ya da önerinin) gerekçeleri, sade dille: tutar nasıl
+/// benziyor, kaç gün uzak, ortak kelime, aynı kategori. Tekrar paneli ve
+/// "karşılığı bulunamayan kayıtlar" sayfası AYNI dili konuşsun diye tek yerde.
+List<String> duplicateReasonLabels(
+  BuildContext context, {
+  required AmountPattern amountPattern,
+  required double amountDelta,
+  required int dayDistance,
+  required String? sharedWord,
+  required bool categoryMatches,
+  required String currency,
+}) {
+  final l10n = context.l10n;
+  final delta = formatMoney(amountDelta.abs(), currency: currency);
+  return [
+    switch (amountPattern) {
+      AmountPattern.exact => l10n.bankImportDupReasonSameAmount,
+      AmountPattern.centsDropped => l10n.bankImportDupReasonCents(delta),
+      AmountPattern.roundedSmall ||
+      AmountPattern.roundedLarge =>
+        l10n.bankImportDupReasonRounded(delta),
+      AmountPattern.near => l10n.bankImportDupReasonNear(delta),
+    },
+    dayDistance == 0
+        ? l10n.bankImportDupReasonSameDay
+        : l10n.bankImportDupReasonDays(dayDistance),
+    if (sharedWord case final word?) l10n.bankImportDupReasonWord(word),
+    if (categoryMatches) l10n.bankImportDupReasonCategory,
+  ];
+}
+
+/// Gerekçe çipi (tekrar paneli ve öneri sayfası).
+class DuplicateReasonChip extends StatelessWidget {
   final String label;
-  const _ReasonChip({required this.label});
+  const DuplicateReasonChip({super.key, required this.label});
 
   @override
   Widget build(BuildContext context) {
