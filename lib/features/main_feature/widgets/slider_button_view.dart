@@ -243,11 +243,12 @@ class _SliderButtonViewState extends State<SliderButtonView> {
       walletId: activeWallet.id!,
       walletCurrency: activeWallet.currency,
       goals: _goalsOf(context),
-      onSave: (investment) {
+      onSave: (investment, cashSource) {
         context.read<InvestmentBloc>().add(CreateInvestmentEvent(
               investment: investment,
               userId: activeWallet.userId,
               walletId: activeWallet.id!,
+              cashSource: cashSource,
             ));
       },
     );
@@ -260,11 +261,12 @@ class _SliderButtonViewState extends State<SliderButtonView> {
       walletId: activeWallet.id!,
       walletCurrency: activeWallet.currency,
       goals: _goalsOf(context),
-      onSave: (investment) {
+      onSave: (investment, cashSource) {
         context.read<InvestmentBloc>().add(CreateInvestmentEvent(
               investment: investment,
               userId: activeWallet.userId,
               walletId: activeWallet.id!,
+              cashSource: cashSource,
             ));
       },
     );
@@ -277,11 +279,12 @@ class _SliderButtonViewState extends State<SliderButtonView> {
       walletId: activeWallet.id!,
       walletCurrency: activeWallet.currency,
       goals: _goalsOf(context),
-      onSave: (investment) {
+      onSave: (investment, cashSource) {
         context.read<InvestmentBloc>().add(CreateInvestmentEvent(
               investment: investment,
               userId: activeWallet.userId,
               walletId: activeWallet.id!,
+              cashSource: cashSource,
             ));
       },
     );

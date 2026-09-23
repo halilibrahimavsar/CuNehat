@@ -12,6 +12,7 @@ import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/bank_import/data/category_guesser.dart';
+import 'package:cunehat/features/bank_import/presentation/widgets/link_suggestions_card.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit.dart';
 import 'package:cunehat/features/bank_import/domain/statement_format.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state.dart';
@@ -538,6 +539,13 @@ class _Done extends StatelessWidget {
               const SizedBox(height: 20),
               _balanceCard(context, wallet),
             ],
+            if (state.linkSuggestions.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              LinkSuggestionsCard(
+                suggestions: state.linkSuggestions,
+                currency: wallet?.currency ?? kDefaultCurrency,
+              ),
+            ],
             const SizedBox(height: 24),
             FilledButton(
               onPressed: () {
@@ -563,9 +571,11 @@ class _Done extends StatelessWidget {
   /// Son içe aktarımı geri alır (yalnız az önce eklenen işlemleri siler) ve
   /// başa döner; kullanıcıya kısa bir onay gösterir.
   Future<void> _undo(BuildContext context) async {
-    final undoneMsg = context.l10n.bankImportUndoDone;
-    await context.read<BankImportCubit>().undoImport();
-    AppMessenger.success(undoneMsg);
+    final l10n = context.l10n;
+    final kept = await context.read<BankImportCubit>().undoImport();
+    AppMessenger.success(kept == 0
+        ? l10n.bankImportUndoDone
+        : l10n.bankImportUndoKeptLinked(kept));
   }
 
   /// İçe aktarım sonrası hesaplanan bakiyeyi gösterir + isteğe bağlı olarak

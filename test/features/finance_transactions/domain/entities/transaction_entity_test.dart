@@ -95,6 +95,57 @@ void main() {
         'isSystem': false,
         'receiptFileName': null,
         'reference': null,
+        // v11
+        'linkedRecordId': null,
+        'adoptedFromTag': null,
+        'origin': null,
+      });
+    });
+
+    group('benimseme (v11)', () {
+      // Ekstreden gelmiş düz satır birikime bağlandı: sistem hareketi oldu,
+      // sahibi ve özgün kategorisi yazıldı.
+      final adopted = entity.copyWith(
+        isSystem: true,
+        tag: 'Yatırım Alımı',
+        reference: 'DK-9',
+        linkedRecordId: 'inv-1',
+        adoptedFromTag: 'Food',
+        origin: TransactionOrigin.bankImport,
+      );
+
+      test('isAdopted yalnız benimseme izi varsa true', () {
+        expect(adopted.isAdopted, isTrue);
+        expect(entity.isAdopted, isFalse);
+        expect(entity.copyWith(isSystem: true).isAdopted, isFalse);
+      });
+
+      test('released: özgün düz satıra döner, kimlik/tutar/numara korunur', () {
+        final back = adopted.released();
+        expect(back.isSystem, isFalse);
+        expect(back.tag, 'Food');
+        expect(back.linkedRecordId, isNull);
+        expect(back.adoptedFromTag, isNull);
+        expect(back.isAdopted, isFalse);
+        expect(back.id, entity.id);
+        expect(back.amount, entity.amount);
+        expect(back.date, entity.date);
+        expect(back.reference, 'DK-9');
+        expect(back.origin, TransactionOrigin.bankImport);
+      });
+
+      test('edited yeni alanları da taşır', () {
+        final e = adopted.edited(
+          title: 'x',
+          tag: adopted.tag,
+          amount: adopted.amount,
+          date: adopted.date,
+          type: adopted.type,
+          receiptFileName: null,
+        );
+        expect(e.linkedRecordId, 'inv-1');
+        expect(e.adoptedFromTag, 'Food');
+        expect(e.origin, TransactionOrigin.bankImport);
       });
     });
 

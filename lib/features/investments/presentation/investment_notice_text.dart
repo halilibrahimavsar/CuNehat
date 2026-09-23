@@ -1,4 +1,5 @@
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
 import 'package:flutter/widgets.dart';
 
@@ -11,8 +12,16 @@ String investmentNoticeText(
   BuildContext context,
   InvestmentNotice notice, {
   bool cashOk = true,
+}) =>
+    investmentNoticeTextOf(context.l10n, notice, cashOk: cashOk);
+
+/// [investmentNoticeText]'in bağlamsız hâli: sonuç, olayı gönderen sayfa
+/// kapandıktan SONRA gelebilir ("Bağla…" akışı); çeviriler önceden alınır.
+String investmentNoticeTextOf(
+  AppLocalizations l10n,
+  InvestmentNotice notice, {
+  bool cashOk = true,
 }) {
-  final l10n = context.l10n;
   final text = switch (notice) {
     RawFailureNotice(:final message) => message,
     GoalSavedNotice() => l10n.hedefKaydedildiMesaji,
@@ -24,6 +33,7 @@ String investmentNoticeText(
     InvestmentDeletedNotice() => l10n.yatirimSilindiDuzeltildiMesaji,
     NoRefreshablePricesNotice() => l10n.yenilenebilirYatirimYokMesaji,
     PricesUnavailableNotice() => l10n.fiyatlarAlinamadiMesaji,
+    AdoptionFailedNotice() => l10n.benimsemeYapilamadiMesaji,
     PricesRefreshedNotice(:final updated, :final failed) => failed == 0
         ? l10n.fiyatlarGuncellendiMesaji(updated)
         : l10n.fiyatlarKismenGuncellendiMesaji(updated, failed),

@@ -12,8 +12,15 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:intl/intl.dart';
+import 'package:cunehat/core/services/cash_source.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 
 class MockGetLiveQuoteUseCase extends Mock implements GetLiveQuoteUseCase {}
+
+class _MockTransactionsRepository extends Mock
+    implements TransactionsRepository {}
 
 void main() {
   // Para metni Intl.defaultLocale'e bakar; testte boş bırakılırsa intl onu
@@ -105,7 +112,7 @@ void main() {
         ContributeSheet(
           investment: cashInvestment,
           walletCurrency: 'TRY',
-          onSave: (inv) => savedInvestment = inv,
+          onSave: (inv, _) => savedInvestment = inv,
         ),
       ),
     );
@@ -157,7 +164,7 @@ void main() {
         ContributeSheet(
           investment: assetInvestment,
           walletCurrency: 'TRY',
-          onSave: (inv) => savedInvestment = inv,
+          onSave: (inv, _) => savedInvestment = inv,
         ),
       ),
     );
@@ -227,7 +234,7 @@ void main() {
         ContributeSheet(
           investment: assetInvestment,
           walletCurrency: 'TRY',
-          onSave: (_) {},
+          onSave: (_, __) {},
         ),
       ),
     );
@@ -256,7 +263,7 @@ void main() {
         ContributeSheet(
           investment: goldInvestment,
           walletCurrency: 'TRY',
-          onSave: (inv) => saved = inv,
+          onSave: (inv, _) => saved = inv,
           onCreateForGoldType: (type) => requestedType = type,
         ),
       ),
@@ -299,7 +306,7 @@ void main() {
         ContributeSheet(
           investment: goldInvestment,
           walletCurrency: 'TRY',
-          onSave: (inv) => saved = inv,
+          onSave: (inv, _) => saved = inv,
         ),
       ),
     );
@@ -343,7 +350,7 @@ void main() {
         ContributeSheet(
           investment: goldInvestment,
           walletCurrency: 'TRY',
-          onSave: (inv) => saved = inv,
+          onSave: (inv, _) => saved = inv,
         ),
       ),
     );
@@ -381,7 +388,7 @@ void main() {
         ContributeSheet(
           investment: goldInvestment,
           walletCurrency: 'TRY',
-          onSave: (_) {},
+          onSave: (_, __) {},
         ),
       ),
     );
@@ -421,7 +428,7 @@ void main() {
         ContributeSheet(
           investment: goldInvestment,
           walletCurrency: 'TRY',
-          onSave: (inv) => saved = inv,
+          onSave: (inv, _) => saved = inv,
         ),
       ),
     );
@@ -441,5 +448,104 @@ void main() {
     expect(saved, isNotNull);
     expect(saved!.quantity, 4.0);
     expect(saved!.amount, 9000.0, reason: '2 × 2.500 maliyete eklenmeli');
+  });
+
+  // Faz 2 (23 Eyl 2026): katkının ödemesi ekstreden defterde zaten
+  // duruyorsa o satır seçilir; tutar ondan gelir, yeni gider yazılmaz.
+  testWidgets('katkı: "ödemesi defterde var" → satır seçilir, tutar kilitlenir',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final row = TransactionEntity(
+      id: 'row-7',
+      userId: 'user_123',
+      walletId: 'wallet_123',
+      title: 'BES KATKI PAYI',
+      tag: 'cat-yatirim',
+      amount: 750,
+      date: DateTime(2026, 9, 3),
+      type: TransactionTypeModel.expense,
+    );
+    final repo = _MockTransactionsRepository();
+    when(() => repo.getTransactions(
+          userId: any(named: 'userId'),
+          walletId: any(named: 'walletId'),
+        )).thenAnswer((_) async => Right([row]));
+    getIt.registerSingleton<TransactionsRepository>(repo);
+
+    InvestmentEntity? saved;
+    CashSource? source;
+    await tester.pumpWidget(buildTestableWidget(ContributeSheet(
+      investment: cashInvestment,
+      walletCurrency: 'TRY',
+      onSave: (inv, cash) {
+        saved = inv;
+        source = cash;
+      },
+    )));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Ödemesi defterde zaten var — satırı seç'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('BES KATKI PAYI'));
+    await tester.pumpAndSettle();
+
+    final field = tester.widget<TextField>(find.byType(TextField).first);
+    expect(field.readOnly, isTrue);
+    expect(field.controller!.text, contains('750'));
+
+    await tester.tap(find.text('Ekle'));
+    await tester.pumpAndSettle();
+
+    expect(saved!.amount, 1750, reason: '1.000 + 750');
+    expect(source, isA<AdoptedCashMovement>());
+    expect((source! as AdoptedCashMovement).transaction.id, 'row-7');
+  });
+
+  testWidgets(
+      '"Bağla…" akışından: satır önceden seçili, tutar ondan ve kilitli',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final row = TransactionEntity(
+      id: 'row-8',
+      userId: 'user_123',
+      walletId: 'wallet_123',
+      title: 'BES KATKI PAYI',
+      tag: 'cat-yatirim',
+      amount: 750,
+      date: DateTime(2026, 9, 3),
+      type: TransactionTypeModel.expense,
+    );
+
+    InvestmentEntity? saved;
+    CashSource? source;
+    await tester.pumpWidget(buildTestableWidget(ContributeSheet(
+      investment: cashInvestment,
+      walletCurrency: 'TRY',
+      initialLedgerTransaction: row,
+      onSave: (inv, cash) {
+        saved = inv;
+        source = cash;
+      },
+    )));
+    await tester.pumpAndSettle();
+
+    // Seçici açılmadan satır hazır: kullanıcı satırdan geldi.
+    final field = tester.widget<TextField>(find.byType(TextField).first);
+    expect(field.readOnly, isTrue);
+    expect(field.controller!.text, contains('750'));
+    expect(find.textContaining('BES KATKI PAYI'), findsOneWidget);
+
+    await tester.tap(find.text('Ekle'));
+    await tester.pumpAndSettle();
+
+    expect(saved!.amount, 1750);
+    expect(source, isA<AdoptedCashMovement>());
+    expect((source! as AdoptedCashMovement).transaction.id, 'row-8');
   });
 }

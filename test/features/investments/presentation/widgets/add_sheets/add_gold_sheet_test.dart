@@ -119,7 +119,7 @@ void main() {
           walletId: 'wallet_123',
           userId: 'user_123',
           walletCurrency: 'TRY',
-          onSave: (inv) => savedInvestment = inv,
+          onSave: (inv, _) => savedInvestment = inv,
         ),
       ),
     );
@@ -209,7 +209,7 @@ void main() {
           walletId: 'wallet_123',
           userId: 'user_123',
           walletCurrency: 'TRY',
-          onSave: (_) {},
+          onSave: (_, __) {},
         ),
       ),
     );
@@ -262,7 +262,7 @@ void main() {
           userId: 'user_123',
           walletCurrency: 'TRY',
           investmentToEdit: testInvestment,
-          onSave: (inv) => updatedInvestment = inv,
+          onSave: (inv, _) => updatedInvestment = inv,
         ),
       ),
     );
@@ -313,7 +313,7 @@ void main() {
         walletId: 'wallet_123',
         userId: 'user_123',
         walletCurrency: 'TRY',
-        onSave: (_) {},
+        onSave: (_, __) {},
       ),
     ));
     await tester.pumpAndSettle();
@@ -341,7 +341,7 @@ void main() {
           walletId: 'wallet_123',
           userId: 'user_123',
           walletCurrency: 'TRY',
-          onSave: (inv) => saved = inv,
+          onSave: (inv, _) => saved = inv,
         ),
       ),
     );
@@ -355,9 +355,10 @@ void main() {
     // Varsayılan: tamamı cüzdandan düşülür.
     expect(find.textContaining('cüzdandan düşülecek'), findsOneWidget);
 
-    final switchFinder = find.byType(SwitchListTile);
-    await tester.ensureVisible(switchFinder);
-    await tester.tap(switchFinder);
+    // Ödeme seçimi artık üçlü: cüzdandan / defterde var / zaten bende.
+    final alreadyOwned = find.text('Bu varlık zaten bende');
+    await tester.ensureVisible(alreadyOwned);
+    await tester.tap(alreadyOwned);
     await tester.pumpAndSettle();
 
     expect(
@@ -394,7 +395,7 @@ void main() {
           userId: 'user_123',
           walletCurrency: 'TRY',
           investmentToEdit: testInvestment,
-          onSave: (_) {},
+          onSave: (_, __) {},
         ),
       ),
     );
@@ -419,7 +420,7 @@ void main() {
           userId: 'user_123',
           walletCurrency: 'TRY',
           investmentToEdit: testInvestment,
-          onSave: (_) {},
+          onSave: (_, __) {},
         ),
       ),
     );
@@ -454,7 +455,7 @@ void main() {
           walletId: 'wallet_123',
           userId: 'user_123',
           walletCurrency: 'TRY',
-          onSave: (inv) => saved = inv,
+          onSave: (inv, _) => saved = inv,
         ),
       ),
     );
@@ -492,7 +493,7 @@ void main() {
           userId: 'user_123',
           walletCurrency: 'TRY',
           investmentToEdit: testInvestment,
-          onSave: (inv) => saved = inv,
+          onSave: (inv, _) => saved = inv,
         ),
       ),
     );
@@ -539,7 +540,7 @@ void main() {
           walletId: 'wallet_123',
           userId: 'user_123',
           walletCurrency: 'TRY',
-          onSave: (_) {},
+          onSave: (_, __) {},
         ),
       ),
     );
@@ -596,7 +597,7 @@ void main() {
           userId: 'u',
           walletId: 'w',
           walletCurrency: 'TRY',
-          onSave: (_) {},
+          onSave: (_, __) {},
         ),
       ),
     );
@@ -641,7 +642,7 @@ void main() {
           userId: 'u',
           walletId: 'w',
           walletCurrency: 'TRY',
-          onSave: (_) {},
+          onSave: (_, __) {},
         ),
       ),
     );
@@ -691,7 +692,7 @@ void main() {
           walletId: 'w',
           userId: 'u',
           walletCurrency: 'TRY',
-          onSave: (_) {},
+          onSave: (_, __) {},
         ),
       ),
     );
@@ -734,7 +735,7 @@ void main() {
           walletId: 'w',
           userId: 'u',
           walletCurrency: 'TRY',
-          onSave: (_) {},
+          onSave: (_, __) {},
         ),
       ),
     );

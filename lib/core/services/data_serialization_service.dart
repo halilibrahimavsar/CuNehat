@@ -145,10 +145,20 @@ class DataSerializationService {
   /// - `null` = kürasyon yapılmamış → hepsi görünür. v9 yedeğinden dönen
   ///   cüzdanların değeri budur, yani davranış değişmez.
   ///
+  /// v11 (2026-09-23): işlemlere kuplaj bağı ve köken (üçü de nullable).
+  /// - `linkedRecordId`: kuplaj hareketinin SAHİBİ (yatırım, borç ödemesi,
+  ///   borç anaparası, alacak ya da transfer çifti).
+  /// - `adoptedFromTag`: kullanıcının düz satırı (çoğu zaman ekstreden) yeni
+  ///   hareket yazılmadan bir kaydın nakit bacağı yapılınca özgün kategorisi;
+  ///   kayıt "hatalı giriş" diye silinince satır bununla düz satıra döner.
+  /// - `origin`: `manual` / `import` / `recurring` / `csv` — ekstre tekrar
+  ///   tespiti "bu kayıt ekstreden mi geldi" sorusunu artık tahmin etmez.
+  /// - v10 yedeğinden dönen işlemlerde üçü de `null` ("bilinmiyor").
+  ///
   /// **Sürüm kapısı artık sıkı eşitlik DEĞİL:** desteklenen aralıktaki eski
   /// yedekler `migrateBackup` zinciriyle yükseltilip geri yüklenir
   /// (bkz. `backup_migrations.dart`).
-  static const int schemaVersion = 10;
+  static const int schemaVersion = 11;
 
   final HiveInterface _hive;
   final ReceiptStorageService _receiptStorage;

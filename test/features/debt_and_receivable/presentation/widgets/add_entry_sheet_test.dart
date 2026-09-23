@@ -9,6 +9,9 @@ import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivable_bloc/receivable_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry_sheet.dart';
+import 'package:cunehat/core/services/cash_source.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -479,5 +482,65 @@ void main() {
     // Uydurma "başlangıç + 1 ay" vadesi ARTIK YOK → bildirim de kurulmaz.
     expect(added.dueDate, isNull);
     expect(added.calcMode, DebtCalcMode.none);
+  });
+
+  testWidgets(
+      '"Bağla…" akışından anapara satırı: form satırın tutarıyla açılır, nakit '
+      'etkisi SORULMAZ, satır benimsenir', (tester) async {
+    final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+    final row = TransactionEntity(
+      id: 'row-k',
+      userId: 'u1',
+      walletId: 'w1',
+      title: 'KREDI KULLANDIRIM',
+      tag: 'cat-diger',
+      amount: 500,
+      date: DateTime(2026, 9, 2, 10),
+      type: TransactionTypeModel.income,
+    );
+    await tester.pumpWidget(buildTestableWidget(
+      AddEntrySheet(
+        walletId: 'w1',
+        userId: 'u1',
+        currency: 'TRY',
+        initialPrincipalTransaction: row,
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text(l10n.debtTypePersonal));
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<TextField>(find.byType(TextField).first).controller!.text,
+      '500',
+    );
+    await tester.enterText(
+      find.ancestor(
+          of: find.text(l10n.borcBaslikHint), matching: find.byType(TextField)),
+      'Kredi',
+    );
+    await tester.enterText(
+      find.ancestor(
+          of: find.text(l10n.kisiAdiHint), matching: find.byType(TextField)),
+      'Banka',
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text(l10n.kaydet));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.kaydet), warnIfMissed: false);
+    await tester.pumpAndSettle();
+
+    // Nakit etki diyaloğu AÇILMADI: cevap belli (anapara o satır).
+    expect(find.text(l10n.borcNakitSecenekBaslik), findsNothing);
+    final added = verify(() => mockDebtBloc.add(captureAny()))
+        .captured
+        .whereType<AddDebtEvent>()
+        .single;
+    expect(added.debt.principalAmount, 500);
+    expect(added.debt.startDate, DateTime(2026, 9, 2));
+    expect(added.debt.principalToWallet, isTrue);
+    expect(added.principalSource, isA<AdoptedCashMovement>());
+    expect(
+        (added.principalSource as AdoptedCashMovement).transaction.id, 'row-k');
   });
 }

@@ -16,6 +16,7 @@ import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/bank_import/data/balance_reconciler.dart';
 import 'package:cunehat/features/bank_import/data/category_guesser.dart';
+import 'package:cunehat/features/bank_import/data/link_hint.dart';
 import 'package:cunehat/features/bank_import/data/column_mapper.dart';
 import 'package:cunehat/features/bank_import/data/draft_dedup.dart';
 import 'package:cunehat/features/bank_import/data/layout/statement_layout_engine.dart';
@@ -925,26 +926,36 @@ class BankImportCubit extends Cubit<BankImportState>
         (d) => _rematch([
           for (var k = 0; k < d.length; k++)
             k == i ? d[k].copyWith(categoryId: categoryId) : d[k]
-        ], [i]),
+        ], [
+          i
+        ]),
       );
 
   void setDraftAmount(int i, double amount) => _mutate(
         (d) => _rematch([
           for (var k = 0; k < d.length; k++)
             k == i ? d[k].copyWith(amount: amount) : d[k]
-        ], [i]),
+        ], [
+          i
+        ]),
       );
 
   void setDraftDescription(int i, String description) => _mutate(
         (d) => _rematch([
           for (var k = 0; k < d.length; k++)
             k == i ? d[k].copyWith(description: description) : d[k]
-        ], [i]),
+        ], [
+          i
+        ]),
       );
 
-  void setDraftType(int i, TransactionTypeModel type) => _mutate((d) => _rematch([
-        for (var k = 0; k < d.length; k++) k == i ? _retyped(d[k], type) : d[k],
-      ], [i]));
+  void setDraftType(int i, TransactionTypeModel type) =>
+      _mutate((d) => _rematch([
+            for (var k = 0; k < d.length; k++)
+              k == i ? _retyped(d[k], type) : d[k],
+          ], [
+            i
+          ]));
 
   /// [indexes]'teki taslakları incelemenin başında çekilen defterle yeniden
   /// eşleştirir. Eskiden eşleştirme yalnız bir kez, ayrıştırmadan hemen sonra
@@ -1124,6 +1135,8 @@ class BankImportCubit extends Cubit<BankImportState>
     emit(BankImportCommitting(done: 0, total: total));
     var added = 0;
     final importedIds = <String>[];
+    final linkable = <LinkSuggestion>[];
+    final investmentCategories = _investmentCategoryIds();
     for (var i = 0; i < selected.length; i++) {
       final id = UidGenerator.generateV7();
       final draft = selected[i];
@@ -1137,6 +1150,13 @@ class BankImportCubit extends Cubit<BankImportState>
       res.fold((_) {}, (_) {
         added++;
         importedIds.add(id);
+        final hint = linkHintOf(
+          draft.description,
+          isIncome: draft.isIncome,
+          inInvestmentCategory: !draft.isIncome &&
+              investmentCategories.contains(draft.categoryId),
+        );
+        if (hint != null) linkable.add(LinkSuggestion(entity, hint));
       });
       if (i % 10 == 0 || i == selected.length - 1) {
         emit(BankImportCommitting(done: i + 1, total: total));
@@ -1169,30 +1189,69 @@ class BankImportCubit extends Cubit<BankImportState>
       committed: selected,
       corrected: originals.length,
       unresolvedLeftovers: s.leftovers.length,
+      linkSuggestions: linkable,
     ));
+  }
+
+  /// Kullanıcının gider tarafındaki "Yatırım" kategorisi ve alt kategorileri
+  /// (ada göre, her dilde; bkz. `CategoryGuesser.resolveTarget`). Yoksa boş.
+  Set<String> _investmentCategoryIds() {
+    final root = _guesser.resolveTarget(
+      parseCategoryTarget('investment'),
+      _expenseCats,
+    );
+    if (root == null) return const {};
+    return {
+      root.id,
+      for (final c in _expenseCats)
+        if (c.parentId == root.id) c.id,
+    };
   }
 
   /// `_Done`'daki "Geri al": son içe aktarımda yazılan işlemleri (yalnız o
   /// partiyi) siler, bakiyeyi yeniden hesaplar, dinleyicileri bilgilendirir ve
   /// başa döner. İkinci çağrı no-op (id listesi boşalır). Oturum kapanınca
   /// (yeni dosya/`reset`) geri alma imkânı da doğal olarak biter.
-  Future<void> undoImport() async {
+  ///
+  /// Dönüş: bu arada bir kayda BAĞLANDIĞI (benimsendiği) için yerinde
+  /// bırakılan satır sayısı. Bağlanmış satır artık bir birikimin, borcun ya
+  /// da transferin nakit bacağıdır: silmek o kaydı parasız bırakır, eski
+  /// hâlini geri yazmak bağı sessizce koparırdı — ikisinde de bakiye kaydın
+  /// tutarı kadar kayardı.
+  Future<int> undoImport() async {
     final ids = _lastImportedIds;
     final originals = _lastCorrectedOriginals;
-    if (ids.isEmpty && originals.isEmpty) return;
+    if (ids.isEmpty && originals.isEmpty) return 0;
     _lastImportedIds = const [];
     _lastCorrectedOriginals = const [];
+    var kept = 0;
     for (final id in ids) {
+      if (await _isAdopted(id)) {
+        kept++;
+        continue;
+      }
       await _txRepo.deleteTransaction(id);
     }
     // Düzeltilen kayıtlar eski tutarlarına (ve referanslarına) döner.
     for (final original in originals) {
+      final id = original.id;
+      if (id != null && await _isAdopted(id)) {
+        kept++;
+        continue;
+      }
       await _txRepo.updateTransaction(original);
     }
     await _metrics.syncBalance(_walletId);
     _notifier.notify(userId: _userId, walletId: _walletId);
     emit(const BankImportInitial());
+    return kept;
   }
+
+  /// Satır bu arada bir kayda bağlandı mı (taze okuma). Okunamazsa `false`:
+  /// silme/geri yazma zaten kendi hatasını verir.
+  Future<bool> _isAdopted(String id) async =>
+      (await _txRepo.getTransactionById(id))
+          .fold((_) => false, (t) => t.isAdopted);
 
   /// Test tohumu: cubit'i doğrudan kategori ÖNERİ adımına sokar.
   @visibleForTesting
@@ -1252,6 +1311,7 @@ class BankImportCubit extends Cubit<BankImportState>
     required List<ImportDraft> committed,
     int corrected = 0,
     int unresolvedLeftovers = 0,
+    List<LinkSuggestion> linkSuggestions = const [],
   }) async {
     final walletRes = await _metrics.walletRepository.getWalletById(_walletId);
     final balance = walletRes.fold((_) => 0.0, (w) => w?.balance ?? 0.0);
@@ -1272,6 +1332,7 @@ class BankImportCubit extends Cubit<BankImportState>
       balance: balance,
       hasPastMonthRows: hasOutOfMonthRows,
       unresolvedLeftovers: unresolvedLeftovers,
+      linkSuggestions: linkSuggestions,
     );
   }
 }

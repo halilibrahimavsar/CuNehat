@@ -78,6 +78,18 @@ class FakeTransactionsRepository implements TransactionsRepository {
       Right(store.where((t) => tags.contains(t.tag)).length);
 
   @override
+  Future<Either<Failure, List<TransactionEntity>>> getLinkedTo({
+    String? walletId,
+    required Set<String> recordIds,
+  }) async =>
+      Right([
+        for (final t in store)
+          if ((walletId == null || t.walletId == walletId) &&
+              recordIds.contains(t.linkedRecordId))
+            t,
+      ]);
+
+  @override
   Future<Either<Failure, int>> retagTransactions(
       Set<String> from, String to) async {
     var changed = 0;
@@ -580,6 +592,162 @@ void main() {
       txs.store.removeWhere((t) => t.amount == 40);
       await service.syncBalance('w');
       expect(wallets.store['w']!.balance, 85); // 100 - 15
+    });
+  });
+
+  // Faz 2 (23 Eyl 2026): ekstreden gelmiş düz satır, kuplaj kendi hareketini
+  // YAZMADAN bir kaydın nakit bacağı olur. Eskiden kuplaj ikinci bir gider
+  // yazıyor ve para iki kez düşüyordu.
+  group('benimseme (adoptCashMovement / releaseAdoptedMovements)', () {
+    TransactionEntity bankRow({
+      String id = 'row-1',
+      String walletId = 'w',
+      double amount = 5000,
+      bool income = false,
+      bool isSystem = false,
+    }) =>
+        TransactionEntity(
+          id: id,
+          userId: 'u',
+          walletId: walletId,
+          title: 'MIDAS MENKUL DEGERLER',
+          tag: 'cat-yatirim',
+          amount: amount,
+          date: DateTime(2026, 9, 5),
+          type: income
+              ? TransactionTypeModel.income
+              : TransactionTypeModel.expense,
+          isSystem: isSystem,
+          reference: 'DK-1',
+          origin: TransactionOrigin.bankImport,
+        );
+
+    setUp(() {
+      // Satır zaten defterde: bakiye onu içeriyor (1000 − 5000).
+      wallets.store['w'] =
+          _wallet(id: 'w', balance: -4000, openingBalance: 1000);
+    });
+
+    test('satır sistem hareketi olur; YENİ hareket yazılmaz, bakiye değişmez',
+        () async {
+      txs.store.add(bankRow());
+
+      final adopted = await service.adoptCashMovement(
+        walletId: 'w',
+        transactionId: 'row-1',
+        tag: CashMovementTags.investmentBuy,
+        linkedRecordId: 'inv-1',
+        expectIncome: false,
+        expectAmount: 5000,
+      );
+
+      expect(adopted, isNotNull);
+      expect(txs.store, hasLength(1), reason: 'ikinci gider YOK');
+      final t = txs.store.single;
+      expect(t.isSystem, isTrue);
+      expect(t.tag, CashMovementTags.investmentBuy);
+      expect(t.linkedRecordId, 'inv-1');
+      expect(t.adoptedFromTag, 'cat-yatirim');
+      // Banka kimliği korunur: yeniden aktarımda kesin anahtar tutsun.
+      expect(t.title, 'MIDAS MENKUL DEGERLER');
+      expect(t.reference, 'DK-1');
+      expect(t.date, DateTime(2026, 9, 5));
+      expect(wallets.store['w']!.balance, -4000);
+    });
+
+    test('tutar, yön, cüzdan tutmuyorsa ya da satır zaten sistemse YAZILMAZ',
+        () async {
+      txs.store.addAll([
+        bankRow(id: 'amt'),
+        bankRow(id: 'dir', income: true),
+        bankRow(id: 'other', walletId: 'x'),
+        bankRow(id: 'sys', isSystem: true),
+      ]);
+      Future<TransactionEntity?> tryAdopt(String id, {double amount = 5000}) =>
+          service.adoptCashMovement(
+            walletId: 'w',
+            transactionId: id,
+            tag: CashMovementTags.investmentBuy,
+            linkedRecordId: 'inv-1',
+            expectIncome: false,
+            expectAmount: amount,
+          );
+
+      expect(await tryAdopt('amt', amount: 4999.99), isNull);
+      expect(await tryAdopt('dir'), isNull);
+      expect(await tryAdopt('other'), isNull);
+      expect(await tryAdopt('sys'), isNull);
+      expect(await tryAdopt('yok'), isNull);
+      expect(txs.store.where((t) => t.linkedRecordId != null), isEmpty);
+    });
+
+    test('bırakma: özgün düz satıra döner, anlık görüntü döner', () async {
+      txs.store.add(bankRow());
+      await service.adoptCashMovement(
+        walletId: 'w',
+        transactionId: 'row-1',
+        tag: CashMovementTags.investmentBuy,
+        linkedRecordId: 'inv-1',
+        expectIncome: false,
+        expectAmount: 5000,
+      );
+
+      final snapshots = await service.releaseAdoptedMovements(
+        walletId: 'w',
+        linkedRecordIds: {'inv-1'},
+      );
+
+      expect(snapshots.single.isAdopted, isTrue,
+          reason: 'geri alma BIRAKMA ÖNCESİ hâli geri yazar');
+      final t = txs.store.single;
+      expect(t.isSystem, isFalse);
+      expect(t.tag, 'cat-yatirim');
+      expect(t.linkedRecordId, isNull);
+      expect(t.adoptedFromTag, isNull);
+      expect(t.reference, 'DK-1');
+      expect(wallets.store['w']!.balance, -4000, reason: 'para yerinde');
+    });
+
+    test('bırakma kuplajın KENDİ yazdığı harekete dokunmaz', () async {
+      await service.recordCashMovement(
+        walletId: 'w',
+        userId: 'u',
+        amount: 100,
+        isIncome: false,
+        title: 'Gram altın',
+        tag: CashMovementTags.investmentBuy,
+        linkedRecordId: 'inv-1',
+      );
+
+      final released = await service.releaseAdoptedMovements(
+        walletId: 'w',
+        linkedRecordIds: {'inv-1'},
+      );
+
+      expect(released, isEmpty);
+      expect(txs.store.single.isSystem, isTrue);
+      expect(txs.store.single.linkedRecordId, 'inv-1',
+          reason: 'modülün yazdığı harekete de sahibi yazılır');
+    });
+
+    test('linkedMovements cüzdan verilmezse TÜM cüzdanlarda arar', () async {
+      // Transfer çiftinin bacakları iki ayrı cüzdandadır; bacaklardan biri
+      // yalnız çift kimliğini bilir.
+      txs.store.addAll([
+        bankRow(id: 'out').copyWith(isSystem: true, linkedRecordId: 'p1'),
+        bankRow(id: 'in', walletId: 'w2', income: true)
+            .copyWith(isSystem: true, linkedRecordId: 'p1'),
+        bankRow(id: 'other').copyWith(isSystem: true, linkedRecordId: 'p2'),
+      ]);
+
+      final everywhere = await service.linkedMovements(recordIds: {'p1'});
+      final onlyW = await service.linkedMovements(
+        walletId: 'w',
+        recordIds: {'p1'},
+      );
+
+      expect([for (final t in everywhere) t.id], ['out', 'in']);
+      expect([for (final t in onlyW) t.id], ['out']);
     });
   });
 

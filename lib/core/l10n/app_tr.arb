@@ -2207,7 +2207,7 @@
   "kismiSatisGeriAlindi": "Kısmi satış geri alındı",
   "alimTarihi": "Alım tarihi",
   "zatenBendeBaslik": "Bu varlık zaten bende",
-  "zatenBendeAciklama": "Uygulamadan önce alındı ya da ödemesi ekstreden deftere zaten girdi; maliyet cüzdandan tekrar düşülmesin",
+  "zatenBendeAciklama": "Uygulamadan önce alındı; maliyeti cüzdandan düşülmesin",
   "alimCuzdandanDusulecek": "{amount}, {date} tarihli gider olarak cüzdandan düşülecek.",
   "@alimCuzdandanDusulecek": {
     "placeholders": {
@@ -2734,5 +2734,102 @@
       }
     }
   },
-  "bankImportDupMoveMatch": "Diğer satırla eşleştir"
+  "bankImportDupMoveMatch": "Diğer satırla eşleştir",
+  "benimsemeYapilamadiMesaji": "Seçilen işlem bağlanamadı: bu arada değişmiş, silinmiş ya da başka bir kayda bağlanmış olabilir. Kayıt eklenmedi.",
+  "defterSatiriSecBaslik": "Ödemenin satırını seç",
+  "defterSatiriSecAciklama": "Bu cüzdandaki düz işlemler; tutarı ve tarihi en yakın olanlar üstte. Seçilen satır bu kaydın ödemesi sayılır, para ikinci kez düşülmez.",
+  "defterSatiriYok": "Uygun işlem yok. Ödeme ekstreden henüz gelmediyse önce ekstreyi içe aktar.",
+  "ekstredenRozeti": "Ekstreden",
+  "odemeKaynagiBaslik": "Ödeme",
+  "odemeCuzdandanBaslik": "Cüzdandan düşülsün",
+  "odemeCuzdandanAciklama": "Alım, seçilen tarihte gider olarak yazılır.",
+  "odemeDefterdeBaslik": "Ödemesi defterde zaten var",
+  "odemeDefterdeAciklama": "Ekstreden gelen ya da elle girdiğin satırı seç; para ikinci kez düşülmez.",
+  "defterSatiriSecDugme": "Satır seç",
+  "defterSatiriDegistir": "Değiştir",
+  "defterSatiriSecilmedi": "Önce ödemenin defterdeki satırını seç.",
+  "alimDefterdenKarsilanacak": "Seçilen satır ({amount}) bu kaydın ödemesi sayılır; yeni gider yazılmaz. Tutar ve tarih o satırdan gelir.",
+  "@alimDefterdenKarsilanacak": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "katkiDefterdeVarDugme": "Ödemesi defterde zaten var — satırı seç",
+  "katkiDefterSatiriKaldir": "Kaldır",
+  "katkiDefterdenKarsilanacak": "Bu katkının ödemesi seçilen satır; yeni gider yazılmaz.",
+  "borcDefterdeSecenekBaslik": "Anapara defterde zaten var",
+  "borcDefterdeSecenekGovde": "Ekstreden gelen giriş satırını (ör. KREDI KULLANDIRIM) seç; ikinci kez gelir yazılmaz.",
+  "borcDefterTutarUyusmuyor": "Seçilen satırın tutarı ({row}) anaparayla ({principal}) aynı değil. Anaparayı düzelt ya da doğru satırı seç.",
+  "@borcDefterTutarUyusmuyor": {
+    "placeholders": {
+      "row": {
+        "type": "String"
+      },
+      "principal": {
+        "type": "String"
+      }
+    }
+  },
+  "borcOdemesiDefterdenKarsilanacak": "Bu ödeme seçilen satırdır; yeni gider yazılmaz. Tutar ve tarih o satırdan gelir.",
+  "odemeDefterSatirinaBagli": "Ekstre satırına bağlı: tutar ve tarih o satırdan gelir. Yanlış satırsa ödemeyi silip yeniden ekle.",
+  "baglaEylemi": "Bağla…",
+  "baglaEylemiAciklama": "Birikim alımı, borç ödemesi ya da transfer olarak işaretle",
+  "baglaBaslik": "Bu satırı bağla",
+  "baglaAciklama": "Satır ikinci kez yazılmaz: seçtiğin kaydın ödemesi olur ve harcama/gelir raporlarından çıkar. Kaydı silersen satır eski hâline döner.",
+  "baglaYeniBirikim": "Yeni birikim alımı",
+  "baglaYeniBirikimAciklama": "Altın, hisse, fon… aldın",
+  "baglaBirikimeKatki": "Var olan birikime ekleme",
+  "baglaBirikimeKatkiAciklama": "Takip ettiğin bir birikime yapılan ödeme",
+  "baglaBorcOdemesi": "Borç ödemesi",
+  "baglaBorcOdemesiAciklama": "Kredi taksidi ya da bir borca yapılan ödeme",
+  "baglaBorcAnaparasi": "Kredi / borç girişi",
+  "baglaBorcAnaparasiAciklama": "Çektiğin kredi ya da aldığın borç hesabına yattı",
+  "baglaTransferCikis": "Kendi hesabıma transfer",
+  "baglaTransferCikisAciklama": "Başka bir cüzdanına (ör. kredi kartına) taşıdığın para",
+  "baglaTransferGiris": "Kendi hesabımdan transfer",
+  "baglaTransferGirisAciklama": "Başka bir cüzdanından gelen para",
+  "baglaBirikimTuruSec": "Ne aldın?",
+  "baglaBirikimSec": "Hangi birikime?",
+  "baglaBirikimYok": "Bu cüzdanda birikim yok. Önce \"Yeni birikim alımı\"nı seç.",
+  "baglaBorcSec": "Hangi borca?",
+  "baglaBorcYok": "Bu cüzdanda açık borç yok.",
+  "baglaCuzdanSec": "Hangi cüzdanın?",
+  "baglaCuzdanYok": "Başka cüzdanın yok. Transfer için önce bir cüzdan daha oluştur.",
+  "baglaKarsiSatirBaslik": "Karşı cüzdanda bu hareket zaten var mı?",
+  "baglaKarsiSatirAciklama": "O cüzdanın ekstresini de aktardıysan aynı para taşıması orada da duruyordur; seç ki iki kez sayılmasın.",
+  "baglaKarsiSatirOlustur": "Yok, karşı cüzdana eklensin",
+  "baglaKarsiSatirAdayYok": "Karşı cüzdanda eşleşebilecek bir satır bulunamadı.",
+  "transferBaglandi": "Transfer olarak bağlandı",
+  "transferiKaldir": "Transferi kaldır",
+  "transferiKaldirOnay": "Transferin iki bacağı da kaldırılır: ekstreden gelen satırlar eski kategorilerine döner, uygulamanın yazdığı bacaklar silinir.",
+  "transferKaldirildi": "Transfer kaldırıldı",
+  "transferKaldirilamadi": "Transfer tam kaldırılamadı; cüzdan defterini kontrol et.",
+  "bagliSatirNotu": "Bu satır bir kaydın ödemesi olarak bağlandı; özgün kategorisi “{category}”. Bağlı kaydı silersen satır eski hâline döner.",
+  "@bagliSatirNotu": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "bagliTransferNotu": "Bu satır kendi cüzdanların arasındaki bir transferin bacağı; harcama ya da gelir sayılmaz.",
+  "bagliSatirKisaNotu": "Bu satır bir kaydın (birikim, borç…) ödemesi olarak bağlandı; o kayıttan yönetilir. Kaydı silersen satır eski hâline döner.",
+  "transferiKaldirAciklama": "İki bacağı da kaldırır; ekstreden gelen satır eski hâline döner",
+  "bankImportUndoKeptLinked": "İçe aktarım geri alındı. Bir kayda bağladığın {count} satır yerinde bırakıldı; onları bağlı kaydı silerek kaldırabilirsin.",
+  "@bankImportUndoKeptLinked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportLinkTitle": "Bir kayda bağlanabilecek satırlar",
+  "bankImportLinkBody": "Bunlar birikim alımı, borç ödemesi ya da kredi girişi gibi görünüyor. Aynı hareketi ilgili bölüme de gireceksen önce buradan bağla; yoksa iki kez sayılır.",
+  "linkHintInvestment": "Birikim alımı olabilir",
+  "linkHintDebtPayment": "Borç ödemesi olabilir",
+  "linkHintLoan": "Kredi girişi olabilir",
+  "bankImportLinkButton": "Bağla",
+  "bankImportLinked": "Bağlandı"
 }

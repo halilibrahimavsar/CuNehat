@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:cunehat/core/blocs/cash_coupling_mixin.dart';
 import 'package:bloc/bloc.dart';
+import 'package:cunehat/core/id_generate/uid_generator.dart';
+import 'package:cunehat/core/services/cash_source.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/core/utils/money_math.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/investments/domain/entities/goal_entity.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/usecases/add_investment_usecase.dart';
@@ -143,31 +146,70 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
       if (!_inFlight.add('create-investment')) return;
       try {
         emit(InvestmentLoading());
-        final result = await addInvestmentUseCase.call(event.investment);
+        // Kimlik burada kesinleşir: benimsenen satır kayda bu kimlikle bağlanır.
+        final investment = (event.investment.id?.isNotEmpty ?? false)
+            ? event.investment
+            : event.investment.copyWith(id: UidGenerator.generateV7());
+
+        // Alımın ödemesi defterde ZATEN duruyorsa (ekstreden gelen satır) o
+        // satır benimsenir, ikinci gider yazılmaz. Benimseme kayıttan ÖNCE:
+        // satır bu arada değişmiş/silinmiş ya da başka kayda bağlanmışsa
+        // kayıt hiç yazılmaz — yazılsaydı nakit bacağı olmayan bir yatırım
+        // kalırdı.
+        TransactionEntity? adopted;
+        final source = event.cashSource;
+        if (source is AdoptedCashMovement) {
+          adopted = await walletMetricsService.adoptCashMovement(
+            walletId: event.walletId,
+            transactionId: source.transaction.id ?? '',
+            tag: CashMovementTags.investmentBuy,
+            linkedRecordId: investment.id!,
+            expectIncome: false,
+            expectAmount: source.transaction.amount,
+          );
+          if (adopted == null) {
+            _emitError(emit, const AdoptionFailedNotice());
+            return;
+          }
+        }
+
+        final result = await addInvestmentUseCase.call(investment);
 
         await result.fold(
-          (failure) async =>
-              _emitError(emit, RawFailureNotice(failure.message)),
+          (failure) async {
+            // Kayıt yazılamadı: benimsenen satır eski düz hâline döner.
+            if (adopted != null) {
+              await walletMetricsService.releaseAdoptedMovements(
+                walletId: event.walletId,
+                linkedRecordIds: {investment.id!},
+              );
+            }
+            _emitError(emit, RawFailureNotice(failure.message));
+          },
           (_) async {
             // Nakit kuplajı: yatırım alımı → maliyet kadar gider.
             //
-            // İki incelik:
+            // Üç incelik:
             // - Yalnız DEFTERE İŞLENECEK kısım yazılır. "Bu varlık zaten bende"
             //   denen tutar (unbookedCost) cüzdandan hiç çıkmadı; bugünün
             //   defterine sahte gider yazmak bakiyeyi olduğundan düşük gösterir.
             // - Gider kaydın TARİHİNE yazılır (bugüne değil): geçmişte alınmış
             //   bir varlık kendi ayında görünür. Yeni kayıtta tarih zaten bugün.
-            final bookedCost = event.investment.bookedCost;
+            // - Benimsenen satır maliyeti karşılar; kalan (normalde yok: sayfa
+            //   tutarı satıra kilitler) yeni hareket olarak yazılır.
+            final remainder =
+                roundToCents(investment.bookedCost - (adopted?.amount ?? 0));
             var cashOk = true;
-            if (bookedCost > 0) {
+            if (remainder > 0) {
               cashOk = await walletMetricsService.recordCashMovement(
                 walletId: event.walletId,
                 userId: event.userId,
-                amount: bookedCost,
+                amount: remainder,
                 isIncome: false,
-                title: event.investment.name,
+                title: investment.name,
                 tag: CashMovementTags.investmentBuy,
-                date: event.investment.dateAdded,
+                date: investment.dateAdded,
+                linkedRecordId: investment.id,
               );
             }
             await _safeSyncInvestment(event.walletId);
@@ -185,15 +227,45 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
     // Yatırım Güncelle
     on<UpdateInvestmentEvent>((event, emit) async {
       emit(InvestmentLoading());
+
+      // Katkının ödemesi defterde zaten duruyorsa (ekstre satırı) önce o
+      // benimsenir; olmazsa kayıt güncellenmez (bkz. CreateInvestmentEvent).
+      TransactionEntity? adopted;
+      final source = event.cashSource;
+      if (source is AdoptedCashMovement) {
+        adopted = await walletMetricsService.adoptCashMovement(
+          walletId: event.walletId,
+          transactionId: source.transaction.id ?? '',
+          tag: CashMovementTags.investmentBuy,
+          linkedRecordId: event.investment.id ?? '',
+          expectIncome: false,
+          expectAmount: source.transaction.amount,
+        );
+        if (adopted == null) {
+          _emitError(emit, const AdoptionFailedNotice());
+          return;
+        }
+      }
+
       final result = await updateInvestmentUseCase.call(event.investment);
 
       await result.fold(
-        (failure) async => _emitError(emit, RawFailureNotice(failure.message)),
+        (failure) async {
+          if (adopted != null) {
+            await walletMetricsService.releaseAdoptedMovements(
+              walletId: event.walletId,
+              linkedRecordIds: {event.investment.id ?? ''},
+            );
+          }
+          _emitError(emit, RawFailureNotice(failure.message));
+        },
         (_) async {
           // Mutabakat: maliyet (anapara) değişimi kadar nakit.
           // Maliyet arttı → gider; azaldı → gelir. (currentValue değişimi
-          // gerçekleşmemiş kâr/zarar olduğundan nakdi etkilemez.)
-          final costDiff = event.newAmount - event.prevAmount;
+          // gerçekleşmemiş kâr/zarar olduğundan nakdi etkilemez.) Benimsenen
+          // satır farkın o kadarını zaten karşılar.
+          final costDiff =
+              event.newAmount - event.prevAmount - (adopted?.amount ?? 0);
           var cashOk = true;
           // Fark PARA olarak ölçülür: ham `!= 0` bir IEEE-754 artığında
           // deftere 0,00 tutarlı, UI'dan silinemez bir sistem satırı yazardı.
@@ -211,6 +283,7 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
               // aynı tutarı `dateAdded`'a ters çevirdiği için iki ayrı ayın
               // raporu birden bozuluyordu.
               date: event.bookingDate,
+              linkedRecordId: event.investment.id,
             );
           }
           await _safeSyncInvestment(event.walletId);
@@ -324,6 +397,7 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
                     isIncome: true,
                     title: 'Yatırım Satışı',
                     tag: CashMovementTags.investmentSell,
+                    linkedRecordId: event.remaining.id,
                   ),
                 ],
               );
@@ -372,6 +446,7 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
           // dengelenir; yoksa bakiye kalıcı düşük kalır ve sistem işlemi
           // UI'dan silinemediği için kullanıcı bunu düzeltemez.
           var cashResult = const CashWriteResult(ok: true);
+          var released = const <TransactionEntity>[];
           if (event.recordSale) {
             // Çoğul yol: geri alma satış gelirinin kaydını id ile silmek
             // zorunda (tekil çağrı yalnız bool döner).
@@ -384,10 +459,28 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
                   isIncome: true,
                   title: 'Yatırım Satışı',
                   tag: CashMovementTags.investmentSell,
+                  linkedRecordId: event.id,
                 ),
               ],
             );
-          } else if (event.amount > 0) {
+          } else {
+            // Hatalı giriş: BENİMSENMİŞ satırlar (ekstreden gelen alım) düz
+            // hâllerine bırakılır — bankada para gerçekten çıktı, ters kayıt
+            // yazmak cüzdanı bankadan koparırdı. Ters kayıt yalnız kuplajın
+            // KENDİ yazdığı kısım için.
+            released = await walletMetricsService.releaseAdoptedMovements(
+              walletId: event.walletId,
+              linkedRecordIds: {event.id},
+            );
+          }
+          final adoptedCost = released.fold<double>(
+              0, (sum, t) => sum + (t.isExpense ? t.amount : -t.amount));
+          // Kuplajın KENDİ yazdığı net gider = işlenmiş maliyet − benimsenen
+          // satır. Genelde pozitiftir; benimsemeden sonra maliyet AŞAĞI
+          // düzeltildiyse (düzeltme geliri yazılmıştı) negatif olur ve tersi
+          // gider olarak yazılır — aksi hâlde o düzeltme geliri yetim kalırdı.
+          final correction = roundToCents(event.amount - adoptedCost);
+          if (!event.recordSale && !moneyEquals(correction, 0)) {
             // event.amount = deftere İŞLENMİŞ maliyet (alım + Σ maliyet
             // güncellemeleri, "zaten bende" kısmı hariç); kümülatif alım
             // hareketlerini birebir tersine çevirir.
@@ -410,11 +503,12 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
               entries: [
                 CashMovement(
                   userId: event.userId,
-                  amount: event.amount,
-                  isIncome: true,
+                  amount: correction.abs(),
+                  isIncome: correction > 0,
                   title: 'Yatırım kaydı silindi (düzeltme)',
                   tag: CashMovementTags.investmentCorrection,
                   date: event.dateAdded,
+                  linkedRecordId: event.id,
                 ),
               ],
             );
@@ -433,6 +527,7 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
                     userId: event.userId,
                     walletId: event.walletId,
                     reversalTransactionIds: cashResult.transactionIds,
+                    releasedAdoptions: released,
                   ),
           ));
           add(GetInvestmentsEvent(

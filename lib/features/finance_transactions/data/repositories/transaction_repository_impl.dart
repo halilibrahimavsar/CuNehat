@@ -89,6 +89,22 @@ class TransactionRepositoryImpl implements TransactionsRepository {
   }
 
   @override
+  Future<Either<Failure, List<TransactionEntity>>> getLinkedTo({
+    String? walletId,
+    required Set<String> recordIds,
+  }) async {
+    try {
+      final models = await localDatasource.getLinkedTo(
+        walletId: walletId,
+        recordIds: recordIds,
+      );
+      return Right([for (final m in models) m.toEntity()]);
+    } catch (e) {
+      return Left(CacheFailure('Bağlı işlemler alınamadı: ${e.toString()}'));
+    }
+  }
+
+  @override
   Future<Either<Failure, int>> retagTransactions(
       Set<String> from, String to) async {
     try {

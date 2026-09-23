@@ -5,6 +5,9 @@ import 'package:cunehat/core/shared/widgets/app_dialog_surface.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/debt_payment_dialog.dart';
+import 'package:cunehat/core/services/cash_source.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -49,7 +52,10 @@ void main() {
 
   /// Diyalog kök Navigator'da açılır; bloc'lar uygulamada da MaterialApp'in
   /// ÜSTÜNDE sağlanır (bkz. `AppProviders`), burada da öyle kurulur.
-  Widget buildTestableWidget({String currency = 'TRY'}) {
+  Widget buildTestableWidget({
+    String currency = 'TRY',
+    TransactionEntity? ledgerRow,
+  }) {
     return BlocProvider<DebtBloc>.value(
       value: mockDebtBloc,
       child: MaterialApp(
@@ -64,8 +70,12 @@ void main() {
         home: Scaffold(
           body: Builder(
             builder: (context) => ElevatedButton(
-              onPressed: () =>
-                  DebtPaymentDialog.show(context, testDebt, currency: currency),
+              onPressed: () => DebtPaymentDialog.show(
+                context,
+                testDebt,
+                currency: currency,
+                initialLedgerTransaction: ledgerRow,
+              ),
               child: const Text('Aç'),
             ),
           ),
@@ -186,5 +196,46 @@ void main() {
     expect(tester.takeException(), isNull);
     // Seçicinin gerçekten AÇILDIĞINI doğrula; tap ıskalasaydı test boş geçerdi.
     expect(find.byType(DatePickerDialog), findsOneWidget);
+  });
+
+  testWidgets(
+      '"Bağla…" akışından: satır önceden seçili — ödeme onun tutarı ve '
+      'tarihiyle, benimsenerek gönderilir', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final row = TransactionEntity(
+      id: 'row-3',
+      userId: 'user_123',
+      walletId: 'wallet_123',
+      title: 'KREDI TAKSIT',
+      tag: 'cat-fatura',
+      amount: 250,
+      date: DateTime(2026, 3, 15, 9),
+      type: TransactionTypeModel.expense,
+    );
+    await tester.pumpWidget(buildTestableWidget(ledgerRow: row));
+    await tester.tap(find.text('Aç'));
+    await tester.pumpAndSettle();
+
+    final amount = tester.widget<TextField>(find.descendant(
+      of: find.byType(TextFormField).first,
+      matching: find.byType(TextField),
+    ));
+    expect(amount.readOnly, isTrue);
+    expect(amount.controller!.text, '250');
+
+    await tester.tap(find.text('Ödemeyi Kaydet'));
+    await tester.pumpAndSettle();
+
+    final event =
+        verify(() => mockDebtBloc.add(captureAny(that: isA<PayDebtEvent>())))
+            .captured
+            .single as PayDebtEvent;
+    expect(event.paymentAmount, 250);
+    expect(event.paymentDate, DateTime(2026, 3, 15));
+    expect(event.cashSource, isA<AdoptedCashMovement>());
+    expect((event.cashSource as AdoptedCashMovement).transaction.id, 'row-3');
   });
 }

@@ -33,10 +33,18 @@ sealed class DeletionUndo extends Equatable {
   /// iki kez sayılır.
   final List<String> reversalTransactionIds;
 
+  /// Silme sırasında özgün düz hâline BIRAKILAN benimsenmiş satırların
+  /// bırakma ÖNCESİ hâlleri (bkz. `WalletMetricsService
+  /// .releaseAdoptedMovements`). Geri alma bunları aynen geri yazar; aksi
+  /// hâlde kayıt geri gelir ama nakit bacağı düz satır olarak kalır ve ikinci
+  /// bir silmede iade edilecek bir şey bulunmaz.
+  final List<TransactionEntity> releasedAdoptions;
+
   const DeletionUndo({
     required this.userId,
     required this.walletId,
     this.reversalTransactionIds = const <String>[],
+    this.releasedAdoptions = const <TransactionEntity>[],
   });
 }
 
@@ -61,10 +69,12 @@ final class DebtDeletionUndo extends DeletionUndo {
     required super.userId,
     required super.walletId,
     required super.reversalTransactionIds,
+    super.releasedAdoptions,
   });
 
   @override
-  List<Object?> get props => [debt, userId, walletId, reversalTransactionIds];
+  List<Object?> get props =>
+      [debt, userId, walletId, reversalTransactionIds, releasedAdoptions];
 }
 
 final class ReceivableDeletionUndo extends DeletionUndo {
@@ -90,11 +100,17 @@ final class InvestmentDeletionUndo extends DeletionUndo {
     required super.userId,
     required super.walletId,
     required super.reversalTransactionIds,
+    super.releasedAdoptions,
   });
 
   @override
-  List<Object?> get props =>
-      [investment, userId, walletId, reversalTransactionIds];
+  List<Object?> get props => [
+        investment,
+        userId,
+        walletId,
+        reversalTransactionIds,
+        releasedAdoptions,
+      ];
 }
 
 /// Silinen kaydı geri yazar ve geri alma penceresi kapanınca kalıcı yan
@@ -143,6 +159,17 @@ class DeletionUndoService {
         final result = await _transactionsRepository.deleteTransaction(id);
         ok = result.fold((failure) {
           debugPrint('Geri alma: ters kayıt silinemedi: ${failure.message}');
+          return false;
+        }, (_) => ok);
+      }
+
+      // 1b) Silmede düz satıra bırakılan benimsemeleri geri yaz: kayıt geri
+      // geldiğinde nakit bacağı yine onun olsun.
+      for (final adopted in undo.releasedAdoptions) {
+        final result = await _transactionsRepository.updateTransaction(adopted);
+        ok = result.fold((failure) {
+          debugPrint(
+              'Geri alma: benimseme geri yazılamadı: ${failure.message}');
           return false;
         }, (_) => ok);
       }

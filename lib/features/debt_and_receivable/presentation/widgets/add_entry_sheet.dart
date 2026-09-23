@@ -1,6 +1,10 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
+import 'package:cunehat/core/services/cash_source.dart';
+import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/ledger_transaction_picker.dart';
 import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
@@ -18,6 +22,7 @@ import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_en
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry/debt_cash_impact_dialog.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry/debt_dynamic_fields.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry/debt_form_widgets.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:showcaseview/showcaseview.dart';
@@ -44,6 +49,12 @@ class AddEntrySheet extends StatefulWidget {
   /// gösterilir.
   final String currency;
 
+  /// "Bağla…" akışından açıldıysa anaparanın cüzdana girişi olan defter
+  /// satırı ("KREDI KULLANDIRIM +50.000"): form borç olarak, tutar ve tarih
+  /// bu satırdan dolu açılır; kaydederken nakit etkisi sorulmaz, satır
+  /// benimsenir. Kaydedilince sayfa `true` ile kapanır.
+  final TransactionEntity? initialPrincipalTransaction;
+
   const AddEntrySheet({
     super.key,
     required this.walletId,
@@ -52,6 +63,7 @@ class AddEntrySheet extends StatefulWidget {
     this.debtToEdit,
     this.receivableToEdit,
     this.initialIsDebt = true,
+    this.initialPrincipalTransaction,
   });
 
   @override
@@ -138,6 +150,11 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
       _amountController.text = _fmt(r.amount);
       _selectedDate = r.dueDate;
       _originalAmount = r.amount;
+    } else if (widget.initialPrincipalTransaction != null) {
+      final tx = widget.initialPrincipalTransaction!;
+      _isDebt = true;
+      _amountController.text = _fmt(tx.amount);
+      _selectedDate = DateTime(tx.date.year, tx.date.month, tx.date.day);
     }
 
     // Düzenlemede yüklenen taksit değerini koru; yalnız yeni kayıtta öner.
@@ -383,18 +400,50 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           expectedTotalAmount: expectedTotal,
         );
         // Borç karşılığı nakit mi ürün mü alındığı bakiye kuplajını belirler;
-        // kullanıcıya iki seçeneğin etkisi açıklanarak sorulur.
-        final impact = await DebtCashImpactDialog.show(
-          context,
-          amount: amount,
-          accent: _accent,
-          currency: widget.currency,
-        );
+        // kullanıcıya iki seçeneğin etkisi açıklanarak sorulur. "Bağla…"
+        // akışından gelindiyse cevap belli: anapara o satır.
+        final linkedRow = widget.initialPrincipalTransaction;
+        final impact = linkedRow != null
+            ? DebtCashImpact.ledger
+            : await DebtCashImpactDialog.show(
+                context,
+                amount: amount,
+                accent: _accent,
+                currency: widget.currency,
+              );
         if (!mounted || impact == null) return;
-        context.read<DebtBloc>().add(AddDebtEvent(debt.copyWith(
-              principalToWallet: impact == DebtCashImpact.cash,
-            )));
-        Navigator.pop(context);
+        CashSource principalSource = const NewCashMovement();
+        if (impact == DebtCashImpact.ledger) {
+          // Anapara defterde zaten duruyor: giriş satırı seçilir ve
+          // benimsenir; ikinci bir gelir yazılmaz.
+          final row = linkedRow ??
+              await showLedgerTransactionPicker(
+                context,
+                userId: userId,
+                walletId: widget.walletId,
+                currency: widget.currency,
+                isIncome: true,
+                amountHint: amount,
+                dateHint: _selectedDate,
+              );
+          if (!mounted || row == null) return;
+          if (!moneyEquals(row.amount, amount)) {
+            AppMessenger.warning(context.l10n.borcDefterTutarUyusmuyor(
+              formatMoney(row.amount, currency: widget.currency),
+              formatMoney(amount, currency: widget.currency),
+            ));
+            return;
+          }
+          principalSource = AdoptedCashMovement(row);
+        }
+        if (!mounted) return;
+        context.read<DebtBloc>().add(AddDebtEvent(
+              debt.copyWith(
+                principalToWallet: impact != DebtCashImpact.product,
+              ),
+              principalSource: principalSource,
+            ));
+        Navigator.pop(context, true);
         return;
       }
     } else {

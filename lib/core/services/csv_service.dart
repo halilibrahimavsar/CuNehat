@@ -53,9 +53,15 @@ class CsvService {
     // sistem etiketleriyle ("Borç Ödemesi") yazılır — dosya bir RAPOR olarak da
     // paylaşıldığı için bu satırlar dışarıda bırakılmaz. İçe aktarımda
     // atlanırlar; bkz. importTransactionsFromCSV.
+    //
+    // BAĞLANMIŞ (benimsenmiş) satır ise otomatik hareket DEĞİLDİR: ekstreden
+    // gelen gerçek bir banka satırıdır, yalnız bir kaydın ödemesi olarak
+    // işaretlenmiştir. Özgün hâliyle (kendi kategorisi, düz) yazılır; aksi
+    // hâlde içe aktarımda atlanır ve para hareketi yeni cüzdanda kaybolurdu.
     final breadcrumbs = buildBreadcrumbs(await _categories.getAllCategories());
 
-    for (var t in transactions) {
+    for (final original in transactions) {
+      final t = original.isAdopted ? original.released() : original;
       rows.add([
         t.title,
         breadcrumbs[t.tag] ?? t.tag,
@@ -214,6 +220,7 @@ class CsvService {
                 date: date,
                 type: type,
                 isSystem: false,
+                origin: TransactionOrigin.csv,
               ),
             );
           } catch (e) {

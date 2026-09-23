@@ -72,6 +72,10 @@ void main() {
         'isSystem': false,
         'receiptFileName': null,
         'reference': null,
+        // v11
+        'linkedRecordId': null,
+        'adoptedFromTag': null,
+        'origin': null,
       });
     });
 
@@ -96,6 +100,27 @@ void main() {
       expect(model.date, date);
       expect(model.type, TransactionTypeModel.expense);
       expect(model.isSystem, false);
+    });
+
+    test('v11 alanları JSON gidiş-dönüşünde korunur', () {
+      final model = TransactionModel(
+        id: 'tx_9',
+        userId: 'user_1',
+        walletId: 'wallet_1',
+        title: 'MIDAS MENKUL DEGERLER',
+        tag: 'Yatırım Alımı',
+        amount: 5000,
+        date: date,
+        type: TransactionTypeModel.expense,
+        isSystem: true,
+        reference: 'DK-1',
+        linkedRecordId: 'inv-1',
+        adoptedFromTag: 'cat-yatirim',
+        origin: 'import',
+      );
+      final back = TransactionModel.fromJson('tx_9', model.toJson());
+      expect(back, model);
+      expect(TransactionModel.fromEntity(model.toEntity()), model);
     });
 
     test('fromJson throws Exception for invalid date format', () {

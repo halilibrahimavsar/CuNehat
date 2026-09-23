@@ -4068,7 +4068,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get zatenBendeAciklama =>
-      'Bought before using the app, or the payment is already in your ledger from a bank statement; don\'t deduct its cost again';
+      'Bought before using the app; don\'t deduct its cost from the wallet';
 
   @override
   String alimCuzdandanDusulecek(Object amount, Object date) {
@@ -4960,4 +4960,241 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bankImportDupMoveMatch => 'Match the other row';
+
+  @override
+  String get benimsemeYapilamadiMesaji =>
+      'Couldn\'t link the selected transaction: it may have changed, been deleted or been linked to another record. Nothing was saved.';
+
+  @override
+  String get defterSatiriSecBaslik => 'Pick the payment row';
+
+  @override
+  String get defterSatiriSecAciklama =>
+      'Plain transactions in this wallet, closest amount and date first. The selected row counts as this record\'s payment; the money isn\'t deducted twice.';
+
+  @override
+  String get defterSatiriYok =>
+      'No matching transaction. If the payment hasn\'t come in from your statement yet, import the statement first.';
+
+  @override
+  String get ekstredenRozeti => 'From statement';
+
+  @override
+  String get odemeKaynagiBaslik => 'Payment';
+
+  @override
+  String get odemeCuzdandanBaslik => 'Deduct from the wallet';
+
+  @override
+  String get odemeCuzdandanAciklama =>
+      'The purchase is recorded as an expense on the chosen date.';
+
+  @override
+  String get odemeDefterdeBaslik => 'The payment is already in my ledger';
+
+  @override
+  String get odemeDefterdeAciklama =>
+      'Pick the row from your bank statement or ledger; the money isn\'t deducted twice.';
+
+  @override
+  String get defterSatiriSecDugme => 'Pick a row';
+
+  @override
+  String get defterSatiriDegistir => 'Change';
+
+  @override
+  String get defterSatiriSecilmedi =>
+      'Pick the payment\'s row from your ledger first.';
+
+  @override
+  String alimDefterdenKarsilanacak(String amount) {
+    return 'The selected row ($amount) counts as this record\'s payment; no new expense is written. Amount and date come from that row.';
+  }
+
+  @override
+  String get katkiDefterdeVarDugme =>
+      'The payment is already in my ledger — pick the row';
+
+  @override
+  String get katkiDefterSatiriKaldir => 'Remove';
+
+  @override
+  String get katkiDefterdenKarsilanacak =>
+      'This contribution is paid by the selected row; no new expense is written.';
+
+  @override
+  String get borcDefterdeSecenekBaslik =>
+      'The principal is already in my ledger';
+
+  @override
+  String get borcDefterdeSecenekGovde =>
+      'Pick the incoming row from your statement (e.g. the loan disbursement); it isn\'t counted as income twice.';
+
+  @override
+  String borcDefterTutarUyusmuyor(String row, String principal) {
+    return 'The selected row\'s amount ($row) doesn\'t match the principal ($principal). Fix the principal or pick the right row.';
+  }
+
+  @override
+  String get borcOdemesiDefterdenKarsilanacak =>
+      'This payment is the selected row; no new expense is written. Amount and date come from that row.';
+
+  @override
+  String get odemeDefterSatirinaBagli =>
+      'Linked to a statement row: amount and date come from that row. If it\'s the wrong row, delete the payment and add it again.';
+
+  @override
+  String get baglaEylemi => 'Link…';
+
+  @override
+  String get baglaEylemiAciklama =>
+      'Mark it as an investment purchase, debt payment or transfer';
+
+  @override
+  String get baglaBaslik => 'Link this entry';
+
+  @override
+  String get baglaAciklama =>
+      'The entry isn\'t written twice: it becomes the payment of the record you choose and leaves the spending/income reports. Deleting that record returns the entry to how it was.';
+
+  @override
+  String get baglaYeniBirikim => 'New investment purchase';
+
+  @override
+  String get baglaYeniBirikimAciklama => 'You bought gold, stocks, funds…';
+
+  @override
+  String get baglaBirikimeKatki => 'Top-up of an existing investment';
+
+  @override
+  String get baglaBirikimeKatkiAciklama =>
+      'A payment into an investment you already track';
+
+  @override
+  String get baglaBorcOdemesi => 'Debt payment';
+
+  @override
+  String get baglaBorcOdemesiAciklama =>
+      'A loan instalment or a payment towards a debt';
+
+  @override
+  String get baglaBorcAnaparasi => 'Loan disbursement';
+
+  @override
+  String get baglaBorcAnaparasiAciklama =>
+      'Money you borrowed arrived in this account';
+
+  @override
+  String get baglaTransferCikis => 'Transfer to my own account';
+
+  @override
+  String get baglaTransferCikisAciklama =>
+      'Money moved to another of your wallets (e.g. a credit card)';
+
+  @override
+  String get baglaTransferGiris => 'Transfer from my own account';
+
+  @override
+  String get baglaTransferGirisAciklama =>
+      'Money that came from another of your wallets';
+
+  @override
+  String get baglaBirikimTuruSec => 'What did you buy?';
+
+  @override
+  String get baglaBirikimSec => 'Which investment?';
+
+  @override
+  String get baglaBirikimYok =>
+      'There are no investments in this wallet. Choose \"New investment purchase\" instead.';
+
+  @override
+  String get baglaBorcSec => 'Which debt?';
+
+  @override
+  String get baglaBorcYok => 'There are no open debts in this wallet.';
+
+  @override
+  String get baglaCuzdanSec => 'Which of your wallets?';
+
+  @override
+  String get baglaCuzdanYok =>
+      'You have no other wallet. Create one first to record a transfer.';
+
+  @override
+  String get baglaKarsiSatirBaslik =>
+      'Is this movement already in the other wallet?';
+
+  @override
+  String get baglaKarsiSatirAciklama =>
+      'If you imported that wallet\'s statement too, the same movement is there as well; pick it so it isn\'t counted twice.';
+
+  @override
+  String get baglaKarsiSatirOlustur =>
+      'It\'s not there — add it to the other wallet';
+
+  @override
+  String get baglaKarsiSatirAdayYok =>
+      'No matching entry was found in the other wallet.';
+
+  @override
+  String get transferBaglandi => 'Linked as a transfer';
+
+  @override
+  String get transferiKaldir => 'Remove transfer';
+
+  @override
+  String get transferiKaldirOnay =>
+      'Both legs of the transfer are removed: statement entries go back to their original category, entries the app wrote are deleted.';
+
+  @override
+  String get transferKaldirildi => 'Transfer removed';
+
+  @override
+  String get transferKaldirilamadi =>
+      'The transfer couldn\'t be fully removed; please check the wallet ledger.';
+
+  @override
+  String bagliSatirNotu(String category) {
+    return 'This entry was linked as the payment of a record; its original category is “$category”. Deleting that record returns the entry to how it was.';
+  }
+
+  @override
+  String get bagliTransferNotu =>
+      'This entry is one leg of a transfer between your own wallets; it isn\'t counted as spending or income.';
+
+  @override
+  String get bagliSatirKisaNotu =>
+      'This entry was linked as the payment of a record (investment, debt…) and is managed there. Deleting that record returns the entry to how it was.';
+
+  @override
+  String get transferiKaldirAciklama =>
+      'Removes both legs; a statement entry goes back to how it was';
+
+  @override
+  String bankImportUndoKeptLinked(int count) {
+    return 'Import undone. $count entries you linked to a record were kept; delete that record to remove them.';
+  }
+
+  @override
+  String get bankImportLinkTitle => 'Entries you may want to link';
+
+  @override
+  String get bankImportLinkBody =>
+      'These look like investment purchases, debt payments or loan disbursements. If you\'ll also record them in their section, link them here first — otherwise they\'re counted twice.';
+
+  @override
+  String get linkHintInvestment => 'Possibly an investment purchase';
+
+  @override
+  String get linkHintDebtPayment => 'Possibly a debt payment';
+
+  @override
+  String get linkHintLoan => 'Possibly a loan disbursement';
+
+  @override
+  String get bankImportLinkButton => 'Link';
+
+  @override
+  String get bankImportLinked => 'Linked';
 }

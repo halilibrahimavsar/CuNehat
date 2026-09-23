@@ -18,6 +18,9 @@ class TransactionModel extends TransactionEntity {
     super.isSystem = false,
     super.receiptFileName,
     super.reference,
+    super.linkedRecordId,
+    super.adoptedFromTag,
+    super.origin,
   });
 
   /// ✅ FIXED: Handle date as ISO 8601 String
@@ -43,6 +46,11 @@ class TransactionModel extends TransactionEntity {
       isSystem: json['isSystem'] as bool,
       receiptFileName: json['receiptFileName'] as String?,
       reference: json['reference'] as String?,
+      // v11 (yedek migrasyonu v10 yedeklerine bu anahtarları açıkça `null`
+      // olarak ekler).
+      linkedRecordId: json['linkedRecordId'] as String?,
+      adoptedFromTag: json['adoptedFromTag'] as String?,
+      origin: json['origin'] as String?,
     );
   }
 
@@ -60,6 +68,9 @@ class TransactionModel extends TransactionEntity {
       'isSystem': isSystem,
       'receiptFileName': receiptFileName,
       'reference': reference,
+      'linkedRecordId': linkedRecordId,
+      'adoptedFromTag': adoptedFromTag,
+      'origin': origin,
     };
   }
 
@@ -76,6 +87,9 @@ class TransactionModel extends TransactionEntity {
       isSystem: entity.isSystem,
       receiptFileName: entity.receiptFileName,
       reference: entity.reference,
+      linkedRecordId: entity.linkedRecordId,
+      adoptedFromTag: entity.adoptedFromTag,
+      origin: entity.origin,
     );
   }
 
@@ -92,6 +106,9 @@ class TransactionModel extends TransactionEntity {
       isSystem: isSystem,
       receiptFileName: receiptFileName,
       reference: reference,
+      linkedRecordId: linkedRecordId,
+      adoptedFromTag: adoptedFromTag,
+      origin: origin,
     );
   }
 
@@ -114,6 +131,9 @@ class TransactionModel extends TransactionEntity {
     bool? isSystem,
     String? receiptFileName,
     String? reference,
+    String? linkedRecordId,
+    String? adoptedFromTag,
+    String? origin,
   }) {
     return TransactionModel(
       id: id ?? this.id, // preserve id (önceden id düşüyordu — düzeltildi)
@@ -127,6 +147,9 @@ class TransactionModel extends TransactionEntity {
       isSystem: isSystem ?? this.isSystem,
       receiptFileName: receiptFileName ?? this.receiptFileName,
       reference: reference ?? this.reference,
+      linkedRecordId: linkedRecordId ?? this.linkedRecordId,
+      adoptedFromTag: adoptedFromTag ?? this.adoptedFromTag,
+      origin: origin ?? this.origin,
     );
   }
 
@@ -173,4 +196,19 @@ class TransactionModel extends TransactionEntity {
   @override
   @HiveField(10)
   String? get reference => super.reference;
+
+  // v11 (şema): üçü de nullable — eski kayıtta alan yoktur, `null` okunur.
+  // Sıradaki serbest alan: 14.
+
+  @override
+  @HiveField(11)
+  String? get linkedRecordId => super.linkedRecordId;
+
+  @override
+  @HiveField(12)
+  String? get adoptedFromTag => super.adoptedFromTag;
+
+  @override
+  @HiveField(13)
+  String? get origin => super.origin;
 }

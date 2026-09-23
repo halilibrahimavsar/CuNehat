@@ -4,8 +4,11 @@ import 'package:flutter/material.dart';
 
 /// Borç eklenirken kullanıcının seçtiği bakiye etkisi:
 /// [cash] = nakit ele geçti (anapara gelir yazılır),
-/// [product] = ürün/hizmet alındı (bakiye değişmez).
-enum DebtCashImpact { cash, product }
+/// [product] = ürün/hizmet alındı (bakiye değişmez),
+/// [ledger] = nakit ele geçti ve giriş defterde ZATEN duruyor (ekstreden
+/// gelen "KREDI KULLANDIRIM" satırı) — o satır benimsenir, ikinci gelir
+/// yazılmaz.
+enum DebtCashImpact { cash, product, ledger }
 
 /// Borç karşılığı nakit mi yoksa ürün/hizmet mi alındığını soran dialog.
 class DebtCashImpactDialog extends StatelessWidget {
@@ -68,6 +71,14 @@ class DebtCashImpactDialog extends StatelessWidget {
             body: context.l10n.borcNakitSecenekGovde(
               formatMoney(amount, currency: currency),
             ),
+            accent: accent,
+          ),
+          const SizedBox(height: 10),
+          _CashImpactOption(
+            impact: DebtCashImpact.ledger,
+            icon: Icons.receipt_long_rounded,
+            title: context.l10n.borcDefterdeSecenekBaslik,
+            body: context.l10n.borcDefterdeSecenekGovde,
             accent: accent,
           ),
           const SizedBox(height: 10),

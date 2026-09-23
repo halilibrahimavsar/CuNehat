@@ -190,6 +190,27 @@ class TransactionHiveDataSource {
     }
   }
 
+  /// [walletId] cüzdanında [recordIds]'ten birine BAĞLI (`linkedRecordId`)
+  /// işlemler. Benimseme akışları bir kaydın hangi satırları benimsediğini
+  /// buradan bulur (bkz. `WalletMetricsService.releaseAdoptedMovements`).
+  Future<List<TransactionModel>> getLinkedTo({
+    String? walletId,
+    required Set<String> recordIds,
+  }) async {
+    if (recordIds.isEmpty) return const [];
+    try {
+      final box = await _getBox();
+      return [
+        for (final t in box.values)
+          if ((walletId == null || t.walletId == walletId) &&
+              recordIds.contains(t.linkedRecordId))
+            t,
+      ];
+    } catch (e) {
+      throw CacheException('Bağlı işlemler alınırken hata oluştu', e);
+    }
+  }
+
   Future<void> deleteTransaction(String id) async {
     try {
       final box = await _getBox();

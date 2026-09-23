@@ -11,6 +11,7 @@ import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/core/services/receipt_storage_service.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/money_text.dart';
+import 'package:cunehat/features/coupling/presentation/link_transaction_flow.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/receipt_viewer_page.dart';
@@ -20,6 +21,7 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_action_sheet.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
 import 'package:flutter/material.dart';
@@ -320,9 +322,25 @@ class _SingleTransactionDetailPageState
                 const SizedBox(height: 24),
 
                 // Aksiyonlar
-                if (t.isSystem)
-                  _systemNotice(context, scheme)
-                else
+                if (t.isSystem) ...[
+                  _systemNotice(context, scheme, t),
+                  if (isRemovableTransferLeg(t)) ...[
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () => confirmAndRemoveTransfer(context, t),
+                      icon: const Icon(Icons.link_off_rounded),
+                      label: Text(context.l10n.transferiKaldir),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppGradients.debt,
+                        side: BorderSide(
+                            color: AppGradients.debt.withValues(alpha: 0.5)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
+                  ],
+                ] else ...[
                   Row(
                     children: [
                       Expanded(
@@ -357,6 +375,20 @@ class _SingleTransactionDetailPageState
                       ),
                     ],
                   ),
+                  if (canLinkTransaction(t)) ...[
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      onPressed: () => startLinkTransactionFlow(
+                        context,
+                        transaction: t,
+                        currency: context.walletById(t.walletId)?.currency ??
+                            context.activeWalletCurrency,
+                      ),
+                      icon: const Icon(Icons.link_rounded),
+                      label: Text(context.l10n.baglaEylemi),
+                    ),
+                  ],
+                ],
               ],
             ),
           ),
@@ -411,7 +443,23 @@ class _SingleTransactionDetailPageState
     );
   }
 
-  Widget _systemNotice(BuildContext context, ColorScheme scheme) {
+  /// Bağlanmış (benimsenmiş) satırda özgün kategori de söylenir: kayıt
+  /// silinince satır o kategoriye döner.
+  String _systemNoticeText(BuildContext context, TransactionEntity t) {
+    final original = t.adoptedFromTag;
+    if (original != null && !isRemovableTransferLeg(t)) {
+      return context.l10n.bagliSatirNotu(
+        _labels[original] ?? context.translateSystemTag(original),
+      );
+    }
+    return systemNoticeText(context, t);
+  }
+
+  Widget _systemNotice(
+    BuildContext context,
+    ColorScheme scheme,
+    TransactionEntity t,
+  ) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -427,7 +475,7 @@ class _SingleTransactionDetailPageState
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              context.l10n.buIslemOtomatikOlusturuldu,
+              _systemNoticeText(context, t),
               style: TextStyle(
                 fontSize: 12,
                 height: 1.35,

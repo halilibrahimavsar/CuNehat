@@ -286,6 +286,38 @@ void main() {
       verify(() => metrics.syncInvestment('wallet_1')).called(1);
     });
 
+    test(
+        'yatırım: silmede düz satıra BIRAKILAN benimseme geri yazılır '
+        '(ekstre satırı yine kaydın nakit bacağı olur)', () async {
+      when(() => addInvestment(any()))
+          .thenAnswer((_) async => const Right(null));
+      when(() => transactionsRepository.updateTransaction(any()))
+          .thenAnswer((_) async => const Right(null));
+      final adopted = transaction.copyWith(
+        id: 'row-1',
+        isSystem: true,
+        tag: 'Yatırım Alımı',
+        linkedRecordId: investment.id,
+        adoptedFromTag: 'cat-yatirim',
+      );
+
+      final ok = await service.restore(InvestmentDeletionUndo(
+        investment: investment,
+        userId: 'user_1',
+        walletId: 'wallet_1',
+        reversalTransactionIds: const [],
+        releasedAdoptions: [adopted],
+      ));
+
+      expect(ok, isTrue);
+      final written = verify(() =>
+              transactionsRepository.updateTransaction(captureAny()))
+          .captured
+          .single as TransactionEntity;
+      expect(written, adopted);
+      verify(() => addInvestment(any())).called(1);
+    });
+
     test('metrik senkronu fırlatsa bile restore çökmez', () async {
       when(() => addInvestment(any()))
           .thenAnswer((_) async => const Right(null));

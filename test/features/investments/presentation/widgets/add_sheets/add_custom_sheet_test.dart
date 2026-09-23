@@ -10,11 +10,20 @@ import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:dartz/dartz.dart';
+import 'package:cunehat/core/services/cash_source.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/ledger_transaction_picker.dart';
 
 /// Showcase turları getIt üzerinden koordinatörü çeker; widget testlerinde
 /// gerçek koordinatör kayıtlı olmadığından mock'lanır.
 class _MockOnboardingCoordinator extends Mock
     implements OnboardingCoordinator {}
+
+class _MockTransactionsRepository extends Mock
+    implements TransactionsRepository {}
 
 void main() {
   setUpAll(() {
@@ -79,7 +88,7 @@ void main() {
           walletId: 'wallet_123',
           userId: 'user_123',
           walletCurrency: 'TRY',
-          onSave: (inv) => savedInvestment = inv,
+          onSave: (inv, _) => savedInvestment = inv,
         ),
       ),
     );
@@ -134,7 +143,7 @@ void main() {
           walletId: 'wallet_123',
           userId: 'user_123',
           walletCurrency: 'TRY',
-          onSave: (_) {},
+          onSave: (_, __) {},
         ),
       ),
     );
@@ -193,7 +202,7 @@ void main() {
           userId: 'user_123',
           walletCurrency: 'TRY',
           investmentToEdit: testInvestment,
-          onSave: (inv) => updatedInvestment = inv,
+          onSave: (inv, _) => updatedInvestment = inv,
         ),
       ),
     );
@@ -246,7 +255,7 @@ void main() {
         walletId: 'wallet_123',
         userId: 'user_123',
         walletCurrency: 'TRY',
-        onSave: (_) {},
+        onSave: (_, __) {},
       ),
     ));
     await tester.pumpAndSettle();
@@ -256,5 +265,215 @@ void main() {
     expect(showcase.isTargetRendered(OnboardingKeys.investmentAddCost), isTrue);
     expect(showcase.isTargetRendered(OnboardingKeys.investmentAddQuantity),
         isFalse);
+  });
+
+  // Faz 2 (23 Eyl 2026): ekstreden gelen "MIDAS MENKUL DEGERLER −5.000"
+  // defterde dururken kullanıcı aynı alımı Birikim'e girince para iki kez
+  // düşüyordu. Artık "Ödemesi defterde zaten var" → satır seçilir; maliyet ve
+  // tarih o satırdan gelir, kayıt benimseme kaynağıyla kaydedilir.
+  testWidgets('"ödemesi defterde var": satır seçilir, maliyet/tarih kilitlenir',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final bankRow = TransactionEntity(
+      id: 'row-1',
+      userId: 'user_123',
+      walletId: 'wallet_123',
+      title: 'MIDAS MENKUL DEGERLER',
+      tag: 'cat-yatirim',
+      amount: 5000,
+      date: DateTime(2026, 9, 5, 14),
+      type: TransactionTypeModel.expense,
+      reference: 'DK-1',
+      origin: TransactionOrigin.bankImport,
+    );
+    final repo = _MockTransactionsRepository();
+    when(() => repo.getTransactions(
+          userId: any(named: 'userId'),
+          walletId: any(named: 'walletId'),
+        )).thenAnswer((_) async => Right([
+          bankRow,
+          // Sistem hareketi seçilemez (zaten bir kaydın malı).
+          bankRow.copyWith(id: 'sys', title: 'Borç Ödemesi', isSystem: true),
+        ]));
+    getIt.registerSingleton<TransactionsRepository>(repo);
+
+    InvestmentEntity? saved;
+    CashSource? source;
+    await tester.pumpWidget(
+      buildTestableWidget(
+        AddCustomSheet(
+          walletId: 'wallet_123',
+          userId: 'user_123',
+          walletCurrency: 'TRY',
+          onSave: (inv, cash) {
+            saved = inv;
+            source = cash;
+          },
+        ),
+      ),
+    );
+
+    await tester.enterText(
+        find.byWidgetPredicate(
+            (w) => w is TextField && w.decoration?.hintText == '0'),
+        '5.200');
+
+    final ledgerOption = find.text('Ödemesi defterde zaten var');
+    await tester.ensureVisible(ledgerOption);
+    await tester.tap(ledgerOption);
+    await tester.pumpAndSettle();
+
+    // Seçici kendiliğinden açıldı; sistem hareketi listede yok.
+    expect(find.text('Ödemenin satırını seç'), findsOneWidget);
+    expect(find.text('Borç Ödemesi'), findsNothing);
+    expect(find.text('Ekstreden'), findsOneWidget);
+    await tester.tap(find.text('MIDAS MENKUL DEGERLER'));
+    await tester.pumpAndSettle();
+
+    // Maliyet satırdan geldi ve kilitli.
+    final cost = tester.widget<TextField>(find.byWidgetPredicate((w) =>
+        w is TextField &&
+        w.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)'));
+    expect(cost.readOnly, isTrue);
+    expect(cost.controller!.text, contains('5.000'));
+    expect(find.textContaining('yeni gider yazılmaz'), findsOneWidget);
+
+    final saveButton = find.text('Kaydet');
+    await tester.ensureVisible(saveButton);
+    await tester.tap(saveButton);
+    await tester.pumpAndSettle();
+
+    expect(saved, isNotNull);
+    expect(saved!.amount, 5000);
+    expect(saved!.dateAdded, DateTime(2026, 9, 5));
+    expect(saved!.unbookedCost, 0,
+        reason: 'maliyet deftere işlenmiş sayılır — benimsenen satırla');
+    expect(source, isA<AdoptedCashMovement>());
+    expect((source! as AdoptedCashMovement).transaction.id, 'row-1');
+  });
+
+  testWidgets('"ödemesi defterde var" seçilip satır seçilmezse kaydedilmez',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    final repo = _MockTransactionsRepository();
+    when(() => repo.getTransactions(
+          userId: any(named: 'userId'),
+          walletId: any(named: 'walletId'),
+        )).thenAnswer((_) async => const Right(<TransactionEntity>[]));
+    getIt.registerSingleton<TransactionsRepository>(repo);
+
+    var saveCalled = false;
+    await tester.pumpWidget(
+      buildTestableWidget(
+        AddCustomSheet(
+          walletId: 'wallet_123',
+          userId: 'user_123',
+          walletCurrency: 'TRY',
+          onSave: (_, __) => saveCalled = true,
+        ),
+      ),
+    );
+    await tester.enterText(
+        find.byWidgetPredicate(
+            (w) => w is TextField && w.decoration?.hintText == '0'),
+        '100');
+    await tester.enterText(
+        find.byWidgetPredicate((w) =>
+            w is TextField &&
+            w.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)'),
+        '100');
+
+    final ledgerOption = find.text('Ödemesi defterde zaten var');
+    await tester.ensureVisible(ledgerOption);
+    await tester.tap(ledgerOption);
+    await tester.pumpAndSettle();
+    // Uygun satır yok: seçici boş durumunu söyler, kullanıcı kapatır.
+    expect(find.textContaining('Uygun işlem yok'), findsOneWidget);
+    // Sayfanın kendi kapatma düğmesi de aynı simgeyi taşır; seçicininki.
+    await tester.tap(find.descendant(
+      of: find.byType(LedgerTransactionPicker),
+      matching: find.byIcon(Icons.close_rounded),
+    ));
+    await tester.pumpAndSettle();
+
+    final saveButton = find.text('Kaydet');
+    await tester.ensureVisible(saveButton);
+    await tester.tap(saveButton);
+    await tester.pumpAndSettle();
+
+    expect(saveCalled, isFalse);
+    expect(find.text('Önce ödemenin defterdeki satırını seç.'), findsWidgets);
+  });
+
+  testWidgets('"Bağla…" akışından: satır önceden seçili, maliyet/tarih ondan',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final bankRow = TransactionEntity(
+      id: 'row-9',
+      userId: 'user_123',
+      walletId: 'wallet_123',
+      title: 'MIDAS MENKUL DEGERLER',
+      tag: 'cat-yatirim',
+      amount: 5000,
+      date: DateTime(2026, 9, 5, 14),
+      type: TransactionTypeModel.expense,
+      origin: TransactionOrigin.bankImport,
+    );
+
+    InvestmentEntity? saved;
+    CashSource? source;
+    await tester.pumpWidget(
+      buildTestableWidget(
+        AddCustomSheet(
+          walletId: 'wallet_123',
+          userId: 'user_123',
+          walletCurrency: 'TRY',
+          initialLedgerTransaction: bankRow,
+          onSave: (inv, cash) {
+            saved = inv;
+            source = cash;
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final cost = tester.widget<TextField>(find.byWidgetPredicate((w) =>
+        w is TextField &&
+        w.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)'));
+    expect(cost.readOnly, isTrue);
+    expect(cost.controller!.text, contains('5.000'));
+    expect(find.textContaining('yeni gider yazılmaz'), findsOneWidget);
+
+    await tester.enterText(
+        find.byWidgetPredicate(
+            (w) => w is TextField && w.decoration?.hintText == '0'),
+        '5.200');
+    final saveButton = find.text('Kaydet');
+    await tester.ensureVisible(saveButton);
+    await tester.tap(saveButton);
+    await tester.pumpAndSettle();
+
+    expect(saved!.amount, 5000);
+    expect(saved!.dateAdded, DateTime(2026, 9, 5));
+    expect(source, isA<AdoptedCashMovement>());
+    expect((source! as AdoptedCashMovement).transaction.id, 'row-9');
   });
 }

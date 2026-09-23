@@ -2186,7 +2186,7 @@
   "kismiSatisGeriAlindi": "Partial sale undone",
   "alimTarihi": "Purchase date",
   "zatenBendeBaslik": "I already own this asset",
-  "zatenBendeAciklama": "Bought before using the app, or the payment is already in your ledger from a bank statement; don't deduct its cost again",
+  "zatenBendeAciklama": "Bought before using the app; don't deduct its cost from the wallet",
   "alimCuzdandanDusulecek": "{amount} will be deducted from the wallet as an expense dated {date}.",
   "@alimCuzdandanDusulecek": {
     "placeholders": {
@@ -2673,5 +2673,102 @@
       }
     }
   },
-  "bankImportDupMoveMatch": "Match the other row"
+  "bankImportDupMoveMatch": "Match the other row",
+  "benimsemeYapilamadiMesaji": "Couldn't link the selected transaction: it may have changed, been deleted or been linked to another record. Nothing was saved.",
+  "defterSatiriSecBaslik": "Pick the payment row",
+  "defterSatiriSecAciklama": "Plain transactions in this wallet, closest amount and date first. The selected row counts as this record's payment; the money isn't deducted twice.",
+  "defterSatiriYok": "No matching transaction. If the payment hasn't come in from your statement yet, import the statement first.",
+  "ekstredenRozeti": "From statement",
+  "odemeKaynagiBaslik": "Payment",
+  "odemeCuzdandanBaslik": "Deduct from the wallet",
+  "odemeCuzdandanAciklama": "The purchase is recorded as an expense on the chosen date.",
+  "odemeDefterdeBaslik": "The payment is already in my ledger",
+  "odemeDefterdeAciklama": "Pick the row from your bank statement or ledger; the money isn't deducted twice.",
+  "defterSatiriSecDugme": "Pick a row",
+  "defterSatiriDegistir": "Change",
+  "defterSatiriSecilmedi": "Pick the payment's row from your ledger first.",
+  "alimDefterdenKarsilanacak": "The selected row ({amount}) counts as this record's payment; no new expense is written. Amount and date come from that row.",
+  "@alimDefterdenKarsilanacak": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "katkiDefterdeVarDugme": "The payment is already in my ledger — pick the row",
+  "katkiDefterSatiriKaldir": "Remove",
+  "katkiDefterdenKarsilanacak": "This contribution is paid by the selected row; no new expense is written.",
+  "borcDefterdeSecenekBaslik": "The principal is already in my ledger",
+  "borcDefterdeSecenekGovde": "Pick the incoming row from your statement (e.g. the loan disbursement); it isn't counted as income twice.",
+  "borcDefterTutarUyusmuyor": "The selected row's amount ({row}) doesn't match the principal ({principal}). Fix the principal or pick the right row.",
+  "@borcDefterTutarUyusmuyor": {
+    "placeholders": {
+      "row": {
+        "type": "String"
+      },
+      "principal": {
+        "type": "String"
+      }
+    }
+  },
+  "borcOdemesiDefterdenKarsilanacak": "This payment is the selected row; no new expense is written. Amount and date come from that row.",
+  "odemeDefterSatirinaBagli": "Linked to a statement row: amount and date come from that row. If it's the wrong row, delete the payment and add it again.",
+  "baglaEylemi": "Link…",
+  "baglaEylemiAciklama": "Mark it as an investment purchase, debt payment or transfer",
+  "baglaBaslik": "Link this entry",
+  "baglaAciklama": "The entry isn't written twice: it becomes the payment of the record you choose and leaves the spending/income reports. Deleting that record returns the entry to how it was.",
+  "baglaYeniBirikim": "New investment purchase",
+  "baglaYeniBirikimAciklama": "You bought gold, stocks, funds…",
+  "baglaBirikimeKatki": "Top-up of an existing investment",
+  "baglaBirikimeKatkiAciklama": "A payment into an investment you already track",
+  "baglaBorcOdemesi": "Debt payment",
+  "baglaBorcOdemesiAciklama": "A loan instalment or a payment towards a debt",
+  "baglaBorcAnaparasi": "Loan disbursement",
+  "baglaBorcAnaparasiAciklama": "Money you borrowed arrived in this account",
+  "baglaTransferCikis": "Transfer to my own account",
+  "baglaTransferCikisAciklama": "Money moved to another of your wallets (e.g. a credit card)",
+  "baglaTransferGiris": "Transfer from my own account",
+  "baglaTransferGirisAciklama": "Money that came from another of your wallets",
+  "baglaBirikimTuruSec": "What did you buy?",
+  "baglaBirikimSec": "Which investment?",
+  "baglaBirikimYok": "There are no investments in this wallet. Choose \"New investment purchase\" instead.",
+  "baglaBorcSec": "Which debt?",
+  "baglaBorcYok": "There are no open debts in this wallet.",
+  "baglaCuzdanSec": "Which of your wallets?",
+  "baglaCuzdanYok": "You have no other wallet. Create one first to record a transfer.",
+  "baglaKarsiSatirBaslik": "Is this movement already in the other wallet?",
+  "baglaKarsiSatirAciklama": "If you imported that wallet's statement too, the same movement is there as well; pick it so it isn't counted twice.",
+  "baglaKarsiSatirOlustur": "It's not there — add it to the other wallet",
+  "baglaKarsiSatirAdayYok": "No matching entry was found in the other wallet.",
+  "transferBaglandi": "Linked as a transfer",
+  "transferiKaldir": "Remove transfer",
+  "transferiKaldirOnay": "Both legs of the transfer are removed: statement entries go back to their original category, entries the app wrote are deleted.",
+  "transferKaldirildi": "Transfer removed",
+  "transferKaldirilamadi": "The transfer couldn't be fully removed; please check the wallet ledger.",
+  "bagliSatirNotu": "This entry was linked as the payment of a record; its original category is “{category}”. Deleting that record returns the entry to how it was.",
+  "@bagliSatirNotu": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "bagliTransferNotu": "This entry is one leg of a transfer between your own wallets; it isn't counted as spending or income.",
+  "bagliSatirKisaNotu": "This entry was linked as the payment of a record (investment, debt…) and is managed there. Deleting that record returns the entry to how it was.",
+  "transferiKaldirAciklama": "Removes both legs; a statement entry goes back to how it was",
+  "bankImportUndoKeptLinked": "Import undone. {count} entries you linked to a record were kept; delete that record to remove them.",
+  "@bankImportUndoKeptLinked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportLinkTitle": "Entries you may want to link",
+  "bankImportLinkBody": "These look like investment purchases, debt payments or loan disbursements. If you'll also record them in their section, link them here first — otherwise they're counted twice.",
+  "linkHintInvestment": "Possibly an investment purchase",
+  "linkHintDebtPayment": "Possibly a debt payment",
+  "linkHintLoan": "Possibly a loan disbursement",
+  "bankImportLinkButton": "Link",
+  "bankImportLinked": "Linked"
 }

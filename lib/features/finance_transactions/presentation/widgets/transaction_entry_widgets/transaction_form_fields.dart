@@ -173,6 +173,10 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
             date: when,
             type: type,
             receiptFileName: receiptFileName,
+            // Tekrar tespiti bununla "elle girildi"yi KESİN bilir; eskiden
+            // başlığın yazımından tahmin ediyordu ("MIGROS" ekstreden
+            // sanılıyordu).
+            origin: TransactionOrigin.manual,
           );
     widget.onSave(transaction, _c.recurringFrequency.value);
   }

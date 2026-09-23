@@ -7172,7 +7172,7 @@ abstract class AppLocalizations {
   /// No description provided for @zatenBendeAciklama.
   ///
   /// In tr, this message translates to:
-  /// **'Uygulamadan önce alındı ya da ödemesi ekstreden deftere zaten girdi; maliyet cüzdandan tekrar düşülmesin'**
+  /// **'Uygulamadan önce alındı; maliyeti cüzdandan düşülmesin'**
   String get zatenBendeAciklama;
 
   /// No description provided for @alimCuzdandanDusulecek.
@@ -8674,6 +8674,402 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Diğer satırla eşleştir'**
   String get bankImportDupMoveMatch;
+
+  /// No description provided for @benimsemeYapilamadiMesaji.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçilen işlem bağlanamadı: bu arada değişmiş, silinmiş ya da başka bir kayda bağlanmış olabilir. Kayıt eklenmedi.'**
+  String get benimsemeYapilamadiMesaji;
+
+  /// No description provided for @defterSatiriSecBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödemenin satırını seç'**
+  String get defterSatiriSecBaslik;
+
+  /// No description provided for @defterSatiriSecAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu cüzdandaki düz işlemler; tutarı ve tarihi en yakın olanlar üstte. Seçilen satır bu kaydın ödemesi sayılır, para ikinci kez düşülmez.'**
+  String get defterSatiriSecAciklama;
+
+  /// No description provided for @defterSatiriYok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygun işlem yok. Ödeme ekstreden henüz gelmediyse önce ekstreyi içe aktar.'**
+  String get defterSatiriYok;
+
+  /// No description provided for @ekstredenRozeti.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekstreden'**
+  String get ekstredenRozeti;
+
+  /// No description provided for @odemeKaynagiBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme'**
+  String get odemeKaynagiBaslik;
+
+  /// No description provided for @odemeCuzdandanBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdandan düşülsün'**
+  String get odemeCuzdandanBaslik;
+
+  /// No description provided for @odemeCuzdandanAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alım, seçilen tarihte gider olarak yazılır.'**
+  String get odemeCuzdandanAciklama;
+
+  /// No description provided for @odemeDefterdeBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödemesi defterde zaten var'**
+  String get odemeDefterdeBaslik;
+
+  /// No description provided for @odemeDefterdeAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekstreden gelen ya da elle girdiğin satırı seç; para ikinci kez düşülmez.'**
+  String get odemeDefterdeAciklama;
+
+  /// No description provided for @defterSatiriSecDugme.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satır seç'**
+  String get defterSatiriSecDugme;
+
+  /// No description provided for @defterSatiriDegistir.
+  ///
+  /// In tr, this message translates to:
+  /// **'Değiştir'**
+  String get defterSatiriDegistir;
+
+  /// No description provided for @defterSatiriSecilmedi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önce ödemenin defterdeki satırını seç.'**
+  String get defterSatiriSecilmedi;
+
+  /// No description provided for @alimDefterdenKarsilanacak.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçilen satır ({amount}) bu kaydın ödemesi sayılır; yeni gider yazılmaz. Tutar ve tarih o satırdan gelir.'**
+  String alimDefterdenKarsilanacak(String amount);
+
+  /// No description provided for @katkiDefterdeVarDugme.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödemesi defterde zaten var — satırı seç'**
+  String get katkiDefterdeVarDugme;
+
+  /// No description provided for @katkiDefterSatiriKaldir.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaldır'**
+  String get katkiDefterSatiriKaldir;
+
+  /// No description provided for @katkiDefterdenKarsilanacak.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu katkının ödemesi seçilen satır; yeni gider yazılmaz.'**
+  String get katkiDefterdenKarsilanacak;
+
+  /// No description provided for @borcDefterdeSecenekBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Anapara defterde zaten var'**
+  String get borcDefterdeSecenekBaslik;
+
+  /// No description provided for @borcDefterdeSecenekGovde.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekstreden gelen giriş satırını (ör. KREDI KULLANDIRIM) seç; ikinci kez gelir yazılmaz.'**
+  String get borcDefterdeSecenekGovde;
+
+  /// No description provided for @borcDefterTutarUyusmuyor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçilen satırın tutarı ({row}) anaparayla ({principal}) aynı değil. Anaparayı düzelt ya da doğru satırı seç.'**
+  String borcDefterTutarUyusmuyor(String row, String principal);
+
+  /// No description provided for @borcOdemesiDefterdenKarsilanacak.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu ödeme seçilen satırdır; yeni gider yazılmaz. Tutar ve tarih o satırdan gelir.'**
+  String get borcOdemesiDefterdenKarsilanacak;
+
+  /// No description provided for @odemeDefterSatirinaBagli.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekstre satırına bağlı: tutar ve tarih o satırdan gelir. Yanlış satırsa ödemeyi silip yeniden ekle.'**
+  String get odemeDefterSatirinaBagli;
+
+  /// No description provided for @baglaEylemi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağla…'**
+  String get baglaEylemi;
+
+  /// No description provided for @baglaEylemiAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Birikim alımı, borç ödemesi ya da transfer olarak işaretle'**
+  String get baglaEylemiAciklama;
+
+  /// No description provided for @baglaBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu satırı bağla'**
+  String get baglaBaslik;
+
+  /// No description provided for @baglaAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satır ikinci kez yazılmaz: seçtiğin kaydın ödemesi olur ve harcama/gelir raporlarından çıkar. Kaydı silersen satır eski hâline döner.'**
+  String get baglaAciklama;
+
+  /// No description provided for @baglaYeniBirikim.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni birikim alımı'**
+  String get baglaYeniBirikim;
+
+  /// No description provided for @baglaYeniBirikimAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Altın, hisse, fon… aldın'**
+  String get baglaYeniBirikimAciklama;
+
+  /// No description provided for @baglaBirikimeKatki.
+  ///
+  /// In tr, this message translates to:
+  /// **'Var olan birikime ekleme'**
+  String get baglaBirikimeKatki;
+
+  /// No description provided for @baglaBirikimeKatkiAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takip ettiğin bir birikime yapılan ödeme'**
+  String get baglaBirikimeKatkiAciklama;
+
+  /// No description provided for @baglaBorcOdemesi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç ödemesi'**
+  String get baglaBorcOdemesi;
+
+  /// No description provided for @baglaBorcOdemesiAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kredi taksidi ya da bir borca yapılan ödeme'**
+  String get baglaBorcOdemesiAciklama;
+
+  /// No description provided for @baglaBorcAnaparasi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kredi / borç girişi'**
+  String get baglaBorcAnaparasi;
+
+  /// No description provided for @baglaBorcAnaparasiAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çektiğin kredi ya da aldığın borç hesabına yattı'**
+  String get baglaBorcAnaparasiAciklama;
+
+  /// No description provided for @baglaTransferCikis.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kendi hesabıma transfer'**
+  String get baglaTransferCikis;
+
+  /// No description provided for @baglaTransferCikisAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başka bir cüzdanına (ör. kredi kartına) taşıdığın para'**
+  String get baglaTransferCikisAciklama;
+
+  /// No description provided for @baglaTransferGiris.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kendi hesabımdan transfer'**
+  String get baglaTransferGiris;
+
+  /// No description provided for @baglaTransferGirisAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başka bir cüzdanından gelen para'**
+  String get baglaTransferGirisAciklama;
+
+  /// No description provided for @baglaBirikimTuruSec.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ne aldın?'**
+  String get baglaBirikimTuruSec;
+
+  /// No description provided for @baglaBirikimSec.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hangi birikime?'**
+  String get baglaBirikimSec;
+
+  /// No description provided for @baglaBirikimYok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu cüzdanda birikim yok. Önce \"Yeni birikim alımı\"nı seç.'**
+  String get baglaBirikimYok;
+
+  /// No description provided for @baglaBorcSec.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hangi borca?'**
+  String get baglaBorcSec;
+
+  /// No description provided for @baglaBorcYok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu cüzdanda açık borç yok.'**
+  String get baglaBorcYok;
+
+  /// No description provided for @baglaCuzdanSec.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hangi cüzdanın?'**
+  String get baglaCuzdanSec;
+
+  /// No description provided for @baglaCuzdanYok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başka cüzdanın yok. Transfer için önce bir cüzdan daha oluştur.'**
+  String get baglaCuzdanYok;
+
+  /// No description provided for @baglaKarsiSatirBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Karşı cüzdanda bu hareket zaten var mı?'**
+  String get baglaKarsiSatirBaslik;
+
+  /// No description provided for @baglaKarsiSatirAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'O cüzdanın ekstresini de aktardıysan aynı para taşıması orada da duruyordur; seç ki iki kez sayılmasın.'**
+  String get baglaKarsiSatirAciklama;
+
+  /// No description provided for @baglaKarsiSatirOlustur.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yok, karşı cüzdana eklensin'**
+  String get baglaKarsiSatirOlustur;
+
+  /// No description provided for @baglaKarsiSatirAdayYok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Karşı cüzdanda eşleşebilecek bir satır bulunamadı.'**
+  String get baglaKarsiSatirAdayYok;
+
+  /// No description provided for @transferBaglandi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transfer olarak bağlandı'**
+  String get transferBaglandi;
+
+  /// No description provided for @transferiKaldir.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transferi kaldır'**
+  String get transferiKaldir;
+
+  /// No description provided for @transferiKaldirOnay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transferin iki bacağı da kaldırılır: ekstreden gelen satırlar eski kategorilerine döner, uygulamanın yazdığı bacaklar silinir.'**
+  String get transferiKaldirOnay;
+
+  /// No description provided for @transferKaldirildi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transfer kaldırıldı'**
+  String get transferKaldirildi;
+
+  /// No description provided for @transferKaldirilamadi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transfer tam kaldırılamadı; cüzdan defterini kontrol et.'**
+  String get transferKaldirilamadi;
+
+  /// No description provided for @bagliSatirNotu.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu satır bir kaydın ödemesi olarak bağlandı; özgün kategorisi “{category}”. Bağlı kaydı silersen satır eski hâline döner.'**
+  String bagliSatirNotu(String category);
+
+  /// No description provided for @bagliTransferNotu.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu satır kendi cüzdanların arasındaki bir transferin bacağı; harcama ya da gelir sayılmaz.'**
+  String get bagliTransferNotu;
+
+  /// No description provided for @bagliSatirKisaNotu.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu satır bir kaydın (birikim, borç…) ödemesi olarak bağlandı; o kayıttan yönetilir. Kaydı silersen satır eski hâline döner.'**
+  String get bagliSatirKisaNotu;
+
+  /// No description provided for @transferiKaldirAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'İki bacağı da kaldırır; ekstreden gelen satır eski hâline döner'**
+  String get transferiKaldirAciklama;
+
+  /// No description provided for @bankImportUndoKeptLinked.
+  ///
+  /// In tr, this message translates to:
+  /// **'İçe aktarım geri alındı. Bir kayda bağladığın {count} satır yerinde bırakıldı; onları bağlı kaydı silerek kaldırabilirsin.'**
+  String bankImportUndoKeptLinked(int count);
+
+  /// No description provided for @bankImportLinkTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir kayda bağlanabilecek satırlar'**
+  String get bankImportLinkTitle;
+
+  /// No description provided for @bankImportLinkBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bunlar birikim alımı, borç ödemesi ya da kredi girişi gibi görünüyor. Aynı hareketi ilgili bölüme de gireceksen önce buradan bağla; yoksa iki kez sayılır.'**
+  String get bankImportLinkBody;
+
+  /// No description provided for @linkHintInvestment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Birikim alımı olabilir'**
+  String get linkHintInvestment;
+
+  /// No description provided for @linkHintDebtPayment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç ödemesi olabilir'**
+  String get linkHintDebtPayment;
+
+  /// No description provided for @linkHintLoan.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kredi girişi olabilir'**
+  String get linkHintLoan;
+
+  /// No description provided for @bankImportLinkButton.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağla'**
+  String get bankImportLinkButton;
+
+  /// No description provided for @bankImportLinked.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlandı'**
+  String get bankImportLinked;
 }
 
 class _AppLocalizationsDelegate

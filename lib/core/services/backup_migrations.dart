@@ -32,6 +32,7 @@ const int oldestSupportedBackupVersion = 9;
 /// `sürüm → o sürümü bir sonrakine taşıyan adım`.
 const Map<int, BackupMigration> backupMigrations = {
   9: _v9ToV10,
+  10: _v10ToV11,
 };
 
 /// [raw]'ı [targetVersion]'a yükseltir.
@@ -77,6 +78,34 @@ Map<String, dynamic> _v9ToV10(Map<String, dynamic> raw) {
     'wallets': [
       for (final w in wallets)
         {...Map<String, dynamic>.from(w as Map), 'categoryIds': null},
+    ],
+  };
+}
+
+/// v10 → v11: işlemlere kuplaj bağı ve köken — `linkedRecordId`,
+/// `adoptedFromTag`, `origin` (üçü de nullable).
+///
+/// v10'da bir kuplaj hareketinin sahibi hiç yazılmıyordu, benimseme kavramı
+/// yoktu ve kaydın elle mi ekstreden mi geldiği saklanmıyordu. `null` tam
+/// olarak bunu söyler ("bilinmiyor"): eski kuplaj hareketleri eskisi gibi
+/// davranır (sahibinden yönetilir), eski düz kayıtlarda tekrar tespiti
+/// başlığın yazımına bakan eski sezgiye düşer.
+///
+/// Alanlar AÇIKÇA yazılıyor (yokluğu da `null` okunurdu): dönüşümün ne
+/// yaptığı veriye bakınca görünsün ve testi tam olarak bunu ölçsün.
+Map<String, dynamic> _v10ToV11(Map<String, dynamic> raw) {
+  final transactions = (raw['transactions'] as List?) ?? const [];
+  return {
+    ...raw,
+    'version': 11,
+    'transactions': [
+      for (final t in transactions)
+        {
+          ...Map<String, dynamic>.from(t as Map),
+          'linkedRecordId': null,
+          'adoptedFromTag': null,
+          'origin': null,
+        },
     ],
   };
 }

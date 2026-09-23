@@ -4,7 +4,9 @@ import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/ledger_transaction_picker.dart';
 import 'package:cunehat/features/investments/domain/entities/goal_entity.dart';
+import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/purchase_payment.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -216,6 +218,10 @@ class InvestmentFilledField extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final VoidCallback onChanged;
 
+  /// Değer başka bir kaynaktan geliyor (ör. defterden seçilen ödeme satırı)
+  /// ve elle değiştirilmemeli.
+  final bool readOnly;
+
   const InvestmentFilledField({
     super.key,
     required this.controller,
@@ -225,6 +231,7 @@ class InvestmentFilledField extends StatelessWidget {
     required this.onChanged,
     this.keyboardType,
     this.inputFormatters,
+    this.readOnly = false,
   });
 
   @override
@@ -232,6 +239,7 @@ class InvestmentFilledField extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return TextField(
       controller: controller,
+      readOnly: readOnly,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
       textCapitalization: keyboardType == null
@@ -246,6 +254,10 @@ class InvestmentFilledField extends StatelessWidget {
             fontWeight: FontWeight.w400),
         prefixIcon: Icon(icon,
             size: 20, color: cs.onSurfaceVariant.withValues(alpha: 0.8)),
+        suffixIcon: readOnly
+            ? Icon(Icons.lock_outline_rounded,
+                size: 18, color: cs.onSurfaceVariant)
+            : null,
         filled: true,
         fillColor: cs.onSurface.withValues(alpha: 0.04),
         contentPadding:
@@ -624,23 +636,30 @@ class InvestmentQuantityAndFetch extends StatelessWidget {
   }
 }
 
-/// Alım tarihi + "bu varlık zaten bende" anahtarı ve ikisinin cüzdana
-/// etkisinin tek cümlelik özeti.
+/// Alım tarihi + ödemenin NEREDEN geldiği ve cüzdana etkisinin tek
+/// cümlelik özeti.
 ///
-/// Neden gerekli: kayıt açıldığında maliyet BUGÜNÜN defterine gider yazılıyor.
-/// Uygulamaya girmeden önce alınmış 50 gram altını eklemek, o parayı bugün
-/// harcamış gibi gösteriyor ve bakiyeyi bozuyordu. Tarih geçmişe alınabilir,
-/// hiç işlenmemesi de seçilebilir (bkz. `InvestmentEntity.unbookedCost`).
+/// Neden gerekli: kayıt açıldığında maliyet cüzdana gider yazılıyor. İki
+/// durumda bu yanlış: (1) varlık uygulamadan ÖNCE alınmıştı (para bugün
+/// çıkmadı — "zaten bende", bkz. `InvestmentEntity.unbookedCost`); (2) ödeme
+/// defterde ZATEN duruyor — ekstreden içe aktarılmış "MIDAS MENKUL DEGERLER
+/// −5.000" gibi. İkinci durumda gider yeniden yazılınca para İKİ KEZ
+/// düşüyordu; artık o satır seçilir ve kaydın nakit bacağı olur.
 class InvestmentPurchaseRow extends StatelessWidget {
   final MaterialColor accent;
   final DateTime date;
   final ValueChanged<DateTime> onDateChanged;
-  final bool alreadyOwned;
-  final ValueChanged<bool> onAlreadyOwnedChanged;
+  final PurchasePayment payment;
+  final ValueChanged<PurchasePayment> onPaymentChanged;
 
-  /// Cüzdandan düşülecek tutarın biçimlenmiş hâli; null → tutar henüz
-  /// girilmedi (özet satırı yalnız anahtarın etkisini anlatır).
-  final String? costText;
+  /// Defter seçicisinin kapsamı ve tutar biçimi.
+  final String userId;
+  final String walletId;
+  final String walletCurrency;
+
+  /// Girilen maliyet; `null` → henüz girilmedi. Özet satırını ve defter
+  /// seçicisindeki sıralamayı (tutarı en yakın satırlar üstte) besler.
+  final double? cost;
 
   /// Geçmiş tarihli alımda "bugünkü değeri hesapla" kısayolu. null →
   /// kısayol yok (özel varlığın canlı fiyat kaynağı yoktur).
@@ -651,9 +670,12 @@ class InvestmentPurchaseRow extends StatelessWidget {
     required this.accent,
     required this.date,
     required this.onDateChanged,
-    required this.alreadyOwned,
-    required this.onAlreadyOwnedChanged,
-    required this.costText,
+    required this.payment,
+    required this.onPaymentChanged,
+    required this.userId,
+    required this.walletId,
+    required this.walletCurrency,
+    required this.cost,
     this.onCalculateTodayValue,
   });
 
@@ -670,9 +692,57 @@ class InvestmentPurchaseRow extends StatelessWidget {
     }
   }
 
+  Future<void> _pickLedgerRow(BuildContext context) async {
+    final picked = await showLedgerTransactionPicker(
+      context,
+      userId: userId,
+      walletId: walletId,
+      currency: walletCurrency,
+      isIncome: false,
+      amountHint: (cost != null && cost! > 0) ? cost : null,
+      dateHint: date,
+    );
+    if (picked != null) onPaymentChanged(PurchasePayment.ledger(picked));
+  }
+
+  void _select(BuildContext context, PurchasePaymentMode mode) {
+    switch (mode) {
+      case PurchasePaymentMode.wallet:
+        onPaymentChanged(const PurchasePayment.wallet());
+      case PurchasePaymentMode.alreadyOwned:
+        onPaymentChanged(const PurchasePayment.alreadyOwned());
+      case PurchasePaymentMode.ledger:
+        if (payment.mode == PurchasePaymentMode.ledger) return;
+        onPaymentChanged(const PurchasePayment.ledger());
+        // Satırsız "defterde var" anlamsız: seçici hemen açılır.
+        _pickLedgerRow(context);
+    }
+  }
+
+  String _caption(BuildContext context) {
+    final l10n = context.l10n;
+    final tx = payment.ledgerTransaction;
+    return switch (payment.mode) {
+      PurchasePaymentMode.ledger when tx != null =>
+        l10n.alimDefterdenKarsilanacak(
+            formatMoney(tx.amount, currency: walletCurrency)),
+      PurchasePaymentMode.ledger => l10n.defterSatiriSecilmedi,
+      PurchasePaymentMode.alreadyOwned => l10n.alimCuzdandanDusulmeyecek,
+      PurchasePaymentMode.wallet when cost == null || cost! <= 0 =>
+        l10n.alimCuzdandanDusulmeyecek,
+      PurchasePaymentMode.wallet => l10n.alimCuzdandanDusulecek(
+          formatMoney(cost!, currency: walletCurrency),
+          AppFormatters.dateLong.format(date),
+        ),
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    final locked = payment.isLedgerLocked;
+    final tx = payment.ledgerTransaction;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -680,7 +750,9 @@ class InvestmentPurchaseRow extends StatelessWidget {
           color: cs.onSurface.withValues(alpha: 0.04),
           borderRadius: BorderRadius.circular(14),
           child: InkWell(
-            onTap: () => _pickDate(context),
+            // Defterden seçilen satırın tarihi alımın tarihidir; ayrıca
+            // değiştirilirse gider ile kayıt farklı günlerde dururdu.
+            onTap: locked ? null : () => _pickDate(context),
             borderRadius: BorderRadius.circular(14),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
@@ -691,7 +763,7 @@ class InvestmentPurchaseRow extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      '${context.l10n.alimTarihi}: '
+                      '${l10n.alimTarihi}: '
                       '${AppFormatters.dateLong.format(date)}',
                       style: TextStyle(
                         color: cs.onSurface,
@@ -699,47 +771,68 @@ class InvestmentPurchaseRow extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Icon(Icons.edit_rounded,
+                  Icon(locked ? Icons.lock_outline_rounded : Icons.edit_rounded,
                       size: 16, color: cs.onSurfaceVariant),
                 ],
               ),
             ),
           ),
         ),
+        const SizedBox(height: 12),
+        InvestmentSectionLabel(l10n.odemeKaynagiBaslik),
         const SizedBox(height: 6),
-        // ListTile zeminini/ink dalgasını en yakın Material'a boyar; sheet'in
-        // renkli DecoratedBox'ı araya girdiğinde Flutter debug'da assert atar.
-        // Kendi (saydam) Material'ı içinde durur.
-        Material(
-          type: MaterialType.transparency,
-          child: SwitchListTile(
-            value: alreadyOwned,
-            onChanged: onAlreadyOwnedChanged,
-            contentPadding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
-            activeThumbColor: accent.shade600,
-            title: Text(
-              context.l10n.zatenBendeBaslik,
-              style: TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w600,
-                color: cs.onSurface,
-              ),
-            ),
-            subtitle: Text(
-              context.l10n.zatenBendeAciklama,
-              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+        _PaymentOption(
+          accent: accent,
+          selected: payment.mode == PurchasePaymentMode.wallet,
+          title: l10n.odemeCuzdandanBaslik,
+          subtitle: l10n.odemeCuzdandanAciklama,
+          onTap: () => _select(context, PurchasePaymentMode.wallet),
+        ),
+        _PaymentOption(
+          accent: accent,
+          selected: payment.mode == PurchasePaymentMode.ledger,
+          title: l10n.odemeDefterdeBaslik,
+          subtitle: l10n.odemeDefterdeAciklama,
+          onTap: () => _select(context, PurchasePaymentMode.ledger),
+        ),
+        if (payment.mode == PurchasePaymentMode.ledger)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(34, 0, 0, 6),
+            child: Row(
+              children: [
+                if (tx != null)
+                  Expanded(
+                    child: Text(
+                      '“${tx.title}” · −'
+                      '${formatMoney(tx.amount, currency: walletCurrency)} · '
+                      '${AppFormatters.dateShort.format(tx.date)}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontSize: 12.5, fontWeight: FontWeight.w600),
+                    ),
+                  )
+                else
+                  const Spacer(),
+                TextButton(
+                  onPressed: () => _pickLedgerRow(context),
+                  style: TextButton.styleFrom(
+                      foregroundColor: accent.shade700),
+                  child: Text(tx == null
+                      ? l10n.defterSatiriSecDugme
+                      : l10n.defterSatiriDegistir),
+                ),
+              ],
             ),
           ),
+        _PaymentOption(
+          accent: accent,
+          selected: payment.mode == PurchasePaymentMode.alreadyOwned,
+          title: l10n.zatenBendeBaslik,
+          subtitle: l10n.zatenBendeAciklama,
+          onTap: () => _select(context, PurchasePaymentMode.alreadyOwned),
         ),
-        InvestmentHintCaption(
-          alreadyOwned || costText == null
-              ? context.l10n.alimCuzdandanDusulmeyecek
-              : context.l10n.alimCuzdandanDusulecek(
-                  costText!,
-                  AppFormatters.dateLong.format(date),
-                ),
-        ),
+        InvestmentHintCaption(_caption(context)),
         // Geçmiş tarihli alımda kafa karıştıran nokta: "Mevcut Değer" alanı
         // alım GÜNÜNÜN değeri sanılıyor. Kâr/zarar yanlış okunmasın diye
         // açıkça söylenir; altın/hissede bugünkü değeri hesaplama kısayolu
@@ -747,7 +840,7 @@ class InvestmentPurchaseRow extends StatelessWidget {
         if (!_isToday(date)) ...[
           const SizedBox(height: 10),
           InvestmentWarningBanner(
-            context.l10n.gecmisAlimUyarisi(AppFormatters.dateLong.format(date)),
+            l10n.gecmisAlimUyarisi(AppFormatters.dateLong.format(date)),
           ),
           if (onCalculateTodayValue != null)
             Align(
@@ -755,7 +848,7 @@ class InvestmentPurchaseRow extends StatelessWidget {
               child: TextButton.icon(
                 onPressed: onCalculateTodayValue,
                 icon: const Icon(Icons.calculate_rounded, size: 18),
-                label: Text(context.l10n.bugunkuDegeriHesapla),
+                label: Text(l10n.bugunkuDegeriHesapla),
                 style: TextButton.styleFrom(foregroundColor: accent.shade700),
               ),
             ),
@@ -769,6 +862,72 @@ class InvestmentPurchaseRow extends StatelessWidget {
     return date.year == now.year &&
         date.month == now.month &&
         date.day == now.day;
+  }
+}
+
+/// Ödeme seçeneklerinden biri: işaret + başlık + açıklama.
+class _PaymentOption extends StatelessWidget {
+  final MaterialColor accent;
+  final bool selected;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _PaymentOption({
+    required this.accent,
+    required this.selected,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    // Sheet'in renkli zemininde ink dalgası için kendi saydam Material'ı.
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                selected
+                    ? Icons.radio_button_checked_rounded
+                    : Icons.radio_button_unchecked_rounded,
+                size: 22,
+                color: selected ? accent.shade600 : cs.onSurfaceVariant,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                        color: cs.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

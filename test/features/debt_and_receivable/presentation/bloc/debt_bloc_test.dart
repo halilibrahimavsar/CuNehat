@@ -9,6 +9,10 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
+import 'package:cunehat/core/services/cash_source.dart';
+import 'package:cunehat/core/services/deletion_undo_service.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 
 class MockGetDebtsUseCase extends Mock implements GetDebtsUseCase {}
 
@@ -30,6 +34,7 @@ void main() {
   late TransactionsChangedNotifier changedNotifier;
 
   setUpAll(() {
+    registerFallbackValue(<String>{});
     registerFallbackValue(
       DebtEntity(
         calcMode: DebtCalcMode.none,
@@ -55,6 +60,15 @@ void main() {
     mockUpdateUseCase = MockUpdateDebtUseCase();
     mockDeleteUseCase = MockDeleteDebtUseCase();
     mockMetricsService = MockWalletMetricsService();
+    // Benimsenmiş satır yoksa bırakılacak/sorgulanacak bir şey de yok.
+    when(() => mockMetricsService.releaseAdoptedMovements(
+          walletId: any(named: 'walletId'),
+          linkedRecordIds: any(named: 'linkedRecordIds'),
+        )).thenAnswer((_) async => const []);
+    when(() => mockMetricsService.adoptedOwners(
+          walletId: any(named: 'walletId'),
+          recordIds: any(named: 'recordIds'),
+        )).thenAnswer((_) async => const <String>{});
 
     debtBloc = DebtBloc(
       getDebtsUseCase: mockGetUseCase,
@@ -132,6 +146,8 @@ void main() {
               // Anapara girişi BAŞLANGIÇ tarihine yazılır; silmedeki ters
               // kayıt da oraya gider (bugüne yazılırsa iki dönem bozulur).
               date: DateTime(2026, 6, 13),
+              // Hareket sahibini taşır (v11): borcun kendisi.
+              linkedRecordId: 'debt_123',
             )).thenAnswer((_) async => true);
         when(() => mockMetricsService.syncDebt('wallet_123'))
             .thenAnswer((_) async => true);
@@ -156,6 +172,7 @@ void main() {
               title: 'Friend Loan',
               tag: CashMovementTags.debt,
               date: DateTime(2026, 6, 13),
+              linkedRecordId: 'debt_123',
             )).called(1);
         verify(() => mockMetricsService.syncDebt('wallet_123')).called(1);
       },
@@ -174,6 +191,7 @@ void main() {
               title: any(named: 'title'),
               tag: any(named: 'tag'),
               date: any(named: 'date'),
+              linkedRecordId: any(named: 'linkedRecordId'),
             )).thenAnswer((_) async => false);
         when(() => mockMetricsService.syncDebt('wallet_123'))
             .thenAnswer((_) async => true);
@@ -212,6 +230,7 @@ void main() {
               title: any(named: 'title'),
               tag: any(named: 'tag'),
               date: any(named: 'date'),
+              linkedRecordId: any(named: 'linkedRecordId'),
             ));
       },
     );
@@ -238,6 +257,7 @@ void main() {
               title: any(named: 'title'),
               tag: any(named: 'tag'),
               date: any(named: 'date'),
+              linkedRecordId: any(named: 'linkedRecordId'),
             )).thenAnswer((_) async => true);
         when(() => mockMetricsService.syncDebt('wallet_123'))
             .thenAnswer((_) async => true);
@@ -317,6 +337,7 @@ void main() {
               title: any(named: 'title'),
               tag: any(named: 'tag'),
               date: any(named: 'date'),
+              linkedRecordId: any(named: 'linkedRecordId'),
             )).thenAnswer((_) async => false);
         when(() => mockMetricsService.syncDebt('wallet_123'))
             .thenAnswer((_) async => true);
@@ -743,6 +764,7 @@ void main() {
               title: any(named: 'title'),
               tag: any(named: 'tag'),
               date: any(named: 'date'),
+              linkedRecordId: any(named: 'linkedRecordId'),
             ));
         verify(() => mockMetricsService.syncDebt('wallet_123')).called(1);
       },
@@ -900,6 +922,7 @@ void main() {
             title: any(named: 'title'),
             tag: any(named: 'tag'),
             date: any(named: 'date'),
+            linkedRecordId: any(named: 'linkedRecordId'),
           )).thenAnswer((_) async => true);
       when(() => mockMetricsService.syncDebt(any())).thenAnswer((_) async {});
       when(() => mockGetUseCase('wallet_123'))
@@ -1049,6 +1072,7 @@ void main() {
               title: any(named: 'title'),
               tag: any(named: 'tag'),
               date: any(named: 'date'),
+              linkedRecordId: any(named: 'linkedRecordId'),
             )).thenAnswer((_) async => true);
         when(() => mockMetricsService.syncDebt(any())).thenAnswer((_) async {});
         when(() => mockGetUseCase('wallet_123'))
@@ -1084,6 +1108,7 @@ void main() {
               title: any(named: 'title'),
               tag: CashMovementTags.debtPayment,
               date: any(named: 'date'),
+              linkedRecordId: any(named: 'linkedRecordId'),
             )).called(1);
 
         final saved = verify(() => mockUpdateUseCase(captureAny()))
@@ -1095,6 +1120,416 @@ void main() {
         expect(saved.principalPaidAmount, closeTo(100, 0.01));
         expect(saved.remainingAmount, closeTo(11900, 0.01));
         expect(saved.isPaid, isFalse);
+      },
+    );
+  });
+
+  // Faz 2 (23 Eyl 2026): ekstredeki "KREDI TAKSIT −2.500" defterde dururken
+  // aynı ödeme borca da girilince kuplaj ikinci bir gider yazıyordu (anapara
+  // girişinde aynısı: "KREDI KULLANDIRIM +50.000" + borç ekleme geliri).
+  // Artık satır benimsenir; silmede özgün düz hâline bırakılır.
+  group('benimseme — defterde zaten duran satır', () {
+    TransactionEntity bankRow({
+      required String id,
+      required double amount,
+      bool income = false,
+    }) =>
+        TransactionEntity(
+          id: id,
+          userId: 'user_123',
+          walletId: 'wallet_123',
+          title: income ? 'KREDI KULLANDIRIM' : 'KREDI TAKSIT TAHSILATI',
+          tag: 'cat-x',
+          amount: amount,
+          date: DateTime(2026, 6, 13),
+          type: income
+              ? TransactionTypeModel.income
+              : TransactionTypeModel.expense,
+        );
+
+    void stubAdopt(TransactionEntity? result) {
+      when(() => mockMetricsService.adoptCashMovement(
+            walletId: any(named: 'walletId'),
+            transactionId: any(named: 'transactionId'),
+            tag: any(named: 'tag'),
+            linkedRecordId: any(named: 'linkedRecordId'),
+            expectIncome: any(named: 'expectIncome'),
+            expectAmount: any(named: 'expectAmount'),
+          )).thenAnswer((_) async => result);
+    }
+
+    void verifyNoCashWrite() {
+      verifyNever(() => mockMetricsService.recordCashMovement(
+            walletId: any(named: 'walletId'),
+            userId: any(named: 'userId'),
+            amount: any(named: 'amount'),
+            isIncome: any(named: 'isIncome'),
+            title: any(named: 'title'),
+            tag: any(named: 'tag'),
+            date: any(named: 'date'),
+            linkedRecordId: any(named: 'linkedRecordId'),
+          ));
+    }
+
+    blocTest<DebtBloc, DebtState>(
+      'borç ekleme: anapara satırı benimsenir, İKİNCİ GELİR yazılmaz',
+      build: () {
+        final row = bankRow(id: 'row-in', amount: 1000, income: true);
+        stubAdopt(row.copyWith(isSystem: true));
+        when(() => mockAddUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.syncDebt(any()))
+            .thenAnswer((_) async => true);
+        when(() => mockGetUseCase(any()))
+            .thenAnswer((_) async => Right([testDebt]));
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(AddDebtEvent(
+        testDebt,
+        principalSource: AdoptedCashMovement(
+            bankRow(id: 'row-in', amount: 1000, income: true)),
+      )),
+      verify: (_) {
+        verify(() => mockMetricsService.adoptCashMovement(
+              walletId: 'wallet_123',
+              transactionId: 'row-in',
+              tag: CashMovementTags.debt,
+              linkedRecordId: 'debt_123',
+              expectIncome: true,
+              expectAmount: 1000,
+            )).called(1);
+        verifyNoCashWrite();
+      },
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'ödeme: taksit satırı benimsenir, İKİNCİ GİDER yazılmaz',
+      build: () {
+        stubAdopt(bankRow(id: 'row-out', amount: 250).copyWith(isSystem: true));
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.syncDebt(any()))
+            .thenAnswer((_) async => true);
+        when(() => mockGetUseCase(any()))
+            .thenAnswer((_) async => Right([testDebt]));
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(PayDebtEvent(
+        testDebt.copyWith(payments: [
+          Payment(id: 'pay-1', date: DateTime(2026, 6, 13), amount: 250),
+        ]),
+        250,
+        paymentDate: DateTime(2026, 6, 13),
+        paymentId: 'pay-1',
+        cashSource: AdoptedCashMovement(bankRow(id: 'row-out', amount: 250)),
+      )),
+      verify: (_) {
+        verify(() => mockMetricsService.adoptCashMovement(
+              walletId: 'wallet_123',
+              transactionId: 'row-out',
+              tag: CashMovementTags.debtPayment,
+              linkedRecordId: 'pay-1',
+              expectIncome: false,
+              expectAmount: 250,
+            )).called(1);
+        verifyNoCashWrite();
+      },
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'ödeme: satır benimsenemezse ödeme HİÇ yazılmaz',
+      build: () {
+        stubAdopt(null);
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(PayDebtEvent(
+        testDebt,
+        250,
+        paymentDate: DateTime(2026, 6, 13),
+        paymentId: 'pay-1',
+        cashSource: AdoptedCashMovement(bankRow(id: 'row-out', amount: 250)),
+      )),
+      expect: () => [DebtLoading(), isA<DebtError>()],
+      verify: (_) {
+        verifyNever(() => mockUpdateUseCase(any()));
+      },
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'benimsenmiş ödemenin TUTARI değiştirilemez',
+      build: () {
+        when(() => mockMetricsService.adoptedOwners(
+              walletId: 'wallet_123',
+              recordIds: {'pay-1'},
+            )).thenAnswer((_) async => {'pay-1'});
+        when(() => mockGetUseCase(any()))
+            .thenAnswer((_) async => Right([testDebt]));
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(UpdateDebtPaymentEvent(
+        testDebt,
+        prevAmount: 250,
+        prevDate: DateTime(2026, 6, 13),
+        newAmount: 300,
+        newDate: DateTime(2026, 6, 13),
+        paymentId: 'pay-1',
+      )),
+      expect: () => [
+        DebtLoading(),
+        isA<DebtError>(),
+        DebtLoading(),
+        DebtLoaded([testDebt]),
+      ],
+      verify: (_) {
+        verifyNever(() => mockUpdateUseCase(any()));
+      },
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'benimsenmiş ödeme silinince iade YAZILMAZ, satır bırakılır',
+      build: () {
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.releaseAdoptedMovements(
+              walletId: 'wallet_123',
+              linkedRecordIds: {'pay-1'},
+            )).thenAnswer((_) async => [
+              bankRow(id: 'row-out', amount: 250).copyWith(
+                isSystem: true,
+                linkedRecordId: 'pay-1',
+                adoptedFromTag: 'cat-x',
+              ),
+            ]);
+        when(() => mockMetricsService.syncDebt(any()))
+            .thenAnswer((_) async => true);
+        when(() => mockGetUseCase(any()))
+            .thenAnswer((_) async => Right([testDebt]));
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(DeleteDebtPaymentEvent(
+        testDebt,
+        removedAmount: 250,
+        removedDate: DateTime(2026, 6, 13),
+        removedPaymentId: 'pay-1',
+      )),
+      verify: (_) => verifyNoCashWrite(),
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'borç silme: benimsenen anapara ve ödeme bırakılır, yalnız KALANLAR '
+      'tersine çevrilir; geri al benimsemeleri taşır',
+      build: () {
+        when(() => mockDeleteUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockGetUseCase(any()))
+            .thenAnswer((_) async => Right([testDebt]));
+        when(() => mockMetricsService.releaseAdoptedMovements(
+              walletId: 'wallet_123',
+              linkedRecordIds: {'debt_123', 'pay-1', 'pay-2'},
+            )).thenAnswer((_) async => [
+              bankRow(id: 'row-in', amount: 1000, income: true).copyWith(
+                  isSystem: true,
+                  linkedRecordId: 'debt_123',
+                  adoptedFromTag: 'cat-x'),
+              bankRow(id: 'row-out', amount: 250).copyWith(
+                  isSystem: true,
+                  linkedRecordId: 'pay-1',
+                  adoptedFromTag: 'cat-x'),
+            ]);
+        when(() => mockMetricsService.recordCashMovements(
+                  walletId: any(named: 'walletId'),
+                  entries: any(named: 'entries'),
+                ))
+            .thenAnswer((_) async =>
+                const CashWriteResult(ok: true, transactionIds: ['rev-1']));
+        when(() => mockMetricsService.syncDebt(any()))
+            .thenAnswer((_) async => true);
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(DeleteDebtEvent(
+        id: 'debt_123',
+        userId: 'user_123',
+        walletId: 'wallet_123',
+        principalAmount: 1000,
+        startDate: DateTime(2026, 6, 13),
+        payments: [
+          Payment(id: 'pay-1', date: DateTime(2026, 6, 20), amount: 250),
+          Payment(id: 'pay-2', date: DateTime(2026, 7, 20), amount: 300),
+        ],
+      )),
+      verify: (bloc) {
+        final entries = verify(() => mockMetricsService.recordCashMovements(
+              walletId: 'wallet_123',
+              entries: captureAny(named: 'entries'),
+            )).captured.single as List<CashMovement>;
+        expect(entries, hasLength(1),
+            reason: 'anapara ve pay-1 bankada gerçek; yalnız pay-2 iade');
+        expect(entries.single.amount, 300);
+        expect(entries.single.linkedRecordId, 'pay-2');
+      },
+      expect: () => [
+        DebtLoading(),
+        isA<DebtOperationSuccess>().having(
+          (s) => (s.undo as DebtDeletionUndo?)?.releasedAdoptions.length,
+          'releasedAdoptions',
+          2,
+        ),
+        DebtLoading(),
+        DebtLoaded([testDebt]),
+      ],
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'anaparası benimsenmiş borçta anapara/başlangıç DEĞİŞTİRİLEMEZ '
+      '(gelir iki kez sayılırdı)',
+      build: () {
+        when(() => mockMetricsService.adoptedOwners(
+              walletId: 'wallet_123',
+              recordIds: {'debt_123'},
+            )).thenAnswer((_) async => {'debt_123'});
+        when(() => mockGetUseCase(any()))
+            .thenAnswer((_) async => Right([testDebt]));
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(UpdateDebtEvent(
+        testDebt.copyWith(startDate: DateTime(2026, 6, 20)),
+        prevPrincipal: 1000,
+        prevStartDate: DateTime(2026, 6, 13),
+      )),
+      expect: () => [
+        DebtLoading(),
+        isA<DebtError>(),
+        DebtLoading(),
+        DebtLoaded([testDebt]),
+      ],
+      verify: (_) {
+        verifyNever(() => mockUpdateUseCase(any()));
+        verifyNever(() => mockMetricsService.recordCashMovements(
+              walletId: any(named: 'walletId'),
+              entries: any(named: 'entries'),
+            ));
+      },
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'anaparası benimsenmiş borçta başlık gibi diğer alanlar düzenlenir',
+      build: () {
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockGetUseCase(any()))
+            .thenAnswer((_) async => Right([testDebt]));
+        when(() => mockMetricsService.syncDebt(any()))
+            .thenAnswer((_) async => true);
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(UpdateDebtEvent(
+        testDebt.copyWith(title: 'Araba kredisi'),
+        prevPrincipal: 1000,
+        prevStartDate: DateTime(2026, 6, 13),
+      )),
+      verify: (_) {
+        // Tutar ve tarih yerinde: kilit sorgusu bile gerekmez.
+        verifyNever(() => mockMetricsService.adoptedOwners(
+              walletId: any(named: 'walletId'),
+              recordIds: any(named: 'recordIds'),
+            ));
+        verify(() => mockUpdateUseCase(any())).called(1);
+      },
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'borç silme: benimsenen satır anaparadan KÜÇÜKSE yalnız fark tersine '
+      'çevrilir (kuplajın kendi yazdığı kısım)',
+      build: () {
+        when(() => mockDeleteUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockGetUseCase(any()))
+            .thenAnswer((_) async => Right([testDebt]));
+        when(() => mockMetricsService.releaseAdoptedMovements(
+              walletId: 'wallet_123',
+              linkedRecordIds: {'debt_123'},
+            )).thenAnswer((_) async => [
+              bankRow(id: 'row-in', amount: 900, income: true).copyWith(
+                  isSystem: true,
+                  linkedRecordId: 'debt_123',
+                  adoptedFromTag: 'cat-x'),
+            ]);
+        when(() => mockMetricsService.recordCashMovements(
+                  walletId: any(named: 'walletId'),
+                  entries: any(named: 'entries'),
+                ))
+            .thenAnswer((_) async =>
+                const CashWriteResult(ok: true, transactionIds: ['rev-1']));
+        when(() => mockMetricsService.syncDebt(any()))
+            .thenAnswer((_) async => true);
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(DeleteDebtEvent(
+        id: 'debt_123',
+        userId: 'user_123',
+        walletId: 'wallet_123',
+        principalAmount: 1000,
+        startDate: DateTime(2026, 6, 13),
+      )),
+      verify: (_) {
+        final entries = verify(() => mockMetricsService.recordCashMovements(
+              walletId: 'wallet_123',
+              entries: captureAny(named: 'entries'),
+            )).captured.single as List<CashMovement>;
+        // Eklemede 900 benimsendi, 100 modül tarafından yazıldı: silmede
+        // yalnız o 100'ün tersi (gider) yazılır.
+        expect(entries.single.amount, 100);
+        expect(entries.single.isIncome, isFalse);
+      },
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'ödeme silme: benimsenen satır ödemeden küçükse yalnız fark iade edilir',
+      build: () {
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockGetUseCase(any()))
+            .thenAnswer((_) async => Right([testDebt]));
+        when(() => mockMetricsService.releaseAdoptedMovements(
+              walletId: 'wallet_123',
+              linkedRecordIds: {'pay-1'},
+            )).thenAnswer((_) async => [
+              bankRow(id: 'row-out', amount: 240).copyWith(
+                  isSystem: true,
+                  linkedRecordId: 'pay-1',
+                  adoptedFromTag: 'cat-x'),
+            ]);
+        when(() => mockMetricsService.recordCashMovement(
+              walletId: any(named: 'walletId'),
+              userId: any(named: 'userId'),
+              amount: any(named: 'amount'),
+              isIncome: any(named: 'isIncome'),
+              title: any(named: 'title'),
+              tag: any(named: 'tag'),
+              date: any(named: 'date'),
+              linkedRecordId: any(named: 'linkedRecordId'),
+            )).thenAnswer((_) async => true);
+        when(() => mockMetricsService.syncDebt(any()))
+            .thenAnswer((_) async => true);
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(DeleteDebtPaymentEvent(
+        testDebt,
+        removedAmount: 250,
+        removedDate: DateTime(2026, 6, 20),
+        removedPaymentId: 'pay-1',
+      )),
+      verify: (_) {
+        verify(() => mockMetricsService.recordCashMovement(
+              walletId: 'wallet_123',
+              userId: any(named: 'userId'),
+              amount: 10,
+              isIncome: true,
+              title: any(named: 'title'),
+              tag: CashMovementTags.debtPayment,
+              date: DateTime(2026, 6, 20),
+              linkedRecordId: 'pay-1',
+            )).called(1);
       },
     );
   });

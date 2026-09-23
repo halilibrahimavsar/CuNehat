@@ -37,6 +37,17 @@ abstract class TransactionsRepository {
   /// sorar; kategoriler cüzdana bağlı olmadığı için sayım da öyle.
   Future<Either<Failure, int>> countByTags(Set<String> tags);
 
+  /// [walletId] cüzdanında [recordIds]'ten birine bağlı (`linkedRecordId`)
+  /// işlemler — bir kaydın kuplaj hareketleri ve benimsediği satırlar.
+  ///
+  /// [walletId] `null` ise TÜM cüzdanlarda arar: transfer çiftinin iki
+  /// bacağı farklı cüzdanlardadır ve bacaklardan biri yalnız çift kimliğini
+  /// bilir.
+  Future<Either<Failure, List<TransactionEntity>>> getLinkedTo({
+    String? walletId,
+    required Set<String> recordIds,
+  });
+
   /// [from] etiketlerini [to]'ya çevirir, değişen kayıt sayısını döner.
   /// Bkz. `DeleteCategoryUseCase` — silinen kategorinin işlemleri yetim kalmaz.
   Future<Either<Failure, int>> retagTransactions(Set<String> from, String to);

@@ -69,6 +69,12 @@ final class PricesUnavailableNotice extends InvestmentNotice {
   const PricesUnavailableNotice();
 }
 
+/// Seçilen defter satırı kaydın nakit bacağı yapılamadı: satır bu arada
+/// değişmiş/silinmiş ya da başka bir kayda bağlanmış. Kayıt YAZILMADI.
+final class AdoptionFailedNotice extends InvestmentNotice {
+  const AdoptionFailedNotice();
+}
+
 sealed class InvestmentState extends Equatable {
   const InvestmentState();
 

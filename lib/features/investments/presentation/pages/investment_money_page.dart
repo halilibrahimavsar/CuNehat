@@ -1,3 +1,4 @@
+import 'package:cunehat/core/services/cash_source.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
@@ -175,7 +176,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
         goldType: goldType,
         goalId: investment.goalId,
       ),
-      onSave: (updated) {
+      onSave: (updated, cashSource) {
         bloc.add(UpdateInvestmentEvent(
           investment: updated,
           userId: _userId,
@@ -184,8 +185,13 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
           // "zaten bende" kısmı cüzdandan hiç çıkmadı.
           prevAmount: investment.bookedCost,
           newAmount: updated.bookedCost,
-          // KATKI: para bugün cüzdandan çıkıyor.
-          bookingDate: DateTime.now(),
+          // KATKI: para bugün cüzdandan çıkıyor — ya da ödeme defterde zaten
+          // duran satırsa o satırın gününde çıktı.
+          bookingDate: switch (cashSource) {
+            AdoptedCashMovement(:final transaction) => transaction.date,
+            _ => DateTime.now(),
+          },
+          cashSource: cashSource,
         ));
       },
     );
@@ -200,11 +206,12 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
   }) {
     final bloc = context.read<InvestmentBloc>();
     final goals = _currentGoals;
-    void onSave(InvestmentEntity investment) {
+    void onSave(InvestmentEntity investment, CashSource cashSource) {
       bloc.add(CreateInvestmentEvent(
         investment: investment,
         userId: _userId,
         walletId: _walletId,
+        cashSource: cashSource,
       ));
     }
 
@@ -252,7 +259,8 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
 
   void _openEditSheet(InvestmentEntity item) {
     final goals = _currentGoals;
-    void onSave(InvestmentEntity updatedInvestment) {
+    // Düzenlemede nakit kaynağı sorulmaz: maliyet farkı bloc'ta türetilir.
+    void onSave(InvestmentEntity updatedInvestment, CashSource _) {
       context.read<InvestmentBloc>().add(UpdateInvestmentEvent(
             investment: updatedInvestment,
             userId: _userId,

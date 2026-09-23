@@ -295,11 +295,16 @@ void main() {
     /// geri yüklenemez hale getirirdi.
     String v9Backup() {
       final wallet = _wallet().toJson()..remove('categoryIds');
+      // v11 alanları v9 yedeğinde de YOKTUR.
+      final tx = _transaction().toJson()
+        ..remove('linkedRecordId')
+        ..remove('adoptedFromTag')
+        ..remove('origin');
       return jsonEncode({
         'version': 9,
         'timestamp': '2026-09-01T10:00:00.000',
         'wallets': [wallet],
-        'transactions': [_transaction().toJson()],
+        'transactions': [tx],
         'investments': [],
         'debts': [],
         'receivables': [],
@@ -335,6 +340,51 @@ void main() {
 
       expect(inspection.status, BackupInspectionStatus.ok);
       expect(inspection.summary?.walletCount, 1);
+    });
+  });
+
+  group('eski sürüm yedeği (v10) migrasyonla geri yüklenir', () {
+    /// Sahadaki gerçek biçim: v10 işlemlerinde kuplaj bağı, benimseme izi ve
+    /// köken alanları YOKTUR. 23 Eyl 2026 itibarıyla testerların yedekleri
+    /// bu sürümde.
+    String v10Backup() {
+      final tx = _transaction().toJson()
+        ..remove('linkedRecordId')
+        ..remove('adoptedFromTag')
+        ..remove('origin');
+      return jsonEncode({
+        'version': 10,
+        'timestamp': '2026-09-20T10:00:00.000',
+        'wallets': [_wallet().toJson()],
+        'transactions': [tx],
+        'investments': [],
+        'debts': [],
+        'receivables': [],
+        'budgets': [],
+        'recurringTransactions': [],
+        'users': {
+          'u1': {'activeWalletId': 'w1'}
+        },
+        'categories': [_category().toJson()],
+      });
+    }
+
+    test('geri yükleme BAŞARILI; işlemin yeni alanları "bilinmiyor" (null)',
+        () async {
+      final result = await service.importDataFromJson(v10Backup());
+
+      expect(result.status, DataRestoreStatus.success);
+      final txs = Hive.box<TransactionModel>('transactions').values.toList();
+      expect(txs, hasLength(1));
+      expect(txs.single.linkedRecordId, isNull);
+      expect(txs.single.adoptedFromTag, isNull);
+      expect(txs.single.origin, isNull);
+    });
+
+    test('önizleme de v10 dosyasını okunabilir sayar', () async {
+      final inspection = service.inspectBackup(v10Backup());
+      expect(inspection.status, BackupInspectionStatus.ok);
+      expect(inspection.summary?.transactionCount, 1);
     });
   });
 

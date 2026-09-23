@@ -79,6 +79,10 @@ class CashMovement {
   final String tag;
   final DateTime? date;
 
+  /// Hareketin SAHİBİ olan kayıt (yatırım, borç ödemesi, anapara, alacak,
+  /// transfer çifti); bkz. `TransactionEntity.linkedRecordId`.
+  final String? linkedRecordId;
+
   const CashMovement({
     required this.userId,
     required this.amount,
@@ -86,6 +90,7 @@ class CashMovement {
     required this.title,
     required this.tag,
     this.date,
+    this.linkedRecordId,
   });
 }
 
@@ -173,6 +178,7 @@ class WalletMetricsService {
     required String title,
     required String tag,
     DateTime? date,
+    String? linkedRecordId,
   }) =>
       _serialized(
         walletId,
@@ -184,6 +190,7 @@ class WalletMetricsService {
           title: title,
           tag: tag,
           date: date,
+          linkedRecordId: linkedRecordId,
         ),
       );
 
@@ -195,6 +202,7 @@ class WalletMetricsService {
     required String title,
     required String tag,
     DateTime? date,
+    String? linkedRecordId,
   }) async {
     final result = await _writeCashMovements(
       walletId: walletId,
@@ -206,11 +214,143 @@ class WalletMetricsService {
           title: title,
           tag: tag,
           date: date,
+          linkedRecordId: linkedRecordId,
         ),
       ],
     );
     return result.ok;
   }
+
+  /// Kullanıcının DÜZ bir satırını (çoğu zaman ekstreden gelen) yeni bir
+  /// hareket yazmadan bir kaydın nakit bacağı yapar — "benimseme".
+  ///
+  /// **Neden:** satır defterde zaten dururken kuplaj kendi gider/gelirini de
+  /// yazınca para İKİ KEZ düşüyordu (ekstredeki yatırım alımı + Birikim'e
+  /// elle eklenen aynı alım; ekstredeki kredi taksidi + borca girilen ödeme).
+  ///
+  /// Satır sistem hareketi olur ([tag] kuplaj etiketi, sahibi
+  /// [linkedRecordId]) ve özgün kategorisi `adoptedFromTag`'e yazılır —
+  /// sahibi "hatalı giriş" diye silinince satır oraya döner
+  /// ([releaseAdoptedMovements]). Başlık, tarih, tutar ve banka numarası
+  /// KORUNUR: aynı ekstre yeniden aktarılınca kesin anahtar satırı yine bulur.
+  ///
+  /// Satır TAZE okunup doğrulanır: var, bu cüzdanda, sistem hareketi değil,
+  /// yönü [expectIncome] ve tutarı [expectAmount] (kuruşuyla). Tutmazsa hiçbir
+  /// şey yazılmaz ve `null` döner; tutarsa benimsenmiş hâli döner.
+  Future<TransactionEntity?> adoptCashMovement({
+    required String walletId,
+    required String transactionId,
+    required String tag,
+    required String linkedRecordId,
+    required bool expectIncome,
+    required double expectAmount,
+  }) =>
+      _serialized(walletId, () async {
+        try {
+          final read =
+              await transactionsRepository.getTransactionById(transactionId);
+          final current = read.fold((_) => null, (t) => t);
+          if (current == null ||
+              current.walletId != walletId ||
+              current.isSystem ||
+              current.isIncome != expectIncome ||
+              !moneyEquals(current.amount, expectAmount)) {
+            debugPrint('adoptCashMovement: satır benimsenemez ($transactionId)');
+            return null;
+          }
+          final adopted = current.copyWith(
+            isSystem: true,
+            tag: tag,
+            linkedRecordId: linkedRecordId,
+            adoptedFromTag: current.tag,
+          );
+          final written = await transactionsRepository.updateTransaction(
+            adopted,
+          );
+          if (written.isLeft()) return null;
+          // Tutar değişmedi; bakiye zaten tutarlıysa senkron no-op'tur.
+          await _syncBalanceImpl(walletId);
+          transactionsChangedNotifier.notify();
+          return adopted;
+        } catch (e) {
+          debugPrint('adoptCashMovement başarısız: $e');
+          return null;
+        }
+      });
+
+  /// [recordIds]'ten hangilerinin nakit bacağı BENİMSENMİŞ bir satır (salt
+  /// okuma). Arayüz benimsenmiş ödemeyi rozetle gösterir ve tutarını/tarihini
+  /// düzenletmez: o değerler bankanın satırından gelir.
+  Future<Set<String>> adoptedOwners({
+    required String walletId,
+    required Set<String> recordIds,
+  }) async {
+    if (recordIds.isEmpty) return const <String>{};
+    final linked = (await transactionsRepository.getLinkedTo(
+      walletId: walletId,
+      recordIds: recordIds,
+    ))
+        .fold((_) => const <TransactionEntity>[], (l) => l);
+    return {
+      for (final t in linked)
+        if (t.isAdopted && t.linkedRecordId != null) t.linkedRecordId!,
+    };
+  }
+
+  /// [recordIds]'e bağlı hareketler (salt okuma); [walletId] `null` ise TÜM
+  /// cüzdanlarda — transfer çiftinin bacakları iki ayrı cüzdandadır.
+  Future<List<TransactionEntity>> linkedMovements({
+    String? walletId,
+    required Set<String> recordIds,
+  }) async {
+    if (recordIds.isEmpty) return const <TransactionEntity>[];
+    return (await transactionsRepository.getLinkedTo(
+      walletId: walletId,
+      recordIds: recordIds,
+    ))
+        .fold((_) => const <TransactionEntity>[], (l) => l);
+  }
+
+  /// [linkedRecordIds]'e bağlı BENİMSENMİŞ satırları özgün düz hâllerine
+  /// döndürür (bkz. `TransactionEntity.released`).
+  ///
+  /// Sahibi "hatalı giriş" diye silinince çağrılır: bankada para gerçekten
+  /// çıktı; ters kayıt yazmak cüzdanı bankadan koparırdı. Kuplajın KENDİ
+  /// yazdığı hareketlere dokunmaz — onların tersi kaydın kendi akışında
+  /// yazılır.
+  ///
+  /// Dönen liste bırakılan satırların BIRAKMA ÖNCESİ hâlleridir: "geri al"
+  /// onları aynen geri yazar (bkz. `DeletionUndoService`).
+  Future<List<TransactionEntity>> releaseAdoptedMovements({
+    required String walletId,
+    required Set<String> linkedRecordIds,
+  }) =>
+      _serialized(walletId, () async {
+        if (linkedRecordIds.isEmpty) return const <TransactionEntity>[];
+        try {
+          final linked = (await transactionsRepository.getLinkedTo(
+            walletId: walletId,
+            recordIds: linkedRecordIds,
+          ))
+              .fold((_) => const <TransactionEntity>[], (l) => l);
+          final released = <TransactionEntity>[];
+          for (final t in linked) {
+            if (!t.isAdopted) continue;
+            final r = await transactionsRepository.updateTransaction(
+              t.released(),
+            );
+            if (r.isRight()) released.add(t);
+          }
+          if (released.isNotEmpty) {
+            await _syncBalanceImpl(walletId);
+            transactionsChangedNotifier.notify();
+          }
+          return released;
+        } catch (e) {
+          debugPrint('releaseAdoptedMovements başarısız: $e');
+          return const <TransactionEntity>[];
+        }
+      });
 
   /// Birden çok nakit hareketini TEK defter senkronuyla yazar.
   ///
@@ -258,6 +398,7 @@ class WalletMetricsService {
                 ? TransactionTypeModel.income
                 : TransactionTypeModel.expense,
             isSystem: true,
+            linkedRecordId: e.linkedRecordId,
           ),
       ];
 

@@ -449,6 +449,23 @@ void main() {
     expect(result, 'id-Yatırım');
   });
 
+  // Faz 2 sözlüğü (23 Eyl 2026, 5 gerçek ekstrede ölçüldü): kuyumcuya ödeme
+  // ve kripto borsasına gönderilen para yatırım alımıdır. Çıplak "altin" ve
+  // çıplak "menkul" BİLEREK yok: mağaza adını ve "GAYRIMENKUL"ü yakalardı.
+  test('kuyumcu ve kripto borsası Yatırım; ALTINYILDIZ ve GAYRIMENKUL değil',
+      () {
+    String? guess(String d) => guesser.guess(
+          description: d,
+          isIncome: false,
+          candidates: defaultExpenseCats,
+        );
+    expect(guess('FAST CELAL CIGCI BOSNA KUYUMCU KUVEYT TURK'), 'id-Yatırım');
+    expect(guess('HAVALE BTCTURK BILISIM A.S.'), 'id-Yatırım');
+    expect(guess('ALTINYILDIZ CLASSICS ISTANBUL'), isNot('id-Yatırım'));
+    expect(
+        guess('TAAHHUT INSAAT GAYRIMENKUL EV ALETLERI'), isNot('id-Yatırım'));
+  });
+
   test('grubun karşılığı kullanıcının listesinde yoksa null döner', () {
     // Tahmin ancak açıklamada anahtar kelime VE kullanıcıda o adda bir
     // kategori varken döner; kullanıcı kategoriyi silmişse sessizce boş kalır.

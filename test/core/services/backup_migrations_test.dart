@@ -122,6 +122,73 @@ void main() {
     });
   });
 
+  group('v10 → v11 (işlemlere kuplaj bağı ve köken)', () {
+    Map<String, dynamic> v10Backup() => {
+          'version': 10,
+          'timestamp': '2026-09-20T10:00:00.000',
+          'wallets': [
+            {'id': 'w1', 'name': 'Nakit', 'categoryIds': null},
+          ],
+          'transactions': [
+            {'id': 't1', 'tag': 'cat-1', 'isSystem': false},
+            {'id': 't2', 'tag': 'Borç Ödemesi', 'isSystem': true},
+          ],
+          'users': <String, dynamic>{},
+        };
+
+    test('sürüm damgası 11 olur', () {
+      expect(migrateBackup(v10Backup(), targetVersion: 11)['version'], 11);
+    });
+
+    test('her işleme üç alan AÇIKÇA null yazılır ("bilinmiyor")', () {
+      // Eski kuplaj hareketinin sahibi bilinmiyordu; benimseme yoktu; kaydın
+      // kökeni saklanmıyordu. `null` tam olarak bunu söyler.
+      final result = migrateBackup(v10Backup(), targetVersion: 11);
+      final txs = (result['transactions'] as List).cast<Map<String, dynamic>>();
+      expect(txs, hasLength(2));
+      for (final t in txs) {
+        for (final key in ['linkedRecordId', 'adoptedFromTag', 'origin']) {
+          expect(t.containsKey(key), isTrue, reason: key);
+          expect(t[key], isNull, reason: key);
+        }
+      }
+      // Diğer alanlar korunur (sistem işareti dahil).
+      expect(txs.map((t) => t['isSystem']), [false, true]);
+    });
+
+    test('işlem dışındaki bölümlere DOKUNULMAZ', () {
+      final source = v10Backup();
+      final result = migrateBackup(source, targetVersion: 11);
+      expect(result['wallets'], source['wallets']);
+      expect(result['timestamp'], source['timestamp']);
+    });
+
+    test('dönüşüm SAFTIR: girdi değişmez', () {
+      final source = v10Backup();
+      migrateBackup(source, targetVersion: 11);
+      expect(source['version'], 10);
+      expect((source['transactions'] as List).first,
+          isNot(contains('linkedRecordId')));
+    });
+
+    test('işlem listesi yoksa çökmez', () {
+      final result = migrateBackup(
+        {'version': 10, 'users': <String, dynamic>{}},
+        targetVersion: 11,
+      );
+      expect(result['transactions'], isEmpty);
+    });
+
+    test('v9 yedeği iki adımda (9→10→11) yükselir', () {
+      final result = migrateBackup(v9Backup(), targetVersion: 11);
+      expect(result['version'], 11);
+      expect(
+          (result['wallets'] as List).first, containsPair('categoryIds', null));
+      expect((result['transactions'] as List).first,
+          containsPair('origin', null));
+    });
+  });
+
   group('zincir bütünlüğü', () {
     test('desteklenen en eskiden güncele kadar HER adım tanımlı', () {
       // Zincirde bir boşluk kalırsa (ör. v11 eklenip 10→11 yazılmazsa) o

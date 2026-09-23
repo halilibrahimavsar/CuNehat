@@ -311,6 +311,17 @@ class CategoryGuesser {
       'yatirim',
       'borsa istanbul',
       'hisse senedi',
+      // Altın alımı çoğu zaman kuyumcuya ödemedir (ölçüldü, 23 Eyl 2026:
+      // QNB ekstresinde "... BOSNA KUYUMCU"). Çıplak "altin" BİLEREK yok:
+      // ALTINYILDIZ gibi mağaza adlarını yakalardı; çıplak "menkul" de yok:
+      // "GAYRIMENKUL"ü yakalıyordu (aynı ekstrede ölçüldü).
+      'kuyumcu',
+      // Kripto borsalarına gönderilen para: alım için yatırılır.
+      'binance',
+      'btcturk',
+      'paribu',
+      'bitexen',
+      'icrypex',
     ],
     // Bankanın kendi kestiği ücret ve vergiler. Gerçek bir QNB ekstresinde
     // 164 satırın 16'sı buydu ("3.3.1 EFT Ücreti" + ardındaki "BSMV

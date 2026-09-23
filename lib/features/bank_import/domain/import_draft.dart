@@ -354,6 +354,7 @@ class ImportDraft extends Equatable {
       type: type,
       isSystem: false,
       reference: reference,
+      origin: TransactionOrigin.bankImport,
     );
   }
 

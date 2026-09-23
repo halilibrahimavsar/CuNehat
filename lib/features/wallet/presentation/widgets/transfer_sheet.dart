@@ -169,7 +169,8 @@ class _TransferSheetState extends State<TransferSheet> {
         _showSuccess(service, outcome, l);
       case TransferResult.rateUnavailable:
         AppMessenger.error(l.transferKurYok);
-      case TransferResult.failed:
+      // Benimseme bu sayfadan yapılmaz; sonuç yine de düz başarısızlıktır.
+      case TransferResult.failed || TransferResult.adoptionFailed:
         AppMessenger.error(l.transferBasarisiz);
       case TransferResult.refundFailed:
         // Kaynak cüzdan KALICI olarak eksik ve defterde iz yok: bu, düz bir

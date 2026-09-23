@@ -4058,7 +4058,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get zatenBendeAciklama =>
-      'Uygulamadan önce alındı ya da ödemesi ekstreden deftere zaten girdi; maliyet cüzdandan tekrar düşülmesin';
+      'Uygulamadan önce alındı; maliyeti cüzdandan düşülmesin';
 
   @override
   String alimCuzdandanDusulecek(Object amount, Object date) {
@@ -4933,4 +4933,235 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bankImportDupMoveMatch => 'Diğer satırla eşleştir';
+
+  @override
+  String get benimsemeYapilamadiMesaji =>
+      'Seçilen işlem bağlanamadı: bu arada değişmiş, silinmiş ya da başka bir kayda bağlanmış olabilir. Kayıt eklenmedi.';
+
+  @override
+  String get defterSatiriSecBaslik => 'Ödemenin satırını seç';
+
+  @override
+  String get defterSatiriSecAciklama =>
+      'Bu cüzdandaki düz işlemler; tutarı ve tarihi en yakın olanlar üstte. Seçilen satır bu kaydın ödemesi sayılır, para ikinci kez düşülmez.';
+
+  @override
+  String get defterSatiriYok =>
+      'Uygun işlem yok. Ödeme ekstreden henüz gelmediyse önce ekstreyi içe aktar.';
+
+  @override
+  String get ekstredenRozeti => 'Ekstreden';
+
+  @override
+  String get odemeKaynagiBaslik => 'Ödeme';
+
+  @override
+  String get odemeCuzdandanBaslik => 'Cüzdandan düşülsün';
+
+  @override
+  String get odemeCuzdandanAciklama =>
+      'Alım, seçilen tarihte gider olarak yazılır.';
+
+  @override
+  String get odemeDefterdeBaslik => 'Ödemesi defterde zaten var';
+
+  @override
+  String get odemeDefterdeAciklama =>
+      'Ekstreden gelen ya da elle girdiğin satırı seç; para ikinci kez düşülmez.';
+
+  @override
+  String get defterSatiriSecDugme => 'Satır seç';
+
+  @override
+  String get defterSatiriDegistir => 'Değiştir';
+
+  @override
+  String get defterSatiriSecilmedi => 'Önce ödemenin defterdeki satırını seç.';
+
+  @override
+  String alimDefterdenKarsilanacak(String amount) {
+    return 'Seçilen satır ($amount) bu kaydın ödemesi sayılır; yeni gider yazılmaz. Tutar ve tarih o satırdan gelir.';
+  }
+
+  @override
+  String get katkiDefterdeVarDugme => 'Ödemesi defterde zaten var — satırı seç';
+
+  @override
+  String get katkiDefterSatiriKaldir => 'Kaldır';
+
+  @override
+  String get katkiDefterdenKarsilanacak =>
+      'Bu katkının ödemesi seçilen satır; yeni gider yazılmaz.';
+
+  @override
+  String get borcDefterdeSecenekBaslik => 'Anapara defterde zaten var';
+
+  @override
+  String get borcDefterdeSecenekGovde =>
+      'Ekstreden gelen giriş satırını (ör. KREDI KULLANDIRIM) seç; ikinci kez gelir yazılmaz.';
+
+  @override
+  String borcDefterTutarUyusmuyor(String row, String principal) {
+    return 'Seçilen satırın tutarı ($row) anaparayla ($principal) aynı değil. Anaparayı düzelt ya da doğru satırı seç.';
+  }
+
+  @override
+  String get borcOdemesiDefterdenKarsilanacak =>
+      'Bu ödeme seçilen satırdır; yeni gider yazılmaz. Tutar ve tarih o satırdan gelir.';
+
+  @override
+  String get odemeDefterSatirinaBagli =>
+      'Ekstre satırına bağlı: tutar ve tarih o satırdan gelir. Yanlış satırsa ödemeyi silip yeniden ekle.';
+
+  @override
+  String get baglaEylemi => 'Bağla…';
+
+  @override
+  String get baglaEylemiAciklama =>
+      'Birikim alımı, borç ödemesi ya da transfer olarak işaretle';
+
+  @override
+  String get baglaBaslik => 'Bu satırı bağla';
+
+  @override
+  String get baglaAciklama =>
+      'Satır ikinci kez yazılmaz: seçtiğin kaydın ödemesi olur ve harcama/gelir raporlarından çıkar. Kaydı silersen satır eski hâline döner.';
+
+  @override
+  String get baglaYeniBirikim => 'Yeni birikim alımı';
+
+  @override
+  String get baglaYeniBirikimAciklama => 'Altın, hisse, fon… aldın';
+
+  @override
+  String get baglaBirikimeKatki => 'Var olan birikime ekleme';
+
+  @override
+  String get baglaBirikimeKatkiAciklama =>
+      'Takip ettiğin bir birikime yapılan ödeme';
+
+  @override
+  String get baglaBorcOdemesi => 'Borç ödemesi';
+
+  @override
+  String get baglaBorcOdemesiAciklama =>
+      'Kredi taksidi ya da bir borca yapılan ödeme';
+
+  @override
+  String get baglaBorcAnaparasi => 'Kredi / borç girişi';
+
+  @override
+  String get baglaBorcAnaparasiAciklama =>
+      'Çektiğin kredi ya da aldığın borç hesabına yattı';
+
+  @override
+  String get baglaTransferCikis => 'Kendi hesabıma transfer';
+
+  @override
+  String get baglaTransferCikisAciklama =>
+      'Başka bir cüzdanına (ör. kredi kartına) taşıdığın para';
+
+  @override
+  String get baglaTransferGiris => 'Kendi hesabımdan transfer';
+
+  @override
+  String get baglaTransferGirisAciklama => 'Başka bir cüzdanından gelen para';
+
+  @override
+  String get baglaBirikimTuruSec => 'Ne aldın?';
+
+  @override
+  String get baglaBirikimSec => 'Hangi birikime?';
+
+  @override
+  String get baglaBirikimYok =>
+      'Bu cüzdanda birikim yok. Önce \"Yeni birikim alımı\"nı seç.';
+
+  @override
+  String get baglaBorcSec => 'Hangi borca?';
+
+  @override
+  String get baglaBorcYok => 'Bu cüzdanda açık borç yok.';
+
+  @override
+  String get baglaCuzdanSec => 'Hangi cüzdanın?';
+
+  @override
+  String get baglaCuzdanYok =>
+      'Başka cüzdanın yok. Transfer için önce bir cüzdan daha oluştur.';
+
+  @override
+  String get baglaKarsiSatirBaslik => 'Karşı cüzdanda bu hareket zaten var mı?';
+
+  @override
+  String get baglaKarsiSatirAciklama =>
+      'O cüzdanın ekstresini de aktardıysan aynı para taşıması orada da duruyordur; seç ki iki kez sayılmasın.';
+
+  @override
+  String get baglaKarsiSatirOlustur => 'Yok, karşı cüzdana eklensin';
+
+  @override
+  String get baglaKarsiSatirAdayYok =>
+      'Karşı cüzdanda eşleşebilecek bir satır bulunamadı.';
+
+  @override
+  String get transferBaglandi => 'Transfer olarak bağlandı';
+
+  @override
+  String get transferiKaldir => 'Transferi kaldır';
+
+  @override
+  String get transferiKaldirOnay =>
+      'Transferin iki bacağı da kaldırılır: ekstreden gelen satırlar eski kategorilerine döner, uygulamanın yazdığı bacaklar silinir.';
+
+  @override
+  String get transferKaldirildi => 'Transfer kaldırıldı';
+
+  @override
+  String get transferKaldirilamadi =>
+      'Transfer tam kaldırılamadı; cüzdan defterini kontrol et.';
+
+  @override
+  String bagliSatirNotu(String category) {
+    return 'Bu satır bir kaydın ödemesi olarak bağlandı; özgün kategorisi “$category”. Bağlı kaydı silersen satır eski hâline döner.';
+  }
+
+  @override
+  String get bagliTransferNotu =>
+      'Bu satır kendi cüzdanların arasındaki bir transferin bacağı; harcama ya da gelir sayılmaz.';
+
+  @override
+  String get bagliSatirKisaNotu =>
+      'Bu satır bir kaydın (birikim, borç…) ödemesi olarak bağlandı; o kayıttan yönetilir. Kaydı silersen satır eski hâline döner.';
+
+  @override
+  String get transferiKaldirAciklama =>
+      'İki bacağı da kaldırır; ekstreden gelen satır eski hâline döner';
+
+  @override
+  String bankImportUndoKeptLinked(int count) {
+    return 'İçe aktarım geri alındı. Bir kayda bağladığın $count satır yerinde bırakıldı; onları bağlı kaydı silerek kaldırabilirsin.';
+  }
+
+  @override
+  String get bankImportLinkTitle => 'Bir kayda bağlanabilecek satırlar';
+
+  @override
+  String get bankImportLinkBody =>
+      'Bunlar birikim alımı, borç ödemesi ya da kredi girişi gibi görünüyor. Aynı hareketi ilgili bölüme de gireceksen önce buradan bağla; yoksa iki kez sayılır.';
+
+  @override
+  String get linkHintInvestment => 'Birikim alımı olabilir';
+
+  @override
+  String get linkHintDebtPayment => 'Borç ödemesi olabilir';
+
+  @override
+  String get linkHintLoan => 'Kredi girişi olabilir';
+
+  @override
+  String get bankImportLinkButton => 'Bağla';
+
+  @override
+  String get bankImportLinked => 'Bağlandı';
 }

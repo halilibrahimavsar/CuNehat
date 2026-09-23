@@ -1,8 +1,27 @@
+import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 
-enum TransactionAction { edit, delete }
+enum TransactionAction {
+  edit,
+  delete,
+
+  /// Düz satırı bir kaydın (birikim, borç, transfer) nakit bacağı yap —
+  /// bkz. `startLinkTransactionFlow`.
+  link,
+
+  /// Çift kimliği olan transferi iki bacağıyla kaldır — bkz.
+  /// `TransferService.unlinkTransfer`.
+  removeTransfer,
+}
+
+/// Transfer bacağı mı ve sonradan kaldırılabilir mi: çift kimliği (şema 11)
+/// olmayan eski transferlerin bacakları güvenle eşlenemez.
+bool isRemovableTransferLeg(TransactionEntity t) =>
+    t.isSystem &&
+    t.tag == CashMovementTags.transfer &&
+    t.linkedRecordId != null;
 
 class TransactionActionSheet extends StatelessWidget {
   final TransactionEntity transaction;
@@ -90,12 +109,21 @@ class TransactionActionSheet extends StatelessWidget {
                 ],
               ),
             ),
-            if (transaction.isSystem)
+            if (transaction.isSystem) ...[
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
                 child: _systemNotice(context, cs),
-              )
-            else ...[
+              ),
+              if (isRemovableTransferLeg(transaction))
+                _tile(
+                  context,
+                  icon: Icons.link_off_rounded,
+                  color: Colors.red,
+                  title: context.l10n.transferiKaldir,
+                  subtitle: context.l10n.transferiKaldirAciklama,
+                  action: TransactionAction.removeTransfer,
+                ),
+            ] else ...[
               _tile(
                 context,
                 icon: Icons.edit_rounded,
@@ -104,6 +132,15 @@ class TransactionActionSheet extends StatelessWidget {
                 subtitle: context.l10n.duzenleSubtitle,
                 action: TransactionAction.edit,
               ),
+              if (transaction.id != null)
+                _tile(
+                  context,
+                  icon: Icons.link_rounded,
+                  color: cs.primary,
+                  title: context.l10n.baglaEylemi,
+                  subtitle: context.l10n.baglaEylemiAciklama,
+                  action: TransactionAction.link,
+                ),
               _tile(
                 context,
                 icon: Icons.delete_outline_rounded,
@@ -137,7 +174,7 @@ class TransactionActionSheet extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              context.l10n.buIslemOtomatikOlusturuldu,
+              systemNoticeText(context, transaction),
               style: TextStyle(
                 fontSize: 12,
                 height: 1.35,
@@ -166,7 +203,10 @@ class TransactionActionSheet extends StatelessWidget {
         style: TextStyle(
           fontWeight: FontWeight.w700,
           fontSize: 14.5,
-          color: action == TransactionAction.delete ? Colors.red : cs.onSurface,
+          color: action == TransactionAction.delete ||
+                  action == TransactionAction.removeTransfer
+              ? Colors.red
+              : cs.onSurface,
         ),
       ),
       subtitle: Text(
@@ -176,4 +216,15 @@ class TransactionActionSheet extends StatelessWidget {
       onTap: () => Navigator.pop(context, action),
     );
   }
+}
+
+/// Kilitli satırın bilgi notu: bağlanmış (benimsenmiş) satır ve transfer
+/// bacağı "otomatik oluşturuldu" DEĞİLDİR — ilki kullanıcının kendi (çoğu
+/// zaman ekstreden gelen) satırı, ikincisi kendi cüzdanları arası para.
+String systemNoticeText(BuildContext context, TransactionEntity t) {
+  if (t.tag == CashMovementTags.transfer && t.linkedRecordId != null) {
+    return context.l10n.bagliTransferNotu;
+  }
+  if (t.isAdopted) return context.l10n.bagliSatirKisaNotu;
+  return context.l10n.buIslemOtomatikOlusturuldu;
 }

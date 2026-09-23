@@ -10,11 +10,14 @@ import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/investments/domain/entities/goal_entity.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/usecases/get_live_quote_usecase.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/investment_form_validation.dart';
+import 'package:cunehat/core/services/cash_source.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/investment_sheet_widgets.dart';
+import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/purchase_payment.dart';
 import 'package:flutter/material.dart';
 import 'package:showcaseview/showcaseview.dart';
 
@@ -22,7 +25,11 @@ class AddStockSheet extends StatefulWidget {
   final String walletId;
   final String userId;
   final InvestmentEntity? investmentToEdit;
-  final Function(InvestmentEntity) onSave;
+
+  /// Kayıt + alımın nakit kaynağı (bkz. [PurchasePayment]). Düzenlemede
+  /// kaynak her zaman [NewCashMovement]: maliyet farkı bloc'ta türetilir.
+  final void Function(InvestmentEntity investment, CashSource cashSource)
+      onSave;
 
   /// Cüzdanın birikim hedefleri — "hedefe bağla" seçicisini besler.
   final List<GoalEntity> goals;
@@ -34,6 +41,10 @@ class AddStockSheet extends StatefulWidget {
   /// gelen fiyat başka bir birimdeyse çapraz kurla buna çevrilir.
   final String walletCurrency;
 
+  /// "Bağla…" akışından açıldıysa ödemesi defterde ZATEN duran satır: sayfa
+  /// "Defterdeki işlem" seçili açılır, maliyet ve tarih bu satırdan gelir.
+  final TransactionEntity? initialLedgerTransaction;
+
   const AddStockSheet({
     super.key,
     required this.walletId,
@@ -43,17 +54,20 @@ class AddStockSheet extends StatefulWidget {
     this.goals = const [],
     this.initialGoalId,
     this.investmentToEdit,
+    this.initialLedgerTransaction,
   });
 
   static Future<void> show(
     BuildContext context, {
     required String walletId,
     required String userId,
-    required Function(InvestmentEntity) onSave,
+    required void Function(InvestmentEntity investment, CashSource cashSource)
+        onSave,
     required String walletCurrency,
     List<GoalEntity> goals = const [],
     String? initialGoalId,
     InvestmentEntity? investmentToEdit,
+    TransactionEntity? initialLedgerTransaction,
   }) {
     return showModalBottomSheet(
       context: context,
@@ -67,6 +81,7 @@ class AddStockSheet extends StatefulWidget {
         goals: goals,
         initialGoalId: initialGoalId,
         investmentToEdit: investmentToEdit,
+        initialLedgerTransaction: initialLedgerTransaction,
       ),
     );
   }
@@ -103,9 +118,9 @@ class _AddStockSheetState extends State<AddStockSheet> {
   /// Alım tarihi: kayıt açılırken seçilir, gider bu tarihe yazılır.
   DateTime _purchaseDate = DateTime.now();
 
-  /// "Bu varlık zaten bende": maliyet cüzdandan düşülmez
-  /// (bkz. `InvestmentEntity.unbookedCost`).
-  bool _alreadyOwned = false;
+  /// Alımın ödemesi nereden: cüzdandan, defterde zaten duran satırdan ya da
+  /// hiç ("zaten bende"; bkz. `InvestmentEntity.unbookedCost`).
+  PurchasePayment _payment = const PurchasePayment.wallet();
 
   Color _selectedColor = Colors.blue;
 
@@ -139,6 +154,14 @@ class _AddStockSheetState extends State<AddStockSheet> {
       _selectedColor = item.color;
       _purchaseDate = item.dateAdded;
       _symbolController.text = item.symbol ?? '';
+    }
+    // "Bağla…" akışı: satır önceden seçili gelir; maliyet ve tarih ondan.
+    final ledgerTx = widget.initialLedgerTransaction;
+    if (!_isEditing && ledgerTx != null) {
+      _payment = PurchasePayment.ledger(ledgerTx);
+      _amountController.text = _fmt(ledgerTx.amount);
+      _purchaseDate =
+          DateTime(ledgerTx.date.year, ledgerTx.date.month, ledgerTx.date.day);
     }
     // Alım özeti ("şu kadarı cüzdandan düşülecek") maliyetten türer.
     _amountController.addListener(() => setState(() {}));
@@ -259,11 +282,32 @@ class _AddStockSheetState extends State<AddStockSheet> {
     );
   }
 
-  String? _validate() => validateInvestmentForm(
-        context,
-        cost: _parsedAmount,
-        currentValue: _parsedCurrentValue,
-      );
+  String? _validate() {
+    // "Ödemesi defterde var" seçildi ama satır seçilmedi: kayıt nakit bacağı
+    // olmadan yazılırdı.
+    if (!_isEditing && _payment.needsLedgerTransaction) {
+      return context.l10n.defterSatiriSecilmedi;
+    }
+    return validateInvestmentForm(
+      context,
+      cost: _parsedAmount,
+      currentValue: _parsedCurrentValue,
+    );
+  }
+
+  /// Defterden bir satır seçilince maliyet ve alım tarihi o satırdan gelir
+  /// (ve kilitlenir): gider zaten o tutarla, o gün defterde.
+  void _onPaymentChanged(PurchasePayment payment) {
+    setState(() {
+      _payment = payment;
+      final tx = payment.ledgerTransaction;
+      if (tx != null) {
+        _amountController.text = _fmt(tx.amount);
+        _purchaseDate = DateTime(tx.date.year, tx.date.month, tx.date.day);
+      }
+      _error = null;
+    });
+  }
 
   void _save() {
     final err = _validate();
@@ -302,7 +346,10 @@ class _AddStockSheetState extends State<AddStockSheet> {
       unbookedCost: _resolveUnbookedCost(_parsedAmount ?? 0.0),
     );
 
-    widget.onSave(investment);
+    widget.onSave(
+      investment,
+      _isEditing ? const NewCashMovement() : _payment.cashSource,
+    );
     Navigator.pop(context);
   }
 
@@ -414,6 +461,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
                             context.l10n.onboardingInvestmentAddCostDesc,
                         child: InvestmentFilledField(
                           controller: _amountController,
+                          readOnly: _payment.isLedgerLocked,
                           hint: context.l10n.maliyetYatirilanAnaPara,
                           icon: Icons.payments_rounded,
                           accent: _accent,
@@ -584,11 +632,12 @@ class _AddStockSheetState extends State<AddStockSheet> {
         accent: _accent,
         date: _purchaseDate,
         onDateChanged: (d) => setState(() => _purchaseDate = d),
-        alreadyOwned: _alreadyOwned,
-        onAlreadyOwnedChanged: (v) => setState(() => _alreadyOwned = v),
-        costText: (cost == null || cost <= 0)
-            ? null
-            : formatMoney(cost, currency: widget.walletCurrency),
+        payment: _payment,
+        onPaymentChanged: _onPaymentChanged,
+        userId: widget.userId,
+        walletId: widget.walletId,
+        walletCurrency: widget.walletCurrency,
+        cost: cost,
         // Aynı sorgu "Hesapla" düğmesininki: miktar × güncel fiyat →
         // mevcut değer. Geçmiş tarihli alımda kullanıcı bunu arıyor.
         onCalculateTodayValue: _isLoading ? null : _fetchLivePrice,
@@ -605,7 +654,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
   /// kısım sabit tutulur, fark defteri etkiler.
   double _resolveUnbookedCost(double cost) {
     final item = widget.investmentToEdit;
-    if (item == null) return _alreadyOwned ? cost : 0.0;
+    if (item == null) return _payment.isAlreadyOwned ? cost : 0.0;
     if (item.amount > 0 && item.unbookedCost >= item.amount) return cost;
     return item.unbookedCost > cost ? cost : item.unbookedCost;
   }

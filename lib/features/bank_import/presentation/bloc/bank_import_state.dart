@@ -1,6 +1,7 @@
 import 'package:cunehat/features/bank_import/data/balance_reconciler.dart';
 import 'package:cunehat/features/bank_import/data/category_guesser.dart';
 import 'package:cunehat/features/bank_import/data/column_mapper.dart';
+import 'package:cunehat/features/bank_import/data/link_hint.dart';
 import 'package:cunehat/features/bank_import/data/raw_table_reader.dart';
 import 'package:cunehat/features/bank_import/data/statement_verification.dart';
 import 'package:cunehat/features/bank_import/domain/column_mapping.dart';
@@ -221,6 +222,11 @@ class BankImportDone extends BankImportState {
   /// açılış bakiyesini kaydırır ve bir tekrarı bakiyede görünmez yapar
   /// (rapor ise onu yine iki kez sayar).
   final int unresolvedLeftovers;
+
+  /// Yazılan satırlardan bir kayda (birikim, borç ödemesi, kredi girişi)
+  /// bağlanmaya aday görünenler — yalnız öneri (bkz. `linkHintOf`).
+  final List<LinkSuggestion> linkSuggestions;
+
   const BankImportDone({
     required this.added,
     this.corrected = 0,
@@ -230,6 +236,7 @@ class BankImportDone extends BankImportState {
     required this.balance,
     required this.hasPastMonthRows,
     this.unresolvedLeftovers = 0,
+    this.linkSuggestions = const [],
   });
 }
 

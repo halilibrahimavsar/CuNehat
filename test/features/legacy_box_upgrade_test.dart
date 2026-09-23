@@ -11,6 +11,7 @@ import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart
 import 'package:cunehat/features/debt_and_receivable/data/models/receivable_model.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
+import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/investments/data/models/investment_model.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
@@ -117,6 +118,40 @@ void main() {
           'kategoriler görünür. `[]` gelseydi testerın cüzdanında hiçbir '
           'kategori görünmezdi.',
     );
+  });
+
+  test('işlem: v11 öncesi 11 alanlı kayıt açılır, yeni alanlar null gelir',
+      () async {
+    // 23 Eyl 2026: testerların defteri bu biçimde duruyor. Üç yeni alan
+    // (kuplaj sahibi, benimseme izi, köken) nullable; üretilen adapter
+    // `fields[11] as String?` okur — eski kare onları taşımaz.
+    final back = await upgrade(
+      'transactions',
+      TransactionModel(
+        id: 't1',
+        userId: 'u',
+        walletId: 'w1',
+        title: 'BIM MAGAZALAR',
+        tag: 'cat-market',
+        amount: 913.15,
+        date: DateTime(2026, 9, 5),
+        type: TransactionTypeModel.expense,
+        isSystem: false,
+        reference: 'DK-77',
+        linkedRecordId: 'bu-alan-eski-kayda-YAZILMAZ',
+        adoptedFromTag: 'bu-da',
+        origin: 'bu-da',
+      ),
+      [AdapterRegistration.of(_LegacyTransactionWriter())],
+    );
+
+    expect(back.title, 'BIM MAGAZALAR');
+    expect(back.amount, 913.15);
+    expect(back.reference, 'DK-77');
+    expect(back.linkedRecordId, isNull);
+    expect(back.adoptedFromTag, isNull);
+    expect(back.origin, isNull);
+    expect(back.isAdopted, isFalse);
   });
 
   test('yatırım: unbookedCost/goalId olmayan kayıt açılır', () async {
@@ -428,6 +463,42 @@ class _LegacyWalletWriter extends TypeAdapter<WalletModel> {
       ..write(obj.openingBalance)
       ..writeByte(13)
       ..write(obj.currency);
+  }
+}
+
+class _LegacyTransactionWriter extends TypeAdapter<TransactionModel> {
+  @override
+  final int typeId = 1;
+
+  @override
+  TransactionModel read(BinaryReader reader) => throw UnimplementedError();
+
+  @override
+  void write(BinaryWriter writer, TransactionModel obj) {
+    writer
+      ..writeByte(11) // v11 öncesi: alan 11-13 YOK
+      ..writeByte(0)
+      ..write(obj.id)
+      ..writeByte(1)
+      ..write(obj.userId)
+      ..writeByte(2)
+      ..write(obj.walletId)
+      ..writeByte(3)
+      ..write(obj.title)
+      ..writeByte(4)
+      ..write(obj.tag)
+      ..writeByte(5)
+      ..write(obj.amount)
+      ..writeByte(6)
+      ..write(obj.date)
+      ..writeByte(7)
+      ..write(obj.type)
+      ..writeByte(8)
+      ..write(obj.isSystem)
+      ..writeByte(9)
+      ..write(obj.receiptFileName)
+      ..writeByte(10)
+      ..write(obj.reference);
   }
 }
 

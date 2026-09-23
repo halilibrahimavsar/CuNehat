@@ -2,7 +2,12 @@
 
 import 'dart:math' as math;
 
+import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/services/cash_source.dart';
+import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/ledger_transaction_picker.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
@@ -33,22 +38,32 @@ class DebtPaymentDialog extends StatefulWidget {
   /// (taksit aritmetiği birimden bağımsız, yalnız gösterim bunu kullanır).
   final String currency;
 
+  /// "Bağla…" akışından açıldıysa ödemesi defterde ZATEN duran satır:
+  /// diyalog o satır seçili açılır, tutar ve tarih ondan gelir.
+  final TransactionEntity? initialLedgerTransaction;
+
   const DebtPaymentDialog({
     super.key,
     required this.debt,
     required this.currency,
+    this.initialLedgerTransaction,
   });
 
-  /// Static show metodu - Dialog'u açar
+  /// Static show metodu - Dialog'u açar. Ödeme gönderildiyse `true` döner.
   static Future<bool?> show(
     BuildContext context,
     DebtEntity debt, {
     required String currency,
+    TransactionEntity? initialLedgerTransaction,
   }) {
     return showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => DebtPaymentDialog(debt: debt, currency: currency),
+      builder: (_) => DebtPaymentDialog(
+        debt: debt,
+        currency: currency,
+        initialLedgerTransaction: initialLedgerTransaction,
+      ),
     );
   }
 
@@ -72,14 +87,116 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
   /// ekran boşaltılmaz.
   late DebtEntity _debt;
 
+  /// Ödeme defterde ZATEN duruyorsa (ekstredeki "KREDI TAKSIT −2.500") o
+  /// satır: tutar ve tarih ondan gelir ve kilitlenir, yeni gider yazılmaz.
+  TransactionEntity? _ledgerTx;
+
+  /// Nakit bacağı benimsenmiş bir ekstre satırı olan ödemeler: rozetle
+  /// gösterilir, tutarı/tarihi düzenlenmez (bankanın satırından gelir).
+  Set<String> _adoptedPaymentIds = const {};
+
   @override
   void initState() {
     super.initState();
     _debt = widget.debt;
+    _loadAdoptedPayments();
     // Alan başlatıcısı widget'a erişemediği için varsayılan "bugün"dü; borcun
     // başlangıcı gelecekteyse bu, seçicinin `firstDate`inin ALTINDA kalıyor ve
     // showDatePicker assertion ile düşüyordu.
     _paymentDate = _clampToPickerRange(DateTime.now());
+    final ledgerTx = widget.initialLedgerTransaction;
+    if (ledgerTx != null) {
+      _ledgerTx = ledgerTx;
+      _amountController.text = formatAmountForInput(ledgerTx.amount);
+      _paymentDate =
+          DateTime(ledgerTx.date.year, ledgerTx.date.month, ledgerTx.date.day);
+    }
+  }
+
+  Future<void> _loadAdoptedPayments() async {
+    final ids = {for (final p in _debt.payments) p.id};
+    if (ids.isEmpty || !getIt.isRegistered<WalletMetricsService>()) return;
+    try {
+      final adopted = await getIt<WalletMetricsService>().adoptedOwners(
+        walletId: _debt.walletId,
+        recordIds: ids,
+      );
+      if (mounted) setState(() => _adoptedPaymentIds = adopted);
+    } catch (_) {
+      // Rozet yalnız bilgi; okunamazsa bloc yine düzenlemeyi reddeder.
+    }
+  }
+
+  Future<void> _pickLedgerRow() async {
+    final picked = await showLedgerTransactionPicker(
+      context,
+      userId: _debt.userId,
+      walletId: _debt.walletId,
+      currency: widget.currency,
+      isIncome: false,
+      amountHint: parseMoneyInput(_amountController.text),
+      dateHint: _paymentDate,
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _ledgerTx = picked;
+      _activeQuickPay = null;
+      _amountController.text = formatAmountForInput(picked.amount);
+      _paymentDate =
+          DateTime(picked.date.year, picked.date.month, picked.date.day);
+    });
+  }
+
+  /// "Ödemesi defterde zaten var": satırı seçme/gösterme/kaldırma.
+  Widget _buildLedgerPayment(ColorScheme cs) {
+    final tx = _ledgerTx;
+    if (tx == null) {
+      return Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: TextButton.icon(
+          onPressed: _pickLedgerRow,
+          icon: const Icon(Icons.receipt_long_rounded, size: 18),
+          label: Text(context.l10n.katkiDefterdeVarDugme),
+        ),
+      );
+    }
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
+      decoration: BoxDecoration(
+        color: cs.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.link_rounded, size: 18, color: cs.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '“${tx.title}” · −${_plainMoney(tx.amount)} · '
+                  '${AppFormatters.dateShort.format(tx.date)}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 12.5, fontWeight: FontWeight.w600),
+                ),
+                Text(
+                  context.l10n.borcOdemesiDefterdenKarsilanacak,
+                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () => setState(() => _ledgerTx = null),
+            child: Text(context.l10n.katkiDefterSatiriKaldir),
+          ),
+        ],
+      ),
+    );
   }
 
   /// Ödeme, borcun başlangıcından önce yapılmış olamaz.
@@ -177,9 +294,16 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
       payments: [..._debt.payments, newPayment],
     );
 
-    context
-        .read<DebtBloc>()
-        .add(PayDebtEvent(updatedDebt, amount, paymentDate: _paymentDate));
+    final ledgerTx = _ledgerTx;
+    context.read<DebtBloc>().add(PayDebtEvent(
+          updatedDebt,
+          amount,
+          paymentDate: _paymentDate,
+          paymentId: newPayment.id,
+          cashSource: ledgerTx == null
+              ? const NewCashMovement()
+              : AdoptedCashMovement(ledgerTx),
+        ));
     Navigator.of(context).pop(true);
   }
 
@@ -297,14 +421,17 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
 
                     const SizedBox(height: 16),
 
-                    // Hızlı seçim chip'leri
-                    _buildQuickPayOptions(payoff, outstandingInterest),
-
-                    const SizedBox(height: 12),
+                    // Hızlı seçim chip'leri — defterden satır seçiliyken tutar
+                    // o satırındır, çip onu değiştiremez.
+                    if (_ledgerTx == null) ...[
+                      _buildQuickPayOptions(payoff, outstandingInterest),
+                      const SizedBox(height: 12),
+                    ],
 
                     // Ödeme Tutarı
                     TextFormField(
                       controller: _amountController,
+                      readOnly: _ledgerTx != null,
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [AmountInputFormatter()],
@@ -337,11 +464,13 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                     if (moneyIsPositive(outstandingInterest))
                       _buildAllocationHint(outstandingInterest),
 
+                    _buildLedgerPayment(cs),
+
                     const SizedBox(height: 16),
 
-                    // Ödeme Tarihi
+                    // Ödeme Tarihi — defterden seçilen satırın günü kilitlidir.
                     InkWell(
-                      onTap: _selectDate,
+                      onTap: _ledgerTx == null ? _selectDate : null,
                       borderRadius: BorderRadius.circular(12),
                       child: InputDecorator(
                         decoration: InputDecoration(
@@ -621,6 +750,7 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
       ),
       removedAmount: payment.amount,
       removedDate: payment.date,
+      removedPaymentId: payment.id,
     ));
   }
 
@@ -650,6 +780,7 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
       prevDate: payment.date,
       newAmount: result.amount,
       newDate: result.date,
+      paymentId: payment.id,
     ));
   }
 
@@ -659,6 +790,7 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
       children: _debt.payments.asMap().entries.map((entry) {
         final index = entry.key;
         final payment = entry.value;
+        final adopted = _adoptedPaymentIds.contains(payment.id);
         return Card(
           margin: const EdgeInsets.only(bottom: 8),
           child: ListTile(
@@ -681,14 +813,28 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
             ),
             // Başlıktaki tutar cüzdandan ÇIKAN tam tutar; bunun ne kadarının
             // borcu değil gecikme faizini kapattığı burada yazar.
-            subtitle: Text(
-              moneyIsPositive(payment.overdueInterestPart)
-                  ? context.l10n.odemeIcindeGecikmeFaizi(
-                      AppFormatters.dateShort.format(payment.date),
-                      _money(payment.overdueInterestPart),
-                    )
-                  : AppFormatters.dateShort.format(payment.date),
-              style: const TextStyle(fontSize: 12),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  moneyIsPositive(payment.overdueInterestPart)
+                      ? context.l10n.odemeIcindeGecikmeFaizi(
+                          AppFormatters.dateShort.format(payment.date),
+                          _money(payment.overdueInterestPart),
+                        )
+                      : AppFormatters.dateShort.format(payment.date),
+                  style: const TextStyle(fontSize: 12),
+                ),
+                if (adopted)
+                  Text(
+                    context.l10n.odemeDefterSatirinaBagli,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+              ],
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
@@ -710,6 +856,9 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                   itemBuilder: (_) => [
                     PopupMenuItem(
                       value: 'edit',
+                      // Benimsenmiş ödemenin tutarı/tarihi bankanın
+                      // satırından gelir (bloc da reddeder).
+                      enabled: !adopted,
                       child: Row(
                         children: [
                           const Icon(Icons.edit,

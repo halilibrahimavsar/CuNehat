@@ -255,6 +255,8 @@ void main() {
     expect(savedTransaction!.amount, 100.0);
     expect(savedTransaction!.title, 'Lunch out');
     expect(savedTransaction!.tag, 'Food');
+    // Ekstre tekrar tespiti "elle girildi"yi başlıktan tahmin etmesin (M5).
+    expect(savedTransaction!.origin, TransactionOrigin.manual);
   });
 
   // REGRESYON (M7, 23 Eyl 2026): form düzenlemede varlığı sıfırdan kuruyordu;

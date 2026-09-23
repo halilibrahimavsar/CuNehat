@@ -1,0 +1,337 @@
+import 'dart:async';
+
+import 'package:cunehat/core/l10n/app_localizations.dart';
+import 'package:cunehat/core/services/wallet_metrics_service.dart';
+import 'package:cunehat/features/coupling/presentation/link_transaction_flow.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_action_sheet.dart';
+import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
+
+TransactionEntity _tx(
+  String id, {
+  String walletId = 'w',
+  double amount = 5000,
+  bool income = false,
+  DateTime? date,
+  bool isSystem = false,
+  String tag = 'cat-diger',
+  String? linkedRecordId,
+  String? adoptedFromTag,
+}) =>
+    TransactionEntity(
+      id: id,
+      userId: 'u',
+      walletId: walletId,
+      title: 'SATIR $id',
+      tag: tag,
+      amount: amount,
+      date: date ?? DateTime(2026, 9, 10, 12),
+      type: income ? TransactionTypeModel.income : TransactionTypeModel.expense,
+      isSystem: isSystem,
+      linkedRecordId: linkedRecordId,
+      adoptedFromTag: adoptedFromTag,
+    );
+
+void main() {
+  setUp(() => Intl.defaultLocale = 'tr_TR');
+
+  group('hedefler', () {
+    test('gider: alım/ödeme hedefleri; gelir: borç girişi ve transfer', () {
+      expect(linkTargetsFor(_tx('g')), [
+        LinkTarget.newInvestment,
+        LinkTarget.investmentContribution,
+        LinkTarget.debtPayment,
+        LinkTarget.transfer,
+      ]);
+      expect(linkTargetsFor(_tx('i', income: true)), [
+        LinkTarget.debtPrincipal,
+        LinkTarget.transfer,
+      ]);
+    });
+
+    test('sistem satırı ve kaydedilmemiş satır bağlanamaz', () {
+      expect(canLinkTransaction(_tx('a')), isTrue);
+      expect(canLinkTransaction(_tx('a', isSystem: true)), isFalse);
+      expect(
+        canLinkTransaction(TransactionEntity(
+          id: null,
+          userId: 'u',
+          walletId: 'w',
+          title: 't',
+          tag: 't',
+          amount: 1,
+          date: DateTime(2026),
+          type: TransactionTypeModel.expense,
+        )),
+        isFalse,
+      );
+    });
+  });
+
+  group('transferCounterpartCandidates', () {
+    final leg = _tx('leg', amount: 5000, date: DateTime(2026, 9, 10, 14));
+
+    test(
+        'aynı birim: ters yön + kuruşu kuruşuna aynı tutar + ±3 gün; '
+        'sistem satırı ve aynı yön elenir', () {
+      final pool = [
+        _tx('far', walletId: 'k', income: true, date: DateTime(2026, 9, 14)),
+        _tx('next', walletId: 'k', income: true, date: DateTime(2026, 9, 11)),
+        _tx('same', walletId: 'k', income: true, date: DateTime(2026, 9, 10)),
+        _tx('diffAmount',
+            walletId: 'k',
+            income: true,
+            amount: 4999.99,
+            date: DateTime(2026, 9, 10)),
+        _tx('sameDir', walletId: 'k', date: DateTime(2026, 9, 10)),
+        _tx('sys',
+            walletId: 'k',
+            income: true,
+            isSystem: true,
+            date: DateTime(2026, 9, 10)),
+      ];
+
+      final ids = [
+        for (final t in transferCounterpartCandidates(
+          pool,
+          leg: leg,
+          sameCurrency: true,
+        ))
+          t.id,
+      ];
+
+      // En yakın gün önce; 4 gün uzak, tutarı farklı, yönü aynı ya da
+      // sistem satırı olan aday DEĞİL.
+      expect(ids, ['same', 'next']);
+    });
+
+    test('farklı birimde tutar karşılaştırılmaz (o günün kuru bilinmiyor)', () {
+      final pool = [
+        _tx('usd', walletId: 'k', income: true, amount: 120.5),
+      ];
+      expect(
+        transferCounterpartCandidates(pool, leg: leg, sameCurrency: false),
+        hasLength(1),
+      );
+      expect(
+        transferCounterpartCandidates(pool, leg: leg, sameCurrency: true),
+        isEmpty,
+      );
+    });
+
+    test('gelir bacağının karşılığı GİDER satırıdır', () {
+      final incomeLeg = _tx('in', income: true, amount: 300);
+      final pool = [
+        _tx('out', walletId: 'b', amount: 300),
+        _tx('in2', walletId: 'b', amount: 300, income: true),
+      ];
+      expect(
+        [
+          for (final t in transferCounterpartCandidates(pool,
+              leg: incomeLeg, sameCurrency: true))
+            t.id
+        ],
+        ['out'],
+      );
+    });
+  });
+
+  group('OutcomeWatch', () {
+    test('koşulu sağlayan İLK durumu verir, öncekileri atlar', () async {
+      final controller = StreamController<int>.broadcast();
+      final watch = OutcomeWatch<int>(controller.stream, (s) => s.isEven);
+      controller
+        ..add(1)
+        ..add(4)
+        ..add(6);
+      expect(await watch.result, 4);
+      await controller.close();
+    });
+
+    test('vazgeçilince null — sonradan gelen sonuç yakalanmaz', () async {
+      final controller = StreamController<int>.broadcast();
+      final watch = OutcomeWatch<int>(controller.stream, (s) => s.isEven);
+      watch.cancel();
+      controller.add(2);
+      expect(await watch.result, isNull);
+      expect(controller.hasListener, isFalse, reason: 'dinleme bırakıldı');
+      await controller.close();
+    });
+
+    test('süre dolarsa null', () async {
+      final controller = StreamController<int>.broadcast();
+      final watch = OutcomeWatch<int>(
+        controller.stream,
+        (s) => s.isEven,
+        timeout: const Duration(milliseconds: 5),
+      );
+      expect(await watch.result, isNull);
+      expect(controller.hasListener, isFalse);
+      await controller.close();
+    });
+  });
+
+  Widget app(Widget home) => MaterialApp(
+        locale: const Locale('tr'),
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(body: home),
+      );
+
+  group('LinkTargetSheet', () {
+    Future<LinkChoice?> open(
+      WidgetTester tester,
+      TransactionEntity t, {
+      required Future<void> Function() interact,
+    }) async {
+      LinkChoice? result;
+      await tester.pumpWidget(app(Builder(
+        builder: (context) => ElevatedButton(
+          onPressed: () async {
+            result = await showModalBottomSheet<LinkChoice>(
+              context: context,
+              isScrollControlled: true,
+              builder: (_) => LinkTargetSheet(transaction: t, currency: 'TRY'),
+            );
+          },
+          child: const Text('Aç'),
+        ),
+      )));
+      await tester.tap(find.text('Aç'));
+      await tester.pumpAndSettle();
+      await interact();
+      await tester.pumpAndSettle();
+      return result;
+    }
+
+    testWidgets('gider: yeni birikim → tür sorulur, seçilen türle döner',
+        (tester) async {
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      final choice = await open(tester, _tx('g'), interact: () async {
+        expect(find.text(l10n.baglaYeniBirikim), findsOneWidget);
+        expect(find.text(l10n.baglaBirikimeKatki), findsOneWidget);
+        expect(find.text(l10n.baglaBorcOdemesi), findsOneWidget);
+        expect(find.text(l10n.baglaTransferCikis), findsOneWidget);
+        expect(find.text(l10n.baglaBorcAnaparasi), findsNothing);
+
+        await tester.tap(find.text(l10n.baglaYeniBirikim));
+        await tester.pumpAndSettle();
+        expect(find.text(l10n.baglaBirikimTuruSec), findsOneWidget);
+        await tester.tap(find.text(l10n.altinYatirimi));
+      });
+
+      expect(choice?.target, LinkTarget.newInvestment);
+      expect(choice?.investmentType, InvestmentType.gold);
+    });
+
+    testWidgets('gelir: yalnız borç girişi ve transfer', (tester) async {
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      final choice =
+          await open(tester, _tx('i', income: true), interact: () async {
+        expect(find.text(l10n.baglaYeniBirikim), findsNothing);
+        expect(find.text(l10n.baglaBorcOdemesi), findsNothing);
+        expect(find.text(l10n.baglaTransferGiris), findsOneWidget);
+        await tester.tap(find.text(l10n.baglaBorcAnaparasi));
+      });
+
+      expect(choice?.target, LinkTarget.debtPrincipal);
+    });
+
+    testWidgets('360dp genişlikte taşma yok', (tester) async {
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await open(tester, _tx('g'), interact: () async {});
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('TransactionActionSheet', () {
+    Future<TransactionAction?> open(
+      WidgetTester tester,
+      TransactionEntity t, {
+      Future<void> Function()? interact,
+    }) async {
+      TransactionAction? result;
+      await tester.pumpWidget(app(Builder(
+        builder: (context) => ElevatedButton(
+          onPressed: () async {
+            result = await TransactionActionSheet.show(
+              context,
+              transaction: t,
+              accent: Colors.red,
+            );
+          },
+          child: const Text('Aç'),
+        ),
+      )));
+      await tester.tap(find.text('Aç'));
+      await tester.pumpAndSettle();
+      if (interact != null) await interact();
+      await tester.pumpAndSettle();
+      return result;
+    }
+
+    testWidgets('düz satırda "Bağla…" eylemi var', (tester) async {
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      final action = await open(tester, _tx('a'), interact: () async {
+        await tester.tap(find.text(l10n.baglaEylemi));
+      });
+      expect(action, TransactionAction.link);
+    });
+
+    testWidgets(
+        'çift kimlikli transfer bacağında "Transferi kaldır"; eski transferde '
+        'YOK', (tester) async {
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      final action = await open(
+        tester,
+        _tx('leg',
+            isSystem: true,
+            tag: CashMovementTags.transfer,
+            linkedRecordId: 'p1'),
+        interact: () async {
+          expect(find.text(l10n.bagliTransferNotu), findsOneWidget);
+          expect(find.text(l10n.baglaEylemi), findsNothing);
+          await tester.tap(find.text(l10n.transferiKaldir));
+        },
+      );
+      expect(action, TransactionAction.removeTransfer);
+
+      await open(
+        tester,
+        _tx('old', isSystem: true, tag: CashMovementTags.transfer),
+        interact: () async {
+          expect(find.text(l10n.transferiKaldir), findsNothing);
+        },
+      );
+    });
+
+    testWidgets('bağlanmış satırın notu "otomatik oluşturuldu" DEMEZ',
+        (tester) async {
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      await open(
+        tester,
+        _tx('adopted',
+            isSystem: true,
+            tag: CashMovementTags.investmentBuy,
+            linkedRecordId: 'inv-1',
+            adoptedFromTag: 'cat-yatirim'),
+        interact: () async {
+          expect(find.text(l10n.bagliSatirKisaNotu), findsOneWidget);
+          expect(find.text(l10n.buIslemOtomatikOlusturuldu), findsNothing);
+        },
+      );
+    });
+  });
+}

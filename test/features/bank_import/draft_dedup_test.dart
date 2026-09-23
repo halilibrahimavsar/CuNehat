@@ -515,8 +515,8 @@ void main() {
   // katı kapıya takılıyordu → satır seçili geliyor, harcama ikinci kez
   // ekleniyordu.
   group('referansa demirli eşleşme — düzeltilmiş elle kayıt', () {
-    final bankRow = _bank(DateTime(2026, 9, 5), 913.15,
-        'SATIŞ-517040*4626-BİM L508 YUNUS EMRE',
+    final bankRow = _bank(
+        DateTime(2026, 9, 5), 913.15, 'SATIŞ-517040*4626-BİM L508 YUNUS EMRE',
         reference: 'DK-77');
 
     TransactionEntity corrected(DateTime at, {double amount = 913.15}) =>
@@ -637,6 +637,120 @@ void main() {
   // ekstre satırı İKİNCİ KEZ ekleniyordu. Eşik gevşetilmez (gerçek harcama
   // sessizce atlanırdı); bunun yerine bu kayıtlar ÖNERİ olarak döner ve hiçbir
   // satırın seçimi değişmez.
+  // REGRESYON (M5, 23 Eyl 2026): "ekstreden mi gelmiş" sorusu yalnız
+  // başlığın yazımından tahmin ediliyordu (BÜYÜK HARF / 4+ rakam). Elle
+  // "MIGROS" ya da "Kira 2026" yazan kullanıcının kaydı ekstreden gelmiş
+  // sanılıp "aynı gün + ortak kelime" isteyen katı kapıya giriyordu: bir gün
+  // kayık girilmiş kayıt bulunamıyor, ekstre satırı ikinci kez ekleniyordu.
+  // Artık kayıt kökenini taşıyor (şema 11); tahmin yalnız eski kayıtlarda.
+  group('köken (origin) — elle kayıt kesin bilinir', () {
+    final migros =
+        _bank(DateTime(2026, 9, 7), 910, 'MIGROS TICARET A.S. ISTANBUL TR');
+
+    test('elle BÜYÜK HARFLE yazılmış kayıt 2 gün kayık da bulunur', () {
+      final marked = markDuplicateDrafts([
+        migros
+      ], [
+        _manual('m1', DateTime(2026, 9, 5), 910, 'MIGROS',
+            origin: TransactionOrigin.manual),
+      ]);
+      expect(marked.single.duplicateOf?.existingId, 'm1');
+      expect(marked.single.selected, isFalse);
+    });
+
+    test('rakamlı elle başlık ("Kira 2026") da elle sayılır', () {
+      final marked = markDuplicateDrafts([
+        _bank(DateTime(2026, 9, 2), 15000, 'KIRA ODEMESI EFT AHMET YILMAZ'),
+      ], [
+        _manual('k1', DateTime(2026, 9, 1), 15000, 'Kira 2026',
+            origin: TransactionOrigin.manual),
+      ]);
+      expect(marked.single.duplicateOf?.existingId, 'k1');
+    });
+
+    test('düzenli işlemden gelen kayıt da elle sayılır', () {
+      final marked = markDuplicateDrafts([
+        migros
+      ], [
+        _manual('r1', DateTime(2026, 9, 5), 910, 'MIGROS',
+            origin: TransactionOrigin.recurring),
+      ]);
+      expect(marked.single.duplicateOf?.existingId, 'r1');
+    });
+
+    test('kökeni bilinmeyen ESKİ kayıtta tahmin sürer (temkinli)', () {
+      final marked = markDuplicateDrafts(
+          [migros], [_manual('old', DateTime(2026, 9, 5), 910, 'MIGROS')]);
+      expect(marked.single.isDuplicate, isFalse);
+    });
+
+    test(
+        'ekstreden gelmiş numarasız kayıt, başlığı elle yazılmış gibi görünse '
+        'de katı kapıda kalır', () {
+      // PDF'ten gelen (numarasız) satırın başlığı kullanıcı tarafından
+      // düzeltilmiş olabilir; farklı günde aynı büfe yine FARKLI alışveriştir.
+      final marked = markDuplicateDrafts([
+        _bank(DateTime(2026, 9, 11), 450, 'DEMIRHAN BUFE ISTANBUL'),
+      ], [
+        _manual('imp', DateTime(2026, 9, 9), 450, 'Demirhan büfe',
+            origin: TransactionOrigin.bankImport),
+      ]);
+      expect(marked.single.isDuplicate, isFalse);
+    });
+
+    test('elle BÜYÜK HARF kayıt eşik altındaysa öneri listesine girer', () {
+      final ledger = [
+        _manual('m1', DateTime(2026, 9, 7, 20), 910, 'ALISVERIS',
+            origin: TransactionOrigin.manual),
+      ];
+      final drafts = markDuplicateDrafts([
+        _bank(DateTime(2026, 9, 5), 913.15, 'DEMKAR GIDA ISTANBUL',
+            category: null),
+      ], ledger);
+      expect(drafts.single.isDuplicate, isFalse);
+      expect(findLedgerLeftovers(drafts, ledger).single.entry.id, 'm1');
+    });
+  });
+
+  // Faz 2: bir kayda BAĞLANMIŞ (benimsenmiş) satır sistem hareketi olur ama
+  // bankanın kimliğini (başlık, gün, tutar, numara) korur. Aynı ekstre
+  // yeniden aktarılınca KESİN tekrar bulunmalı — aksi hâlde satır ikinci kez
+  // eklenir ve bağlama boşa gider.
+  group('bağlanmış satır yeniden aktarımda', () {
+    TransactionEntity adopted({String? reference}) => _manual(
+          'adopted',
+          DateTime(2026, 9, 5, 10),
+          5000,
+          'MIDAS MENKUL DEGERLER',
+          tag: 'Yatırım Alımı',
+          isSystem: true,
+          reference: reference,
+          origin: TransactionOrigin.bankImport,
+        ).copyWith(linkedRecordId: 'inv-1', adoptedFromTag: 'cat-yatirim');
+
+    test('numaralı ekstrede kesin tekrar', () {
+      final marked = markDuplicateDrafts([
+        _bank(DateTime(2026, 9, 5), 5000, 'MIDAS MENKUL DEGERLER',
+            reference: 'DK-1'),
+      ], [
+        adopted(reference: 'DK-1')
+      ]);
+      expect(marked.single.duplicateOf?.kind, DuplicateKind.exact);
+      expect(marked.single.duplicateOf?.existingIsSystem, isTrue);
+      expect(marked.single.selected, isFalse);
+    });
+
+    test('numarasız ekstrede de (gün + tutar + başlık) kesin tekrar', () {
+      final marked = markDuplicateDrafts([
+        _bank(DateTime(2026, 9, 5), 5000, 'MIDAS MENKUL DEGERLER'),
+      ], [
+        adopted()
+      ]);
+      expect(marked.single.duplicateOf?.kind, DuplicateKind.exact);
+      expect(marked.single.selected, isFalse);
+    });
+  });
+
   group('findLedgerLeftovers — karşılığı bulunamayan kayıtlar', () {
     // Küçük işletme: sözlük tanımıyor, kategori tahmini yok.
     final demkar = _bank(DateTime(2026, 9, 5), 913.15, 'DEMKAR GIDA ISTANBUL',
@@ -722,7 +836,8 @@ void main() {
       expect(findLedgerLeftovers(drafts, ledger), isEmpty);
     });
 
-    test('kuplaj kaydı (uygulamadan girilmiş yatırım) birebir tutarla aday alır',
+    test(
+        'kuplaj kaydı (uygulamadan girilmiş yatırım) birebir tutarla aday alır',
         () {
       // Kullanıcı altını uygulamaya 5 gün SONRA "bugün" tarihiyle girmiş;
       // banka havalesi 5 Eyl'de. Yaklaşık eşleşmenin 3 günlük penceresi dışı.
@@ -755,8 +870,8 @@ void main() {
     test('kapatılan öneri tekrar gelmez', () {
       final ledger = [_manual('m1', DateTime(2026, 9, 7), 910, 'Market')];
       final drafts = markDuplicateDrafts([demkar], ledger);
-      expect(
-          findLedgerLeftovers(drafts, ledger, ignoredEntryIds: {'m1'}), isEmpty);
+      expect(findLedgerLeftovers(drafts, ledger, ignoredEntryIds: {'m1'}),
+          isEmpty);
     });
 
     test('adaylar güçlüden zayıfa, en fazla 3', () {
@@ -773,8 +888,8 @@ void main() {
     });
 
     test('linkedMatch gerekçeleri taşır', () {
-      final m = linkedMatch(demkar,
-          _manual('m1', DateTime(2026, 9, 7, 20), 910, 'Market'));
+      final m = linkedMatch(
+          demkar, _manual('m1', DateTime(2026, 9, 7, 20), 910, 'Market'));
       expect(m.kind, DuplicateKind.linkedByUser);
       expect(m.existingId, 'm1');
       expect(m.amountPattern, AmountPattern.roundedSmall);
@@ -799,6 +914,7 @@ TransactionEntity _manual(
   bool expense = true,
   bool isSystem = false,
   String? reference,
+  String? origin,
 }) =>
     TransactionEntity(
       id: id,
@@ -812,6 +928,7 @@ TransactionEntity _manual(
           expense ? TransactionTypeModel.expense : TransactionTypeModel.income,
       isSystem: isSystem,
       reference: reference,
+      origin: origin,
     );
 
 ImportDraft _bank(

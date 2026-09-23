@@ -39,6 +39,7 @@ class ApproveRecurringTransactionUsecase {
       // Onay tarihi değil vade tarihi: birikmiş vadeler doğru aya işlensin
       // diye (bütçe ve raporlar bu tarihe göre toplar).
       date: template.nextExecutionDate,
+      origin: TransactionOrigin.recurring,
     );
 
     // 2. Gerçek işlemi kaydet

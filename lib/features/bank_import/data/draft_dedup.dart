@@ -322,8 +322,7 @@ List<LedgerLeftover> findLedgerLeftovers(
     final day = _dayNumber(t.date);
     if (day < from || day > to) continue;
     final coupling = t.isSystem && _bankVisibleCouplingTags.contains(t.tag);
-    final manual =
-        !t.isSystem && _norm(t.reference) == null && !_looksImported(t.title);
+    final manual = !t.isSystem && !_isFromStatement(t);
     if (!coupling && !manual) continue;
 
     final candidates = <LeftoverCandidate>[
@@ -598,8 +597,7 @@ const double _ambiguityMargin = 1.0;
   // ekstrelerin sınırındaki günlük büfe alışverişi) birbirine benzetilmesini
   // önlemek içindir; numarası düzeltmeyle yazılmış elle kaydı dışlamamalı.
   final sameReference = draftRef != null && draftRef == existingRef;
-  final fromStatement =
-      !sameReference && (existingRef != null || _looksImported(t.title));
+  final fromStatement = !sameReference && _isFromStatement(t);
   if (fromStatement &&
       (pattern != AmountPattern.exact || dayDistance != 0 || shared == null)) {
     return null;
@@ -659,6 +657,26 @@ AmountPattern? amountPatternOf({required double bank, required double typed}) {
 }
 
 const double _maxRelativeGap = 0.2;
+
+/// Kayıt başka bir ekstreden mi gelmiş?
+///
+/// Banka numarası taşıyan kayıt her zaman öyle sayılır. Numarasızda kesin
+/// cevap kaydın KÖKENİDİR (`TransactionEntity.origin`, şema 11); yalnız o
+/// alandan önce yazılmış kayıtlarda (ve kökeni belirsiz CSV dökümünde)
+/// başlığın yazımından TAHMİN edilir ([_looksImported]).
+///
+/// **Neden (M5):** tahmin elle "MIGROS" ya da "Kira 2026" yazan kullanıcının
+/// kaydını ekstreden gelmiş sanıp "aynı gün + ortak kelime" isteyen katı
+/// kapıya sokuyordu: bir gün kayık girilmiş elle kayıt bulunamıyor, ekstre
+/// satırı ikinci kez ekleniyordu.
+bool _isFromStatement(TransactionEntity t) {
+  if (_norm(t.reference) != null) return true;
+  return switch (t.origin) {
+    TransactionOrigin.bankImport => true,
+    TransactionOrigin.manual || TransactionOrigin.recurring => false,
+    _ => _looksImported(t.title),
+  };
+}
 
 /// Kayıt ekstreden mi gelmiş görünüyor? Banka açıklaması ya kod taşır
 /// ("SOK-10419", 4+ rakam) ya da tamamı BÜYÜK HARFTİR; elle giriş formu

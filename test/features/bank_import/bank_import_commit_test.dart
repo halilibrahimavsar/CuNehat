@@ -1,6 +1,8 @@
+import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/system_activity_guard.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
+import 'package:cunehat/features/bank_import/data/link_hint.dart';
 import 'package:cunehat/features/bank_import/data/category_guesser.dart';
 import 'package:cunehat/features/bank_import/data/column_mapper.dart';
 import 'package:cunehat/features/bank_import/data/draft_dedup.dart';
@@ -11,6 +13,7 @@ import 'package:cunehat/features/bank_import/data/statement_ocr_service.dart';
 import 'package:cunehat/features/bank_import/domain/import_draft.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
@@ -91,8 +94,10 @@ void main() {
   late _MockMetrics metrics;
   late _MockWalletRepo walletRepo;
   late _MockNotifier notifier;
+  late _MockGuesser guesser;
 
   setUpAll(() {
+    registerFallbackValue((key: 'x', parentKey: null));
     registerFallbackValue(
       TransactionEntity(
         id: 'x',
@@ -112,11 +117,16 @@ void main() {
     metrics = _MockMetrics();
     walletRepo = _MockWalletRepo();
     notifier = _MockNotifier();
+    guesser = _MockGuesser();
 
     when(() => txRepo.addTransaction(any()))
         .thenAnswer((_) async => const Right('new_id'));
     when(() => txRepo.deleteTransaction(any()))
         .thenAnswer((_) async => const Right(null));
+    // Geri alma satırı TAZE okur (bu arada bir kayda bağlanmış mı); varsayılan
+    // olarak okunamaz → bağlı sayılmaz.
+    when(() => txRepo.getTransactionById(any()))
+        .thenAnswer((_) async => const Left(CacheFailure('yok')));
     when(() => metrics.syncBalance(any())).thenAnswer((_) async => true);
     when(() => metrics.walletRepository).thenReturn(walletRepo);
     when(() => walletRepo.getWalletById(any()))
@@ -129,7 +139,7 @@ void main() {
       // Rasterleştirme/OCR commit yolunda kullanılmaz.
       _MockRasterizer(),
       _MockOcr(),
-      _MockGuesser(),
+      guesser,
       // CategoryRepository commit yolunda kullanılmaz.
       _MockCategoryRepo(),
       _walletCategoriesStub(_MockCategoryRepo()),
@@ -155,7 +165,14 @@ void main() {
 
       await cubit.commit();
 
-      verify(() => txRepo.addTransaction(any())).called(2);
+      final written = verify(() => txRepo.addTransaction(captureAny()))
+          .captured
+          .cast<TransactionEntity>();
+      expect(written, hasLength(2));
+      // Köken yazılır: sonraki aktarımlar "ekstreden mi geldi" sorusunu
+      // başlıktan tahmin etmek zorunda kalmaz (M5).
+      expect(written.map((t) => t.origin),
+          everyElement(TransactionOrigin.bankImport));
       verify(() => metrics.syncBalance('w1')).called(1);
       verify(() => notifier.notify(userId: 'u1', walletId: 'w1')).called(1);
 
@@ -385,9 +402,9 @@ void main() {
       );
       cubit.setCorrectExisting(0, true);
       await cubit.commit();
-      final correctedEntry = verify(() => txRepo.updateTransaction(captureAny()))
-          .captured
-          .single as TransactionEntity;
+      final correctedEntry =
+          verify(() => txRepo.updateTransaction(captureAny())).captured.single
+              as TransactionEntity;
 
       final second = markDuplicateDrafts([parsed], [correctedEntry]);
 
@@ -765,6 +782,59 @@ void main() {
     });
   });
 
+  group('bağlama önerileri (bitiş ekranı)', () {
+    test(
+        'yatırım kategorisindeki ve kredi taksidi satırı öneri olur; hiçbiri '
+        'kendiliğinden BAĞLANMAZ', () async {
+      final cubit = build();
+      const invest = CategoryEntity(
+        id: 'cat-inv',
+        name: 'Yatırım',
+        iconName: 'trending_up',
+        isExpense: true,
+      );
+      when(() => guesser.resolveTarget(any(), any())).thenReturn(invest);
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        expenseCategories: const [invest],
+        drafts: [
+          ImportDraft(
+            date: DateTime(2026, 9, 1),
+            description: 'MIDAS MENKUL DEGERLER',
+            amount: 5000,
+            type: TransactionTypeModel.expense,
+            categoryId: 'cat-inv',
+          ),
+          ImportDraft(
+            date: DateTime(2026, 9, 2),
+            description: 'KREDI TAKSIT TAHSILATI',
+            amount: 2500,
+            type: TransactionTypeModel.expense,
+          ),
+          ImportDraft(
+            date: DateTime(2026, 9, 3),
+            description: 'BIM L508',
+            amount: 120,
+            type: TransactionTypeModel.expense,
+          ),
+        ],
+      );
+
+      await cubit.commit();
+
+      final done = cubit.state as BankImportDone;
+      expect(done.linkSuggestions.map((s) => s.hint),
+          [LinkHint.investment, LinkHint.debtPayment]);
+      expect(done.linkSuggestions.first.transaction.title,
+          'MIDAS MENKUL DEGERLER');
+      expect(
+          done.linkSuggestions.every((s) => !s.transaction.isSystem), isTrue);
+      expect(
+          done.linkSuggestions.every((s) => s.transaction.id != null), isTrue);
+    });
+  });
+
   group('undoImport', () {
     test('yalnız az önce eklenenleri siler + resync + notify + başa döner',
         () async {
@@ -785,6 +855,49 @@ void main() {
       // Bir commit + bir undo = 2 syncBalance.
       verify(() => metrics.syncBalance('w1')).called(2);
       expect(cubit.state, isA<BankImportInitial>());
+    });
+
+    test('bu arada bir kayda BAĞLANMIŞ satır silinmez; sayısı bildirilir',
+        () async {
+      // Bitiş ekranından MIDAS satırı birikime bağlandıktan sonra "Geri al"
+      // denirse satır silinseydi birikim parasız kalır, bakiye alım tutarı
+      // kadar kayardı.
+      final cubit = build();
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [
+          _draft(DateTime(2026, 7, 10), 100),
+          _draft(DateTime(2026, 7, 11), 50),
+        ],
+      );
+      await cubit.commit();
+      final ids = verify(() => txRepo.addTransaction(captureAny()))
+          .captured
+          .cast<TransactionEntity>()
+          .map((t) => t.id!)
+          .toList();
+      when(() => txRepo.getTransactionById(ids.first)).thenAnswer(
+        (_) async => Right(TransactionEntity(
+          id: ids.first,
+          userId: 'u1',
+          walletId: 'w1',
+          title: 'MIDAS',
+          tag: CashMovementTags.investmentBuy,
+          amount: 100,
+          date: DateTime(2026, 7, 10),
+          type: TransactionTypeModel.expense,
+          isSystem: true,
+          linkedRecordId: 'inv-1',
+          adoptedFromTag: 'cat-yatirim',
+        )),
+      );
+
+      final kept = await cubit.undoImport();
+
+      expect(kept, 1);
+      verifyNever(() => txRepo.deleteTransaction(ids.first));
+      verify(() => txRepo.deleteTransaction(ids.last)).called(1);
     });
 
     test('ikinci geri alma çağrısı no-op (id listesi boşaldı)', () async {

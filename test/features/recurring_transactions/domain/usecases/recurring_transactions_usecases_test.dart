@@ -360,6 +360,7 @@ void main() {
       // işlemin izlenecek bir kaynak kaydı yok; kilitlenmemeli (bkz.
       // isSystem alanının dokümantasyonu — sadece nakit kuplajı içindir).
       expect(txCaptured.isSystem, false);
+      expect(txCaptured.origin, TransactionOrigin.recurring);
 
       // Verify template save with advanced execution date (June 20 -> July 20)
       final tempCaptured =

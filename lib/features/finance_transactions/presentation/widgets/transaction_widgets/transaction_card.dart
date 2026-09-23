@@ -3,6 +3,7 @@ import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/shared/widgets/money_text.dart';
+import 'package:cunehat/features/coupling/presentation/link_transaction_flow.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/single_transaction_detail_page.dart';
@@ -63,13 +64,22 @@ class TransactionCard extends StatelessWidget {
     if (action == null || !context.mounted) return;
 
     // Kilitli (isSystem) işlemler için TransactionActionSheet zaten
-    // Düzenle/Sil yerine bir bilgi notu gösterir; bu action'lar hiç
+    // Düzenle/Sil/Bağla yerine bir bilgi notu gösterir; bu action'lar hiç
     // dönmez, o yüzden burada tekrar isSystem kontrolüne gerek yok.
     switch (action) {
       case TransactionAction.edit:
         _edit(context);
       case TransactionAction.delete:
         await _delete(context);
+      case TransactionAction.link:
+        await startLinkTransactionFlow(
+          context,
+          transaction: t,
+          currency: context.walletById(t.walletId)?.currency ??
+              context.activeWalletCurrency,
+        );
+      case TransactionAction.removeTransfer:
+        await confirmAndRemoveTransfer(context, t);
     }
   }
 

@@ -1,4 +1,8 @@
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/services/cash_source.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/ledger_transaction_picker.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/money_format.dart';
@@ -39,7 +43,10 @@ enum ContributeMode {
 /// geliyorsa çapraz kurla çevrilmiş hâli kullanılır.
 class ContributeSheet extends StatefulWidget {
   final InvestmentEntity investment;
-  final Function(InvestmentEntity) onSave;
+
+  /// Güncellenmiş kayıt + katkının nakit kaynağı: yeni gider ya da defterde
+  /// zaten duran satır (ekstreden gelen ödeme — benimsenir).
+  final void Function(InvestmentEntity updated, CashSource cashSource) onSave;
 
   /// Cüzdanın para birimi; katkı ve değerleme bu birimdedir, canlı fiyat da
   /// buna çevrilir.
@@ -53,6 +60,10 @@ class ContributeSheet extends StatefulWidget {
   /// o tür için YENİ kayıt açma yolu. null → yol sunulmaz (yalnız açıklama).
   final void Function(String goldTypeKey)? onCreateForGoldType;
 
+  /// "Bağla…" akışından açıldıysa katkının ödemesi olan defter satırı:
+  /// sayfa o satır seçili açılır, ödenen tutar ondan gelir.
+  final TransactionEntity? initialLedgerTransaction;
+
   const ContributeSheet({
     super.key,
     required this.investment,
@@ -60,15 +71,18 @@ class ContributeSheet extends StatefulWidget {
     required this.walletCurrency,
     this.goalProgress,
     this.onCreateForGoldType,
+    this.initialLedgerTransaction,
   });
 
   static Future<void> show(
     BuildContext context, {
     required InvestmentEntity investment,
-    required Function(InvestmentEntity) onSave,
+    required void Function(InvestmentEntity updated, CashSource cashSource)
+        onSave,
     required String walletCurrency,
     GoalProgress? goalProgress,
     void Function(String goldTypeKey)? onCreateForGoldType,
+    TransactionEntity? initialLedgerTransaction,
   }) {
     return showModalBottomSheet(
       context: context,
@@ -80,6 +94,7 @@ class ContributeSheet extends StatefulWidget {
         walletCurrency: walletCurrency,
         goalProgress: goalProgress,
         onCreateForGoldType: onCreateForGoldType,
+        initialLedgerTransaction: initialLedgerTransaction,
       ),
     );
   }
@@ -105,6 +120,11 @@ class _ContributeSheetState extends State<ContributeSheet> {
   /// `controller.text` yazımı onChanged tetiklemez; bayrak yalnız gerçek
   /// kullanıcı girişinde kalkar.)
   bool _paidEdited = false;
+
+  /// Katkının ödemesi defterde ZATEN duruyorsa o satır (ekstreden gelen
+  /// "MIDAS MENKUL DEGERLER −5.000"): tutar ondan gelir ve kilitlenir, yeni
+  /// gider yazılmaz — eskiden aynı para iki kez düşüyordu.
+  TransactionEntity? _ledgerTx;
 
   /// Son başarılı sorgunun CÜZDAN birimindeki birim fiyatı; miktar kipinde
   /// currentValue'yu, tutar kipinde miktarı hesaplamak için kullanılır.
@@ -148,6 +168,11 @@ class _ContributeSheetState extends State<ContributeSheet> {
     super.initState();
     _goldType = widget.investment.symbol ?? '';
     _mode = _isAssetRecord ? ContributeMode.quantity : ContributeMode.cash;
+    final ledgerTx = widget.initialLedgerTransaction;
+    if (ledgerTx != null) {
+      _ledgerTx = ledgerTx;
+      _amountController.text = _fmt(ledgerTx.amount);
+    }
   }
 
   @override
@@ -165,7 +190,7 @@ class _ContributeSheetState extends State<ContributeSheet> {
   /// Miktar kipinde ödenen tutarı güncel fiyattan önerir. Kullanıcı alana
   /// dokunduysa dokunulmaz: "hediye" için alan bilerek boş bırakılabilir.
   void _suggestPaid() {
-    if (_paidEdited || !_isQuantityMode) return;
+    if (_paidEdited || !_isQuantityMode || _ledgerTx != null) return;
     final price = _livePrice;
     final qty = _parsedQuantity;
     if (price == null || qty == null || qty <= 0) return;
@@ -268,8 +293,85 @@ class _ContributeSheetState extends State<ContributeSheet> {
       }
     }
 
-    widget.onSave(updated);
+    final ledgerTx = _ledgerTx;
+    widget.onSave(
+      updated,
+      ledgerTx == null
+          ? const NewCashMovement()
+          : AdoptedCashMovement(ledgerTx),
+    );
     Navigator.pop(context);
+  }
+
+  Future<void> _pickLedgerRow() async {
+    final inv = widget.investment;
+    final picked = await showLedgerTransactionPicker(
+      context,
+      userId: inv.userId,
+      walletId: inv.walletId,
+      currency: widget.walletCurrency,
+      isIncome: false,
+      amountHint: _parsedAmount,
+      dateHint: DateTime.now(),
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _ledgerTx = picked;
+      _amountController.text = _fmt(picked.amount);
+      _error = null;
+    });
+  }
+
+  /// "Ödemesi defterde zaten var": satırı seçme/gösterme/kaldırma.
+  Widget _buildLedgerPayment(ColorScheme cs, Color accent) {
+    final tx = _ledgerTx;
+    if (tx == null) {
+      return Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: TextButton.icon(
+          onPressed: _pickLedgerRow,
+          icon: const Icon(Icons.receipt_long_rounded, size: 18),
+          label: Text(context.l10n.katkiDefterdeVarDugme),
+          style: TextButton.styleFrom(foregroundColor: accent),
+        ),
+      );
+    }
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.link_rounded, size: 18, color: accent),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '“${tx.title}” · −${_money(tx.amount)} · '
+                  '${AppFormatters.dateShort.format(tx.date)}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 12.5, fontWeight: FontWeight.w600),
+                ),
+                Text(
+                  context.l10n.katkiDefterdenKarsilanacak,
+                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () => setState(() => _ledgerTx = null),
+            child: Text(context.l10n.katkiDefterSatiriKaldir),
+          ),
+        ],
+      ),
+    );
   }
 
   void _createForSelectedType() {
@@ -474,6 +576,7 @@ class _ContributeSheetState extends State<ContributeSheet> {
         TextField(
           controller: _amountController,
           autofocus: true,
+          readOnly: _ledgerTx != null,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           inputFormatters: [AmountInputFormatter()],
           decoration: _inputDecoration(
@@ -486,6 +589,8 @@ class _ContributeSheetState extends State<ContributeSheet> {
             if (_error != null) setState(() => _error = null);
           },
         ),
+        const SizedBox(height: 8),
+        _buildLedgerPayment(cs, accent),
       ];
     }
 
@@ -543,6 +648,7 @@ class _ContributeSheetState extends State<ContributeSheet> {
         const SizedBox(height: 12),
         TextField(
           controller: _amountController,
+          readOnly: _ledgerTx != null,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           inputFormatters: [AmountInputFormatter()],
           decoration: _inputDecoration(
@@ -556,6 +662,8 @@ class _ContributeSheetState extends State<ContributeSheet> {
             _error = null;
           }),
         ),
+        const SizedBox(height: 8),
+        _buildLedgerPayment(cs, accent),
         // Ödenen boşken alım bedelsiz sayılır: maliyet artmaz, defterde
         // gider oluşmaz, fark kâr olarak görünür. Sessiz kalmaz.
         if (_quantityController.text.trim().isNotEmpty &&
@@ -567,6 +675,7 @@ class _ContributeSheetState extends State<ContributeSheet> {
         TextField(
           controller: _amountController,
           autofocus: true,
+          readOnly: _ledgerTx != null,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           inputFormatters: [AmountInputFormatter()],
           decoration: _inputDecoration(
@@ -577,6 +686,8 @@ class _ContributeSheetState extends State<ContributeSheet> {
           ),
           onChanged: (_) => setState(() => _error = null),
         ),
+        const SizedBox(height: 8),
+        _buildLedgerPayment(cs, accent),
         const SizedBox(height: 12),
         _buildFetchButton(accent),
         if (_tracksQuantity) ...[

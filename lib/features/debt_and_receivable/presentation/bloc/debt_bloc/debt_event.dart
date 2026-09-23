@@ -17,10 +17,21 @@ class GetDebtsEvent extends DebtEvent {
 
 class AddDebtEvent extends DebtEvent {
   final DebtEntity debt;
-  const AddDebtEvent(this.debt);
+
+  /// Anaparanın cüzdana girişi nereden: yeni gelir (varsayılan) ya da
+  /// defterde ZATEN duran satır — ekstredeki "KREDI KULLANDIRIM +50.000"
+  /// gibi. İkincisinde satır benimsenir; ikinci bir gelir yazılmaz (eskiden
+  /// anapara iki kez gelir sayılıyordu). Yalnız `principalToWallet` iken
+  /// anlamlıdır.
+  final CashSource principalSource;
+
+  const AddDebtEvent(
+    this.debt, {
+    this.principalSource = const NewCashMovement(),
+  });
 
   @override
-  List<Object?> get props => [debt];
+  List<Object?> get props => [debt, principalSource];
 }
 
 class UpdateDebtEvent extends DebtEvent {
@@ -54,11 +65,25 @@ class PayDebtEvent extends DebtEvent {
   /// iade, başka dönemde iadesiz gider bırakıyordu.)
   final DateTime paymentDate;
 
-  const PayDebtEvent(this.debt, this.paymentAmount,
-      {required this.paymentDate});
+  /// Yeni ödemenin ([debt] içindeki) kimliği: kuplaj hareketi ona bağlanır
+  /// (`TransactionEntity.linkedRecordId`).
+  final String? paymentId;
+
+  /// Ödemenin nakit bacağı: yeni gider (varsayılan) ya da defterde zaten
+  /// duran satır (ekstredeki "KREDI TAKSIT −2.500") — benimsenir.
+  final CashSource cashSource;
+
+  const PayDebtEvent(
+    this.debt,
+    this.paymentAmount, {
+    required this.paymentDate,
+    this.paymentId,
+    this.cashSource = const NewCashMovement(),
+  });
 
   @override
-  List<Object?> get props => [debt, paymentAmount, paymentDate];
+  List<Object?> get props =>
+      [debt, paymentAmount, paymentDate, paymentId, cashSource];
 }
 
 /// Var olan bir ödeme kaydını günceller (tutar / tarih / not).
@@ -73,16 +98,22 @@ class UpdateDebtPaymentEvent extends DebtEvent {
   final double newAmount;
   final DateTime newDate;
 
+  /// Düzenlenen ödemenin kimliği. Nakit bacağı benimsenmiş bir satırsa
+  /// tutarı ve tarihi değiştirilemez (bankanın satırından gelir).
+  final String? paymentId;
+
   const UpdateDebtPaymentEvent(
     this.debt, {
     required this.prevAmount,
     required this.prevDate,
     required this.newAmount,
     required this.newDate,
+    this.paymentId,
   });
 
   @override
-  List<Object?> get props => [debt, prevAmount, prevDate, newAmount, newDate];
+  List<Object?> get props =>
+      [debt, prevAmount, prevDate, newAmount, newDate, paymentId];
 }
 
 /// Bir ödeme kaydını siler; deftere iade kendi tarihine yazılır.
@@ -93,14 +124,20 @@ class DeleteDebtPaymentEvent extends DebtEvent {
   final double removedAmount;
   final DateTime removedDate;
 
+  /// Silinen ödemenin kimliği. Nakit bacağı benimsenmiş satırsa iade
+  /// YAZILMAZ; satır özgün düz hâline döner (bankada para gerçekten çıktı).
+  final String? removedPaymentId;
+
   const DeleteDebtPaymentEvent(
     this.debt, {
     required this.removedAmount,
     required this.removedDate,
+    this.removedPaymentId,
   });
 
   @override
-  List<Object?> get props => [debt, removedAmount, removedDate];
+  List<Object?> get props =>
+      [debt, removedAmount, removedDate, removedPaymentId];
 }
 
 class DeleteDebtEvent extends DebtEvent {

@@ -44,13 +44,19 @@ final class CreateInvestmentEvent extends InvestmentEvent {
   final String walletId;
   final InvestmentEntity investment;
 
+  /// Alımın nakit bacağı nereden gelir: yeni gider (varsayılan), defterde
+  /// ZATEN duran satır (ekstreden gelen alım — benimsenir, ikinci gider
+  /// yazılmaz) ya da hiç ("zaten bende"; kaydın `unbookedCost`'u bunu taşır).
+  final CashSource cashSource;
+
   const CreateInvestmentEvent({
     required this.investment,
     required this.userId,
     required this.walletId,
+    this.cashSource = const NewCashMovement(),
   });
   @override
-  List<Object> get props => [investment, userId, walletId];
+  List<Object> get props => [investment, userId, walletId, cashSource];
 }
 
 final class UpdateInvestmentEvent extends InvestmentEvent {
@@ -81,6 +87,10 @@ final class UpdateInvestmentEvent extends InvestmentEvent {
   /// kalıyordu.
   final DateTime bookingDate;
 
+  /// Maliyet artışının (katkının) nakit bacağı: yeni gider (varsayılan) ya da
+  /// defterde zaten duran satır (bkz. [CreateInvestmentEvent.cashSource]).
+  final CashSource cashSource;
+
   const UpdateInvestmentEvent({
     required this.investment,
     required this.userId,
@@ -88,9 +98,11 @@ final class UpdateInvestmentEvent extends InvestmentEvent {
     required this.prevAmount,
     required this.newAmount,
     required this.bookingDate,
+    this.cashSource = const NewCashMovement(),
   });
   @override
-  List<Object> get props => [investment, userId, walletId, bookingDate];
+  List<Object> get props =>
+      [investment, userId, walletId, bookingDate, cashSource];
 }
 
 /// Canlı fiyatlardan güncel değer yenileme. [investmentId] verilirse tek

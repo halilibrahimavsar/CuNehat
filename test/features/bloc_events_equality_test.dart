@@ -1,3 +1,5 @@
+import 'package:cunehat/core/services/cash_source.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/budgets/presentation/bloc/budgets_event.dart';
@@ -16,6 +18,18 @@ import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+/// Defterde zaten duran satır (benimseme olaylarının nakit kaynağı).
+final _ledgerRow = TransactionEntity(
+  id: 'row-1',
+  userId: 'u1',
+  walletId: 'w1',
+  title: 'MIDAS MENKUL DEGERLER',
+  tag: 'cat-yatirim',
+  amount: 500,
+  date: DateTime(2026, 3, 5),
+  type: TransactionTypeModel.expense,
+);
 
 void main() {
   group('WalletEvent', () {
@@ -113,7 +127,13 @@ void main() {
       final e1 = AddDebtEvent(debt);
       final e2 = AddDebtEvent(debt);
       expect(e1, e2);
-      expect(e1.props, [debt]);
+      expect(e1.props, [debt, const NewCashMovement()]);
+      // Anaparanın kaynağı olayın parçası: defterdeki satırı benimseyen
+      // ekleme ile yeni gelir yazan ekleme AYNI olay sayılmamalı.
+      expect(
+        AddDebtEvent(debt, principalSource: AdoptedCashMovement(_ledgerRow)),
+        isNot(e1),
+      );
     });
 
     test('UpdateDebtEvent props', () {
@@ -131,7 +151,14 @@ void main() {
       final e1 = PayDebtEvent(debt, 500.0, paymentDate: payDate);
       final e2 = PayDebtEvent(debt, 500.0, paymentDate: payDate);
       expect(e1, e2);
-      expect(e1.props, [debt, 500.0, payDate]);
+      expect(e1.props, [debt, 500.0, payDate, null, const NewCashMovement()]);
+      expect(
+        PayDebtEvent(debt, 500.0,
+            paymentDate: payDate,
+            paymentId: 'p1',
+            cashSource: AdoptedCashMovement(_ledgerRow)),
+        isNot(e1),
+      );
     });
 
     test('DeleteDebtEvent props', () {
@@ -334,7 +361,16 @@ void main() {
       final e2 = CreateInvestmentEvent(
           investment: investment, userId: 'u1', walletId: 'w1');
       expect(e1, e2);
-      expect(e1.props, [investment, 'u1', 'w1']);
+      expect(e1.props, [investment, 'u1', 'w1', const NewCashMovement()]);
+      expect(
+        CreateInvestmentEvent(
+          investment: investment,
+          userId: 'u1',
+          walletId: 'w1',
+          cashSource: AdoptedCashMovement(_ledgerRow),
+        ),
+        isNot(e1),
+      );
     });
 
     test('UpdateInvestmentEvent props', () {
@@ -356,7 +392,8 @@ void main() {
         bookingDate: booking,
       );
       expect(e1, e2);
-      expect(e1.props, [investment, 'u1', 'w1', booking]);
+      expect(
+          e1.props, [investment, 'u1', 'w1', booking, const NewCashMovement()]);
 
       // Tarih props'ta OLMAK ZORUNDA: aynı tutarı iki farklı döneme yazan
       // iki olay eşit sayılırsa, bloc'un olay ayıklaması (ve testlerin

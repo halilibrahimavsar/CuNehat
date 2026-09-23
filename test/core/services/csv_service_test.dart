@@ -132,6 +132,7 @@ void main() {
       expect(result.transactions.single.amount, 123.45);
       // Dışa aktarımda ad yazıldı, içe aktarımda kimliğe geri çözüldü.
       expect(result.transactions.single.tag, 'id-market');
+      expect(result.transactions.single.origin, TransactionOrigin.csv);
     });
 
     test('otomatik hareket satırı dışa aktarılır ama içe aktarımda ATLANIR',
@@ -171,6 +172,46 @@ void main() {
       expect(result!.transactions, hasLength(1));
       expect(result.transactions.single.tag, 'id-market');
       expect(result.skippedRows, 1);
+    });
+
+    test(
+        'BAĞLANMIŞ ekstre satırı özgün hâliyle yazılır ve içe aktarımda '
+        'KAYBOLMAZ', () async {
+      // Bir birikim alımına bağlanan "MIDAS" satırı gerçek bir banka
+      // hareketidir; sistem etiketiyle yazılsaydı içe aktarımda atlanır, para
+      // hareketi yeni cüzdanda hiç görünmezdi (bağlamadan önce taşınıyordu).
+      await csvService.exportTransactionsToCSV([
+        TransactionEntity(
+          id: 't3',
+          userId: 'u1',
+          walletId: 'w1',
+          title: 'MIDAS MENKUL DEGERLER',
+          tag: 'Yatırım Alımı',
+          amount: 5000,
+          date: DateTime(2026, 9, 5),
+          type: TransactionTypeModel.expense,
+          isSystem: true,
+          linkedRecordId: 'inv-1',
+          adoptedFromTag: 'id-market',
+        ),
+      ]);
+
+      final path = '${Directory.systemTemp.path}/transactions_export.csv';
+      filePickerResponse = [
+        {
+          'path': path,
+          'name': 'transactions_export.csv',
+          'size': await File(path).length(),
+          'bytes': null,
+        }
+      ];
+      final result = await csvService.importTransactionsFromCSV('u1');
+
+      expect(result!.skippedRows, 0);
+      final t = result.transactions.single;
+      expect(t.title, 'MIDAS MENKUL DEGERLER');
+      expect(t.tag, 'id-market', reason: 'özgün kategorisiyle');
+      expect(t.isSystem, isFalse);
     });
 
     test('gelirde ve giderde AYNI adlı kök round-trip\'i bozmaz', () async {
