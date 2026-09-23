@@ -65,7 +65,9 @@ void main() {
       final e1 = CreateWalletEvent(wallet);
       final e2 = CreateWalletEvent(wallet);
       expect(e1, e2);
-      expect(e1.props, [wallet]);
+      expect(e1.props, [wallet, true]);
+      // Kart eklemek aktif cüzdanı değiştirmez: farklı olaydır.
+      expect(CreateWalletEvent(wallet, activate: false), isNot(e1));
     });
 
     test('UpdateWalletEvent props', () {

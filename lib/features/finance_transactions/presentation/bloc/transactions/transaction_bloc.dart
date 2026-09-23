@@ -37,6 +37,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   }) : super(TransactionLoading()) {
     on<GetTransactionsEvent>(_onLoadTransactions);
     on<AddTransactionEvent>(_onAddTransaction);
+    on<AddTransactionsEvent>(_onAddTransactions);
     on<UpdateTransactionEvent>(_onUpdateTransaction);
     on<DeleteTransactionEvent>(_onDeleteTransaction);
 
@@ -121,6 +122,48 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         );
       },
     );
+  }
+
+  /// Taksitler: her satır yazılır, bakiye BİR kez türetilir, dinleyiciler
+  /// BİR kez uyarılır (içe aktarım deseni). Bir satır yazılamazsa
+  /// yazılabilenler kalır — bakiye defterden türediği için tutarlıdır — ve
+  /// hata bildirilir.
+  Future<void> _onAddTransactions(
+    AddTransactionsEvent event,
+    Emitter<TransactionState> emit,
+  ) async {
+    if (event.transactions.isEmpty) return;
+    final currentData = state.currentTransactions;
+    final added = <TransactionEntity>[];
+    String? failure;
+    for (final t in event.transactions) {
+      final result = await addTransactionUseCase(t);
+      result.fold(
+        (f) => failure ??= f.message,
+        (newId) => added.add(t.copyWith(id: newId)),
+      );
+    }
+    final first = event.transactions.first;
+    if (added.isNotEmpty) {
+      final synced = await _safeSyncBalance(first.walletId);
+      if (failure == null) {
+        emit(TransactionActionSuccess(
+          '${first.title} başarıyla eklendi',
+          transactions: [...currentData, ...added],
+          warning: synced ? null : _syncWarning,
+        ));
+      }
+      transactionsChangedNotifier.notify(
+        userId: first.userId,
+        walletId: first.walletId,
+      );
+    }
+    if (failure != null) {
+      emit(TransactionError(
+        'İşlem eklenirken hata oluştu: $failure',
+        transactions: [...currentData, ...added],
+      ));
+    }
   }
 
   Future<void> _onUpdateTransaction(

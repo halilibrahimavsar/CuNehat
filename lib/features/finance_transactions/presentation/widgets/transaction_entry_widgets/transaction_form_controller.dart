@@ -34,6 +34,9 @@ class TransactionFormController {
   final ValueNotifier<DateTime> dateTime = ValueNotifier(DateTime.now());
   final ValueNotifier<RecurringFrequency?> recurringFrequency =
       ValueNotifier(null);
+
+  /// Taksit sayısı (yalnız kredi kartı cüzdanında sunulur); 1 = tek çekim.
+  final ValueNotifier<int> installments = ValueNotifier(1);
   final ValueNotifier<bool> submitting = ValueNotifier(false);
   final ValueNotifier<String?> error = ValueNotifier(null);
 
@@ -113,6 +116,7 @@ class TransactionFormController {
     categoryId.dispose();
     dateTime.dispose();
     recurringFrequency.dispose();
+    installments.dispose();
     submitting.dispose();
     error.dispose();
     pickedReceipt.dispose();

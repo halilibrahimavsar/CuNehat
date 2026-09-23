@@ -2770,5 +2770,147 @@
   "linkHintDebtPayment": "Possibly a debt payment",
   "linkHintLoan": "Possibly a loan disbursement",
   "bankImportLinkButton": "Link",
-  "bankImportLinked": "Linked"
+  "bankImportLinked": "Linked",
+  "kkSekme": "Credit cards",
+  "kkKartEkle": "Add card",
+  "kkMevcutCevir": "Turn an existing wallet into a card",
+  "kkKurulumBaslik": "Add credit card",
+  "kkCevirBaslik": "Turn into a credit card",
+  "kkAyarlarBaslik": "Card settings",
+  "kkKurulumAciklama": "The card becomes its own wallet: its spending lives there and paying it from your bank counts as a transfer, so nothing is counted twice.",
+  "kkKartAdi": "Card name",
+  "kkKartAdiIpucu": "e.g. Everyday card",
+  "kkKartAdiGerekli": "Card name is required.",
+  "kkBanka": "Bank (optional)",
+  "kkSon4": "Last 4 digits (optional)",
+  "kkSon4Aciklama": "Used to match card payments on your bank statement.",
+  "kkSon4Hatasi": "Last 4 digits must be 4 numbers.",
+  "kkLimit": "Credit limit (optional)",
+  "kkKesimGunu": "Statement closing day",
+  "kkSonOdemeGunu": "Payment due day",
+  "kkGuncelBorc": "Current total balance owed",
+  "kkGuncelBorcAciklama": "The amount currently owed in your bank app (including instalments). This becomes the card's opening balance.",
+  "kkOdemeCuzdani": "Which wallet do you pay it from?",
+  "kkSecilmedi": "Not set",
+  "kkSonEkstre": "Latest statement (optional)",
+  "kkSonEkstreAciklama": "From the statement closed on {date}: statement balance and minimum payment.",
+  "@kkSonEkstreAciklama": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "kkDonemBorcu": "Statement balance",
+  "kkAsgariOdeme": "Minimum payment",
+  "kkBosBaslik": "No credit cards yet",
+  "kkBosAciklama": "Add your card to track closing and due dates and get payment reminders.",
+  "kkKalanDonemBorcu": "Remaining statement balance",
+  "kkKalanAsgari": "Remaining minimum",
+  "kkSonOdeme": "Due: {date}",
+  "@kkSonOdeme": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "kkGunKaldi": "{days} days left",
+  "@kkGunKaldi": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "kkBugunSonGun": "Due today",
+  "kkGecikti": "{days} days overdue",
+  "@kkGecikti": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "kkToplamBorc": "Total owed",
+  "kkKullanilabilirLimit": "Available credit",
+  "kkKalanTaksit": "Upcoming instalments",
+  "kkSonrakiKesim": "Next closing: {date}",
+  "@kkSonrakiKesim": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "kkOde": "Pay",
+  "kkEkstreBilgisi": "Statement details",
+  "kkHarcamalar": "Transactions",
+  "kkAyarlar": "Settings",
+  "kkEkstreGirilmedi": "Enter this period's statement so the balance and minimum match your bank's.",
+  "kkDefterGuvenilmez": "The card was added after this closing; enter the statement balance from your statement.",
+  "kkFarkUyarisi": "There's a {amount} difference between the statement and your records: some transactions may be missing or duplicated.",
+  "@kkFarkUyarisi": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "kkOdemeIcinCuzdanYok": "You need another wallet to pay from.",
+  "kkKesimTarihi": "Closing date",
+  "kkSonOdemeTarihi": "Due date",
+  "kkEkstreSayfaAciklama": "The figures on your bank's statement. We pre-filled them from your records.",
+  "kkKaydedildi": "Card details saved",
+  "kkKartAktifOldu": "{name} is now open: you can add its spending here.",
+  "@kkKartAktifOldu": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kkSonrakiKesimEtiket": "Next closing",
+  "notifCardUpcomingTitle": "Card payment due tomorrow",
+  "notifCardUpcomingBody": "{amount} of your {name} statement balance is still unpaid; it's due tomorrow.",
+  "@notifCardUpcomingBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "notifCardDueTitle": "Card payment due today!",
+  "notifCardDueBody": "{amount} of your {name} statement balance is still unpaid; it's due today.",
+  "@notifCardDueBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "linkHintCardPayment": "Possibly a card payment",
+  "tekCekim": "Single payment",
+  "taksitSecenek": "{count} instalments",
+  "@taksitSecenek": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "taksitOzeti": "{amount} a month; the first instalment on this date, the rest on the same day each month.",
+  "@taksitOzeti": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

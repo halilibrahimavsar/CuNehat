@@ -91,6 +91,11 @@ class TransactionSheetHandler {
               }
             }
           },
+          onSaveInstallments: (installments) {
+            Navigator.pop(sheetContext);
+            final txBloc = transactionBloc ?? context.read<TransactionBloc>();
+            txBloc.add(AddTransactionsEvent(installments));
+          },
           onCancel: () => Navigator.pop(sheetContext),
         );
       },

@@ -2831,5 +2831,147 @@
   "linkHintDebtPayment": "Borç ödemesi olabilir",
   "linkHintLoan": "Kredi girişi olabilir",
   "bankImportLinkButton": "Bağla",
-  "bankImportLinked": "Bağlandı"
+  "bankImportLinked": "Bağlandı",
+  "kkSekme": "Kredi kartları",
+  "kkKartEkle": "Kart ekle",
+  "kkMevcutCevir": "Var olan bir cüzdanı karta çevir",
+  "kkKurulumBaslik": "Kredi kartı ekle",
+  "kkCevirBaslik": "Kredi kartına çevir",
+  "kkAyarlarBaslik": "Kart ayarları",
+  "kkKurulumAciklama": "Kart ayrı bir cüzdan olur: harcamaları orada tutulur, bankadan karta ödeme transfer sayılır. Böylece hiçbir tutar iki kez sayılmaz.",
+  "kkKartAdi": "Kart adı",
+  "kkKartAdiIpucu": "ör. Bonus Kart",
+  "kkKartAdiGerekli": "Kart adı gerekli.",
+  "kkBanka": "Banka (isteğe bağlı)",
+  "kkSon4": "Son 4 hane (isteğe bağlı)",
+  "kkSon4Aciklama": "Banka ekstresindeki kart ödemesini bu karta bağlamak için.",
+  "kkSon4Hatasi": "Son 4 hane 4 rakam olmalı.",
+  "kkLimit": "Kart limiti (isteğe bağlı)",
+  "kkKesimGunu": "Hesap kesim günü",
+  "kkSonOdemeGunu": "Son ödeme günü",
+  "kkGuncelBorc": "Şu anki toplam borç",
+  "kkGuncelBorcAciklama": "Kart uygulamasındaki güncel borç (taksitler dahil). Kartın açılış bakiyesi bu olur.",
+  "kkOdemeCuzdani": "Kartı hangi cüzdandan ödüyorsun?",
+  "kkSecilmedi": "Seçilmedi",
+  "kkSonEkstre": "Son ekstre (isteğe bağlı)",
+  "kkSonEkstreAciklama": "{date} tarihli kesimin ekstresinden: dönem borcu ve asgari ödeme.",
+  "@kkSonEkstreAciklama": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "kkDonemBorcu": "Dönem borcu",
+  "kkAsgariOdeme": "Asgari ödeme",
+  "kkBosBaslik": "Henüz kredi kartı yok",
+  "kkBosAciklama": "Kartını ekle; kesim ve son ödeme tarihlerini takip edelim, ödemeyi hatırlatalım.",
+  "kkKalanDonemBorcu": "Kalan dönem borcu",
+  "kkKalanAsgari": "Kalan asgari",
+  "kkSonOdeme": "Son ödeme: {date}",
+  "@kkSonOdeme": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "kkGunKaldi": "{days} gün kaldı",
+  "@kkGunKaldi": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "kkBugunSonGun": "Son gün bugün",
+  "kkGecikti": "{days} gün gecikti",
+  "@kkGecikti": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "kkToplamBorc": "Toplam borç",
+  "kkKullanilabilirLimit": "Kullanılabilir limit",
+  "kkKalanTaksit": "Kalan taksitler",
+  "kkSonrakiKesim": "Sonraki kesim: {date}",
+  "@kkSonrakiKesim": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "kkOde": "Öde",
+  "kkEkstreBilgisi": "Ekstre bilgisi",
+  "kkHarcamalar": "Harcamalar",
+  "kkAyarlar": "Ayarlar",
+  "kkEkstreGirilmedi": "Bu dönemin ekstresini girersen dönem borcu ve asgari bankanınkiyle birebir olur.",
+  "kkDefterGuvenilmez": "Kart bu kesimden sonra eklendi; dönem borcunu ekstreden gir.",
+  "kkFarkUyarisi": "Ekstre ile kayıtlar arasında {amount} fark var: eksik ya da fazla işlem olabilir.",
+  "@kkFarkUyarisi": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "kkOdemeIcinCuzdanYok": "Ödemek için başka bir cüzdanın olmalı.",
+  "kkKesimTarihi": "Hesap kesim tarihi",
+  "kkSonOdemeTarihi": "Son ödeme tarihi",
+  "kkEkstreSayfaAciklama": "Bankanın gönderdiği ekstredeki rakamlar. Kayıtlardan hesaplananla önceden doldurduk.",
+  "kkKaydedildi": "Kart bilgisi kaydedildi",
+  "kkKartAktifOldu": "{name} açıldı: harcamalarını buradan ekleyebilirsin.",
+  "@kkKartAktifOldu": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kkSonrakiKesimEtiket": "Sonraki kesim",
+  "notifCardUpcomingTitle": "Kart son ödemesi yarın",
+  "notifCardUpcomingBody": "{name} kartının dönem borcundan {amount} kaldı; son ödeme yarın.",
+  "@notifCardUpcomingBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "notifCardDueTitle": "Kart son ödeme günü!",
+  "notifCardDueBody": "{name} kartının dönem borcundan {amount} kaldı; son ödeme bugün.",
+  "@notifCardDueBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "linkHintCardPayment": "Kart ödemesi olabilir",
+  "tekCekim": "Tek çekim",
+  "taksitSecenek": "{count} taksit",
+  "@taksitSecenek": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "taksitOzeti": "Her ay {amount}; ilk taksit bu tarihte, sonrakiler her ay aynı gün.",
+  "@taksitOzeti": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

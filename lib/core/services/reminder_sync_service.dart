@@ -1,14 +1,23 @@
+import 'dart:async';
+
 import 'package:injectable/injectable.dart';
 
 import 'package:cunehat/core/notifications/notification_constants.dart';
 import 'package:cunehat/core/notifications/notification_localizer.dart';
 import 'package:cunehat/core/notifications/notification_service.dart';
 import 'package:cunehat/core/services/notification_settings_service.dart';
+import 'package:cunehat/core/services/transactions_changed_notifier.dart';
+import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/repositories/debt_repository.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/services/installment_progress.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_transaction_entity.dart';
 import 'package:cunehat/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
+import 'package:cunehat/features/wallet/domain/card_cycle.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
+import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
 
 /// Planlanmış hatırlatmaların **tek sahibi**: kaydın güncel haline bakıp
 /// bildirimi kurar ya da iptal eder.
@@ -29,6 +38,10 @@ class ReminderSyncService {
   final NotificationService _notifications;
   final NotificationSettingsService _settings;
   final NotificationLocalizer _localizer;
+  final WalletRepository _walletRepository;
+  final TransactionsRepository _transactionsRepository;
+
+  StreamSubscription<TransactionsChange>? _ledgerChanges;
 
   ReminderSyncService(
     this._recurringRepository,
@@ -36,7 +49,21 @@ class ReminderSyncService {
     this._notifications,
     this._settings,
     this._localizer,
-  );
+    this._walletRepository,
+    this._transactionsRepository,
+    TransactionsChangedNotifier transactionsChanged,
+  ) {
+    // Kart hatırlatması KALAN dönem borcuna bağlı: karta ödeme (transfer) ya
+    // da harcama defteri değiştirince yeniden kurulur — ödenmiş kart için
+    // "son ödeme bugün" demesin. Kart olmayan cüzdanda tek bir okuma yapılır.
+    _ledgerChanges = transactionsChanged.stream.listen((change) {
+      final walletId = change.walletId;
+      if (walletId != null) unawaited(syncCardById(walletId));
+    });
+  }
+
+  @disposeMethod
+  Future<void> dispose() async => _ledgerChanges?.cancel();
 
   /// Tüm hatırlatma türlerini güncel veriye/ayarlara göre yeniden kurar.
   Future<void> syncAll() async {
@@ -44,6 +71,7 @@ class ReminderSyncService {
     await Future.wait([
       syncAllRecurringReminders(),
       syncAllDebtReminders(),
+      syncAllCardReminders(),
       _notifications
           .scheduleRandomDailyReminders(_settings.getRandomFrequency()),
     ]);
@@ -198,6 +226,94 @@ class ReminderSyncService {
       (debts) async {
         for (final debt in debts) {
           await syncDebt(debt);
+        }
+      },
+    );
+  }
+
+  // -------------------------------------------------------------- credit card
+
+  /// Kredi kartı cüzdanının iki hatırlatmasını (son ödemeden bir gün önce +
+  /// son ödeme günü) yeniden kurar.
+  ///
+  /// Yalnız KALAN dönem borcu varken: ödenmiş kart hatırlatmaz. Son ödeme
+  /// geçtiyse gün hatırlatması borç kapanana kadar her sabah tekrarlar
+  /// (bkz. [syncDebt] — aynı kurallar).
+  Future<void> syncCard(WalletEntity wallet, {DateTime? now}) async {
+    final walletId = wallet.id;
+    if (walletId == null || walletId.isEmpty) return;
+    await cancelCardReminders(walletId);
+
+    final card = wallet.creditCard;
+    if (card == null || !_settings.isDebtRemindersEnabled) return;
+
+    final ledger = (await _transactionsRepository.getTransactions(
+      userId: wallet.userId,
+      walletId: walletId,
+    ))
+        .fold((_) => null, (l) => l);
+    if (ledger == null) return;
+    final at = now ?? DateTime.now();
+    final status = computeCardStatus(
+      card: card,
+      openingBalance: wallet.openingBalance,
+      walletCreatedAt: wallet.createdAt,
+      ledger: ledger,
+      today: at,
+    );
+    final remaining = status.remainingStatementDebt;
+    if (!moneyIsPositive(remaining)) return;
+
+    final l10n = _localizer.l10n;
+    final amount = formatMoney(remaining, currency: wallet.currency);
+    final due = status.dueDate;
+    final dayBefore = DateTime(due.year, due.month, due.day - 1, kReminderHour);
+    if (dayBefore.isAfter(at)) {
+      await _notifications.scheduleNotification(
+        id: ReminderIds.cardUpcoming(walletId),
+        title: l10n.notifCardUpcomingTitle,
+        body: l10n.notifCardUpcomingBody(wallet.name, amount),
+        scheduledDate: dayBefore,
+        payload: NotificationPayloads.debtDue,
+      );
+    }
+    await _notifications.scheduleNotification(
+      id: ReminderIds.cardDue(walletId),
+      title: l10n.notifCardDueTitle,
+      body: l10n.notifCardDueBody(wallet.name, amount),
+      scheduledDate: nextReminderSlot(due, at),
+      payload: NotificationPayloads.debtDue,
+      repeatDaily: isReminderOverdue(due, at),
+    );
+  }
+
+  /// [walletId] bir kart cüzdanıysa hatırlatmalarını yeniden kurar; değilse
+  /// hiçbir şey yapmaz (defter değişikliği dinleyicisi her cüzdan için çağırır).
+  Future<void> syncCardById(String walletId) async {
+    try {
+      final wallet = (await _walletRepository.getWalletById(walletId))
+          .fold((_) => null, (w) => w);
+      if (wallet == null || !wallet.isCreditCard) return;
+      await syncCard(wallet);
+    } catch (e) {
+      // Çıplak stream dinleyicisinden çağrılır: kaçan hata aboneliği öldürürdü.
+      _notifications.noteFailure('kart hatırlatması kurulamadı', '$e');
+    }
+  }
+
+  Future<void> cancelCardReminders(String walletId) async {
+    await _notifications.cancelNotification(ReminderIds.cardUpcoming(walletId));
+    await _notifications.cancelNotification(ReminderIds.cardDue(walletId));
+  }
+
+  Future<void> syncAllCardReminders() async {
+    final result = await _walletRepository.getAllWallets();
+    await result.fold(
+      (failure) async =>
+          _notifications.noteFailure('cüzdanlar okunamadı', failure.message),
+      (wallets) async {
+        for (final w in wallets) {
+          if (w.isCreditCard) await syncCard(w);
         }
       },
     );

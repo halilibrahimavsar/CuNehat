@@ -106,19 +106,33 @@ List<TransactionEntity> transferCounterpartCandidates(
 
 /// Akışın girişi: hedef seçtirilir, ardından o hedefin kendi sayfası satır
 /// önceden seçili açılır.
+///
+/// [target] verilirse hedef sorulmaz (ör. bitiş ekranındaki "kart ödemesi"
+/// önerisi doğrudan transfere gider); yeni birikim hedefi tür sorusu
+/// gerektirdiği için bu yolla verilemez. [counterpartWalletId] transferde
+/// karşı cüzdanı önceden seçer (son 4 hanesi açıklamada geçen kart).
 Future<void> startLinkTransactionFlow(
   BuildContext context, {
   required TransactionEntity transaction,
   required String currency,
+  LinkTarget? target,
+  String? counterpartWalletId,
 }) async {
   if (!canLinkTransaction(transaction)) return;
-  final choice = await showModalBottomSheet<LinkChoice>(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (_) =>
-        LinkTargetSheet(transaction: transaction, currency: currency),
-  );
+  final LinkChoice? choice;
+  if (target != null &&
+      target != LinkTarget.newInvestment &&
+      linkTargetsFor(transaction).contains(target)) {
+    choice = LinkChoice(target);
+  } else {
+    choice = await showModalBottomSheet<LinkChoice>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) =>
+          LinkTargetSheet(transaction: transaction, currency: currency),
+    );
+  }
   if (choice == null || !context.mounted) return;
   switch (choice.target) {
     case LinkTarget.newInvestment:
@@ -135,7 +149,11 @@ Future<void> startLinkTransactionFlow(
     case LinkTarget.debtPrincipal:
       await _linkDebtPrincipal(context, transaction, currency);
     case LinkTarget.transfer:
-      await _linkTransfer(context, transaction);
+      await _linkTransfer(
+        context,
+        transaction,
+        counterpartWalletId: counterpartWalletId,
+      );
   }
 }
 
@@ -372,24 +390,33 @@ Future<List<DebtEntity>> _openDebtsOf(TransactionEntity tx) async {
 
 // ─── Transfer ───────────────────────────────────────────────────────────────
 
-Future<void> _linkTransfer(BuildContext context, TransactionEntity tx) async {
+Future<void> _linkTransfer(
+  BuildContext context,
+  TransactionEntity tx, {
+  String? counterpartWalletId,
+}) async {
   final l10n = context.l10n;
   final wallets = (await getIt<WalletRepository>().getWallets(tx.userId))
       .getOrElse(() => const []);
   if (!context.mounted) return;
   final own = wallets.where((w) => w.id == tx.walletId).firstOrNull;
   if (own == null) return;
-  final counterpart = await _choose<WalletEntity>(
-    context,
-    title: l10n.baglaCuzdanSec,
-    emptyText: l10n.baglaCuzdanYok,
-    items: [
-      for (final w in wallets)
-        if (w.id != null && w.id != own.id) w,
-    ],
-    label: (w) => w.name,
-    detail: (w) => formatMoney(w.balance, currency: w.currency),
-  );
+  final preselected =
+      counterpartWalletId == null || counterpartWalletId == own.id
+          ? null
+          : wallets.where((w) => w.id == counterpartWalletId).firstOrNull;
+  final counterpart = preselected ??
+      await _choose<WalletEntity>(
+        context,
+        title: l10n.baglaCuzdanSec,
+        emptyText: l10n.baglaCuzdanYok,
+        items: [
+          for (final w in wallets)
+            if (w.id != null && w.id != own.id) w,
+        ],
+        label: (w) => w.name,
+        detail: (w) => formatMoney(w.balance, currency: w.currency),
+      );
   if (counterpart == null || !context.mounted) return;
 
   final ledger = (await getIt<TransactionsRepository>().getTransactions(

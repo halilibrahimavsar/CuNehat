@@ -5164,4 +5164,210 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bankImportLinked => 'Bağlandı';
+
+  @override
+  String get kkSekme => 'Kredi kartları';
+
+  @override
+  String get kkKartEkle => 'Kart ekle';
+
+  @override
+  String get kkMevcutCevir => 'Var olan bir cüzdanı karta çevir';
+
+  @override
+  String get kkKurulumBaslik => 'Kredi kartı ekle';
+
+  @override
+  String get kkCevirBaslik => 'Kredi kartına çevir';
+
+  @override
+  String get kkAyarlarBaslik => 'Kart ayarları';
+
+  @override
+  String get kkKurulumAciklama =>
+      'Kart ayrı bir cüzdan olur: harcamaları orada tutulur, bankadan karta ödeme transfer sayılır. Böylece hiçbir tutar iki kez sayılmaz.';
+
+  @override
+  String get kkKartAdi => 'Kart adı';
+
+  @override
+  String get kkKartAdiIpucu => 'ör. Bonus Kart';
+
+  @override
+  String get kkKartAdiGerekli => 'Kart adı gerekli.';
+
+  @override
+  String get kkBanka => 'Banka (isteğe bağlı)';
+
+  @override
+  String get kkSon4 => 'Son 4 hane (isteğe bağlı)';
+
+  @override
+  String get kkSon4Aciklama =>
+      'Banka ekstresindeki kart ödemesini bu karta bağlamak için.';
+
+  @override
+  String get kkSon4Hatasi => 'Son 4 hane 4 rakam olmalı.';
+
+  @override
+  String get kkLimit => 'Kart limiti (isteğe bağlı)';
+
+  @override
+  String get kkKesimGunu => 'Hesap kesim günü';
+
+  @override
+  String get kkSonOdemeGunu => 'Son ödeme günü';
+
+  @override
+  String get kkGuncelBorc => 'Şu anki toplam borç';
+
+  @override
+  String get kkGuncelBorcAciklama =>
+      'Kart uygulamasındaki güncel borç (taksitler dahil). Kartın açılış bakiyesi bu olur.';
+
+  @override
+  String get kkOdemeCuzdani => 'Kartı hangi cüzdandan ödüyorsun?';
+
+  @override
+  String get kkSecilmedi => 'Seçilmedi';
+
+  @override
+  String get kkSonEkstre => 'Son ekstre (isteğe bağlı)';
+
+  @override
+  String kkSonEkstreAciklama(String date) {
+    return '$date tarihli kesimin ekstresinden: dönem borcu ve asgari ödeme.';
+  }
+
+  @override
+  String get kkDonemBorcu => 'Dönem borcu';
+
+  @override
+  String get kkAsgariOdeme => 'Asgari ödeme';
+
+  @override
+  String get kkBosBaslik => 'Henüz kredi kartı yok';
+
+  @override
+  String get kkBosAciklama =>
+      'Kartını ekle; kesim ve son ödeme tarihlerini takip edelim, ödemeyi hatırlatalım.';
+
+  @override
+  String get kkKalanDonemBorcu => 'Kalan dönem borcu';
+
+  @override
+  String get kkKalanAsgari => 'Kalan asgari';
+
+  @override
+  String kkSonOdeme(String date) {
+    return 'Son ödeme: $date';
+  }
+
+  @override
+  String kkGunKaldi(int days) {
+    return '$days gün kaldı';
+  }
+
+  @override
+  String get kkBugunSonGun => 'Son gün bugün';
+
+  @override
+  String kkGecikti(int days) {
+    return '$days gün gecikti';
+  }
+
+  @override
+  String get kkToplamBorc => 'Toplam borç';
+
+  @override
+  String get kkKullanilabilirLimit => 'Kullanılabilir limit';
+
+  @override
+  String get kkKalanTaksit => 'Kalan taksitler';
+
+  @override
+  String kkSonrakiKesim(String date) {
+    return 'Sonraki kesim: $date';
+  }
+
+  @override
+  String get kkOde => 'Öde';
+
+  @override
+  String get kkEkstreBilgisi => 'Ekstre bilgisi';
+
+  @override
+  String get kkHarcamalar => 'Harcamalar';
+
+  @override
+  String get kkAyarlar => 'Ayarlar';
+
+  @override
+  String get kkEkstreGirilmedi =>
+      'Bu dönemin ekstresini girersen dönem borcu ve asgari bankanınkiyle birebir olur.';
+
+  @override
+  String get kkDefterGuvenilmez =>
+      'Kart bu kesimden sonra eklendi; dönem borcunu ekstreden gir.';
+
+  @override
+  String kkFarkUyarisi(String amount) {
+    return 'Ekstre ile kayıtlar arasında $amount fark var: eksik ya da fazla işlem olabilir.';
+  }
+
+  @override
+  String get kkOdemeIcinCuzdanYok => 'Ödemek için başka bir cüzdanın olmalı.';
+
+  @override
+  String get kkKesimTarihi => 'Hesap kesim tarihi';
+
+  @override
+  String get kkSonOdemeTarihi => 'Son ödeme tarihi';
+
+  @override
+  String get kkEkstreSayfaAciklama =>
+      'Bankanın gönderdiği ekstredeki rakamlar. Kayıtlardan hesaplananla önceden doldurduk.';
+
+  @override
+  String get kkKaydedildi => 'Kart bilgisi kaydedildi';
+
+  @override
+  String kkKartAktifOldu(String name) {
+    return '$name açıldı: harcamalarını buradan ekleyebilirsin.';
+  }
+
+  @override
+  String get kkSonrakiKesimEtiket => 'Sonraki kesim';
+
+  @override
+  String get notifCardUpcomingTitle => 'Kart son ödemesi yarın';
+
+  @override
+  String notifCardUpcomingBody(String name, String amount) {
+    return '$name kartının dönem borcundan $amount kaldı; son ödeme yarın.';
+  }
+
+  @override
+  String get notifCardDueTitle => 'Kart son ödeme günü!';
+
+  @override
+  String notifCardDueBody(String name, String amount) {
+    return '$name kartının dönem borcundan $amount kaldı; son ödeme bugün.';
+  }
+
+  @override
+  String get linkHintCardPayment => 'Kart ödemesi olabilir';
+
+  @override
+  String get tekCekim => 'Tek çekim';
+
+  @override
+  String taksitSecenek(int count) {
+    return '$count taksit';
+  }
+
+  @override
+  String taksitOzeti(String amount) {
+    return 'Her ay $amount; ilk taksit bu tarihte, sonrakiler her ay aynı gün.';
+  }
 }

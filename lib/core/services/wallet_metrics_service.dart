@@ -270,7 +270,7 @@ class WalletMetricsService {
           if (written.isLeft()) return null;
           // Tutar değişmedi; bakiye zaten tutarlıysa senkron no-op'tur.
           await _syncBalanceImpl(walletId);
-          transactionsChangedNotifier.notify();
+          transactionsChangedNotifier.notify(walletId: walletId);
           return adopted;
         } catch (e) {
           debugPrint('adoptCashMovement başarısız: $e');
@@ -343,7 +343,7 @@ class WalletMetricsService {
           }
           if (released.isNotEmpty) {
             await _syncBalanceImpl(walletId);
-            transactionsChangedNotifier.notify();
+            transactionsChangedNotifier.notify(walletId: walletId);
           }
           return released;
         } catch (e) {
@@ -428,7 +428,9 @@ class WalletMetricsService {
       // (transaction_bloc, bank_import_cubit, pending_recurring_bloc) zaten
       // bu sıradaydı; yalnız burası ters duruyordu.
       final synced = await _syncBalanceImpl(walletId);
-      transactionsChangedNotifier.notify();
+      // Cüzdan kimliği taşınır: kart hatırlatması hangi kartın defterinin
+      // değiştiğini buradan öğrenir (karta ödeme transferin bu bacağıdır).
+      transactionsChangedNotifier.notify(walletId: walletId);
       return CashWriteResult(
         ok: allWritten && synced,
         // Yazım başarısızsa id vermek yanıltıcı olurdu: geri alma var olmayan
@@ -704,6 +706,10 @@ class WalletMetricsService {
         }
       },
     );
+
+    // Kredi kartı cüzdanıysa son ödeme alarmları da düşer (cüzdan kaydı
+    // silindikten sonra hiçbir tarama o kimliğe bir daha uğramaz).
+    await reminderSync.cancelCardReminders(walletId);
 
     final debtsResult = await debtRepository.getDebtsByWalletId(walletId);
     await debtsResult.fold(

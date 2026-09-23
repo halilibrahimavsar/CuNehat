@@ -25,6 +25,7 @@ import 'package:cunehat/features/investments/domain/entities/investment_entity.d
 import 'package:cunehat/features/investments/presentation/widgets/color_adapter.dart';
 import 'package:cunehat/features/recurring_transactions/data/models/recurring_transaction_model.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_frequency_enum.dart';
+import 'package:cunehat/features/wallet/data/models/credit_card_info_model.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -86,6 +87,9 @@ void main() {
     }
 
     register(WalletModelAdapter());
+    // Cüzdan alan 15'in (kredi kartı) iç içe kayıtları.
+    register(CreditCardInfoModelAdapter());
+    register(CardStatementModelAdapter());
     register(TransactionModelAdapter());
     register(TransactionTypeModelAdapter());
     register(InvestmentModelAdapter());
@@ -294,7 +298,10 @@ void main() {
     /// reddediliyordu; zincir eklenmeden `schemaVersion`'ı artırmak onları
     /// geri yüklenemez hale getirirdi.
     String v9Backup() {
-      final wallet = _wallet().toJson()..remove('categoryIds');
+      final wallet = _wallet().toJson()
+        ..remove('categoryIds')
+        // v12 alanı v9 yedeğinde de YOKTUR.
+        ..remove('creditCard');
       // v11 alanları v9 yedeğinde de YOKTUR.
       final tx = _transaction().toJson()
         ..remove('linkedRecordId')
@@ -355,7 +362,7 @@ void main() {
       return jsonEncode({
         'version': 10,
         'timestamp': '2026-09-20T10:00:00.000',
-        'wallets': [_wallet().toJson()],
+        'wallets': [_wallet().toJson()..remove('creditCard')],
         'transactions': [tx],
         'investments': [],
         'debts': [],
@@ -386,6 +393,70 @@ void main() {
       expect(inspection.status, BackupInspectionStatus.ok);
       expect(inspection.summary?.transactionCount, 1);
     });
+  });
+
+  group('eski sürüm yedeği (v11) migrasyonla geri yüklenir', () {
+    /// Sahadaki gerçek biçim: v11 cüzdanlarında `creditCard` alanı YOKTUR.
+    String v11Backup() => jsonEncode({
+          'version': 11,
+          'timestamp': '2026-09-23T10:00:00.000',
+          'wallets': [_wallet().toJson()..remove('creditCard')],
+          'transactions': [_transaction().toJson()],
+          'investments': [],
+          'debts': [],
+          'receivables': [],
+          'budgets': [],
+          'recurringTransactions': [],
+          'users': {
+            'u1': {'activeWalletId': 'w1'}
+          },
+          'categories': [_category().toJson()],
+        });
+
+    test('geri yükleme BAŞARILI; cüzdan DÜZ cüzdan döner', () async {
+      final result = await service.importDataFromJson(v11Backup());
+
+      expect(result.status, DataRestoreStatus.success);
+      final wallet = Hive.box<WalletModel>('wallets').get('w1')!;
+      expect(wallet.name, 'Main');
+      expect(wallet.creditCard, isNull);
+    });
+
+    test('önizleme de v11 dosyasını okunabilir sayar', () async {
+      final inspection = service.inspectBackup(v11Backup());
+      expect(inspection.status, BackupInspectionStatus.ok);
+      expect(inspection.summary?.walletCount, 1);
+    });
+  });
+
+  test('kart cüzdanı export/import round-trip ile kart bilgisini korur',
+      () async {
+    final card = CreditCardInfoModel(
+      bankName: 'Garanti BBVA',
+      last4: '5690',
+      limit: 50000,
+      closingDay: 15,
+      dueDay: 25,
+      paymentWalletId: 'w-bank',
+      lastStatement: CardStatementModel(
+        closingDate: DateTime(2026, 9, 15),
+        dueDate: DateTime(2026, 9, 25),
+        statementBalance: 12345.67,
+        minimumPayment: 4938.27,
+        source: 'manual',
+        recordedAt: DateTime(2026, 9, 16, 10, 30),
+      ),
+    );
+    await Hive.box<WalletModel>('wallets')
+        .put('w1', _wallet().copyWith(creditCard: card));
+
+    final jsonString = await service.exportDataToJson();
+    await service.clearAllLocalData();
+    final result = await service.importDataFromJson(jsonString);
+
+    expect(result.isSuccess, true);
+    final back = Hive.box<WalletModel>('wallets').get('w1')!.toEntity();
+    expect(back.creditCard, card.toEntity());
   });
 
   test('bozuk JSON sürüm uyuşmazlığından ayrı raporlanır', () async {

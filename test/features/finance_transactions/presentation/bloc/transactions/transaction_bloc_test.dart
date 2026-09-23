@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
+import 'package:cunehat/features/finance_transactions/domain/installments.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
@@ -238,6 +239,61 @@ void main() {
         const TransactionError('İşlem eklenirken hata oluştu: Create failed',
             transactions: []),
       ],
+    );
+  });
+
+  group('AddTransactionsEvent (kart taksitleri)', () {
+    final installments = splitIntoInstallments(
+      testTransaction.copyWith(amount: 1000),
+      3,
+      newId: () => 'i',
+    );
+
+    blocTest<TransactionBloc, TransactionState>(
+      'her taksit yazılır; bakiye BİR kez türetilir, dinleyiciler BİR kez '
+      'uyarılır',
+      build: () {
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockAddUseCase(any()))
+            .thenAnswer((_) async => const Right('new'));
+        return transactionBloc;
+      },
+      act: (bloc) async {
+        var notified = 0;
+        final sub = changedNotifier.stream.listen((_) => notified++);
+        bloc.add(AddTransactionsEvent(installments));
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        await sub.cancel();
+        expect(notified, 1);
+      },
+      expect: () => [isA<TransactionActionSuccess>()],
+      verify: (_) {
+        verify(() => mockAddUseCase(any())).called(3);
+        verify(() => mockMetricsService.syncBalance('wallet_123')).called(1);
+      },
+    );
+
+    blocTest<TransactionBloc, TransactionState>(
+      'bir taksit yazılamazsa hata bildirilir; yazılanlar için bakiye yine '
+      'türetilir',
+      build: () {
+        var calls = 0;
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockAddUseCase(any())).thenAnswer((_) async {
+          calls++;
+          return calls == 2
+              ? const Left(CacheFailure('disk dolu'))
+              : const Right('new');
+        });
+        return transactionBloc;
+      },
+      act: (bloc) => bloc.add(AddTransactionsEvent(installments)),
+      expect: () => [isA<TransactionError>()],
+      verify: (_) {
+        verify(() => mockMetricsService.syncBalance('wallet_123')).called(1);
+      },
     );
   });
 

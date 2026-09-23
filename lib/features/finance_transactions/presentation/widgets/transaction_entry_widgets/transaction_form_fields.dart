@@ -3,6 +3,10 @@ import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
+import 'package:cunehat/core/config/feature_flags.dart';
+import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/finance_transactions/domain/installments.dart';
+import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
@@ -30,6 +34,10 @@ class TransactionFormSheet extends StatefulWidget {
   final TransactionEntity? initialTransaction;
   final void Function(
       TransactionEntity transaction, RecurringFrequency? frequency) onSave;
+
+  /// Taksitli alışveriş kaydedilince (kart cüzdanı, taksit > 1) bölünmüş
+  /// satırlarla çağrılır; verilmezse taksit seçici gösterilmez.
+  final void Function(List<TransactionEntity> installments)? onSaveInstallments;
   final VoidCallback onCancel;
 
   const TransactionFormSheet({
@@ -39,6 +47,7 @@ class TransactionFormSheet extends StatefulWidget {
     required this.userId,
     this.initialTransaction,
     required this.onSave,
+    this.onSaveInstallments,
     required this.onCancel,
   });
 
@@ -178,8 +187,22 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
             // sanılıyordu).
             origin: TransactionOrigin.manual,
           );
+    final installments = _c.installments.value;
+    final onInstallments = widget.onSaveInstallments;
+    if (!_isEdit && installments > 1 && onInstallments != null) {
+      onInstallments(splitIntoInstallments(transaction, installments));
+      return;
+    }
     widget.onSave(transaction, _c.recurringFrequency.value);
   }
+
+  /// Taksit seçici yalnız YENİ gider + kredi kartı cüzdanı + bayrak açıkken.
+  bool _offersInstallments(BuildContext context) =>
+      FeatureFlags.creditCards &&
+      !_isEdit &&
+      widget.isExpense &&
+      widget.onSaveInstallments != null &&
+      (context.walletById(widget.walletId)?.isCreditCard ?? false);
 
   @override
   Widget build(BuildContext context) {
@@ -256,9 +279,26 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
                             .l10n.onboardingTransactionsAddRecurringTitle,
                         description:
                             context.l10n.onboardingTransactionsAddRecurringDesc,
-                        child: _RecurringRow(
-                            controller: _c, accent: _accent, isEdit: _isEdit),
+                        child: ValueListenableBuilder<int>(
+                          valueListenable: _c.installments,
+                          // Taksitli alışveriş tekrarlayan işlem olamaz.
+                          builder: (context, n, _) => n > 1
+                              ? const SizedBox.shrink()
+                              : _RecurringRow(
+                                  controller: _c,
+                                  accent: _accent,
+                                  isEdit: _isEdit),
+                        ),
                       ),
+                      if (_offersInstallments(context)) ...[
+                        const SizedBox(height: 12),
+                        _InstallmentRow(
+                          controller: _c,
+                          currency:
+                              context.walletById(widget.walletId)?.currency ??
+                                  context.activeWalletCurrency,
+                        ),
+                      ],
                       const SizedBox(height: 20),
                       _ErrorBanner(controller: _c),
                       _SaveButton(
@@ -511,6 +551,86 @@ class _SaveButton extends StatelessWidget {
                 ),
               ),
             ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ============================================================ Installment row
+
+/// Kart cüzdanında taksit sayısı: tek çekim ya da 2–12 taksit. Seçilince
+/// aylık tutar önizlenir (son taksit kuruş farkını emer).
+class _InstallmentRow extends StatelessWidget {
+  final TransactionFormController controller;
+  final String currency;
+
+  const _InstallmentRow({required this.controller, required this.currency});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    // Tutar yazıldıkça aylık önizleme de tazelenir.
+    return ListenableBuilder(
+      listenable: Listenable.merge(
+          [controller.installments, controller.amountController]),
+      builder: (context, _) {
+        final n = controller.installments.value;
+        final amount = controller.parsedAmount;
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          decoration: BoxDecoration(
+            color: cs.onSurface.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.credit_score_rounded,
+                      color: cs.onSurfaceVariant.withValues(alpha: 0.8)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<int>(
+                        value: n,
+                        isExpanded: true,
+                        icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                        items: [
+                          DropdownMenuItem(
+                            value: 1,
+                            child: Text(context.l10n.tekCekim),
+                          ),
+                          for (var k = 2; k <= 12; k++)
+                            DropdownMenuItem(
+                              value: k,
+                              child: Text(context.l10n.taksitSecenek(k)),
+                            ),
+                        ],
+                        onChanged: (v) {
+                          if (v == null) return;
+                          controller.installments.value = v;
+                          // Taksitli alışveriş tekrarlayan işlem olamaz.
+                          if (v > 1) controller.recurringFrequency.value = null;
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (n > 1 && amount != null && amount > 0)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    context.l10n.taksitOzeti(formatMoney(
+                        ((amount * 100).round() ~/ n) / 100,
+                        currency: currency)),
+                    style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                  ),
+                ),
+            ],
           ),
         );
       },

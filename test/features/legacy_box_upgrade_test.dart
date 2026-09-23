@@ -17,6 +17,7 @@ import 'package:cunehat/features/investments/data/models/investment_model.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/recurring_transactions/data/models/recurring_transaction_model.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_frequency_enum.dart';
+import 'package:cunehat/features/wallet/data/models/credit_card_info_model.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:flutter/material.dart' show Color;
 import 'package:flutter_test/flutter_test.dart';
@@ -118,6 +119,82 @@ void main() {
           'kategoriler görünür. `[]` gelseydi testerın cüzdanında hiçbir '
           'kategori görünmezdi.',
     );
+  });
+
+  test('cüzdan: v12 öncesi 15 alanlı kayıt açılır, DÜZ cüzdan gelir', () async {
+    // Faz 3'ün yükseltme yolu: 24 Eyl 2026 itibarıyla testerların cüzdanları
+    // alan 14'e (categoryIds) kadar yazılı; alan 15 (kredi kartı) yok.
+    final back = await upgrade(
+      'wallets',
+      WalletModel(
+        id: 'w1',
+        userId: 'u',
+        name: 'Bonus',
+        balance: -2500.0,
+        debt: 0,
+        credit: 0,
+        investment: 0,
+        colorHex: '0xFF4CAF50',
+        iconName: 'credit_card',
+        createdAt: DateTime(2026, 9, 1),
+        isActive: true,
+        sortOrder: 0,
+        openingBalance: 0,
+        currency: 'TRY',
+        categoryIds: const ['cat-a'],
+      ),
+      [AdapterRegistration.of(_LegacyV11WalletWriter())],
+    );
+
+    expect(back.name, 'Bonus');
+    expect(back.categoryIds, ['cat-a'], reason: 'alan 14 korunur');
+    expect(back.creditCard, isNull, reason: 'alan 15 eski kayıtta YOK');
+  });
+
+  test('kart cüzdanı gerçek kutuda yazılıp okunur (iç içe typeId 17/18)',
+      () async {
+    final card = CreditCardInfoModel(
+      bankName: 'Garanti BBVA',
+      last4: '5690',
+      limit: 50000,
+      closingDay: 31,
+      dueDay: 10,
+      paymentWalletId: 'w-bank',
+      lastStatement: CardStatementModel(
+        closingDate: DateTime(2026, 8, 31),
+        dueDate: DateTime(2026, 9, 10),
+        statementBalance: 12345.67,
+        minimumPayment: null,
+        source: 'manual',
+        recordedAt: DateTime(2026, 9, 1, 9),
+      ),
+    );
+    final hive = currentHive();
+    final box = await hive.openBox<WalletModel>('wallets');
+    await box.put(
+      'k',
+      WalletModel(
+        id: 'card',
+        userId: 'u',
+        name: 'Bonus',
+        balance: -12345.67,
+        debt: 0,
+        credit: 0,
+        investment: 0,
+        colorHex: '0xFF4CAF50',
+        iconName: 'credit_card',
+        createdAt: DateTime(2026, 9, 1),
+        openingBalance: -12345.67,
+        creditCard: card,
+      ),
+    );
+    await hive.close();
+
+    final again = currentHive();
+    final back = (await again.openBox<WalletModel>('wallets')).get('k')!;
+    await again.close();
+
+    expect(back.creditCard?.toEntity(), card.toEntity());
   });
 
   test('işlem: v11 öncesi 11 alanlı kayıt açılır, yeni alanlar null gelir',
@@ -409,8 +486,8 @@ void main() {
         current.openBox<InvestmentModel>('investments_box'),
         current.openBox<DebtModel>('debts'),
         current.openBox<ReceivableModel>('receivables'),
-        current.openBox<RecurringTransactionModel>(
-            'recurring_transactions_box'),
+        current
+            .openBox<RecurringTransactionModel>('recurring_transactions_box'),
       ]),
       completes,
     );
@@ -463,6 +540,51 @@ class _LegacyWalletWriter extends TypeAdapter<WalletModel> {
       ..write(obj.openingBalance)
       ..writeByte(13)
       ..write(obj.currency);
+  }
+}
+
+/// v12 öncesi (şema 10-11) cüzdan: alan 14'e kadar, alan 15 (kredi kartı) YOK.
+class _LegacyV11WalletWriter extends TypeAdapter<WalletModel> {
+  @override
+  final int typeId = 0;
+
+  @override
+  WalletModel read(BinaryReader reader) => throw UnimplementedError();
+
+  @override
+  void write(BinaryWriter writer, WalletModel obj) {
+    writer
+      ..writeByte(15)
+      ..writeByte(0)
+      ..write(obj.id)
+      ..writeByte(1)
+      ..write(obj.userId)
+      ..writeByte(2)
+      ..write(obj.name)
+      ..writeByte(3)
+      ..write(obj.balance)
+      ..writeByte(4)
+      ..write(obj.debt)
+      ..writeByte(5)
+      ..write(obj.credit)
+      ..writeByte(6)
+      ..write(obj.investment)
+      ..writeByte(7)
+      ..write(obj.colorHex)
+      ..writeByte(8)
+      ..write(obj.iconName)
+      ..writeByte(9)
+      ..write(obj.createdAt)
+      ..writeByte(10)
+      ..write(obj.isActive)
+      ..writeByte(11)
+      ..write(obj.sortOrder)
+      ..writeByte(12)
+      ..write(obj.openingBalance)
+      ..writeByte(13)
+      ..write(obj.currency)
+      ..writeByte(14)
+      ..write(obj.categoryIds);
   }
 }
 

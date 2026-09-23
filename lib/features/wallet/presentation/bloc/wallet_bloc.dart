@@ -126,6 +126,10 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
         (failure) async =>
             _emitError(emit, 'Cüzdan oluşturulamadı: ${failure.message}'),
         (newWalletId) async {
+          if (!event.activate) {
+            _emitSuccess(emit, WalletMessageType.created);
+            return;
+          }
           final activeResult = await setActiveWalletUseCase.call(
             userId: event.wallet.userId,
             walletId: newWalletId,

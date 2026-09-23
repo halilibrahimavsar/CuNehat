@@ -25,22 +25,40 @@ class TransferSheet extends StatefulWidget {
   final List<WalletEntity> wallets;
   final WalletEntity initialFrom;
 
+  /// Açılışta seçili hedef (ör. kart ödemesinde kartın kendisi); verilmezse
+  /// kaynaktan farklı ilk cüzdan.
+  final WalletEntity? initialTo;
+
+  /// Tutar önerileri (ör. kart ödemesinde "kalan dönem borcu", "kalan
+  /// asgari"): dokununca tutar alanını doldurur. Tutarlar HEDEF birimindedir;
+  /// birimler farklıysa gösterilmez (kaynak biriminde yanıltıcı olurdu).
+  final List<TransferAmountSuggestion> amountSuggestions;
+
   const TransferSheet({
     super.key,
     required this.wallets,
     required this.initialFrom,
+    this.initialTo,
+    this.amountSuggestions = const [],
   });
 
   static Future<void> show(
     BuildContext context, {
     required List<WalletEntity> wallets,
     required WalletEntity initialFrom,
+    WalletEntity? initialTo,
+    List<TransferAmountSuggestion> amountSuggestions = const [],
   }) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => TransferSheet(wallets: wallets, initialFrom: initialFrom),
+      builder: (_) => TransferSheet(
+        wallets: wallets,
+        initialFrom: initialFrom,
+        initialTo: initialTo,
+        amountSuggestions: amountSuggestions,
+      ),
     );
   }
 
@@ -80,7 +98,11 @@ class _TransferSheetState extends State<TransferSheet> {
   void initState() {
     super.initState();
     _from = widget.initialFrom;
-    _to = widget.wallets.firstWhere((w) => w.id != _from.id);
+    final preferred = widget.initialTo;
+    _to = widget.wallets.firstWhere(
+      (w) => preferred != null && w.id == preferred.id && w.id != _from.id,
+      orElse: () => widget.wallets.firstWhere((w) => w.id != _from.id),
+    );
     _loadRates();
   }
 
@@ -409,6 +431,27 @@ class _TransferSheetState extends State<TransferSheet> {
                     ),
                     validator: (v) => validateAmountInput(v ?? ''),
                   ),
+                  if (widget.amountSuggestions.isNotEmpty && !_crossCurrency)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          for (final s in widget.amountSuggestions)
+                            ActionChip(
+                              label: Text(
+                                '${s.label}: '
+                                '${formatMoney(s.amount, currency: _to.currency)}',
+                              ),
+                              onPressed: () => setState(() {
+                                _amountController.text =
+                                    formatAmountForInput(s.amount);
+                              }),
+                            ),
+                        ],
+                      ),
+                    ),
                   const SizedBox(height: 14),
                   InkWell(
                     borderRadius: BorderRadius.circular(12),
@@ -494,4 +537,12 @@ class _TransferSheetState extends State<TransferSheet> {
       onChanged: _submitting ? null : onChanged,
     );
   }
+}
+
+/// [TransferSheet] tutar önerisi: etiket + hedef birimindeki tutar.
+class TransferAmountSuggestion {
+  final String label;
+  final double amount;
+
+  const TransferAmountSuggestion({required this.label, required this.amount});
 }

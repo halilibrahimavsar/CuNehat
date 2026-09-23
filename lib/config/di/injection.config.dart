@@ -433,13 +433,19 @@ extension GetItInjectableX on _i174.GetIt {
               gh<_i94.BudgetRepository>(),
               gh<_i977.BudgetsChangedNotifier>(),
             ));
-    gh.lazySingleton<_i534.ReminderSyncService>(() => _i534.ReminderSyncService(
-          gh<_i788.RecurringTransactionRepository>(),
-          gh<_i198.DebtRepository>(),
-          gh<_i551.NotificationService>(),
-          gh<_i721.NotificationSettingsService>(),
-          gh<_i931.NotificationLocalizer>(),
-        ));
+    gh.lazySingleton<_i534.ReminderSyncService>(
+      () => _i534.ReminderSyncService(
+        gh<_i788.RecurringTransactionRepository>(),
+        gh<_i198.DebtRepository>(),
+        gh<_i551.NotificationService>(),
+        gh<_i721.NotificationSettingsService>(),
+        gh<_i931.NotificationLocalizer>(),
+        gh<_i504.WalletRepository>(),
+        gh<_i543.TransactionsRepository>(),
+        gh<_i777.TransactionsChangedNotifier>(),
+      ),
+      dispose: (i) => i.dispose(),
+    );
     gh.factory<_i510.DeleteGoalUseCase>(() => _i510.DeleteGoalUseCase(
           gh<_i851.GoalRepository>(),
           gh<_i589.InvestmentRepository>(),

@@ -5197,4 +5197,210 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bankImportLinked => 'Linked';
+
+  @override
+  String get kkSekme => 'Credit cards';
+
+  @override
+  String get kkKartEkle => 'Add card';
+
+  @override
+  String get kkMevcutCevir => 'Turn an existing wallet into a card';
+
+  @override
+  String get kkKurulumBaslik => 'Add credit card';
+
+  @override
+  String get kkCevirBaslik => 'Turn into a credit card';
+
+  @override
+  String get kkAyarlarBaslik => 'Card settings';
+
+  @override
+  String get kkKurulumAciklama =>
+      'The card becomes its own wallet: its spending lives there and paying it from your bank counts as a transfer, so nothing is counted twice.';
+
+  @override
+  String get kkKartAdi => 'Card name';
+
+  @override
+  String get kkKartAdiIpucu => 'e.g. Everyday card';
+
+  @override
+  String get kkKartAdiGerekli => 'Card name is required.';
+
+  @override
+  String get kkBanka => 'Bank (optional)';
+
+  @override
+  String get kkSon4 => 'Last 4 digits (optional)';
+
+  @override
+  String get kkSon4Aciklama =>
+      'Used to match card payments on your bank statement.';
+
+  @override
+  String get kkSon4Hatasi => 'Last 4 digits must be 4 numbers.';
+
+  @override
+  String get kkLimit => 'Credit limit (optional)';
+
+  @override
+  String get kkKesimGunu => 'Statement closing day';
+
+  @override
+  String get kkSonOdemeGunu => 'Payment due day';
+
+  @override
+  String get kkGuncelBorc => 'Current total balance owed';
+
+  @override
+  String get kkGuncelBorcAciklama =>
+      'The amount currently owed in your bank app (including instalments). This becomes the card\'s opening balance.';
+
+  @override
+  String get kkOdemeCuzdani => 'Which wallet do you pay it from?';
+
+  @override
+  String get kkSecilmedi => 'Not set';
+
+  @override
+  String get kkSonEkstre => 'Latest statement (optional)';
+
+  @override
+  String kkSonEkstreAciklama(String date) {
+    return 'From the statement closed on $date: statement balance and minimum payment.';
+  }
+
+  @override
+  String get kkDonemBorcu => 'Statement balance';
+
+  @override
+  String get kkAsgariOdeme => 'Minimum payment';
+
+  @override
+  String get kkBosBaslik => 'No credit cards yet';
+
+  @override
+  String get kkBosAciklama =>
+      'Add your card to track closing and due dates and get payment reminders.';
+
+  @override
+  String get kkKalanDonemBorcu => 'Remaining statement balance';
+
+  @override
+  String get kkKalanAsgari => 'Remaining minimum';
+
+  @override
+  String kkSonOdeme(String date) {
+    return 'Due: $date';
+  }
+
+  @override
+  String kkGunKaldi(int days) {
+    return '$days days left';
+  }
+
+  @override
+  String get kkBugunSonGun => 'Due today';
+
+  @override
+  String kkGecikti(int days) {
+    return '$days days overdue';
+  }
+
+  @override
+  String get kkToplamBorc => 'Total owed';
+
+  @override
+  String get kkKullanilabilirLimit => 'Available credit';
+
+  @override
+  String get kkKalanTaksit => 'Upcoming instalments';
+
+  @override
+  String kkSonrakiKesim(String date) {
+    return 'Next closing: $date';
+  }
+
+  @override
+  String get kkOde => 'Pay';
+
+  @override
+  String get kkEkstreBilgisi => 'Statement details';
+
+  @override
+  String get kkHarcamalar => 'Transactions';
+
+  @override
+  String get kkAyarlar => 'Settings';
+
+  @override
+  String get kkEkstreGirilmedi =>
+      'Enter this period\'s statement so the balance and minimum match your bank\'s.';
+
+  @override
+  String get kkDefterGuvenilmez =>
+      'The card was added after this closing; enter the statement balance from your statement.';
+
+  @override
+  String kkFarkUyarisi(String amount) {
+    return 'There\'s a $amount difference between the statement and your records: some transactions may be missing or duplicated.';
+  }
+
+  @override
+  String get kkOdemeIcinCuzdanYok => 'You need another wallet to pay from.';
+
+  @override
+  String get kkKesimTarihi => 'Closing date';
+
+  @override
+  String get kkSonOdemeTarihi => 'Due date';
+
+  @override
+  String get kkEkstreSayfaAciklama =>
+      'The figures on your bank\'s statement. We pre-filled them from your records.';
+
+  @override
+  String get kkKaydedildi => 'Card details saved';
+
+  @override
+  String kkKartAktifOldu(String name) {
+    return '$name is now open: you can add its spending here.';
+  }
+
+  @override
+  String get kkSonrakiKesimEtiket => 'Next closing';
+
+  @override
+  String get notifCardUpcomingTitle => 'Card payment due tomorrow';
+
+  @override
+  String notifCardUpcomingBody(String name, String amount) {
+    return '$amount of your $name statement balance is still unpaid; it\'s due tomorrow.';
+  }
+
+  @override
+  String get notifCardDueTitle => 'Card payment due today!';
+
+  @override
+  String notifCardDueBody(String name, String amount) {
+    return '$amount of your $name statement balance is still unpaid; it\'s due today.';
+  }
+
+  @override
+  String get linkHintCardPayment => 'Possibly a card payment';
+
+  @override
+  String get tekCekim => 'Single payment';
+
+  @override
+  String taksitSecenek(int count) {
+    return '$count instalments';
+  }
+
+  @override
+  String taksitOzeti(String amount) {
+    return '$amount a month; the first instalment on this date, the rest on the same day each month.';
+  }
 }

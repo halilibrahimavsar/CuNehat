@@ -6,7 +6,12 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_picker_sheet.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_fields.dart';
+import 'package:bloc_test/bloc_test.dart';
+import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
+import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:showcaseview/showcaseview.dart';
@@ -15,6 +20,9 @@ import 'package:mocktail/mocktail.dart';
 import '../../../../../support/wallet_category_stub.dart';
 
 class MockCategoryRepository extends Mock implements CategoryRepository {}
+
+class _MockWalletBloc extends MockBloc<WalletEvent, WalletState>
+    implements WalletBloc {}
 
 void main() {
   late MockCategoryRepository mockCategoryRepository;
@@ -494,6 +502,98 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Elektrik'), findsNothing);
+    });
+  });
+
+  group('kart cüzdanında taksit', () {
+    WalletEntity wallet({CreditCardInfo? card}) => WalletEntity(
+          id: 'wallet_123',
+          userId: 'user_123',
+          name: 'Bonus',
+          balance: 0,
+          debt: 0,
+          credit: 0,
+          investment: 0,
+          colorHex: '0xFF37474F',
+          iconName: 'credit_card',
+          createdAt: DateTime(2026, 1, 1),
+          openingBalance: 0,
+          creditCard: card,
+        );
+
+    Future<void> pumpForm(
+      WidgetTester tester, {
+      required WalletEntity w,
+      required void Function(List<TransactionEntity>) onInstallments,
+    }) async {
+      tester.view.physicalSize = const Size(1080, 2600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      when(() => mockCategoryRepository.getCategories(true)).thenAnswer(
+        (_) async => [
+          const CategoryEntity(
+            id: 'Food',
+            name: 'Food',
+            iconName: 'fastfood',
+            isExpense: true,
+          ),
+        ],
+      );
+      final bloc = _MockWalletBloc();
+      when(() => bloc.state).thenReturn(WalletLoadedSt([w], w));
+      await tester.pumpWidget(BlocProvider<WalletBloc>.value(
+        value: bloc,
+        child: buildTestableWidget(
+          TransactionFormSheet(
+            isExpense: true,
+            walletId: 'wallet_123',
+            userId: 'user_123',
+            onSave: (_, __) {},
+            onSaveInstallments: onInstallments,
+            onCancel: () {},
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets(
+        '3 taksit seçilince aylık satırlar üretilir (son taksit kuruşu emer)',
+        (tester) async {
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      List<TransactionEntity>? saved;
+      await pumpForm(
+        tester,
+        w: wallet(card: const CreditCardInfo(closingDay: 15, dueDay: 25)),
+        onInstallments: (rows) => saved = rows,
+      );
+
+      await tester.enterText(
+          find.byWidgetPredicate(
+              (w) => w is TextField && w.keyboardType.decimal == true),
+          '1000');
+      await tester.ensureVisible(find.text('Food'));
+      await tester.tap(find.text('Food'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text(l10n.tekCekim));
+      await tester.tap(find.text(l10n.tekCekim));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(l10n.taksitSecenek(3)).last);
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Kaydet'));
+      await tester.tap(find.text('Kaydet'));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(saved, hasLength(3));
+      expect(saved!.map((t) => t.amount), [333.33, 333.33, 333.34]);
+      expect(saved!.first.title, endsWith('(1/3)'));
+    });
+
+    testWidgets('düz cüzdanda taksit seçici YOK', (tester) async {
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      await pumpForm(tester, w: wallet(), onInstallments: (_) {});
+      expect(find.text(l10n.tekCekim), findsNothing);
     });
   });
 }

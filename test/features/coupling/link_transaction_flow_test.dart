@@ -1,16 +1,27 @@
 import 'dart:async';
 
+import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/coupling/presentation/link_transaction_flow.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_action_sheet.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
+import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
+import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
+import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
+import 'package:mocktail/mocktail.dart';
+
+class _MockWalletRepo extends Mock implements WalletRepository {}
+
+class _MockTxRepo extends Mock implements TransactionsRepository {}
 
 TransactionEntity _tx(
   String id, {
@@ -332,6 +343,67 @@ void main() {
           expect(find.text(l10n.buIslemOtomatikOlusturuldu), findsNothing);
         },
       );
+    });
+  });
+
+  group('startLinkTransactionFlow — ön seçim', () {
+    WalletEntity wallet(String id, {CreditCardInfo? card}) => WalletEntity(
+          id: id,
+          userId: 'u',
+          name: id == 'card' ? 'Bonus' : 'Banka',
+          balance: 0,
+          debt: 0,
+          credit: 0,
+          investment: 0,
+          colorHex: '0xFF2196F3',
+          iconName: 'wallet',
+          createdAt: DateTime(2026, 1, 1),
+          openingBalance: 0,
+          creditCard: card,
+        );
+
+    tearDown(() async => getIt.reset());
+
+    testWidgets(
+        'kart ödemesi önerisi: hedef ve kart sorulmaz, doğrudan karşı satır '
+        'sorusu açılır', (tester) async {
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      final walletRepo = _MockWalletRepo();
+      final txRepo = _MockTxRepo();
+      getIt
+        ..registerSingleton<WalletRepository>(walletRepo)
+        ..registerSingleton<TransactionsRepository>(txRepo);
+      when(() => walletRepo.getWallets('u')).thenAnswer((_) async => Right([
+            wallet('w'),
+            wallet('card',
+                card: const CreditCardInfo(
+                    closingDay: 15, dueDay: 25, last4: '5690')),
+          ]));
+      when(() => txRepo.getTransactions(
+            userId: any(named: 'userId'),
+            walletId: any(named: 'walletId'),
+          )).thenAnswer((_) async => const Right(<TransactionEntity>[]));
+
+      await tester.pumpWidget(app(Builder(
+        builder: (context) => ElevatedButton(
+          onPressed: () => startLinkTransactionFlow(
+            context,
+            transaction: _tx('pay', walletId: 'w', amount: 5000),
+            currency: 'TRY',
+            target: LinkTarget.transfer,
+            counterpartWalletId: 'card',
+          ),
+          child: const Text('Aç'),
+        ),
+      )));
+      await tester.tap(find.text('Aç'));
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.baglaBaslik), findsNothing);
+      expect(find.text(l10n.baglaCuzdanSec), findsNothing);
+      expect(find.text(l10n.baglaKarsiSatirBaslik), findsOneWidget);
+      verify(() => txRepo.getTransactions(userId: 'u', walletId: 'card'))
+          .called(1);
     });
   });
 }

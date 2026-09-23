@@ -33,6 +33,7 @@ const int oldestSupportedBackupVersion = 9;
 const Map<int, BackupMigration> backupMigrations = {
   9: _v9ToV10,
   10: _v10ToV11,
+  11: _v11ToV12,
 };
 
 /// [raw]'ı [targetVersion]'a yükseltir.
@@ -106,6 +107,26 @@ Map<String, dynamic> _v10ToV11(Map<String, dynamic> raw) {
           'adoptedFromTag': null,
           'origin': null,
         },
+    ],
+  };
+}
+
+/// v11 → v12: cüzdanlara `creditCard` (kredi kartı bilgileri).
+///
+/// v11'de kredi kartı kavramı yoktu: her cüzdan düz cüzdandı. `null` tam
+/// olarak bunu söyler; eski yedekten dönen cüzdanlar düz cüzdan kalır (elle
+/// açılmış kart cüzdanları sonradan "Kredi kartına çevir" ile çevrilebilir).
+///
+/// Alan AÇIKÇA yazılıyor (yokluğu da `null` okunurdu): dönüşümün ne yaptığı
+/// veriye bakınca görünsün ve testi tam olarak bunu ölçsün.
+Map<String, dynamic> _v11ToV12(Map<String, dynamic> raw) {
+  final wallets = (raw['wallets'] as List?) ?? const [];
+  return {
+    ...raw,
+    'version': 12,
+    'wallets': [
+      for (final w in wallets)
+        {...Map<String, dynamic>.from(w as Map), 'creditCard': null},
     ],
   };
 }

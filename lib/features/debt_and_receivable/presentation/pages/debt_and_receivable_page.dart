@@ -1,4 +1,6 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/core/config/feature_flags.dart';
+import 'package:cunehat/features/credit_card/presentation/credit_cards_tab.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
@@ -48,7 +50,11 @@ class _DebtAndReceivablePageState extends State<DebtAndReceivablePage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    // Kredi kartı sekmesi bayrak arkasında (bkz. FeatureFlags.creditCards).
+    _tabController = TabController(
+      length: FeatureFlags.creditCards ? 3 : 2,
+      vsync: this,
+    );
     _loadData();
   }
 
@@ -79,6 +85,11 @@ class _DebtAndReceivablePageState extends State<DebtAndReceivablePage>
       labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
       tabs: [
         Tab(icon: const Icon(Icons.outbound), text: context.l10n.borclarim),
+        if (FeatureFlags.creditCards)
+          Tab(
+            icon: const Icon(Icons.credit_card_rounded),
+            text: context.l10n.kkSekme,
+          ),
         Tab(
             icon: const Icon(Icons.call_received),
             text: context.l10n.alacaklarim),
@@ -109,6 +120,11 @@ class _DebtAndReceivablePageState extends State<DebtAndReceivablePage>
             userId: widget.userId,
             currency: widget.walletCurrency,
           ),
+          if (FeatureFlags.creditCards)
+            CreditCardsTab(
+              userId: widget.userId,
+              defaultCurrency: widget.walletCurrency,
+            ),
           ReceivableListSection(
             walletId: widget.walletId,
             userId: widget.userId,

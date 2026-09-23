@@ -33,10 +33,15 @@ final class WatchWalletsEvent extends WalletEvent {
 final class CreateWalletEvent extends WalletEvent {
   final WalletEntity wallet;
 
-  const CreateWalletEvent(this.wallet);
+  /// Yeni cüzdan aktif yapılsın mı. Cüzdan listesinden açılan cüzdan hemen
+  /// kullanılacağı için aktif olur (varsayılan); borç sayfasından eklenen
+  /// kredi kartı ise kullanıcının bulunduğu cüzdanı DEĞİŞTİRMEMELİ.
+  final bool activate;
+
+  const CreateWalletEvent(this.wallet, {this.activate = true});
 
   @override
-  List<Object> get props => [wallet];
+  List<Object> get props => [wallet, activate];
 }
 
 /// Cüzdan güncelle

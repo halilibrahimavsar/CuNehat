@@ -9070,6 +9070,360 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bağlandı'**
   String get bankImportLinked;
+
+  /// No description provided for @kkSekme.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kredi kartları'**
+  String get kkSekme;
+
+  /// No description provided for @kkKartEkle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart ekle'**
+  String get kkKartEkle;
+
+  /// No description provided for @kkMevcutCevir.
+  ///
+  /// In tr, this message translates to:
+  /// **'Var olan bir cüzdanı karta çevir'**
+  String get kkMevcutCevir;
+
+  /// No description provided for @kkKurulumBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kredi kartı ekle'**
+  String get kkKurulumBaslik;
+
+  /// No description provided for @kkCevirBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kredi kartına çevir'**
+  String get kkCevirBaslik;
+
+  /// No description provided for @kkAyarlarBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart ayarları'**
+  String get kkAyarlarBaslik;
+
+  /// No description provided for @kkKurulumAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart ayrı bir cüzdan olur: harcamaları orada tutulur, bankadan karta ödeme transfer sayılır. Böylece hiçbir tutar iki kez sayılmaz.'**
+  String get kkKurulumAciklama;
+
+  /// No description provided for @kkKartAdi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart adı'**
+  String get kkKartAdi;
+
+  /// No description provided for @kkKartAdiIpucu.
+  ///
+  /// In tr, this message translates to:
+  /// **'ör. Bonus Kart'**
+  String get kkKartAdiIpucu;
+
+  /// No description provided for @kkKartAdiGerekli.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart adı gerekli.'**
+  String get kkKartAdiGerekli;
+
+  /// No description provided for @kkBanka.
+  ///
+  /// In tr, this message translates to:
+  /// **'Banka (isteğe bağlı)'**
+  String get kkBanka;
+
+  /// No description provided for @kkSon4.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son 4 hane (isteğe bağlı)'**
+  String get kkSon4;
+
+  /// No description provided for @kkSon4Aciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Banka ekstresindeki kart ödemesini bu karta bağlamak için.'**
+  String get kkSon4Aciklama;
+
+  /// No description provided for @kkSon4Hatasi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son 4 hane 4 rakam olmalı.'**
+  String get kkSon4Hatasi;
+
+  /// No description provided for @kkLimit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart limiti (isteğe bağlı)'**
+  String get kkLimit;
+
+  /// No description provided for @kkKesimGunu.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesap kesim günü'**
+  String get kkKesimGunu;
+
+  /// No description provided for @kkSonOdemeGunu.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son ödeme günü'**
+  String get kkSonOdemeGunu;
+
+  /// No description provided for @kkGuncelBorc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şu anki toplam borç'**
+  String get kkGuncelBorc;
+
+  /// No description provided for @kkGuncelBorcAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart uygulamasındaki güncel borç (taksitler dahil). Kartın açılış bakiyesi bu olur.'**
+  String get kkGuncelBorcAciklama;
+
+  /// No description provided for @kkOdemeCuzdani.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartı hangi cüzdandan ödüyorsun?'**
+  String get kkOdemeCuzdani;
+
+  /// No description provided for @kkSecilmedi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçilmedi'**
+  String get kkSecilmedi;
+
+  /// No description provided for @kkSonEkstre.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son ekstre (isteğe bağlı)'**
+  String get kkSonEkstre;
+
+  /// No description provided for @kkSonEkstreAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'{date} tarihli kesimin ekstresinden: dönem borcu ve asgari ödeme.'**
+  String kkSonEkstreAciklama(String date);
+
+  /// No description provided for @kkDonemBorcu.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dönem borcu'**
+  String get kkDonemBorcu;
+
+  /// No description provided for @kkAsgariOdeme.
+  ///
+  /// In tr, this message translates to:
+  /// **'Asgari ödeme'**
+  String get kkAsgariOdeme;
+
+  /// No description provided for @kkBosBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz kredi kartı yok'**
+  String get kkBosBaslik;
+
+  /// No description provided for @kkBosAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartını ekle; kesim ve son ödeme tarihlerini takip edelim, ödemeyi hatırlatalım.'**
+  String get kkBosAciklama;
+
+  /// No description provided for @kkKalanDonemBorcu.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalan dönem borcu'**
+  String get kkKalanDonemBorcu;
+
+  /// No description provided for @kkKalanAsgari.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalan asgari'**
+  String get kkKalanAsgari;
+
+  /// No description provided for @kkSonOdeme.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son ödeme: {date}'**
+  String kkSonOdeme(String date);
+
+  /// No description provided for @kkGunKaldi.
+  ///
+  /// In tr, this message translates to:
+  /// **'{days} gün kaldı'**
+  String kkGunKaldi(int days);
+
+  /// No description provided for @kkBugunSonGun.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son gün bugün'**
+  String get kkBugunSonGun;
+
+  /// No description provided for @kkGecikti.
+  ///
+  /// In tr, this message translates to:
+  /// **'{days} gün gecikti'**
+  String kkGecikti(int days);
+
+  /// No description provided for @kkToplamBorc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplam borç'**
+  String get kkToplamBorc;
+
+  /// No description provided for @kkKullanilabilirLimit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kullanılabilir limit'**
+  String get kkKullanilabilirLimit;
+
+  /// No description provided for @kkKalanTaksit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalan taksitler'**
+  String get kkKalanTaksit;
+
+  /// No description provided for @kkSonrakiKesim.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonraki kesim: {date}'**
+  String kkSonrakiKesim(String date);
+
+  /// No description provided for @kkOde.
+  ///
+  /// In tr, this message translates to:
+  /// **'Öde'**
+  String get kkOde;
+
+  /// No description provided for @kkEkstreBilgisi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekstre bilgisi'**
+  String get kkEkstreBilgisi;
+
+  /// No description provided for @kkHarcamalar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Harcamalar'**
+  String get kkHarcamalar;
+
+  /// No description provided for @kkAyarlar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayarlar'**
+  String get kkAyarlar;
+
+  /// No description provided for @kkEkstreGirilmedi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu dönemin ekstresini girersen dönem borcu ve asgari bankanınkiyle birebir olur.'**
+  String get kkEkstreGirilmedi;
+
+  /// No description provided for @kkDefterGuvenilmez.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart bu kesimden sonra eklendi; dönem borcunu ekstreden gir.'**
+  String get kkDefterGuvenilmez;
+
+  /// No description provided for @kkFarkUyarisi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekstre ile kayıtlar arasında {amount} fark var: eksik ya da fazla işlem olabilir.'**
+  String kkFarkUyarisi(String amount);
+
+  /// No description provided for @kkOdemeIcinCuzdanYok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödemek için başka bir cüzdanın olmalı.'**
+  String get kkOdemeIcinCuzdanYok;
+
+  /// No description provided for @kkKesimTarihi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesap kesim tarihi'**
+  String get kkKesimTarihi;
+
+  /// No description provided for @kkSonOdemeTarihi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son ödeme tarihi'**
+  String get kkSonOdemeTarihi;
+
+  /// No description provided for @kkEkstreSayfaAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bankanın gönderdiği ekstredeki rakamlar. Kayıtlardan hesaplananla önceden doldurduk.'**
+  String get kkEkstreSayfaAciklama;
+
+  /// No description provided for @kkKaydedildi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart bilgisi kaydedildi'**
+  String get kkKaydedildi;
+
+  /// No description provided for @kkKartAktifOldu.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} açıldı: harcamalarını buradan ekleyebilirsin.'**
+  String kkKartAktifOldu(String name);
+
+  /// No description provided for @kkSonrakiKesimEtiket.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonraki kesim'**
+  String get kkSonrakiKesimEtiket;
+
+  /// No description provided for @notifCardUpcomingTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart son ödemesi yarın'**
+  String get notifCardUpcomingTitle;
+
+  /// No description provided for @notifCardUpcomingBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} kartının dönem borcundan {amount} kaldı; son ödeme yarın.'**
+  String notifCardUpcomingBody(String name, String amount);
+
+  /// No description provided for @notifCardDueTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart son ödeme günü!'**
+  String get notifCardDueTitle;
+
+  /// No description provided for @notifCardDueBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} kartının dönem borcundan {amount} kaldı; son ödeme bugün.'**
+  String notifCardDueBody(String name, String amount);
+
+  /// No description provided for @linkHintCardPayment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart ödemesi olabilir'**
+  String get linkHintCardPayment;
+
+  /// No description provided for @tekCekim.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tek çekim'**
+  String get tekCekim;
+
+  /// No description provided for @taksitSecenek.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} taksit'**
+  String taksitSecenek(int count);
+
+  /// No description provided for @taksitOzeti.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her ay {amount}; ilk taksit bu tarihte, sonrakiler her ay aynı gün.'**
+  String taksitOzeti(String amount);
 }
 
 class _AppLocalizationsDelegate

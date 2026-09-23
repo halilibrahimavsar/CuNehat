@@ -1,5 +1,6 @@
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
+import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
@@ -40,6 +41,7 @@ void main() {
       'currency': 'TRY',
       // v10: kürasyon yapılmamış cüzdan. `null` = hepsi görünür.
       'categoryIds': null,
+      'creditCard': null,
     };
 
     test('fromEntity and toEntity should match correctly', () {
@@ -266,6 +268,61 @@ void main() {
       final result = adapter.read(reader);
 
       expect(result.categoryIds, ['cat-a', 'cat-b']);
+    });
+  });
+
+  group('kredi kartı bilgisi (şema 12)', () {
+    final card = CreditCardInfo(
+      bankName: 'Garanti BBVA',
+      last4: '5690',
+      limit: 50000,
+      closingDay: 15,
+      dueDay: 25,
+      paymentWalletId: 'w-bank',
+      lastStatement: CardStatement(
+        closingDate: DateTime(2026, 9, 15),
+        dueDate: DateTime(2026, 9, 25),
+        statementBalance: 12345.67,
+        minimumPayment: 4938.27,
+        recordedAt: DateTime(2026, 9, 16, 10, 30),
+      ),
+    );
+    final entity = WalletEntity(
+      id: 'card-1',
+      userId: 'u',
+      name: 'Bonus',
+      balance: -12345.67,
+      debt: 0,
+      credit: 0,
+      investment: 0,
+      colorHex: '0xFF2196F3',
+      iconName: 'credit_card',
+      createdAt: DateTime(2026, 9, 1),
+      openingBalance: -10000,
+      creditCard: card,
+    );
+
+    test('entity ↔ model ↔ JSON gidiş-dönüşü kartı korur', () {
+      final json = WalletModel.fromEntity(entity).toJson();
+      final back = WalletModel.fromJson('card-1', json).toEntity();
+      expect(back, entity);
+      expect(back.isCreditCard, isTrue);
+      expect(back.creditCard!.lastStatement!.minimumPayment, 4938.27);
+    });
+
+    test('düz cüzdan: creditCard null yazılır ve null okunur', () {
+      final plain = entity.copyWith(clearCreditCard: true);
+      final json = WalletModel.fromEntity(plain).toJson();
+      expect(json.containsKey('creditCard'), isTrue);
+      expect(json['creditCard'], isNull);
+      expect(WalletModel.fromJson('card-1', json).toEntity().isCreditCard,
+          isFalse);
+    });
+
+    test('sıkı cast: kesim günü metinse gürültülü hata', () {
+      final json = WalletModel.fromEntity(entity).toJson();
+      (json['creditCard'] as Map)['closingDay'] = '15';
+      expect(() => WalletModel.fromJson('card-1', json), throwsA(anything));
     });
   });
 }

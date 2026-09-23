@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
@@ -11,6 +12,8 @@ import 'package:cunehat/features/bank_import/data/link_hint.dart';
 import 'package:cunehat/features/coupling/presentation/link_transaction_flow.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
+import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 
 /// İçe aktarım bitiş ekranında: az önce yazılan satırlardan bir kayda
 /// (birikim, borç ödemesi, kredi girişi) bağlanmaya aday görünenler, her
@@ -122,6 +125,7 @@ class _LinkSuggestionsCardState extends State<LinkSuggestionsCard> {
       LinkHint.investment => l10n.linkHintInvestment,
       LinkHint.debtPayment => l10n.linkHintDebtPayment,
       LinkHint.loanDisbursement => l10n.linkHintLoan,
+      LinkHint.cardPayment => l10n.linkHintCardPayment,
     };
     final linked = t.isSystem;
     return Padding(
@@ -164,15 +168,41 @@ class _LinkSuggestionsCardState extends State<LinkSuggestionsCard> {
             )
           else
             TextButton(
-              onPressed: () => startLinkTransactionFlow(
-                context,
-                transaction: t,
-                currency: widget.currency,
-              ),
+              onPressed: () => hint == LinkHint.cardPayment
+                  // Kart ödemesi doğrudan transfere gider; son 4 hanesi
+                  // açıklamada geçen TEK kart varsa o kart önceden seçilir.
+                  ? startLinkTransactionFlow(
+                      context,
+                      transaction: t,
+                      currency: widget.currency,
+                      target: LinkTarget.transfer,
+                      counterpartWalletId: _cardFor(context, t.title),
+                    )
+                  : startLinkTransactionFlow(
+                      context,
+                      transaction: t,
+                      currency: widget.currency,
+                    ),
               child: Text(l10n.bankImportLinkButton),
             ),
         ],
       ),
     );
+  }
+
+  /// Açıklamada son 4 hanesi geçen kart cüzdanı (bkz. [cardIdByLast4]).
+  String? _cardFor(BuildContext context, String description) {
+    final List<WalletEntity> wallets;
+    try {
+      final state = context.read<WalletBloc>().state;
+      wallets = state is WalletLoadedSt ? state.wallets : const [];
+    } on ProviderNotFoundException {
+      return null;
+    }
+    return cardIdByLast4(description, [
+      for (final w in wallets)
+        if (w.id != null && w.creditCard?.last4 != null)
+          (id: w.id!, last4: w.creditCard!.last4!),
+    ]);
   }
 }

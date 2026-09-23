@@ -7,6 +7,13 @@ import 'package:cunehat/core/notifications/notification_localizer.dart';
 import 'package:cunehat/core/notifications/notification_service.dart';
 import 'package:cunehat/core/services/notification_settings_service.dart';
 import 'package:cunehat/core/services/reminder_sync_service.dart';
+import 'package:cunehat/core/services/transactions_changed_notifier.dart';
+import 'package:cunehat/core/services/wallet_metrics_service.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
+import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
+import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/repositories/debt_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
@@ -30,12 +37,20 @@ class MockNotificationSettingsService extends Mock
 
 class MockNotificationLocalizer extends Mock implements NotificationLocalizer {}
 
+class MockWalletRepository extends Mock implements WalletRepository {}
+
+class MockTransactionsRepository extends Mock
+    implements TransactionsRepository {}
+
 void main() {
   late MockRecurringTransactionRepository recurringRepo;
   late MockDebtRepository debtRepo;
   late MockNotificationService notifications;
   late MockNotificationSettingsService settings;
   late MockNotificationLocalizer localizer;
+  late MockWalletRepository walletRepo;
+  late MockTransactionsRepository txRepo;
+  late TransactionsChangedNotifier ledgerChanges;
   late ReminderSyncService service;
   late AppLocalizations tr;
 
@@ -82,14 +97,18 @@ void main() {
     notifications = MockNotificationService();
     settings = MockNotificationSettingsService();
     localizer = MockNotificationLocalizer();
+    walletRepo = MockWalletRepository();
+    txRepo = MockTransactionsRepository();
+    ledgerChanges = TransactionsChangedNotifier();
 
     when(() => localizer.l10n).thenReturn(tr);
+    when(() => walletRepo.getAllWallets())
+        .thenAnswer((_) async => const Right(<WalletEntity>[]));
     when(() => settings.isRecurringRemindersEnabled).thenReturn(true);
     when(() => settings.isDebtRemindersEnabled).thenReturn(true);
     // Eski aralık temizliği tek seferlik: varsayılan olarak HENÜZ yapılmamış.
     when(() => settings.isLegacyRandomRangePurged).thenReturn(false);
-    when(() => settings.markLegacyRandomRangePurged())
-        .thenAnswer((_) async {});
+    when(() => settings.markLegacyRandomRangePurged()).thenAnswer((_) async {});
     when(() => notifications.purgeLegacyRandomReminders())
         .thenAnswer((_) async {});
     when(() => settings.getRandomFrequency())
@@ -114,6 +133,9 @@ void main() {
       notifications,
       settings,
       localizer,
+      walletRepo,
+      txRepo,
+      ledgerChanges,
     );
   });
 
@@ -420,7 +442,8 @@ void main() {
     test('eski rastgele aralık BİR KEZ temizlenir, sonra hiç', () async {
       when(() => recurringRepo.getAllTemplates())
           .thenAnswer((_) async => const Right([]));
-      when(() => debtRepo.getAllDebts()).thenAnswer((_) async => const Right([]));
+      when(() => debtRepo.getAllDebts())
+          .thenAnswer((_) async => const Right([]));
 
       await service.syncAll();
       verify(() => notifications.purgeLegacyRandomReminders()).called(1);
@@ -447,6 +470,175 @@ void main() {
       verify(() => notifications.noteFailure(any(), 'şablon kutusu bozuk'))
           .called(1);
       verify(() => notifications.noteFailure(any(), 'borç kutusu bozuk'))
+          .called(1);
+    });
+  });
+
+  group('kredi kartı', () {
+    WalletEntity card({String id = 'card'}) => WalletEntity(
+          id: id,
+          userId: 'u',
+          name: 'Bonus',
+          balance: -800,
+          debt: 0,
+          credit: 0,
+          investment: 0,
+          colorHex: '0xFF37474F',
+          iconName: 'credit_card',
+          createdAt: DateTime(2026, 8, 1),
+          openingBalance: 0,
+          creditCard: const CreditCardInfo(closingDay: 15, dueDay: 25),
+        );
+
+    TransactionEntity tx(DateTime at, double amount, {bool income = false}) =>
+        TransactionEntity(
+          id: 't$at$amount',
+          userId: 'u',
+          walletId: 'card',
+          title: 'x',
+          tag: income ? CashMovementTags.transfer : 'cat-a',
+          amount: amount,
+          date: at,
+          type: income
+              ? TransactionTypeModel.income
+              : TransactionTypeModel.expense,
+          isSystem: income,
+        );
+
+    void stubLedger(List<TransactionEntity> ledger) {
+      when(() => txRepo.getTransactions(
+            userId: any(named: 'userId'),
+            walletId: any(named: 'walletId'),
+          )).thenAnswer((_) async => Right(ledger));
+    }
+
+    test(
+        'kalan dönem borcu varsa: son ödemeden bir gün önce + gün, tutar ve '
+        'kart adıyla', () async {
+      stubLedger([tx(DateTime(2026, 9, 10), 800)]);
+
+      await service.syncCard(card(), now: DateTime(2026, 9, 20, 10));
+
+      final upcoming = verify(() => notifications.scheduleNotification(
+            id: ReminderIds.cardUpcoming('card'),
+            title: any(named: 'title'),
+            body: captureAny(named: 'body'),
+            scheduledDate: DateTime(2026, 9, 24, kReminderHour),
+            payload: NotificationPayloads.debtDue,
+            channel: any(named: 'channel'),
+            repeatDaily: any(named: 'repeatDaily'),
+          )).captured.single as String;
+      expect(upcoming, contains('Bonus'));
+      expect(upcoming, contains('800'));
+      verify(() => notifications.scheduleNotification(
+            id: ReminderIds.cardDue('card'),
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            scheduledDate: DateTime(2026, 9, 25, kReminderHour),
+            payload: NotificationPayloads.debtDue,
+            channel: any(named: 'channel'),
+            repeatDaily: false,
+          )).called(1);
+    });
+
+    test('ödenmiş kart hatırlatmaz; eski alarmlar düşer', () async {
+      stubLedger([
+        tx(DateTime(2026, 9, 10), 800),
+        tx(DateTime(2026, 9, 18), 800, income: true),
+      ]);
+
+      await service.syncCard(card(), now: DateTime(2026, 9, 20, 10));
+
+      verify(() =>
+              notifications.cancelNotification(ReminderIds.cardDue('card')))
+          .called(1);
+      verifyNever(() => notifications.scheduleNotification(
+            id: any(named: 'id'),
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            scheduledDate: any(named: 'scheduledDate'),
+            payload: any(named: 'payload'),
+            channel: any(named: 'channel'),
+            repeatDaily: any(named: 'repeatDaily'),
+          ));
+    });
+
+    test('son ödeme geçtiyse gün hatırlatması her sabah TEKRARLAR', () async {
+      stubLedger([tx(DateTime(2026, 9, 10), 800)]);
+
+      await service.syncCard(card(), now: DateTime(2026, 9, 27, 10));
+
+      verify(() => notifications.scheduleNotification(
+            id: ReminderIds.cardDue('card'),
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            scheduledDate: any(named: 'scheduledDate'),
+            payload: any(named: 'payload'),
+            channel: any(named: 'channel'),
+            repeatDaily: true,
+          )).called(1);
+      verifyNever(() => notifications.scheduleNotification(
+            id: ReminderIds.cardUpcoming('card'),
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            scheduledDate: any(named: 'scheduledDate'),
+            payload: any(named: 'payload'),
+            channel: any(named: 'channel'),
+            repeatDaily: any(named: 'repeatDaily'),
+          ));
+    });
+
+    test('borç hatırlatmaları kapalıysa kurulmaz', () async {
+      when(() => settings.isDebtRemindersEnabled).thenReturn(false);
+      stubLedger([tx(DateTime(2026, 9, 10), 800)]);
+
+      await service.syncCard(card(), now: DateTime(2026, 9, 20, 10));
+
+      verifyNever(() => notifications.scheduleNotification(
+            id: any(named: 'id'),
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            scheduledDate: any(named: 'scheduledDate'),
+            payload: any(named: 'payload'),
+            channel: any(named: 'channel'),
+            repeatDaily: any(named: 'repeatDaily'),
+          ));
+    });
+
+    test(
+        'defter değişikliği bildirimi KARTIN hatırlatmasını yeniden kurar; '
+        'kart olmayan cüzdana dokunmaz', () async {
+      final now = DateTime.now();
+      stubLedger([tx(now.subtract(const Duration(days: 45)), 800)]);
+      when(() => walletRepo.getWalletById('card'))
+          .thenAnswer((_) async => Right(card()));
+      when(() => walletRepo.getWalletById('bank')).thenAnswer(
+          (_) async => Right(card(id: 'bank').copyWith(clearCreditCard: true)));
+
+      ledgerChanges.notify(walletId: 'bank');
+      ledgerChanges.notify(walletId: 'card');
+      await pumpEventQueue();
+
+      verify(() =>
+              notifications.cancelNotification(ReminderIds.cardDue('card')))
+          .called(1);
+      verifyNever(
+          () => notifications.cancelNotification(ReminderIds.cardDue('bank')));
+    });
+
+    test('syncAll kart hatırlatmalarını da tazeler', () async {
+      when(() => recurringRepo.getAllTemplates())
+          .thenAnswer((_) async => const Right([]));
+      when(() => debtRepo.getAllDebts())
+          .thenAnswer((_) async => const Right([]));
+      when(() => walletRepo.getAllWallets())
+          .thenAnswer((_) async => Right([card()]));
+      stubLedger(const []);
+
+      await service.syncAll();
+
+      verify(() =>
+              notifications.cancelNotification(ReminderIds.cardDue('card')))
           .called(1);
     });
   });

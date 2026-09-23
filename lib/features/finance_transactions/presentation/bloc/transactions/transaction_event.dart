@@ -37,6 +37,17 @@ class AddTransactionEvent extends TransactionEvent {
   List<Object> get props => [transaction];
 }
 
+/// Birden çok işlemi (kart taksitleri) tek seferde ekler: tek bakiye
+/// senkronu, tek defter bildirimi.
+class AddTransactionsEvent extends TransactionEvent {
+  final List<TransactionEntity> transactions;
+
+  const AddTransactionsEvent(this.transactions);
+
+  @override
+  List<Object> get props => [transactions];
+}
+
 class UpdateTransactionEvent extends TransactionEvent {
   final TransactionEntity previousTransaction;
   final TransactionEntity newTransaction;

@@ -184,8 +184,59 @@ void main() {
       expect(result['version'], 11);
       expect(
           (result['wallets'] as List).first, containsPair('categoryIds', null));
-      expect((result['transactions'] as List).first,
-          containsPair('origin', null));
+      expect(
+          (result['transactions'] as List).first, containsPair('origin', null));
+    });
+  });
+
+  group('v11 → v12 (cüzdanlara kredi kartı bilgisi)', () {
+    Map<String, dynamic> v11Backup() => {
+          'version': 11,
+          'timestamp': '2026-09-23T10:00:00.000',
+          'wallets': [
+            {'id': 'w1', 'name': 'Nakit', 'categoryIds': null},
+            {'id': 'w2', 'name': 'Bonus Kart', 'categoryIds': <String>[]},
+          ],
+          'transactions': [
+            {'id': 't1', 'tag': 'cat-1', 'origin': 'manual'},
+          ],
+          'users': <String, dynamic>{},
+        };
+
+    test('sürüm damgası 12 olur', () {
+      expect(migrateBackup(v11Backup(), targetVersion: 12)['version'], 12);
+    });
+
+    test('her cüzdana creditCard AÇIKÇA null yazılır (düz cüzdan)', () {
+      // v11'de kart kavramı yoktu: her cüzdan düz cüzdandı. Elle açılmış
+      // "kart" cüzdanı da düz kalır; kullanıcı sonradan çevirebilir.
+      final result = migrateBackup(v11Backup(), targetVersion: 12);
+      final wallets = (result['wallets'] as List).cast<Map<String, dynamic>>();
+      expect(wallets, hasLength(2));
+      for (final w in wallets) {
+        expect(w.containsKey('creditCard'), isTrue);
+        expect(w['creditCard'], isNull);
+      }
+      expect(wallets.map((w) => w['name']), ['Nakit', 'Bonus Kart']);
+      expect(wallets.last['categoryIds'], isEmpty);
+    });
+
+    test('cüzdan dışındaki bölümlere DOKUNULMAZ; dönüşüm SAFTIR', () {
+      final source = v11Backup();
+      final result = migrateBackup(source, targetVersion: 12);
+      expect(result['transactions'], source['transactions']);
+      expect(source['version'], 11);
+      expect((source['wallets'] as List).first, isNot(contains('creditCard')));
+    });
+
+    test('v9 yedeği üç adımda (9→10→11→12) yükselir', () {
+      final result = migrateBackup(v9Backup(), targetVersion: 12);
+      expect(result['version'], 12);
+      final wallet = (result['wallets'] as List).first as Map;
+      expect(wallet, containsPair('categoryIds', null));
+      expect(wallet, containsPair('creditCard', null));
+      expect(
+          (result['transactions'] as List).first, containsPair('origin', null));
     });
   });
 

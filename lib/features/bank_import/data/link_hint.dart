@@ -18,6 +18,10 @@ enum LinkHint {
 
   /// Gelir: çekilen kredinin hesaba yatması.
   loanDisbursement,
+
+  /// Gider: bankadan KREDİ KARTINA ödeme — kart cüzdanına transferdir
+  /// (harcama değil; kartın harcamaları kart cüzdanında zaten sayılır).
+  cardPayment,
 }
 
 /// [description]'dan bağlama ipucu. [inInvestmentCategory]: satırın
@@ -25,9 +29,9 @@ enum LinkHint {
 ///
 /// Sözlük BİLEREK dar: yanlış öneri kullanıcıyı yorar, kaçan satır ise işlem
 /// listesindeki "Bağla…" ile yine bağlanabilir. Gerçek ekstrelerde ölçüldü
-/// (23 Eyl 2026, 5 dosya): kart ÖDEMESİ satırları ("... NOLU KART ODEMESI")
-/// borç ödemesi DEĞİLDİR — kart cüzdanına transferdir (kredi kartı fazı);
-/// "kredi karti" geçen satır bu yüzden borç ödemesi sayılmaz.
+/// (23 Eyl 2026, 5 dosya): kart ÖDEMESİ satırları ("... NOLU KART ODEMESI",
+/// "... ILE BITEN KREDI KARTI ODEMESI", 10+ satır) borç ödemesi DEĞİLDİR —
+/// kart cüzdanına transferdir ([LinkHint.cardPayment]).
 LinkHint? linkHintOf(
   String description, {
   required bool isIncome,
@@ -39,9 +43,36 @@ LinkHint? linkHintOf(
     return any(_disbursementWords) ? LinkHint.loanDisbursement : null;
   }
   if (inInvestmentCategory) return LinkHint.investment;
-  if (any(_cardPaymentWords)) return null;
+  if (_isCardPayment(text)) return LinkHint.cardPayment;
   if (any(_debtPaymentWords)) return LinkHint.debtPayment;
   return null;
+}
+
+/// "Kart ödemesi" — çıplak "kredi karti" YETMEZ (kart aidatı, kartla alışveriş
+/// açıklamaları da içerir); ödeme/otomatik/tahsilat sözcüğüyle birlikte.
+bool _isCardPayment(String text) =>
+    text.contains('kart odeme') ||
+    (text.contains('kredi kart') &&
+        (text.contains('odeme') ||
+            text.contains('otomatik') ||
+            text.contains('tahsilat')));
+
+/// [description]'da son 4 hanesi AYRI bir sayı olarak geçen TEK kartın
+/// kimliği ("545847 5690 NOLU KART ODEMESI", "…******5690"); hiçbiri ya da
+/// birden fazlası uyuyorsa `null` — yanlış karta bağlamaktansa sormak yeğdir.
+String? cardIdByLast4(
+  String description,
+  Iterable<({String id, String last4})> cards,
+) {
+  String? found;
+  for (final c in cards) {
+    if (c.last4.length != 4) continue;
+    final pattern = RegExp('(?<![0-9])${RegExp.escape(c.last4)}(?![0-9])');
+    if (!pattern.hasMatch(description)) continue;
+    if (found != null && found != c.id) return null;
+    found = c.id;
+  }
+  return found;
 }
 
 const _debtPaymentWords = [
@@ -60,12 +91,6 @@ const _disbursementWords = [
   'ihtiyac kredisi',
   'konut kredisi',
   'tasit kredisi',
-];
-
-const _cardPaymentWords = [
-  'kredi karti',
-  'kredi kart',
-  'kart odeme',
 ];
 
 /// Yazılmış bir satır + neden bağlanmaya aday olduğu (bitiş ekranı listesi).

@@ -14,6 +14,7 @@ import 'package:cunehat/core/services/auto_backup_service.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
 import 'package:cunehat/core/notifications/notification_service.dart';
 import 'package:cunehat/core/services/reminder_sync_service.dart';
+import 'package:cunehat/features/wallet/data/models/credit_card_info_model.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/category_local_datasource.dart';
 import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
@@ -156,6 +157,9 @@ class AppInitialization {
   static List<AdapterRegistration> get adapterRegistrations =>
       <AdapterRegistration>[
         AdapterRegistration.of(WalletModelAdapter()),
+        // Cüzdan alan 15'in (kredi kartı, şema 12) iç içe kayıtları.
+        AdapterRegistration.of(CreditCardInfoModelAdapter()),
+        AdapterRegistration.of(CardStatementModelAdapter()),
         AdapterRegistration.of(TransactionModelAdapter()),
         AdapterRegistration.of(TransactionTypeModelAdapter()),
         AdapterRegistration.of(GoalModelAdapter()),

@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
+
 class WalletEntity extends Equatable {
   final String? id;
   final String userId;
@@ -40,6 +42,11 @@ class WalletEntity extends Equatable {
   /// (bkz. `wallet_category_scope.dart`).
   final List<String>? categoryIds;
 
+  /// Kredi kartı cüzdanıysa kart bilgileri (kesim/son ödeme günü, limit,
+  /// son ekstre); düz cüzdanda — ve bu alandan önce yazılmış kayıtlarda
+  /// (Hive alan 15 yok, v11 yedeğinde anahtar yok) — `null`.
+  final CreditCardInfo? creditCard;
+
   const WalletEntity({
     required this.id,
     required this.userId,
@@ -56,7 +63,10 @@ class WalletEntity extends Equatable {
     required this.openingBalance,
     this.currency = 'TRY',
     this.categoryIds,
+    this.creditCard,
   });
+
+  bool get isCreditCard => creditCard != null;
 
   WalletEntity copyWith({
     String? id,
@@ -74,6 +84,8 @@ class WalletEntity extends Equatable {
     double? openingBalance,
     String? currency,
     List<String>? categoryIds,
+    CreditCardInfo? creditCard,
+    bool clearCreditCard = false,
   }) {
     return WalletEntity(
       id: id ?? this.id,
@@ -94,6 +106,7 @@ class WalletEntity extends Equatable {
       // (küme → null) kullanıcıya sunulan bir eylem değil, bu yüzden
       // `clearCategoryIds` bayrağı bilerek yok.
       categoryIds: categoryIds ?? this.categoryIds,
+      creditCard: clearCreditCard ? null : (creditCard ?? this.creditCard),
     );
   }
 
@@ -114,5 +127,6 @@ class WalletEntity extends Equatable {
         openingBalance,
         currency,
         categoryIds,
+        creditCard,
       ];
 }

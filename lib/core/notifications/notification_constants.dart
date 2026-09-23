@@ -51,6 +51,11 @@ class ReminderIds {
 
   static int debtDue(String debtId) => 'debt_${debtId}_2'.hashCode;
 
+  /// Kredi kartı cüzdanının son ödeme hatırlatmaları (bir gün önce + gün).
+  static int cardUpcoming(String walletId) => 'card_${walletId}_1'.hashCode;
+
+  static int cardDue(String walletId) => 'card_${walletId}_2'.hashCode;
+
   /// Bütçeler cüzdan bazlıdır (`walletId::categoryId` bileşik anahtar).
   /// Yalnız `categoryId` kullanılırsa aynı kategoriyi iki cüzdanda bütçeleyen
   /// kullanıcıda ikinci uyarı birincinin üstüne yazar.

@@ -1,3 +1,4 @@
+import 'package:cunehat/features/wallet/data/models/credit_card_info_model.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:hive/hive.dart';
 
@@ -21,6 +22,10 @@ class WalletModel {
   /// Bkz. [WalletEntity.categoryIds] — anlam ve değişmez orada.
   final List<String>? categoryIds;
 
+  /// Kredi kartı bilgileri (HiveField 15, şema 12); düz cüzdanda `null`.
+  /// Bkz. [WalletEntity.creditCard].
+  final CreditCardInfoModel? creditCard;
+
   const WalletModel({
     required this.id,
     required this.userId,
@@ -37,6 +42,7 @@ class WalletModel {
     required this.openingBalance,
     this.currency = 'TRY',
     this.categoryIds,
+    this.creditCard,
   });
 
   /// Creates Wallet from JSON Map
@@ -59,6 +65,12 @@ class WalletModel {
       // v10'da eklendi. YOKLUĞU anlamlıdır ("kürasyon yok"), bu yüzden sıkı
       // cast tercihinin istisnası değil kuralın kendisi: nullable okunur.
       categoryIds: (json['categoryIds'] as List?)?.cast<String>(),
+      // v12'de eklendi; düz cüzdanda `null` (v11 yedeğine migrasyon açıkça
+      // `null` yazar).
+      creditCard: json['creditCard'] == null
+          ? null
+          : CreditCardInfoModel.fromJson(
+              Map<String, dynamic>.from(json['creditCard'] as Map)),
     );
   }
 
@@ -79,6 +91,9 @@ class WalletModel {
       openingBalance: entity.openingBalance,
       currency: entity.currency,
       categoryIds: entity.categoryIds,
+      creditCard: entity.creditCard == null
+          ? null
+          : CreditCardInfoModel.fromEntity(entity.creditCard!),
     );
   }
 
@@ -99,6 +114,7 @@ class WalletModel {
       openingBalance: openingBalance,
       currency: currency,
       categoryIds: categoryIds,
+      creditCard: creditCard?.toEntity(),
     );
   }
 
@@ -120,6 +136,7 @@ class WalletModel {
       'openingBalance': openingBalance,
       'currency': currency,
       'categoryIds': categoryIds,
+      'creditCard': creditCard?.toJson(),
     };
   }
 
@@ -140,6 +157,7 @@ class WalletModel {
     double? openingBalance,
     String? currency,
     List<String>? categoryIds,
+    CreditCardInfoModel? creditCard,
   }) {
     return WalletModel(
       id: id ?? this.id,
@@ -157,6 +175,7 @@ class WalletModel {
       openingBalance: openingBalance ?? this.openingBalance,
       currency: currency ?? this.currency,
       categoryIds: categoryIds ?? this.categoryIds,
+      creditCard: creditCard ?? this.creditCard,
     );
   }
 
@@ -196,13 +215,16 @@ class WalletModelAdapter extends TypeAdapter<WalletModel> {
       // haritada hiç yoktur → null → "kürasyon yok". Hive'dan `List<dynamic>`
       // döner, cast şart.
       categoryIds: (fields[14] as List?)?.cast<String>(),
+      // Alan 15 v12'de eklendi (kredi kartı); eski kayıtta yok → null → düz
+      // cüzdan.
+      creditCard: fields[15] as CreditCardInfoModel?,
     );
   }
 
   @override
   void write(BinaryWriter writer, WalletModel obj) {
     writer
-      ..writeByte(15)
+      ..writeByte(16)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -232,6 +254,8 @@ class WalletModelAdapter extends TypeAdapter<WalletModel> {
       ..writeByte(13)
       ..write(obj.currency)
       ..writeByte(14)
-      ..write(obj.categoryIds);
+      ..write(obj.categoryIds)
+      ..writeByte(15)
+      ..write(obj.creditCard);
   }
 }
