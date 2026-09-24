@@ -1,3 +1,4 @@
+import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
@@ -155,7 +156,7 @@ void main() {
 
   tearDown(() => getIt.reset());
 
-  Widget app(Widget child) => BlocProvider<AmountVisibilityCubit>(
+  Widget app(Widget child) => BlocProvider<TransactionFilterCubit>(create: (_) => TransactionFilterCubit(), child: BlocProvider<AmountVisibilityCubit>(
         create: (_) => AmountVisibilityCubit(),
         child: MaterialApp(
           localizationsDelegates: const [
@@ -169,7 +170,7 @@ void main() {
           theme: ThemeData(fontFamily: kRealFontFamily),
           home: child,
         ),
-      );
+      ));
 
   testWidgets('başka bir bloc örneğinden silme rapora anında yansır',
       (tester) async {

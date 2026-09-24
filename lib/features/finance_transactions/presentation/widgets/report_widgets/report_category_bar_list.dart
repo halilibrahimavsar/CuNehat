@@ -1,3 +1,4 @@
+import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/utils/money_format.dart';
@@ -305,7 +306,7 @@ class _ChildRow extends StatelessWidget {
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                       color:
-                          budget!.isExceeded ? Colors.redAccent : Colors.green,
+                          budget!.isExceeded ? MoneyColors.expense : MoneyColors.income,
                     ),
                   ),
                 ),
@@ -476,8 +477,8 @@ class _Row extends StatelessWidget {
                               scheme.onSurface.withValues(alpha: 0.08),
                           valueColor: AlwaysStoppedAnimation(
                             budget!.isExceeded
-                                ? Colors.redAccent
-                                : Colors.green,
+                                ? MoneyColors.expense
+                                : MoneyColors.income,
                           ),
                         ),
                       ),
@@ -490,8 +491,8 @@ class _Row extends StatelessWidget {
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
                         color: budget!.isExceeded
-                            ? Colors.redAccent
-                            : Colors.green,
+                            ? MoneyColors.expense
+                            : MoneyColors.income,
                       ),
                     ),
                   ],

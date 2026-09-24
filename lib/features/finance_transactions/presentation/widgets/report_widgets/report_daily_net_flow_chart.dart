@@ -1,3 +1,4 @@
+import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/report_series_service.dart';
@@ -75,8 +76,8 @@ class ReportDailyNetFlowChart extends StatelessWidget {
     this.showDateAxis = true,
   });
 
-  static const incomeColor = Colors.green;
-  static const expenseColor = Colors.redAccent;
+  static const incomeColor = MoneyColors.income;
+  static const expenseColor = MoneyColors.expense;
 
   @override
   Widget build(BuildContext context) {

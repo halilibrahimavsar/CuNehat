@@ -1,3 +1,4 @@
+import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:flutter/material.dart';
 
@@ -43,7 +44,7 @@ class ReportChangeBadge extends StatelessWidget {
     final theme = Theme.of(context);
     final isIncrease = value > 0;
     final isGood = isIncrease == increaseIsGood;
-    final color = isGood ? Colors.green : Colors.redAccent;
+    final color = isGood ? MoneyColors.income : MoneyColors.expense;
 
     final magnitude = value.abs();
     final text = magnitude > maxPercent

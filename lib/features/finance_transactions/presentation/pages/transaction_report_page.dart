@@ -8,7 +8,6 @@ import 'package:cunehat/core/error/error_handling.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/services/csv_service.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
-import 'package:cunehat/core/shared/widgets/app_date_range_picker.dart';
 import 'package:cunehat/core/utils/date_range_helper.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/budgets/domain/repositories/budget_repository.dart';
@@ -34,6 +33,9 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/repor
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_section_header.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_summary_cards.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_system_movements_toggle.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/shared_period.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/analysis_empty_card.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
@@ -93,9 +95,8 @@ class _TransactionReportView extends StatefulWidget {
 }
 
 class _TransactionReportViewState extends State<_TransactionReportView> {
-  late DateTimeRange _range;
-  bool _hasUserPickedRange = false;
-  bool _hasAutoAdjustedRange = false;
+  /// Dönem İşlemler ve İçgörü ile ORTAK (bkz. `shared_period.dart`).
+  DateTimeRange get _range => context.read<TransactionFilterCubit>().period;
   bool _showExpenseBarChart = false;
   bool _showIncomeBarChart = false;
   FinanceMode _categoryMode = FinanceMode.compare;
@@ -188,10 +189,6 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   @override
   void initState() {
     super.initState();
-    // İçgörüler sayfasıyla AYNI dönem tanımı. Eskiden rapor "ayın 1'i →
-    // şimdi" kullanıyordu: hızlı seçenekteki "Bu Ay" çipi hiçbir zaman
-    // seçili görünmüyor, iki kardeş sayfa aynı ayı farklı tanımlıyordu.
-    _range = DateRangeHelper.thisMonth();
     _loadCategoryIcons();
     _categoriesSub = getIt<CategoriesChangedNotifier>()
         .stream
@@ -203,15 +200,6 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     _budgetsSub =
         getIt<BudgetsChangedNotifier>().stream.listen((_) => _loadBudgets());
 
-    // Listener yalnız state DEĞİŞİMİNDE tetiklenir; bloc zaten dolu bir
-    // durumla verilmişse ilk kontrolü burada yapmak gerekir. [_maybeAdjust...]
-    // kendi bayrağıyla korunduğundan iki yolun çakışması sorun değildir.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _maybeAdjustInitialRange(
-        _forWallet(context.read<TransactionBloc>().state.currentTransactions),
-      );
-    });
   }
 
   /// Kategori ikon+ad indeksini yükler ve kategoriler değiştikçe TAZELER.
@@ -326,21 +314,6 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     );
   }
 
-  Future<void> _pickDateRange() async {
-    final picked = await AppDateRangePicker.pick(
-      context,
-      initialDateRange: _range,
-      quickOptions: DateRangeHelper.buildDateRangeQuickOptions(context.l10n),
-    );
-    if (picked != null) {
-      setState(() {
-        _range = picked;
-        _hasUserPickedRange = true;
-        _unitOverride = null;
-      });
-    }
-  }
-
   /// Seçili [_range] ile aynı gün sayısına sahip, hemen öncesindeki dönemin
   /// toplamlarını hesaplar (dönemsel değişim rozetleri için).
   ///
@@ -404,39 +377,6 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     _walletTransactions =
         all.where((t) => t.walletId == widget.walletId).toList();
     return _walletTransactions;
-  }
-
-  /// Varsayılan aralık ("bu ay") boşsa ama geçmiş veri varsa, aralığı son
-  /// işlemin ayına kaydırır — kullanıcı raporu boş sanmasın.
-  ///
-  /// build sırasında değil, işlem listesi her değiştiğinde bir kez çalışır
-  /// (bkz. [BlocListener] kurulumu): build içinde state yazmak aynı kareyi
-  /// tutarsız bırakır ve aralık boş kaldığı sürece her rebuild'de tekrarlanırdı.
-  void _maybeAdjustInitialRange(List<TransactionEntity> transactions) {
-    if (_hasUserPickedRange || _hasAutoAdjustedRange) return;
-    if (transactions.isEmpty) return;
-    if (_filterTransactionsByRange(transactions).isNotEmpty) return;
-
-    DateTime? latestDate;
-    for (final t in transactions) {
-      if (latestDate == null || t.date.isAfter(latestDate)) {
-        latestDate = t.date;
-      }
-    }
-    if (latestDate == null) return;
-
-    final start = DateTime(latestDate.year, latestDate.month, 1);
-    final lastDayOfMonth = DateTime(latestDate.year, latestDate.month + 1, 0);
-    final now = DateTime.now();
-    final end = latestDate.isBefore(now)
-        ? (lastDayOfMonth.isBefore(now) ? lastDayOfMonth : now)
-        : latestDate;
-
-    setState(() {
-      _range = DateTimeRange(start: start, end: end);
-      _hasAutoAdjustedRange = true;
-      _unitOverride = null;
-    });
   }
 
   /// Türetmeyi etkileyen "bugün". Gün hassasiyetinde: saat başına önbellek
@@ -782,284 +722,288 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
               centerTitle: true,
             )
           : null,
-      body: BlocConsumer<TransactionBloc, TransactionState>(
+      // Dönem ortak (bkz. `shared_period.dart`): başka bir sayfada değişince
+      // bu sayfa da yeniden çizilir; elle seçilen çözünürlük ise yeni
+      // dönemde anlamını yitirir ("62 kovayı aşan seçenek KAPALI" kuralı
+      // aralığa bağlı) ve sıfırlanır. Eskiden burada "dönem boşsa verinin
+      // olduğu aya SESSİZCE kay" mantığı vardı; ortak dönemi arka planda
+      // değiştirmek diğer iki sayfayı da kaydırırdı — yerine boş durum kartı
+      // "… dönemine git" eylemini sunar.
+      body: BlocListener<TransactionFilterCubit, CombinedFilter>(
         listenWhen: (prev, curr) =>
-            prev.currentTransactions != curr.currentTransactions,
-        listener: (context, state) =>
-            _maybeAdjustInitialRange(_forWallet(state.currentTransactions)),
-        builder: (context, state) {
-          final transactions = _forWallet(state.currentTransactions);
-          if (state is TransactionLoading && transactions.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
+            prev.viewFilter.startDate != curr.viewFilter.startDate ||
+            prev.viewFilter.endDate != curr.viewFilter.endDate,
+        listener: (context, _) {
+          if (_unitOverride != null) setState(() => _unitOverride = null);
+        },
+        child: BlocBuilder<TransactionBloc, TransactionState>(
+          builder: (context, state) {
+            context.select((TransactionFilterCubit c) => c.period);
+            final transactions = _forWallet(state.currentTransactions);
+            if (state is TransactionLoading && transactions.isEmpty) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (transactions.isEmpty) {
-            return _buildEmptyState(context);
-          }
+            if (transactions.isEmpty) {
+              return _buildEmptyState(context);
+            }
 
-          final brightness =
-              (theme.extension<AppSurface>() ?? AppSurface.light).brightness;
-          final derived = _derive(
-              context, _analysisSource(transactions), transactions, brightness);
-          final linkedCards = _linkedCards(context);
+            final brightness =
+                (theme.extension<AppSurface>() ?? AppSurface.light).brightness;
+            final derived = _derive(
+                context, _analysisSource(transactions), transactions, brightness);
+            final linkedCards = _linkedCards(context);
 
-          final dataBuilder = derived.dataBuilder;
-          final filteredTransactions = derived.filtered;
-          final split = derived.split;
-          final totals = derived.totals;
-          final previousTotals = derived.previousTotals;
-          final expenseFull = derived.expenseFull;
-          final incomeFull = derived.incomeFull;
-          final expensePie = derived.expensePie;
-          final incomePie = derived.incomePie;
-          final flowSeries = derived.flowSeries;
-          final balanceSeries = derived.balanceSeries;
+            final dataBuilder = derived.dataBuilder;
+            final filteredTransactions = derived.filtered;
+            final split = derived.split;
+            final totals = derived.totals;
+            final previousTotals = derived.previousTotals;
+            final expenseFull = derived.expenseFull;
+            final incomeFull = derived.incomeFull;
+            final expensePie = derived.expensePie;
+            final incomePie = derived.incomePie;
+            final flowSeries = derived.flowSeries;
+            final balanceSeries = derived.balanceSeries;
 
-          // Karşılaştırma modu tek bir kart çizer (bkz.
-          // [ReportCompareChartCard]); tek taraflı modlar eskisi gibi
-          // pasta/çubuk kartını gösterir.
-          final isCompare = _categoryMode == FinanceMode.compare;
+            // Karşılaştırma modu tek bir kart çizer (bkz.
+            // [ReportCompareChartCard]); tek taraflı modlar eskisi gibi
+            // pasta/çubuk kartını gösterir.
+            final isCompare = _categoryMode == FinanceMode.compare;
 
-          // Dönem kontrolü YAPIŞKAN. Ölçüldü: sayfa 360×800 telefonda ~3
-          // ekran; kullanıcı ikinci ekranda hangi dönemin raporuna baktığını
-          // göremiyor ve dönemi değiştirmek için en başa dönmesi gerekiyordu.
-          return Column(
-            children: [
-              // Dönem kontrolü TEK satır: `‹ Eylül 2026 ›` + paylaş.
-              //
-              // Eskiden burada sayfa başlığı, aralık metni ("01 Eyl 2026 -
-              // 30 Eyl 2026"), takvim düğmesi ve yatay kayan hızlı çip
-              // satırı vardı. Ölçüldü (411dp telefon): yapışkan blok
-              // **188dp**, yani ekranın dörtte biri; üstelik çip satırı
-              // sağdan kırpıldığı için son çip "Son…" diye yarım
-              // görünüyordu. Aynı kontrol işlemler ekranında zaten 44dp'lik
-              // bir ay çubuğu ([TransactionPeriodBar]) — iki kardeş sayfanın
-              // dönemi farklı kontrollerle seçmesi için sebep yok.
-              //
-              // Hızlı seçenekler (Son 7 Gün, Bu Yıl…) kaybolmadı: etikete
-              // dokunmak onların menüsünü açar ([_pickDateRange]).
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 8, 0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TransactionPeriodBar(
-                        range: _range,
-                        onStep: (step) => setState(() {
-                          _range = shiftPeriod(_range, step);
-                          _hasUserPickedRange = true;
-                          _unitOverride = null;
-                        }),
-                        onPick: _pickDateRange,
-                      ),
-                    ),
-                    // Paylaş düğmesi eskiden YALNIZ AppBar'daydı ve sayfa
-                    // üretimde `showAppBar: false` ile kuruluyor (bkz.
-                    // SubViewFactory) — yani CSV dışa aktarımı hiç
-                    // erişilemiyordu, `_shareReport` ölü koddu.
-                    IconButton(
-                      icon: const Icon(Icons.ios_share_rounded),
-                      tooltip: context.l10n.reportShareTooltip,
-                      onPressed:
-                          filteredTransactions.isEmpty ? null : _shareReport,
-                    ),
-                  ],
-                ),
-              ),
-              // İçerik yapışkan başlığın ALTINDAN kayıyor; ince bir çizgi
-              // olmadan kartlar başlığa yapışmış gibi görünüyor.
-              Divider(
-                height: 12,
-                thickness: 1,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.06),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            // Dönem kontrolü YAPIŞKAN. Ölçüldü: sayfa 360×800 telefonda ~3
+            // ekran; kullanıcı ikinci ekranda hangi dönemin raporuna baktığını
+            // göremiyor ve dönemi değiştirmek için en başa dönmesi gerekiyordu.
+            return Column(
+              children: [
+                // Dönem kontrolü TEK satır: `‹ Eylül 2026 ›` + paylaş.
+                //
+                // Eskiden burada sayfa başlığı, aralık metni ("01 Eyl 2026 -
+                // 30 Eyl 2026"), takvim düğmesi ve yatay kayan hızlı çip
+                // satırı vardı. Ölçüldü (411dp telefon): yapışkan blok
+                // **188dp**, yani ekranın dörtte biri; üstelik çip satırı
+                // sağdan kırpıldığı için son çip "Son…" diye yarım
+                // görünüyordu. Aynı kontrol işlemler ekranında zaten 44dp'lik
+                // bir ay çubuğu ([TransactionPeriodBar]) — iki kardeş sayfanın
+                // dönemi farklı kontrollerle seçmesi için sebep yok.
+                //
+                // Hızlı seçenekler (Son 7 Gün, Bu Yıl…) kaybolmadı: etikete
+                // dokunmak onların menüsünü açar ([_pickDateRange]).
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 8, 0),
+                  child: Row(
                     children: [
-                      if (filteredTransactions.isEmpty) ...[
-                        _periodEmptyCard(context, transactions),
-                      ] else ...[
-                        // Dönemde kayıt var ama gelir–gider evreni BOŞ (yalnız
-                        // para taşıma hareketi ya da harcamalar kartlarda):
-                        // 0/0 özet, "↓%100" rozeti ve boş eksenli grafik yerine
-                        // nedeni ve bir sonraki adımı söyleyen kart. Bakiye
-                        // çizgisi aşağıda yine çizilir — orada hareket var.
-                        if (totals.totalIncome == 0 &&
-                            totals.totalExpense == 0)
-                          _noFlowCard(
-                            context,
-                            transactions,
-                            movedCount: split.system.length,
-                            hasCards: linkedCards.isNotEmpty,
-                          )
-                        else ...[
-                          ReportSummaryCards(
-                            totals: totals,
-                            previousTotals: previousTotals,
-                          ),
-                          // Anahtar yalnız bu hesaba bağlı kart VARKEN çizilir;
-                          // yoksa hiçbir şeyi açıklamayan bir anahtar yer kaplardı.
-                          if (linkedCards.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            ReportCardsToggle(
-                              included: _includeCards,
-                              cardCount: linkedCards.length,
-                              onChanged: _setIncludeCards,
-                            ),
-                          ],
-                          if (split.system.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            ReportSystemMovementsToggle(
-                              included: _includeSystemMovements,
-                              count: split.system.length,
-                              onChanged: (v) =>
-                                  setState(() => _includeSystemMovements = v),
-                            ),
-                          ],
-                          const SizedBox(height: 24),
-                          ReportSectionHeader(
-                            title: context.l10n.kategoriDagilimi,
-                            trailing: FinanceModeSegment(
-                              currentMode: _categoryMode,
-                              onModeChanged: (m) =>
-                                  setState(() => _categoryMode = m),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          if (isCompare)
-                            ReportCompareChartCard(
-                              incomeSlices: derived.incomeRanked,
-                              expenseSlices: derived.expenseRanked,
-                              categoryLabels: _categoryLabels,
-                              // Bütçeler varsayılan modda GÖRÜNMÜYORDU: ilerleme
-                              // çubukları yalnız tek taraflı pasta kartına
-                              // geçiriliyordu, oysa açılış modu karşılaştırma.
-                              budgetProgressFor: dataBuilder.budgetProgressFor,
-                              onSliceTap: (slice, isExpense) =>
-                                  _openCategoryDetails(
-                                      slice, isExpense, ReportSliceMode.ranked),
-                            )
-                          else if (_categoryMode == FinanceMode.expense)
-                            ReportCategoryChartCard(
-                              title: context.l10n.reportExpensesTitle,
-                              fullData: expenseFull,
-                              pieData: expensePie,
-                              isExpense: true,
-                              showBarChart: _showExpenseBarChart,
-                              onToggleBarChart: (v) =>
-                                  setState(() => _showExpenseBarChart = v),
-                              onCategoryTap: (cat, mode) =>
-                                  _openCategoryDetails(cat, true, mode),
-                              budgetProgressFor: dataBuilder.budgetProgressFor,
-                              categoryLabels: _categoryLabels,
-                            )
-                          else
-                            ReportCategoryChartCard(
-                              title: context.l10n.reportIncomesTitle,
-                              fullData: incomeFull,
-                              pieData: incomePie,
-                              isExpense: false,
-                              showBarChart: _showIncomeBarChart,
-                              onToggleBarChart: (v) =>
-                                  setState(() => _showIncomeBarChart = v),
-                              onCategoryTap: (cat, mode) =>
-                                  _openCategoryDetails(cat, false, mode),
-                              budgetProgressFor: dataBuilder.budgetProgressFor,
-                              categoryLabels: _categoryLabels,
-                            ),
-                          // ── ürün önceliğine göre sıra ────────────────────────
-                          // Ölçüldü: sayfa 360×800'de 2.761dp'ye (3,5 ekran)
-                          // çıkmıştı ve uygulamanın ASIL sorusu olan kategori
-                          // dağılımı 1507dp'de, iki ekran aşağıdaydı. Sıra artık
-                          // kullanıcının sorduğu sırayla: ne oldu → nereye gitti →
-                          // bütçeyi aştım mı → eğilim ne → tam olarak nereye.
-                          // Koşul BÜTÇE VARLIĞINA bakar, durum listesine değil:
-                          // aralık bir ay olmadığında liste boş döner ama bölüm
-                          // kaybolmamalı — kullanıcı bütçelerini silinmiş sanır.
-                          // Kart o durumda sebebini yazar.
-                          // Ay dışı aralıkta liste boştur ama kart sebebini
-                          // yazar; ay içinde liste boşsa (tüm limitler 0) kart
-                          // hiçbir şey çizmez — başlık da yetim kalmamalı.
-                          if (_budgets.isNotEmpty &&
-                              (derived.budgetStatuses.isNotEmpty ||
-                                  !DateRangeHelper.isSingleCalendarMonth(
-                                      _range))) ...[
-                            const SizedBox(height: 24),
-                            ReportSectionHeader(
-                                title: context.l10n.reportBudgetSummaryTitle),
-                            const SizedBox(height: 12),
-                            ReportBudgetSummaryCard(
-                              statuses: derived.budgetStatuses,
-                              monthScoped:
-                                  DateRangeHelper.isSingleCalendarMonth(_range),
-                              onTap: _openBudgetCategory,
-                            ),
-                          ],
-                        ],
-                        // Dönem içi seyir: akış çubukları ve bakiye çizgisi
-                        // AYNI kartta, aynı zaman ekseninde (bkz.
-                        // [ReportPeriodChartCard]). Bölüm, çizilecek bir şey
-                        // varken kurulur — grafik kendini gizlediğinde geriye
-                        // başlık + seçici + BOŞLUK kalıyordu.
-                        if (ReportPeriodChartCard.hasContent(
-                          flowSeries: flowSeries,
-                          balanceSeries: balanceSeries,
-                        )) ...[
-                          const SizedBox(height: 24),
-                          ReportSectionHeader(
-                            // Başlık çözünürlüğü İZLER: haftalık kovalarda
-                            // "Günlük Gelir–Gider" yazmak mağaza denetiminde
-                            // yakalanan hatanın aynısıdır. Akış boşsa (dönemde
-                            // yalnız kuplaj hareketi var) kart tek başına
-                            // bakiyeyi çizer, başlık da onu söyler.
-                            title: flowSeries.hasNoActivity
-                                ? context.l10n.reportBalanceTrend
-                                : _flowTitle(context, flowSeries.unit),
-                            // Çözünürlük seçicisi yalnız GEREKTİĞİNDE: bir ayı
-                            // ya da daha kısa bir aralığı günlük çizmek her
-                            // zaman doğru cevap, seçenek sunmak boşuna bir
-                            // çip satırı demekti.
-                            trailing: _showsUnitSelector(derived.chartEnd)
-                                ? ReportUnitSelector(
-                                    selected: flowSeries.unit,
-                                    bucketCounts:
-                                        _bucketCounts(derived.chartEnd),
-                                    onChanged: (u) =>
-                                        setState(() => _unitOverride = u),
-                                  )
-                                : null,
-                          ),
-                          const SizedBox(height: 12),
-                          ReportPeriodChartCard(
-                            flowSeries: flowSeries,
-                            balanceSeries: balanceSeries,
-                          ),
-                        ],
-                        if (derived.payeeGroups.isNotEmpty) ...[
-                          const SizedBox(height: 24),
-                          ReportSectionHeader(
-                              title: context.l10n.reportTopPayeesTitle),
-                          const SizedBox(height: 12),
-                          ReportTopPayeesCard(
-                            groups: derived.payeeGroups,
-                            onGroupTap: _openPayeeGroup,
-                            periodExpenseTotal: derived.totals.totalExpense,
-                          ),
-                        ],
-                      ],
+                      Expanded(
+                        child: const SharedPeriodBar(),
+                      ),
+                      // Paylaş düğmesi eskiden YALNIZ AppBar'daydı ve sayfa
+                      // üretimde `showAppBar: false` ile kuruluyor (bkz.
+                      // SubViewFactory) — yani CSV dışa aktarımı hiç
+                      // erişilemiyordu, `_shareReport` ölü koddu.
+                      IconButton(
+                        icon: const Icon(Icons.ios_share_rounded),
+                        tooltip: context.l10n.reportShareTooltip,
+                        onPressed:
+                            filteredTransactions.isEmpty ? null : _shareReport,
+                      ),
                     ],
                   ),
                 ),
-              ),
-            ],
-          );
-        },
+                // İçerik yapışkan başlığın ALTINDAN kayıyor; ince bir çizgi
+                // olmadan kartlar başlığa yapışmış gibi görünüyor.
+                Divider(
+                  height: 12,
+                  thickness: 1,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.06),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (filteredTransactions.isEmpty) ...[
+                          _periodEmptyCard(context, transactions),
+                        ] else ...[
+                          // Dönemde kayıt var ama gelir–gider evreni BOŞ (yalnız
+                          // para taşıma hareketi ya da harcamalar kartlarda):
+                          // 0/0 özet, "↓%100" rozeti ve boş eksenli grafik yerine
+                          // nedeni ve bir sonraki adımı söyleyen kart. Bakiye
+                          // çizgisi aşağıda yine çizilir — orada hareket var.
+                          if (totals.totalIncome == 0 &&
+                              totals.totalExpense == 0)
+                            _noFlowCard(
+                              context,
+                              transactions,
+                              movedCount: split.system.length,
+                              hasCards: linkedCards.isNotEmpty,
+                            )
+                          else ...[
+                            ReportSummaryCards(
+                              totals: totals,
+                              previousTotals: previousTotals,
+                            ),
+                            // Anahtar yalnız bu hesaba bağlı kart VARKEN çizilir;
+                            // yoksa hiçbir şeyi açıklamayan bir anahtar yer kaplardı.
+                            if (linkedCards.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              ReportCardsToggle(
+                                included: _includeCards,
+                                cardCount: linkedCards.length,
+                                onChanged: _setIncludeCards,
+                              ),
+                            ],
+                            if (split.system.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              ReportSystemMovementsToggle(
+                                included: _includeSystemMovements,
+                                count: split.system.length,
+                                onChanged: (v) =>
+                                    setState(() => _includeSystemMovements = v),
+                              ),
+                            ],
+                            const SizedBox(height: 24),
+                            ReportSectionHeader(
+                              title: context.l10n.kategoriDagilimi,
+                              trailing: FinanceModeSegment(
+                                currentMode: _categoryMode,
+                                onModeChanged: (m) =>
+                                    setState(() => _categoryMode = m),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            if (isCompare)
+                              ReportCompareChartCard(
+                                incomeSlices: derived.incomeRanked,
+                                expenseSlices: derived.expenseRanked,
+                                categoryLabels: _categoryLabels,
+                                // Bütçeler varsayılan modda GÖRÜNMÜYORDU: ilerleme
+                                // çubukları yalnız tek taraflı pasta kartına
+                                // geçiriliyordu, oysa açılış modu karşılaştırma.
+                                budgetProgressFor: dataBuilder.budgetProgressFor,
+                                onSliceTap: (slice, isExpense) =>
+                                    _openCategoryDetails(
+                                        slice, isExpense, ReportSliceMode.ranked),
+                              )
+                            else if (_categoryMode == FinanceMode.expense)
+                              ReportCategoryChartCard(
+                                title: context.l10n.reportExpensesTitle,
+                                fullData: expenseFull,
+                                pieData: expensePie,
+                                isExpense: true,
+                                showBarChart: _showExpenseBarChart,
+                                onToggleBarChart: (v) =>
+                                    setState(() => _showExpenseBarChart = v),
+                                onCategoryTap: (cat, mode) =>
+                                    _openCategoryDetails(cat, true, mode),
+                                budgetProgressFor: dataBuilder.budgetProgressFor,
+                                categoryLabels: _categoryLabels,
+                              )
+                            else
+                              ReportCategoryChartCard(
+                                title: context.l10n.reportIncomesTitle,
+                                fullData: incomeFull,
+                                pieData: incomePie,
+                                isExpense: false,
+                                showBarChart: _showIncomeBarChart,
+                                onToggleBarChart: (v) =>
+                                    setState(() => _showIncomeBarChart = v),
+                                onCategoryTap: (cat, mode) =>
+                                    _openCategoryDetails(cat, false, mode),
+                                budgetProgressFor: dataBuilder.budgetProgressFor,
+                                categoryLabels: _categoryLabels,
+                              ),
+                            // ── ürün önceliğine göre sıra ────────────────────────
+                            // Ölçüldü: sayfa 360×800'de 2.761dp'ye (3,5 ekran)
+                            // çıkmıştı ve uygulamanın ASIL sorusu olan kategori
+                            // dağılımı 1507dp'de, iki ekran aşağıdaydı. Sıra artık
+                            // kullanıcının sorduğu sırayla: ne oldu → nereye gitti →
+                            // bütçeyi aştım mı → eğilim ne → tam olarak nereye.
+                            // Koşul BÜTÇE VARLIĞINA bakar, durum listesine değil:
+                            // aralık bir ay olmadığında liste boş döner ama bölüm
+                            // kaybolmamalı — kullanıcı bütçelerini silinmiş sanır.
+                            // Kart o durumda sebebini yazar.
+                            // Ay dışı aralıkta liste boştur ama kart sebebini
+                            // yazar; ay içinde liste boşsa (tüm limitler 0) kart
+                            // hiçbir şey çizmez — başlık da yetim kalmamalı.
+                            if (_budgets.isNotEmpty &&
+                                (derived.budgetStatuses.isNotEmpty ||
+                                    !DateRangeHelper.isSingleCalendarMonth(
+                                        _range))) ...[
+                              const SizedBox(height: 24),
+                              ReportSectionHeader(
+                                  title: context.l10n.reportBudgetSummaryTitle),
+                              const SizedBox(height: 12),
+                              ReportBudgetSummaryCard(
+                                statuses: derived.budgetStatuses,
+                                monthScoped:
+                                    DateRangeHelper.isSingleCalendarMonth(_range),
+                                onTap: _openBudgetCategory,
+                              ),
+                            ],
+                          ],
+                          // Dönem içi seyir: akış çubukları ve bakiye çizgisi
+                          // AYNI kartta, aynı zaman ekseninde (bkz.
+                          // [ReportPeriodChartCard]). Bölüm, çizilecek bir şey
+                          // varken kurulur — grafik kendini gizlediğinde geriye
+                          // başlık + seçici + BOŞLUK kalıyordu.
+                          if (ReportPeriodChartCard.hasContent(
+                            flowSeries: flowSeries,
+                            balanceSeries: balanceSeries,
+                          )) ...[
+                            const SizedBox(height: 24),
+                            ReportSectionHeader(
+                              // Başlık çözünürlüğü İZLER: haftalık kovalarda
+                              // "Günlük Gelir–Gider" yazmak mağaza denetiminde
+                              // yakalanan hatanın aynısıdır. Akış boşsa (dönemde
+                              // yalnız kuplaj hareketi var) kart tek başına
+                              // bakiyeyi çizer, başlık da onu söyler.
+                              title: flowSeries.hasNoActivity
+                                  ? context.l10n.reportBalanceTrend
+                                  : _flowTitle(context, flowSeries.unit),
+                              // Çözünürlük seçicisi yalnız GEREKTİĞİNDE: bir ayı
+                              // ya da daha kısa bir aralığı günlük çizmek her
+                              // zaman doğru cevap, seçenek sunmak boşuna bir
+                              // çip satırı demekti.
+                              trailing: _showsUnitSelector(derived.chartEnd)
+                                  ? ReportUnitSelector(
+                                      selected: flowSeries.unit,
+                                      bucketCounts:
+                                          _bucketCounts(derived.chartEnd),
+                                      onChanged: (u) =>
+                                          setState(() => _unitOverride = u),
+                                    )
+                                  : null,
+                            ),
+                            const SizedBox(height: 12),
+                            ReportPeriodChartCard(
+                              flowSeries: flowSeries,
+                              balanceSeries: balanceSeries,
+                            ),
+                          ],
+                          if (derived.payeeGroups.isNotEmpty) ...[
+                            const SizedBox(height: 24),
+                            ReportSectionHeader(
+                                title: context.l10n.reportTopPayeesTitle),
+                            const SizedBox(height: 12),
+                            ReportTopPayeesCard(
+                              groups: derived.payeeGroups,
+                              onGroupTap: _openPayeeGroup,
+                              periodExpenseTotal: derived.totals.totalExpense,
+                            ),
+                          ],
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -1081,11 +1025,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     return (
       label: context.l10n
           .analysisJumpToPeriod(periodLabel(target, context.l10n)),
-      onTap: () => setState(() {
-            _range = target;
-            _hasUserPickedRange = true;
-            _unitOverride = null;
-          }),
+      onTap: () => context.read<TransactionFilterCubit>().setPeriod(target),
     );
   }
 

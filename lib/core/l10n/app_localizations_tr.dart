@@ -816,7 +816,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu dönem için kayıt bulunmuyor.\nYeni bir işlem eklemek için sürgü butonunu kullanın.';
 
   @override
-  String get kategoriDagilimi => 'Kategori Dağılımı';
+  String get kategoriDagilimi => 'Kategori dağılımı';
 
   @override
   String titleIcinVeriYok(Object title) {
@@ -3217,7 +3217,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get drawerActiveWalletLabel => 'AKTİF CÜZDAN';
 
   @override
-  String get reportBalanceTrend => 'Bakiye Trendi';
+  String get reportBalanceTrend => 'Bakiye seyri';
 
   @override
   String get reportExpensesTitle => 'Giderler';
@@ -4223,13 +4223,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get hedefEkleKisa => 'Hedef ekle';
 
   @override
-  String get reportFlowTitleDay => 'Günlük Gelir–Gider';
+  String get reportFlowTitleDay => 'Günlük gelir–gider';
 
   @override
-  String get reportFlowTitleWeek => 'Haftalık Gelir–Gider';
+  String get reportFlowTitleWeek => 'Haftalık gelir–gider';
 
   @override
-  String get reportFlowTitleMonth => 'Aylık Gelir–Gider';
+  String get reportFlowTitleMonth => 'Aylık gelir–gider';
 
   @override
   String get reportUnitDay => 'Gün';

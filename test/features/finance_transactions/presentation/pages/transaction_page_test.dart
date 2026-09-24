@@ -1,3 +1,4 @@
+import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/features/main_feature/controllers/home_navigation_requests.dart';
 import 'package:cunehat/config/di/injection.dart';
@@ -183,7 +184,7 @@ void main() {
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(
-      BlocProvider<AmountVisibilityCubit>(
+      BlocProvider<TransactionFilterCubit>(create: (_) => TransactionFilterCubit(), child: BlocProvider<AmountVisibilityCubit>(
         create: (_) => AmountVisibilityCubit(),
         child: MaterialApp(
           localizationsDelegates: const [
@@ -199,7 +200,7 @@ void main() {
             child: TransactionsPage(userId: 'u', wallet: wallet),
           ),
         ),
-      ),
+      )),
     );
     await tester.pumpAndSettle();
   }

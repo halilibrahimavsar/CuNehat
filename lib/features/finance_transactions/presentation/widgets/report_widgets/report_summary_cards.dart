@@ -1,3 +1,4 @@
+import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
@@ -78,7 +79,7 @@ class ReportSummaryCards extends StatelessWidget {
                 child: SummaryTile(
                   title: context.l10n.menuIncome,
                   amount: totals.totalIncome,
-                  color: Colors.green,
+                  color: MoneyColors.income,
                   change: _periodChange(
                     totals.totalIncome,
                     previousTotals.totalIncome,
@@ -91,7 +92,7 @@ class ReportSummaryCards extends StatelessWidget {
                 child: SummaryTile(
                   title: context.l10n.menuExpense,
                   amount: totals.totalExpense,
-                  color: Colors.redAccent,
+                  color: MoneyColors.expense,
                   change: _periodChange(
                     totals.totalExpense,
                     previousTotals.totalExpense,
@@ -106,7 +107,7 @@ class ReportSummaryCards extends StatelessWidget {
         SummaryTile(
           title: context.l10n.reportNetLabel,
           amount: totals.net,
-          color: totals.net >= 0 ? Colors.blue : Colors.orange,
+          color: MoneyColors.net(totals.net),
           subtitle: _netSubtitle(context),
           // Net tam genişlikte olduğu için başlık, tutar ve alt satır tek
           // satıra sığar; dikey yığın yerine yatay düzen okunmayı kolaylaştırır.
@@ -236,7 +237,7 @@ class SummaryTile extends StatelessWidget {
     final isGood = isIncrease == change.increaseIsGood;
     final badgeColor = isNeutral
         ? scheme.onSurfaceVariant.withValues(alpha: 0.6)
-        : (isGood ? Colors.green : Colors.redAccent);
+        : (isGood ? MoneyColors.income : MoneyColors.expense);
     final icon = isNeutral
         ? Icons.remove_rounded
         : (isIncrease

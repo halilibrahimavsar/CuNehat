@@ -101,34 +101,36 @@ void main() {
       expect(formatMoneyCompact(999), '999 ₺');
     });
 
-    test('bin → K (gereksiz ",0" kırpılır)', () {
-      expect(formatMoneyCompact(1500), '1,5K ₺');
-      expect(formatMoneyCompact(2000), '2K ₺');
+    test('bin → Türkçede "B" (gereksiz ",0" kırpılır)', () {
+      // Eskiden Türkçe arayüz İngilizce eki yazıyordu: "1,5K".
+      expect(formatMoneyCompact(1500), '1,5 B ₺');
+      expect(formatMoneyCompact(2000), '2 B ₺');
     });
 
-    test('milyon → M', () {
-      expect(formatMoneyCompact(2400000), '2,4M ₺');
+    test('milyon → Türkçede "Mn"', () {
+      expect(formatMoneyCompact(2400000), '2,4 Mn ₺');
     });
 
     test('negatif işaret korunur', () {
-      expect(formatMoneyCompact(-1500), '-1,5K ₺');
+      expect(formatMoneyCompact(-1500), '-1,5 B ₺');
     });
 
     test('symbol:false sembol eklemez', () {
-      expect(formatMoneyCompact(1500, symbol: false), '1,5K');
+      expect(formatMoneyCompact(1500, symbol: false), '1,5 B');
     });
 
     test('birim sembolü [currency] ile gelir', () {
-      expect(formatMoneyCompact(1500, currency: 'USD'), r'1,5K $');
+      expect(formatMoneyCompact(1500, currency: 'USD'), r'1,5 B $');
     });
 
     test('sıfıra yuvarlanan küçük negatif "-0" yazmaz', () {
       expect(formatMoneyCompact(-0.4, symbol: false), '0');
     });
 
-    test('locale ondalık ayracını izler', () {
+    test('locale ondalık ayracını ve eki izler', () {
       Intl.defaultLocale = 'en';
       expect(formatMoneyCompact(1500, symbol: false), '1.5K');
+      expect(formatMoneyCompact(2400000, symbol: false), '2.4M');
     });
   });
 }

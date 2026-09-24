@@ -1,3 +1,5 @@
+import 'package:cunehat/features/finance_transactions/domain/transaction_period.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/core/services/budgets_changed_notifier.dart';
 import 'package:cunehat/core/services/csv_service.dart';
@@ -132,7 +134,7 @@ void main() {
   });
 
   Widget buildTestableWidget(Widget child) {
-    return BlocProvider<AmountVisibilityCubit>(
+    return BlocProvider<TransactionFilterCubit>(create: (_) => TransactionFilterCubit(), child: BlocProvider<AmountVisibilityCubit>(
       create: (_) => AmountVisibilityCubit(),
       child: MaterialApp(
         localizationsDelegates: const [
@@ -148,7 +150,7 @@ void main() {
         locale: const Locale('tr'),
         home: child,
       ),
-    );
+    ));
   }
 
   testWidgets(
@@ -1123,9 +1125,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(ReportPeriodChartCard), findsNothing);
-      expect(find.text('Günlük Gelir–Gider'), findsNothing);
-      expect(find.text('Bakiye Trendi'), findsNothing);
-      expect(find.text('Kategori Dağılımı'), findsNothing);
+      expect(find.text('Günlük gelir–gider'), findsNothing);
+      expect(find.text('Bakiye seyri'), findsNothing);
+      expect(find.text('Kategori dağılımı'), findsNothing);
     });
   });
 
@@ -1162,6 +1164,49 @@ void main() {
     final previous = DateTime(now.year, now.month - 1, 1);
     expect(find.text(label.format(previous)), findsOneWidget);
     expect(find.text(label.format(now)), findsNothing);
+
+    // Dönem ORTAK: ok İşlemler ve İçgörü'nün de okuduğu süzgece yazar.
+    // Eskiden raporun kendi `_range`'ı vardı; yan sayfaya geçen kullanıcı
+    // başka bir ayın rakamlarına bakıyordu.
+    final shared = tester
+        .element(find.byType(TransactionReportPage))
+        .read<TransactionFilterCubit>();
+    expect(shared.period.start, previous);
+  });
+
+  testWidgets('dönem ORTAK: başka sayfada seçilen dönem raporda görünür',
+      (WidgetTester tester) async {
+    final now = DateTime.now();
+    final lastMonth = DateTime(now.year, now.month - 1, 10, 12);
+    when(() => mockTransactionBloc.state).thenReturn(TransactionLoaded(
+      groupedTransactions: const {},
+      allTransactions: [
+        TransactionEntity(
+          id: 'tx_old',
+          userId: 'user_123',
+          walletId: 'wallet_123',
+          title: 'Market',
+          tag: 'Food',
+          amount: 321,
+          date: lastMonth,
+          type: TransactionTypeModel.expense,
+        ),
+      ],
+    ));
+    await tester.pumpWidget(buildTestableWidget(
+      const TransactionReportPage(userId: 'user_123', walletId: 'wallet_123'),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('321,00 ₺'), findsNothing);
+
+    tester
+        .element(find.byType(TransactionReportPage))
+        .read<TransactionFilterCubit>()
+        .setPeriod(monthRangeOf(lastMonth));
+    await tester.pumpAndSettle();
+
+    expect(find.text(DateFormat.yMMMM('tr').format(lastMonth)), findsOneWidget);
+    expect(find.text('321,00 ₺'), findsWidgets);
   });
 
   testWidgets('kullanıcının "Diğer" kategorisi varsa kova BAŞKA ad alır',

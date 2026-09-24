@@ -1560,7 +1560,7 @@ abstract class AppLocalizations {
   /// No description provided for @kategoriDagilimi.
   ///
   /// In tr, this message translates to:
-  /// **'Kategori Dağılımı'**
+  /// **'Kategori dağılımı'**
   String get kategoriDagilimi;
 
   /// No description provided for @titleIcinVeriYok.
@@ -5762,7 +5762,7 @@ abstract class AppLocalizations {
   /// No description provided for @reportBalanceTrend.
   ///
   /// In tr, this message translates to:
-  /// **'Bakiye Trendi'**
+  /// **'Bakiye seyri'**
   String get reportBalanceTrend;
 
   /// No description provided for @reportExpensesTitle.
@@ -7454,19 +7454,19 @@ abstract class AppLocalizations {
   /// No description provided for @reportFlowTitleDay.
   ///
   /// In tr, this message translates to:
-  /// **'Günlük Gelir–Gider'**
+  /// **'Günlük gelir–gider'**
   String get reportFlowTitleDay;
 
   /// No description provided for @reportFlowTitleWeek.
   ///
   /// In tr, this message translates to:
-  /// **'Haftalık Gelir–Gider'**
+  /// **'Haftalık gelir–gider'**
   String get reportFlowTitleWeek;
 
   /// No description provided for @reportFlowTitleMonth.
   ///
   /// In tr, this message translates to:
-  /// **'Aylık Gelir–Gider'**
+  /// **'Aylık gelir–gider'**
   String get reportFlowTitleMonth;
 
   /// No description provided for @reportUnitDay.

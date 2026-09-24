@@ -7,7 +7,6 @@ import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
-import 'package:cunehat/core/shared/widgets/app_date_range_picker.dart';
 import 'package:cunehat/core/utils/date_range_helper.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
@@ -25,6 +24,8 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/repor
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_section_header.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_summary_cards.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_transaction_list_sheet.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/shared_period.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
 import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_transaction_entity.dart';
@@ -106,9 +107,8 @@ class _InsightsViewState extends State<_InsightsView> {
   static const _analytics = TransactionAnalyticsService();
   static const _detector = RecurringPatternDetector();
 
-  late DateTimeRange _range = DateRangeHelper.thisMonth();
-  bool _hasUserPickedRange = false;
-  bool _hasAutoAdjustedRange = false;
+  /// Dönem İşlemler ve Rapor ile ORTAK (bkz. `shared_period.dart`).
+  DateTimeRange get _range => context.read<TransactionFilterCubit>().period;
 
   /// Mevcut şablonlar; null = henüz yükleniyor.
   List<RecurringTransactionEntity>? _templates;
@@ -158,14 +158,6 @@ class _InsightsViewState extends State<_InsightsView> {
         .stream
         .listen((_) => _loadCategoryLabels());
 
-    // Listener yalnız state DEĞİŞİMİNDE tetiklenir; bloc zaten dolu bir
-    // durumla verilmişse ilk kontrolü burada yapmak gerekir.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _maybeAdjustInitialRange(
-        _forWallet(context.read<TransactionBloc>().state.currentTransactions),
-      );
-    });
   }
 
   /// Kategori ikon+ad indeksini yükler ve kategoriler değiştikçe TAZELER.
@@ -241,57 +233,6 @@ class _InsightsViewState extends State<_InsightsView> {
     _walletTransactions =
         all.where((t) => t.walletId == widget.walletId).toList();
     return _walletTransactions;
-  }
-
-  /// Açılış dönemi boşsa, verinin GERÇEKTEN olduğu aya kayar.
-  ///
-  /// Rapor sayfasıyla aynı davranış: uygulamayı bir aylık aradan sonra açan
-  /// kullanıcı, "Bu Ay" boş olduğu için sayfayı tamamen boş görüyor ve
-  /// verisinin durduğu döneme kendi elleriyle gitmek zorunda kalıyordu.
-  void _maybeAdjustInitialRange(List<TransactionEntity> transactions) {
-    if (_hasUserPickedRange || _hasAutoAdjustedRange) return;
-    if (transactions.isEmpty) return;
-
-    final startDay =
-        DateTime(_range.start.year, _range.start.month, _range.start.day);
-    final endDay = DateTime(_range.end.year, _range.end.month, _range.end.day);
-    final hasInRange = transactions.any((t) {
-      final d = DateTime(t.date.year, t.date.month, t.date.day);
-      return !d.isBefore(startDay) && !d.isAfter(endDay);
-    });
-    if (hasInRange) return;
-
-    DateTime? latestDate;
-    for (final t in transactions) {
-      if (latestDate == null || t.date.isAfter(latestDate)) latestDate = t.date;
-    }
-    if (latestDate == null) return;
-
-    final start = DateTime(latestDate.year, latestDate.month, 1);
-    final lastDayOfMonth = DateTime(latestDate.year, latestDate.month + 1, 0);
-    final now = DateTime.now();
-    final end = latestDate.isBefore(now)
-        ? (lastDayOfMonth.isBefore(now) ? lastDayOfMonth : now)
-        : latestDate;
-
-    setState(() {
-      _range = DateTimeRange(start: start, end: end);
-      _hasAutoAdjustedRange = true;
-    });
-  }
-
-  Future<void> _pickDateRange() async {
-    final picked = await AppDateRangePicker.pick(
-      context,
-      initialDateRange: _range,
-      quickOptions: DateRangeHelper.buildDateRangeQuickOptions(context.l10n),
-    );
-    if (picked != null) {
-      setState(() {
-        _range = picked;
-        _hasUserPickedRange = true;
-      });
-    }
   }
 
   _InsightsDerived _derive(BuildContext context, List<TransactionEntity> all) {
@@ -463,12 +404,13 @@ class _InsightsViewState extends State<_InsightsView> {
               centerTitle: true,
             )
           : null,
-      body: BlocConsumer<TransactionBloc, TransactionState>(
-        listenWhen: (prev, curr) =>
-            prev.currentTransactions != curr.currentTransactions,
-        listener: (context, state) =>
-            _maybeAdjustInitialRange(_forWallet(state.currentTransactions)),
+      // Dönem ortak: başka bir sayfada değişince bu sayfa da yeniden çizilir.
+      // Eskiden burada "dönem boşsa verinin olduğu aya SESSİZCE kay"
+      // mantığı vardı; ortak dönemi arka planda değiştirmek diğer iki sayfayı
+      // da kaydırırdı. Yerine boş durum kartı "… dönemine git" eylemini sunar.
+      body: BlocBuilder<TransactionBloc, TransactionState>(
         builder: (context, state) {
+          context.select((TransactionFilterCubit c) => c.period);
           final all = _forWallet(state.currentTransactions);
 
           if (state is TransactionLoading && all.isEmpty) {
@@ -497,14 +439,7 @@ class _InsightsViewState extends State<_InsightsView> {
               // yiyordu. Hızlı seçenekler etikete dokununca açılır.
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: TransactionPeriodBar(
-                  range: _range,
-                  onStep: (step) => setState(() {
-                    _range = shiftPeriod(_range, step);
-                    _hasUserPickedRange = true;
-                  }),
-                  onPick: _pickDateRange,
-                ),
+                child: const SharedPeriodBar(),
               ),
               Divider(
                 height: 12,
@@ -750,10 +685,8 @@ class _InsightsViewState extends State<_InsightsView> {
         if (target != null)
           (
             label: l10n.analysisJumpToPeriod(periodLabel(target, l10n)),
-            onTap: () => setState(() {
-                  _range = target;
-                  _hasUserPickedRange = true;
-                }),
+            onTap: () =>
+                context.read<TransactionFilterCubit>().setPeriod(target),
           ),
       ],
     );

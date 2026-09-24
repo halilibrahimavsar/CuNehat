@@ -1,3 +1,4 @@
+import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
@@ -178,7 +179,7 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
                     _money(total),
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: widget.isExpense ? Colors.redAccent : Colors.green,
+                      color: widget.isExpense ? MoneyColors.expense : MoneyColors.income,
                     ),
                   ),
                 ],
@@ -300,8 +301,8 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
                             scheme.onSurface.withValues(alpha: 0.08),
                         valueColor: AlwaysStoppedAnimation(
                           budgetInfo.isExceeded
-                              ? Colors.redAccent
-                              : Colors.green,
+                              ? MoneyColors.expense
+                              : MoneyColors.income,
                         ),
                       ),
                     ),

@@ -1,3 +1,4 @@
+import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
@@ -70,7 +71,7 @@ class ReportBudgetSummaryCard extends StatelessWidget {
                     ? Icons.warning_amber_rounded
                     : Icons.check_circle_outline_rounded,
                 size: 18,
-                color: exceeded > 0 ? Colors.redAccent : Colors.green,
+                color: exceeded > 0 ? MoneyColors.expense : MoneyColors.income,
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -230,7 +231,7 @@ class _BudgetRow extends StatelessWidget {
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color:
-                          status.isExceeded ? Colors.redAccent : Colors.green,
+                          status.isExceeded ? MoneyColors.expense : MoneyColors.income,
                     ),
                   ),
                 ],
@@ -280,7 +281,7 @@ class _Bar extends StatelessWidget {
         minHeight: height,
         backgroundColor: scheme.onSurface.withValues(alpha: 0.08),
         valueColor: AlwaysStoppedAnimation(
-          isExceeded ? Colors.redAccent : Colors.green,
+          isExceeded ? MoneyColors.expense : MoneyColors.income,
         ),
       ),
     );

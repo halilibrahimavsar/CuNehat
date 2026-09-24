@@ -218,7 +218,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Toplam'), findsOneWidget);
-      expect(find.text('28,2K ₺'), findsOneWidget);
+      expect(find.text('28,2 B ₺'), findsOneWidget);
     });
 
     testWidgets('odaklanınca merkez o kategoriye döner', (tester) async {
@@ -233,7 +233,7 @@ void main() {
 
       expect(find.text('Toplam'), findsNothing);
       expect(find.text('Fatura'), findsOneWidget);
-      expect(find.text('4,2K ₺'), findsOneWidget);
+      expect(find.text('4,2 B ₺'), findsOneWidget);
     });
   });
 

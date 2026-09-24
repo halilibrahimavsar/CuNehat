@@ -812,7 +812,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'No records for this period.\nUse the slider button to add a new transaction.';
 
   @override
-  String get kategoriDagilimi => 'Category Distribution';
+  String get kategoriDagilimi => 'Category breakdown';
 
   @override
   String titleIcinVeriYok(Object title) {
@@ -3226,7 +3226,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get drawerActiveWalletLabel => 'ACTIVE WALLET';
 
   @override
-  String get reportBalanceTrend => 'Balance Trend';
+  String get reportBalanceTrend => 'Balance over time';
 
   @override
   String get reportExpensesTitle => 'Expenses';
@@ -4234,13 +4234,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hedefEkleKisa => 'Add goal';
 
   @override
-  String get reportFlowTitleDay => 'Daily Income–Expense';
+  String get reportFlowTitleDay => 'Daily income vs. spending';
 
   @override
-  String get reportFlowTitleWeek => 'Weekly Income–Expense';
+  String get reportFlowTitleWeek => 'Weekly income vs. spending';
 
   @override
-  String get reportFlowTitleMonth => 'Monthly Income–Expense';
+  String get reportFlowTitleMonth => 'Monthly income vs. spending';
 
   @override
   String get reportUnitDay => 'Day';

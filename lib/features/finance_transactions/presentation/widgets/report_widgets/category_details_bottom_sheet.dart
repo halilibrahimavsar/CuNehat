@@ -1,3 +1,4 @@
+import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
@@ -197,7 +198,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                           money(updatedCategory.totalAmount),
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: isExpense ? Colors.redAccent : Colors.green,
+                            color: isExpense ? MoneyColors.expense : MoneyColors.income,
                           ),
                         ),
                       ],
@@ -288,7 +289,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: budgetExceeded ? Colors.redAccent : Colors.green,
+                    color: budgetExceeded ? MoneyColors.expense : MoneyColors.income,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -345,7 +346,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
     ({double progress, bool isExceeded, double limit}) budget,
   ) {
     final scheme = theme.colorScheme;
-    final color = budget.isExceeded ? Colors.redAccent : Colors.green;
+    final color = budget.isExceeded ? MoneyColors.expense : MoneyColors.income;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

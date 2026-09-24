@@ -50,6 +50,24 @@ class TransactionFilterCubit extends Cubit<CombinedFilter> {
   /// Seçili dönem etkin kartın bir ekstre dönemi mi?
   bool get isStatementPeriod => _isStatementOf(_cycle, period);
 
+  /// Süzgecin bağlı olduğu cüzdan (bkz. [bindWallet]).
+  String? _walletId;
+
+  /// Süzgeç artık uygulama düzeyinde TEK örnek: İşlemler, İçgörü ve Rapor
+  /// aynı dönemi paylaşır (eskiden her sayfa kendi dönemini tutuyordu).
+  /// Sayfa-yerel örnek cüzdan değişince sayfayla birlikte yeniden kuruluyor,
+  /// arama ve kategori seçimi de kendiliğinden sıfırlanıyordu; tek örnekte bu
+  /// açıkça yapılmalı. Kategoriler cüzdana göre görünür olduğundan eski
+  /// cüzdanın kategori seçimi yeni cüzdanda sessizce boş liste üretirdi.
+  /// Dönem ve mod KORUNUR: kullanıcı Eylül'e bakarken cüzdan değiştirince
+  /// yine Eylül'e bakmak ister.
+  void bindWallet(String? walletId) {
+    if (_walletId == walletId) return;
+    final hadWallet = _walletId != null;
+    _walletId = walletId;
+    if (hadWallet) clearDataFilters();
+  }
+
   /// Bağlam değişti (hesap ↔ kart). Varsayılan dönemdeyken (bu ay ya da
   /// önceki kartın bir ekstresi) yeni bağlamın varsayılanına geçilir;
   /// kullanıcının seçtiği özel bir aralığa DOKUNULMAZ.

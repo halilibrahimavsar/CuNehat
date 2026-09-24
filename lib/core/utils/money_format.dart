@@ -52,9 +52,15 @@ String formatMoneyNumber(double amount, {int decimals = 2}) {
 }
 
 /// Dar alanlar (takvim hücreleri, grafik ekseni, rozetler) için kısaltılmış
-/// para metni. Örn: 1500 → "1,5K", 2.400.000 → "2,4M", 320 → "320".
-/// [symbol] true ise sonuna birim sembolü eklenir. Yaklaşıktır; tam değer
-/// için [formatMoney].
+/// para metni. tr: 1500 → "1,5 B", 2.400.000 → "2,4 Mn"; en: "1.5K", "2.4M";
+/// 320 → "320". [symbol] true ise sonuna birim sembolü eklenir. Yaklaşıktır;
+/// tam değer için [formatMoney].
+///
+/// Ekler dile göre: Türkçe arayüz eskiden İngilizce "48,8K" yazıyordu
+/// (ayraç Türkçe, ek İngilizce — iki dilin karışımı). Türkçe ekler intl'in
+/// kendi kısa biçimiyle (`NumberFormat.compact('tr')`) aynıdır; intl'in
+/// kendisi kullanılmaz çünkü yuvarlama ve "-0" davranışı burada ayrıca
+/// sabitlenmiş durumda.
 String formatMoneyCompact(
   double amount, {
   bool symbol = true,
@@ -63,11 +69,13 @@ String formatMoneyCompact(
   final suffix = symbol ? ' ${currencySymbol(currency)}' : '';
   final abs = amount.abs();
 
+  final turkish =
+      (Intl.defaultLocale ?? _fallbackLocale).toLowerCase().startsWith('tr');
   final String body;
   if (abs >= 1000000) {
-    body = '${_trimZero(abs / 1000000)}M';
+    body = '${_trimZero(abs / 1000000)}${turkish ? ' Mn' : 'M'}';
   } else if (abs >= 1000) {
-    body = '${_trimZero(abs / 1000)}K';
+    body = '${_trimZero(abs / 1000)}${turkish ? ' B' : 'K'}';
   } else {
     body = formatMoneyNumber(abs, decimals: 0);
   }

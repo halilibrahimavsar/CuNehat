@@ -1,3 +1,4 @@
+import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
@@ -221,8 +222,8 @@ void main() {
 
       final icons = tester.widgetList<Icon>(find.byType(Icon)).toList();
       expect(icons, hasLength(2));
-      expect(icons[0].color, Colors.green);
-      expect(icons[1].color, Colors.redAccent);
+      expect(icons[0].color, MoneyColors.good);
+      expect(icons[1].color, MoneyColors.bad);
       // Yön ikonu ikisinde de aynı: kutupluluğu renk DEĞİL taraf taşıyor.
       expect(icons[0].icon, Icons.arrow_upward_rounded);
       expect(icons[1].icon, Icons.arrow_upward_rounded);

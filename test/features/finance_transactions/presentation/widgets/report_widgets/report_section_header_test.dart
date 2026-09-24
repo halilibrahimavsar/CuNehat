@@ -43,9 +43,9 @@ void main() {
   group('ReportSectionHeader', () {
     testWidgets('kontrol yokken yalnız başlık çizilir', (tester) async {
       await tester.pumpWidget(host(
-        const ReportSectionHeader(title: 'Kategori Dağılımı'),
+        const ReportSectionHeader(title: 'Kategori dağılımı'),
       ));
-      expect(find.text('Kategori Dağılımı'), findsOneWidget);
+      expect(find.text('Kategori dağılımı'), findsOneWidget);
       expect(find.byType(Wrap), findsNothing);
     });
 
@@ -54,7 +54,7 @@ void main() {
       await tester.pumpWidget(host(
         textScale: 1.5,
         ReportSectionHeader(
-          title: 'Kategori Dağılımı',
+          title: 'Kategori dağılımı',
           trailing: Container(width: 144, height: 44, color: Colors.blue),
         ),
       ));

@@ -231,4 +231,36 @@ void main() {
       expect(cubit.isStatementPeriod, isTrue);
     });
   });
+
+  group('bindWallet (tek örnek, üç sayfa)', () {
+    test('cüzdan DEĞİŞİNCE arama/kategori temizlenir; dönem ve mod korunur',
+        () {
+      final cubit = TransactionFilterCubit()..bindWallet('a');
+      final august = monthRangeOf(DateTime(2026, 8, 1));
+      cubit
+        ..setPeriod(august)
+        ..setFinanceMode(FinanceMode.expense)
+        ..setSearchQuery('market');
+      expect(cubit.state.dataFilter.hasActiveFilters, isTrue);
+
+      cubit.bindWallet('b');
+      expect(cubit.state.dataFilter.hasActiveFilters, isFalse);
+      expect(cubit.period, august);
+      expect(cubit.state.viewFilter.financeMode, FinanceMode.expense);
+    });
+
+    test('aynı cüzdanla yeniden bağlanmak (sayfa yeniden kuruldu) SİLMEZ', () {
+      final cubit = TransactionFilterCubit()
+        ..bindWallet('a')
+        ..setSearchQuery('market');
+      cubit.bindWallet('a');
+      expect(cubit.state.dataFilter.searchQuery, 'market');
+    });
+
+    test('ilk bağlanma temizlemez', () {
+      final cubit = TransactionFilterCubit()..setSearchQuery('market');
+      cubit.bindWallet('a');
+      expect(cubit.state.dataFilter.searchQuery, 'market');
+    });
+  });
 }

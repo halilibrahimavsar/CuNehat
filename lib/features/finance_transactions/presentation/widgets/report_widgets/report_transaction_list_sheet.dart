@@ -1,3 +1,4 @@
+import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
@@ -163,7 +164,7 @@ class ReportTransactionListSheet extends StatelessWidget {
                       money(total),
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: isExpense ? Colors.redAccent : Colors.green,
+                        color: isExpense ? MoneyColors.expense : MoneyColors.income,
                       ),
                     ),
                   ],

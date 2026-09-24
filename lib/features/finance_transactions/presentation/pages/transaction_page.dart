@@ -10,7 +10,6 @@ import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'package:cunehat/core/messaging/deletion_undo_message.dart';
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/core/shared/widgets/app_date_range_picker.dart';
-import 'package:cunehat/core/utils/date_range_helper.dart';
 import 'package:cunehat/features/credit_card/presentation/card_context_rail.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
@@ -29,6 +28,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/finan
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/detailed_list_view.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_day_rail.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_list_skeleton.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/shared_period.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_search_field.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_summary_strip.dart';
@@ -38,8 +38,6 @@ import 'package:cunehat/features/finance_transactions/domain/entities/category_e
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:unified_flutter_features/unified_flutter_features.dart'
-    show IboDateRangeQuickOption;
 
 /// İşlemler ekranı — uygulamanın açılış yüzü.
 ///
@@ -65,14 +63,15 @@ class TransactionsPage extends StatelessWidget {
     required this.wallet,
   });
 
+  /// Süzgeç (dönem dahil) bu sayfaya ait DEĞİL: uygulama düzeyindeki
+  /// [TransactionFilterCubit]'i İçgörü ve Rapor ile paylaşır (bkz.
+  /// `shared_period.dart`). Eskiden burada sayfa-yerel bir örnek kuruluyordu
+  /// ve uygulama düzeyindeki örneği okuyan hiç kimse yoktu.
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => TransactionFilterCubit(),
-      child: _TransactionsView(
-        userId: userId,
-        wallet: wallet,
-      ),
+    return _TransactionsView(
+      userId: userId,
+      wallet: wallet,
     );
   }
 }
@@ -128,6 +127,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
   @override
   void initState() {
     super.initState();
+    context.read<TransactionFilterCubit>().bindWallet(widget.wallet.id);
     _syncStatementCycle();
     // Dışarıdan istenen dönem (ekstre içe aktarımı "Eklenenleri göster");
     // sayfa isteğe göre sonradan kurulduysa burada, zaten açıksa
@@ -196,6 +196,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
   void didUpdateWidget(covariant _TransactionsView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.wallet.id != widget.wallet.id) {
+      context.read<TransactionFilterCubit>().bindWallet(widget.wallet.id);
       _loadData();
     }
     if (oldWidget.wallet.id != widget.wallet.id ||
@@ -273,45 +274,6 @@ class _TransactionsViewState extends State<_TransactionsView> {
         FeatureFlags.creditCards ? widget.wallet.creditCard : null);
   }
 
-  /// Ekstre dönemindeyken "Ekstre · 16 Eyl – 15 Eki".
-  String? _statementLabel(TransactionFilterCubit cubit) {
-    if (!cubit.isStatementPeriod) return null;
-    return context.l10n
-        .kkEkstreDonemEtiketi(periodLabel(cubit.period, context.l10n));
-  }
-
-  Future<void> _pickDateRange(BuildContext context) async {
-    final cubit = context.read<TransactionFilterCubit>();
-    final l10n = context.l10n;
-    final current = cubit.currentStatementPeriod();
-    final cycle = cubit.statementCycle;
-
-    final dateRange = await AppDateRangePicker.pick(
-      context,
-      initialDateRange: cubit.period,
-      quickOptions: [
-        // Kart bağlamında ekstre seçenekleri başta.
-        if (current != null && cycle != null) ...[
-          IboDateRangeQuickOption(label: l10n.kkBuEkstre, range: current),
-          IboDateRangeQuickOption(
-            label: l10n.kkOncekiEkstre,
-            range: () {
-              final p = cycle
-                  .periodEndingAt(cycle.shiftClosing(dayOf(current.end), -1));
-              return DateTimeRange(
-                start: p.start,
-                end: DateTime(p.end.year, p.end.month, p.end.day, 23, 59, 59),
-              );
-            }(),
-          ),
-        ],
-        ...DateRangeHelper.buildDateRangeQuickOptions(l10n),
-      ],
-    );
-
-    if (dateRange != null) cubit.setPeriod(dateRange);
-  }
-
   void _showFilterSheet(BuildContext parentContext) {
     final cubit = parentContext.read<TransactionFilterCubit>();
 
@@ -357,11 +319,11 @@ class _TransactionsViewState extends State<_TransactionsView> {
                         categoryLabels: _categoryLabels,
                       ).length,
                       onFilterChanged: cubit.updateFilter,
-                      onDateTap: () => _pickDateRange(builderContext),
+                      onDateTap: () => pickSharedPeriod(builderContext),
                       onPeriodStep: cubit.stepPeriod,
                       onClearAll: cubit.clearAll,
                       onClose: () => Navigator.pop(builderContext),
-                      periodLabel: _statementLabel(cubit),
+                      periodLabel: statementPeriodLabel(cubit, context.l10n),
                     ),
                   ),
                 ),
@@ -498,11 +460,11 @@ class _TransactionsViewState extends State<_TransactionsView> {
                   const CardContextRail(),
                   TransactionTopBar(
                     filter: filterState,
-                    periodLabel: _statementLabel(cubit),
+                    periodLabel: statementPeriodLabel(cubit, context.l10n),
                     categoryLabels: _categoryLabels,
                     onModeChanged: cubit.setFinanceMode,
                     onPeriodStep: cubit.stepPeriod,
-                    onPeriodPick: () => _pickDateRange(context),
+                    onPeriodPick: () => pickSharedPeriod(context),
                     onFilterTap: () => _showFilterSheet(context),
                     onClearCategories: () => cubit.setCategories(const {}),
                     onClearPriceRange: () => cubit.setPriceRange(null),

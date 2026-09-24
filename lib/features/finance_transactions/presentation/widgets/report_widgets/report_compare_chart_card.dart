@@ -1,3 +1,4 @@
+import 'package:cunehat/config/theme/money_colors.dart';
 import 'dart:math' as math;
 
 import 'package:cunehat/config/theme/app_gradients.dart';
@@ -391,7 +392,7 @@ class ReportCompareChartCard extends StatelessWidget {
     final net = incomeTotal - expenseTotal;
     // Net gelir/gider rampalarından RENK ALMAZ: yeşil/kırmızı bu kartta iki
     // tarafa ayrılmıştır. Özet kartlarıyla aynı mavi/turuncu kullanılır.
-    final netColor = net >= 0 ? Colors.blue : Colors.orange;
+    final netColor = MoneyColors.net(net);
 
     // Oran yalnız gelir varken anlamlı: gelir 0 iken "gelirin %x'i" yok.
     String? hint;
@@ -555,7 +556,7 @@ class ReportCompareChartCard extends StatelessWidget {
             minHeight: 4,
             backgroundColor: scheme.onSurface.withValues(alpha: 0.08),
             valueColor: AlwaysStoppedAnimation(
-              budget.isExceeded ? Colors.redAccent : Colors.green,
+              budget.isExceeded ? MoneyColors.expense : MoneyColors.income,
             ),
           ),
         ),

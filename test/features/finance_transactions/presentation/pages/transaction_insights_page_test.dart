@@ -1,3 +1,5 @@
+import 'package:cunehat/features/finance_transactions/domain/transaction_period.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/error/failure.dart';
@@ -148,7 +150,7 @@ void main() {
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(
-      BlocProvider<AmountVisibilityCubit>.value(
+      BlocProvider<TransactionFilterCubit>(create: (_) => TransactionFilterCubit(), child: BlocProvider<AmountVisibilityCubit>.value(
         value: visibility,
         child: MaterialApp(
           localizationsDelegates: const [
@@ -162,7 +164,7 @@ void main() {
           theme: ThemeData(fontFamily: kRealFontFamily),
           home: const TransactionInsightsPage(userId: 'u', walletId: 'w'),
         ),
-      ),
+      )),
     );
     await tester.pumpAndSettle();
   }
@@ -310,20 +312,44 @@ void main() {
     expect(find.text('Yaşanan $elapsed gün üzerinden'), findsOneWidget);
   });
 
-  testWidgets('açılış dönemi boşsa verinin OLDUĞU aya kayar', (tester) async {
-    // Uygulamayı bir aylık aradan sonra açan kullanıcı sayfayı tamamen boş
-    // görüyor ve verisinin durduğu döneme kendi elleriyle gitmek zorundaydı.
-    // (Rapor sayfasında zaten çözülmüştü.)
+  testWidgets('dönem ORTAK: başka sayfada seçilen dönem burada görünür',
+      (tester) async {
+    final lastMonth = DateTime(now.year, now.month - 1, 10);
+    seed([tx(id: 'e1', date: lastMonth, amount: 432)]);
+    await pumpPage(tester);
+    expect(find.text(formatMoney(432)), findsNothing);
+
+    tester
+        .element(find.byType(TransactionInsightsPage))
+        .read<TransactionFilterCubit>()
+        .setPeriod(monthRangeOf(lastMonth));
+    await tester.pumpAndSettle();
+
+    expect(find.text(DateFormat.yMMMM('tr').format(lastMonth)), findsOneWidget);
+    expect(find.text(formatMoney(432)), findsWidgets);
+  });
+
+  testWidgets(
+      'açılış dönemi boşsa SESSİZCE kaymaz, verinin olduğu döneme götürür',
+      (tester) async {
+    // Dönem artık İşlemler ve Rapor ile ORTAK. Eskiden sayfa boş dönemde
+    // kendi dönemini verinin olduğu aya sessizce kaydırıyordu; ortak dönemi
+    // arka planda değiştirmek diğer iki sayfayı da kaydırırdı. Kullanıcı
+    // yine tek dokunuşla oraya ulaşır.
     final twoMonthsAgo = DateTime(now.year, now.month - 2, 12);
     seed([tx(id: 'e1', date: twoMonthsAgo, amount: 750)]);
     await pumpPage(tester);
 
-    expect(find.text('Seçilen tarih aralığında işlem yok'), findsNothing);
-    expect(find.text(formatMoney(750)), findsWidgets);
-    // Dönem etiketi de kaymış olmalı: ay çubuğu ayın adını yazar.
+    final thisMonth = DateFormat.yMMMM('tr').format(now);
+    expect(find.text(thisMonth), findsOneWidget);
+    expect(find.text('Seçilen tarih aralığında işlem yok'), findsOneWidget);
+
     final movedMonth = DateFormat.yMMMM('tr')
         .format(DateTime(twoMonthsAgo.year, twoMonthsAgo.month, 1));
+    await tester.tap(find.text('$movedMonth dönemine git'));
+    await tester.pumpAndSettle();
     expect(find.text(movedMonth), findsOneWidget);
+    expect(find.text(formatMoney(750)), findsWidgets);
   });
 
   testWidgets('en çok harcanan kategoriye dokunmak işlemleri açar',

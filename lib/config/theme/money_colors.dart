@@ -16,6 +16,18 @@ abstract final class MoneyColors {
   static const Color income = AppGradients.savings;
   static const Color expense = AppGradients.debt;
 
+  /// Pozitif net (birikim): uygulamanın işlem mavisi. Negatif net gider
+  /// rengini alır — eskiden `Colors.orange`'dı, dördüncü bir anlam rengi.
+  static const Color netPositive = AppGradients.transactions;
+
+  static Color net(double value) => value >= 0 ? netPositive : expense;
+
+  /// İyi/kötü sinyali (bütçe içinde / aşıldı, lehte / aleyhte değişim)
+  /// gelir/gider renklerini paylaşır: kullanıcı için yeşil "iyi", kırmızı
+  /// "dikkat" demek; ayrı bir ton bir anlam daha öğretmek olurdu.
+  static const Color good = income;
+  static const Color bad = expense;
+
   /// Para taşıma (transfer, borç, yatırım, kart ödemesi): harcama DEĞİL.
   /// Kırmızı/yeşil çağrışımı taşımayan nötr arduvaz tonu. Koyu temada bir
   /// ton açık: 500'lük ton koyu zeminde büyük metin için bile sınırda

@@ -1,3 +1,5 @@
+import 'package:cunehat/features/finance_transactions/domain/transaction_period.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/error/failure.dart';
@@ -141,7 +143,13 @@ void main() {
     bool dark = false,
     Locale locale = const Locale('tr'),
   }) =>
-      BlocProvider<AmountVisibilityCubit>(
+      BlocProvider<TransactionFilterCubit>(
+        // Dönem ORTAK ve sessizce kaymıyor: veri geçen ayda, dönem de oraya
+        // alınır (eskiden sayfanın oto-ayarı yapıyordu).
+        create: (_) => TransactionFilterCubit()
+          ..setPeriod(monthRangeOf(
+              DateTime(DateTime.now().year, DateTime.now().month - 1, 1))),
+        child: BlocProvider<AmountVisibilityCubit>(
         create: (_) => AmountVisibilityCubit(),
         child: MaterialApp(
           localizationsDelegates: const [
@@ -163,9 +171,9 @@ void main() {
           ),
           home: child,
         ),
-      );
+      ));
 
-  /// Geçen ay: oto-ayar aralığı o aya kaydırır, yani tam bir ay görünür.
+  /// Geçen ay: ortak dönem kurulumda o aya alınır, yani tam bir ay görünür.
   /// Kuplaj hareketi de var — anahtar kartı çizilsin.
   List<TransactionEntity> lastMonth() {
     final now = DateTime.now();
@@ -302,7 +310,7 @@ void main() {
     // Bir ay (≤35 gün) her zaman GÜNLÜK çizilir; seçenek sunmak kalıcı bir
     // çip satırından ibaretti.
     expect(find.text('Hafta'), findsNothing);
-    expect(find.text('Günlük Gelir–Gider'), findsOneWidget);
+    expect(find.text('Günlük gelir–gider'), findsOneWidget);
 
     // Dönemi "Son 3 Ay"a al: seçici artık bir işe yarıyor.
     final errors = await layoutErrors(tester, () async {
@@ -322,7 +330,7 @@ void main() {
     });
     expect(errors, isEmpty, reason: '$errors');
     // Başlık çözünürlüğü izler.
-    expect(find.text('Haftalık Gelir–Gider'), findsOneWidget);
+    expect(find.text('Haftalık gelir–gider'), findsOneWidget);
   });
 
   testWidgets('320dp (en dar yaygın telefon) — düzen bozulmaz', (tester) async {
@@ -373,7 +381,7 @@ void main() {
       await tester.pumpAndSettle();
     });
     expect(errors, isEmpty, reason: '$errors');
-    expect(find.text('Daily Income–Expense'), findsOneWidget);
+    expect(find.text('Daily income vs. spending'), findsOneWidget);
   });
 
   testWidgets('bütün analiz kartları çizilir', (tester) async {
@@ -544,9 +552,9 @@ void main() {
       // Kullanıcının sorduğu sıra: ne oldu → nereye gitti → bütçeyi aştım mı
       // → dönem içinde ne zaman → tam olarak nereye. Kategori dağılımı
       // eskiden 1507dp'de, yani iki ekran aşağıdaydı.
-      final kategori = topOf('Kategori Dağılımı');
+      final kategori = topOf('Kategori dağılımı');
       final butce = topOf('Bütçe durumu');
-      final akis = topOf('Günlük Gelir–Gider');
+      final akis = topOf('Günlük gelir–gider');
       final yerler = topOf('En çok harcanan yerler');
 
       expect(kategori, lessThan(butce));
