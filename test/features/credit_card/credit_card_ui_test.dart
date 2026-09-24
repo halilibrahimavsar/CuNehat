@@ -480,11 +480,41 @@ void main() {
 
       expect(find.text(l10n.kkKalanDonemBorcu), findsOneWidget);
       expect(find.byKey(const ValueKey('ctx-card-pay')), findsOneWidget);
+      // Kart son kesimden ÖNCE açılmış: dönem borcu defterden güvenilir,
+      // ekstre ipucu yok.
+      expect(find.byKey(const ValueKey('ctx-card-statement')), findsNothing);
 
       await tester.tap(find.text('Banka'));
       final event = verify(() => bloc.add(captureAny())).captured.single
           as SetActiveWalletEvent;
       expect(event.walletId, 'bank');
+    });
+
+    testWidgets(
+        'kart son kesimden SONRA eklendi, ekstre yok: tutar "≈" ile, '
+        '"Ekstreyi gir" ekstre sayfasını açar', (tester) async {
+      emptyLedger();
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      final bank = _wallet('bank');
+      final fresh = _wallet('card',
+          name: 'Bonus',
+          balance: -2500,
+          opening: -2500,
+          createdAt: DateTime.now(),
+          card: const CreditCardInfo(
+            closingDay: 15,
+            dueDay: 25,
+            last4: '5690',
+            paymentWalletId: 'bank',
+          ));
+      when(() => bloc.state).thenReturn(WalletLoadedSt([bank, fresh], fresh));
+      await tester.pumpWidget(app(const CardContextRail()));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('≈ '), findsOneWidget);
+      await tester.tap(find.text(l10n.kkEkstreyiGir));
+      await tester.pumpAndSettle();
+      expect(find.byType(CardStatementSheet), findsOneWidget);
     });
 
     testWidgets('360dp: uzun adlar ve iki kartla taşma yok', (tester) async {
@@ -493,11 +523,13 @@ void main() {
       addTearDown(tester.view.reset);
       emptyLedger();
       final bank = _wallet('bank', name: 'Çok uzun adlı maaş hesabı cüzdanı');
-      final card = bonusCard();
+      // En kalabalık şerit: tahmin tutarı + son ödeme çipi + "Ekstreyi gir".
+      final card = bonusCard().copyWith(createdAt: DateTime.now());
       when(() => bloc.state).thenReturn(
           WalletLoadedSt([bank, card, bonusCard(id: 'world')], card));
       await tester.pumpWidget(app(const CardContextRail()));
       await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('ctx-card-statement')), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   });

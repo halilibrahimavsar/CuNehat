@@ -5409,4 +5409,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get kkKartEklendi => 'Kredi kartı eklendi';
+
+  @override
+  String get kkEkstreyiGir => 'Ekstreyi gir';
 }

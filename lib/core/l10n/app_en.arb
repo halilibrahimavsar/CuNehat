@@ -2916,5 +2916,6 @@
   "kkBagliCuzdanAciklama": "The card shows up inside this wallet, and \"Pay\" pays from here by default.",
   "kkCuzdanKartliSilinemez": "{name} has {count} credit card(s). Delete them or move them to another wallet first.",
   "kkCuzdanaBagla": "Attach to a wallet",
-  "kkKartEklendi": "Credit card added"
+  "kkKartEklendi": "Credit card added",
+  "kkEkstreyiGir": "Enter statement"
 }

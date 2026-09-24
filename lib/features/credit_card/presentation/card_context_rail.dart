@@ -6,6 +6,7 @@ import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/credit_card/presentation/card_statement_sheet.dart';
 import 'package:cunehat/features/credit_card/presentation/credit_card_tile.dart';
 import 'package:cunehat/features/credit_card/presentation/mini_credit_card.dart';
 import 'package:cunehat/features/wallet/domain/card_family.dart';
@@ -218,63 +219,89 @@ class _CardStrip extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
             child: CardStatusBuilder(
               card: card,
-              builder: (context, status) => Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          l10n.kkKalanDonemBorcu,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: cs.onSurfaceVariant,
-                          ),
-                        ),
-                        // Dar ekranda çip tutarın altına kayar (360dp'de
-                        // yan yana sığmıyordu: ölçüldü, 15px taşma).
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 2,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            Text(
-                              status == null
-                                  ? '…'
-                                  : formatMoney(status.remainingStatementDebt,
-                                      currency: card.currency),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w900,
-                                color: (status?.isOverdue ?? false)
-                                    ? cs.error
-                                    : cs.onSurface,
-                              ),
+              builder: (context, status) {
+                // Kart son kesimden SONRA eklendi ve bu dönemin ekstresi
+                // girilmedi: dönem borcu defterden çıkarılamaz (açılış borcu
+                // tahmindir). Tutar "≈" ile soluk yazılır ve ekstreyi girme
+                // yolu şeridin kendisinde sunulur — not eskiden yalnız
+                // ayrıntı sayfasındaydı, şerit kesinmiş gibi görünüyordu.
+                final guessed = status != null &&
+                    status.declared == null &&
+                    !status.derivedReliable;
+                return Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            l10n.kkKalanDonemBorcu,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: cs.onSurfaceVariant,
                             ),
-                            if (status != null) CardDueChip(status: status),
-                          ],
-                        ),
-                      ],
+                          ),
+                          // Dar ekranda çip tutarın altına kayar (360dp'de
+                          // yan yana sığmıyordu: ölçüldü, 15px taşma).
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 2,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                status == null
+                                    ? '…'
+                                    : '${guessed ? '≈ ' : ''}${formatMoney(status.remainingStatementDebt, currency: card.currency)}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w900,
+                                  color: guessed
+                                      ? cs.onSurfaceVariant
+                                      : (status?.isOverdue ?? false)
+                                          ? cs.error
+                                          : cs.onSurface,
+                                ),
+                              ),
+                              if (status != null) CardDueChip(status: status),
+                              if (guessed)
+                                ActionChip(
+                                  key: const ValueKey('ctx-card-statement'),
+                                  visualDensity: VisualDensity.compact,
+                                  materialTapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                  avatar: const Icon(Icons.receipt_long_rounded,
+                                      size: 16),
+                                  label: Text(l10n.kkEkstreyiGir),
+                                  onPressed: () => CardStatementSheet.show(
+                                    context,
+                                    card: card,
+                                    status: status,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  FilledButton.tonal(
-                    key: const ValueKey('ctx-card-pay'),
-                    style: FilledButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                    const SizedBox(width: 6),
+                    FilledButton.tonal(
+                      key: const ValueKey('ctx-card-pay'),
+                      style: FilledButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                      ),
+                      onPressed: status == null
+                          ? null
+                          : () => payCreditCard(context,
+                              card: card, wallets: wallets, status: status),
+                      child: Text(l10n.kkOde),
                     ),
-                    onPressed: status == null
-                        ? null
-                        : () => payCreditCard(context,
-                            card: card, wallets: wallets, status: status),
-                    child: Text(l10n.kkOde),
-                  ),
-                ],
-              ),
+                  ],
+                );
+              },
             ),
           ),
         ),

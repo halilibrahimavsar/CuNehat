@@ -9490,6 +9490,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kredi kartı eklendi'**
   String get kkKartEklendi;
+
+  /// No description provided for @kkEkstreyiGir.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekstreyi gir'**
+  String get kkEkstreyiGir;
 }
 
 class _AppLocalizationsDelegate

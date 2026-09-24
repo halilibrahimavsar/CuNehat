@@ -5442,4 +5442,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kkKartEklendi => 'Credit card added';
+
+  @override
+  String get kkEkstreyiGir => 'Enter statement';
 }
