@@ -21,6 +21,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/insig
 import 'package:cunehat/features/finance_transactions/presentation/widgets/insight_widgets/insight_budget_cards.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/insight_widgets/insight_stat_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/insight_widgets/recurring_suggestion_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/analysis_empty_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_section_header.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_summary_cards.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_transaction_list_sheet.dart';
@@ -520,7 +521,7 @@ class _InsightsViewState extends State<_InsightsView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (insights.isEmpty)
-                        _buildPeriodEmptyNote(context)
+                        _buildPeriodEmptyNote(context, all, insights)
                       else ...[
                         ..._buildStatusSection(context, insights, money, all),
                         ..._buildPeriodSection(context, insights),
@@ -714,19 +715,47 @@ class _InsightsViewState extends State<_InsightsView> {
     );
   }
 
-  Widget _buildPeriodEmptyNote(BuildContext context) {
-    final theme = Theme.of(context);
-    return AppCard(
-      section: AppSection.transactions,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      child: Center(
-        child: Text(
-          context.l10n.buDonemdeIslemYok,
-          textAlign: TextAlign.center,
-          style: theme.textTheme.bodyMedium
-              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-        ),
-      ),
+  /// Dönemde gelir–gider yoksa ne olduğunu ve nereye gidilebileceğini söyler.
+  ///
+  /// Eskiden tek cümleydi: "Bu dönemde işlem yok". Dönemde yalnız para taşıma
+  /// hareketi (kart ödemesi, transfer) varken bu YANLIŞTI — işlemler sayfası
+  /// aynı dönemde o satırı gösteriyordu. Kullanıcıya bir sonraki adım da
+  /// sunulmuyordu: sayfanın yarısı boş kalıyordu.
+  Widget _buildPeriodEmptyNote(
+    BuildContext context,
+    List<TransactionEntity> all,
+    TransactionInsights insights,
+  ) {
+    final l10n = context.l10n;
+    final moved = insights.systemMovementCount;
+    final day = nearestDayOutside(
+      [
+        for (final t in all)
+          if (isSpendingMovement(t)) t.date,
+      ],
+      _range,
+    );
+    final target = day == null ? null : periodContainingDay(_range, day);
+    return AnalysisEmptyCard(
+      icon: moved > 0 ? Icons.swap_horiz_rounded : Icons.event_busy_rounded,
+      title: moved > 0
+          ? l10n.analysisNoFlowTitle
+          : l10n.msgSecilenTarihAraligindaIslem,
+      lines: [
+        moved > 0
+            ? l10n.analysisNoFlowMoved(moved)
+            : l10n.analysisPeriodEmptyBody,
+      ],
+      actions: [
+        if (target != null)
+          (
+            label: l10n.analysisJumpToPeriod(periodLabel(target, l10n)),
+            onTap: () => setState(() {
+                  _range = target;
+                  _hasUserPickedRange = true;
+                }),
+          ),
+      ],
     );
   }
 

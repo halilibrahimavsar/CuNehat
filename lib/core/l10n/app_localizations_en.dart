@@ -4299,7 +4299,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Transfers between wallets, debt payments and investment buys/sells are not spending: the money isn\'t spent, it only moves. The balance line always includes them.';
 
   @override
-  String get reportShareTooltip => 'Share the report';
+  String get reportShareTooltip => 'Share transactions as CSV';
 
   @override
   String get reportNoIncomeForRate => 'No income this period';
@@ -5738,4 +5738,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String bankImportUndoWillRemoveBatch(int count) {
     return 'The $count transactions this import added are deleted.';
   }
+
+  @override
+  String get analysisNoFlowTitle => 'No income or spending in this period';
+
+  @override
+  String analysisNoFlowMoved(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'There are $count moved-money entries (transfer, debt, investment). They aren\'t counted as income or spending.',
+      one:
+          'There is 1 moved-money entry (transfer, debt, investment). It isn\'t counted as income or spending.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get analysisNoFlowCards => 'Card spending is kept separate.';
+
+  @override
+  String get analysisIncludeMoved => 'Include moved money';
+
+  @override
+  String get analysisIncludeCards => 'Include cards';
+
+  @override
+  String analysisJumpToPeriod(String period) {
+    return 'Go to $period';
+  }
+
+  @override
+  String get analysisPeriodEmptyBody =>
+      'Nothing recorded in this range. Try another period.';
 }

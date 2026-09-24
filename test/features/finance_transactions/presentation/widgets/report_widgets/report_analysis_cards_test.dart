@@ -54,6 +54,33 @@ void main() {
           tx(DateTime(2026, 6, 11), 'Kahve', 90),
         ];
 
+    test('REGRESYON: gruplar İŞLEM SAYISINA değil TUTARA göre sıralanır', () {
+      // Cihazda görülen: SPOR (4 işlem, 4.193 ₺) İNTERNET'in (5 işlem,
+      // 2.607 ₺) altında duruyordu — gruplama motoru sayıya göre sıralıyor.
+      final groups = ReportTopPayeesCard.buildGroups([
+        for (var i = 0; i < 5; i++)
+          tx(DateTime(2026, 8, 1 + i), 'INTERNET', 521.5),
+        for (var i = 0; i < 4; i++)
+          tx(DateTime(2026, 8, 10 + i), 'SPOR', 1048.25),
+      ]);
+      expect([for (final g in groups) g.label.toUpperCase()],
+          ['SPOR', 'INTERNET']);
+      expect(groups.first.total, closeTo(4193, 0.01));
+    });
+
+    test('maxRows kesimi seyrek ama BÜYÜK yeri listeden atmaz', () {
+      final groups = ReportTopPayeesCard.buildGroups([
+        // maxRows kadar sık ama küçük yer…
+        for (var p = 0; p < ReportTopPayeesCard.maxRows; p++)
+          for (var i = 0; i < 4; i++)
+            tx(DateTime(2026, 8, 1 + i), 'KUCUK$p YER', 10),
+        // …ve iki kez gidilmiş büyük yer.
+        tx(DateTime(2026, 8, 20), 'MOBILYACI', 9000),
+        tx(DateTime(2026, 8, 21), 'MOBILYACI', 6000),
+      ]);
+      expect(groups.first.label.toUpperCase(), 'MOBILYACI');
+    });
+
     testWidgets('şube kodlu başlıklar TEK kaleme iner', (tester) async {
       await tester.pumpWidget(host(ReportTopPayeesCard(
         groups: ReportTopPayeesCard.buildGroups(statementLike()),

@@ -270,6 +270,45 @@ void main() {
       expect(groups.last.dayEndBalance, 2000.0);
     });
 
+    test(
+        'REGRESYON: para taşıma hareketi gün netine KATILMAZ, ayrı tutulur',
+        () {
+      // Özet şeridi "gider 0" derken gün rozeti transferi sayıp "−2.500"
+      // diyordu: iki bileşen aynı dönem için farklı evren konuşuyordu.
+      TransactionWithBalance row(String id, double amount, DateTime date,
+              {bool system = false}) =>
+          TransactionWithBalance(
+            transaction: TransactionEntity(
+              id: id,
+              userId: 'u',
+              walletId: 'w',
+              title: id,
+              tag: system ? 'Transfer' : 'Food',
+              amount: amount,
+              date: date,
+              type: TransactionTypeModel.expense,
+              isSystem: system,
+            ),
+            balanceAfter: 0,
+          );
+      final groups = groupLedgerByDay([
+        row('kart', 2500, DateTime(2026, 9, 24, 17), system: true),
+        row('market', 100, DateTime(2026, 9, 23, 12)),
+        row('transfer', 400, DateTime(2026, 9, 23, 10), system: true),
+      ], FinanceMode.compare);
+
+      final onlyMoved = groups.first;
+      expect(onlyMoved.expense, 0);
+      expect(onlyMoved.net, 0);
+      expect(onlyMoved.moved, -2500);
+      expect(onlyMoved.isOnlyMoved, isTrue);
+
+      final mixed = groups.last;
+      expect(mixed.expense, 100);
+      expect(mixed.moved, -400);
+      expect(mixed.isOnlyMoved, isFalse);
+    });
+
     test('tek modda grup toplamı da yalnız o türü sayar', () {
       final onlyIncome = groupLedgerByDay(transactions, FinanceMode.income);
       expect(onlyIncome, hasLength(1));

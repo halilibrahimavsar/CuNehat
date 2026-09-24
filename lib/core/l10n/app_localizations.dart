@@ -7538,7 +7538,7 @@ abstract class AppLocalizations {
   /// No description provided for @reportShareTooltip.
   ///
   /// In tr, this message translates to:
-  /// **'Raporu paylaş'**
+  /// **'İşlemleri CSV olarak paylaş'**
   String get reportShareTooltip;
 
   /// No description provided for @reportNoIncomeForRate.
@@ -9940,6 +9940,48 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bu içe aktarımın eklediği {count} işlem silinir.'**
   String bankImportUndoWillRemoveBatch(int count);
+
+  /// No description provided for @analysisNoFlowTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu dönemde gelir ya da gider yok'**
+  String get analysisNoFlowTitle;
+
+  /// No description provided for @analysisNoFlowMoved.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} para taşıma hareketi var (transfer, borç, yatırım). Bunlar gelir–gidere sayılmaz.'**
+  String analysisNoFlowMoved(int count);
+
+  /// No description provided for @analysisNoFlowCards.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart harcamaları ayrı tutuluyor.'**
+  String get analysisNoFlowCards;
+
+  /// No description provided for @analysisIncludeMoved.
+  ///
+  /// In tr, this message translates to:
+  /// **'Para taşımayı dahil et'**
+  String get analysisIncludeMoved;
+
+  /// No description provided for @analysisIncludeCards.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartları dahil et'**
+  String get analysisIncludeCards;
+
+  /// No description provided for @analysisJumpToPeriod.
+  ///
+  /// In tr, this message translates to:
+  /// **'{period} dönemine git'**
+  String analysisJumpToPeriod(String period);
+
+  /// No description provided for @analysisPeriodEmptyBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu aralıkta kayıt yok. Başka bir döneme geçebilirsin.'**
+  String get analysisPeriodEmptyBody;
 }
 
 class _AppLocalizationsDelegate

@@ -13,6 +13,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/calcu
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_card.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_transaction_entity.dart';
 import 'package:cunehat/features/recurring_transactions/domain/usecases/save_recurring_transaction_usecase.dart';
+import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -154,6 +155,36 @@ void main() {
       isSystem: isSystem,
     );
   }
+
+  testWidgets(
+      'REGRESYON: para taşıma satırı gider kırmızısıyla DEĞİL nötr renkle çizilir',
+      (tester) async {
+    Color amountColor(String text) =>
+        tester.widget<Text>(find.text(text)).style!.color!;
+
+    final moved = createTx(isSystem: true, id: 'tx_sys');
+    final spent = createTx(isSystem: false, id: 'tx_exp');
+    when(() => mockTransactionBloc.state).thenReturn(TransactionLoaded(
+      groupedTransactions: {
+        testDate: [moved, spent]
+      },
+      allTransactions: [moved, spent],
+    ));
+
+    await tester.pumpWidget(buildTestableWidget(TransactionCard(
+      item: TransactionWithBalance(transaction: moved, balanceAfter: 0),
+    )));
+    await tester.pumpAndSettle();
+    final brightness = Theme.of(tester.element(find.byType(TransactionCard)))
+        .brightness;
+    expect(amountColor('-150,00 ₺'), MoneyColors.moved(brightness));
+
+    await tester.pumpWidget(buildTestableWidget(TransactionCard(
+      item: TransactionWithBalance(transaction: spent, balanceAfter: 0),
+    )));
+    await tester.pumpAndSettle();
+    expect(amountColor('-150,00 ₺'), MoneyColors.expense);
+  });
 
   testWidgets('renders TransactionCard with correct details',
       (WidgetTester tester) async {

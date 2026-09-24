@@ -2312,7 +2312,7 @@
     }
   },
   "reportSystemMovementsHint": "Transfers between wallets, debt payments and investment buys/sells are not spending: the money isn't spent, it only moves. The balance line always includes them.",
-  "reportShareTooltip": "Share the report",
+  "reportShareTooltip": "Share transactions as CSV",
   "reportNoIncomeForRate": "No income this period",
   "reportViewPie": "Pie view",
   "reportViewBars": "Bar view",
@@ -3161,5 +3161,26 @@
         "type": "int"
       }
     }
-  }
+  },
+  "analysisNoFlowTitle": "No income or spending in this period",
+  "analysisNoFlowMoved": "{count, plural, =1{There is 1 moved-money entry (transfer, debt, investment). It isn't counted as income or spending.} other{There are {count} moved-money entries (transfer, debt, investment). They aren't counted as income or spending.}}",
+  "@analysisNoFlowMoved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "analysisNoFlowCards": "Card spending is kept separate.",
+  "analysisIncludeMoved": "Include moved money",
+  "analysisIncludeCards": "Include cards",
+  "analysisJumpToPeriod": "Go to {period}",
+  "@analysisJumpToPeriod": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "analysisPeriodEmptyBody": "Nothing recorded in this range. Try another period."
 }

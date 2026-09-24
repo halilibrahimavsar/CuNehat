@@ -268,6 +268,36 @@ void main() {
     expect(find.textContaining('sayılmadı'), findsOneWidget);
   });
 
+  testWidgets(
+      'REGRESYON: yalnız para taşıma hareketi olan dönem "işlem yok" DEMEZ',
+      (tester) async {
+    // İşlemler sayfası aynı dönemde kart ödemesini gösterirken bu sayfa
+    // "Bu dönemde işlem yok" diyordu.
+    final lastMonth = DateTime(now.year, now.month - 1, 10);
+    seed([
+      tx(
+        id: 's1',
+        date: dayThisMonth(1),
+        amount: 2500,
+        tag: 'Transfer',
+        title: 'Kart ödemesi',
+        isSystem: true,
+      ),
+      tx(id: 'e1', date: lastMonth, amount: 300),
+    ]);
+    await pumpPage(tester);
+
+    expect(find.text('Bu dönemde gelir ya da gider yok'), findsOneWidget);
+    expect(find.textContaining('1 para taşıma hareketi var'), findsOneWidget);
+
+    final previous =
+        DateFormat.yMMMM('tr').format(DateTime(lastMonth.year, lastMonth.month));
+    await tester.tap(find.text('$previous dönemine git'));
+    await tester.pumpAndSettle();
+    expect(find.text(previous), findsOneWidget);
+    expect(find.text(formatMoney(300)), findsWidgets);
+  });
+
   testWidgets('günlük ortalama YAŞANAN güne bölünür', (tester) async {
     // "Bu Ay" ayın 1'inde başlar; bugüne kadar geçen gün sayısı = bugünün
     // ayın kaçı olduğu. Eski kod ayın TAMAMINA bölüyordu ve ayın 3'ünde
@@ -288,7 +318,7 @@ void main() {
     seed([tx(id: 'e1', date: twoMonthsAgo, amount: 750)]);
     await pumpPage(tester);
 
-    expect(find.text('Bu dönemde işlem yok'), findsNothing);
+    expect(find.text('Seçilen tarih aralığında işlem yok'), findsNothing);
     expect(find.text(formatMoney(750)), findsWidgets);
     // Dönem etiketi de kaymış olmalı: ay çubuğu ayın adını yazar.
     final movedMonth = DateFormat.yMMMM('tr')

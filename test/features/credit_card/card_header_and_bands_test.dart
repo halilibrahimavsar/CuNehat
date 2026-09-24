@@ -191,6 +191,37 @@ void main() {
       expect(find.byKey(const ValueKey('ctx-due-card')), findsNothing);
     });
 
+    testWidgets('REGRESYON: tutarlar gizliyken bant ve şerit tutarı da gizlenir',
+        (tester) async {
+      final bank = _bank();
+      final card = _card();
+      when(() => bloc.state).thenReturn(WalletLoadedSt([bank, card], bank));
+      await tester.pumpWidget(app(const CardContextRail()));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('1.000,00'), findsWidgets);
+
+      await tester
+          .element(find.byType(CardContextRail))
+          .read<AmountVisibilityCubit>()
+          .setVisibility(false);
+      await tester.pumpAndSettle();
+      // `formatMoney` doğrudan çağrıldığı için göz düğmesi bu tutarı
+      // gizlemiyordu.
+      expect(find.textContaining('1.000,00'), findsNothing);
+      expect(find.textContaining('****'), findsWidgets);
+
+      // Kart bağlamındaki şerit de aynı kurala uyar.
+      when(() => bloc.state).thenReturn(WalletLoadedSt([bank, card], card));
+      await tester.pumpWidget(app(const CardContextRail()));
+      await tester.pumpAndSettle();
+      await tester
+          .element(find.byType(CardContextRail))
+          .read<AmountVisibilityCubit>()
+          .setVisibility(false);
+      await tester.pumpAndSettle();
+      expect(find.textContaining('1.000,00'), findsNothing);
+    });
+
     testWidgets('kart bağlamında bant yerine kartın şeridi', (tester) async {
       final card = _card();
       when(() => bloc.state).thenReturn(WalletLoadedSt([_bank(), card], card));

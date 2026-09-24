@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/config/theme/money_colors.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/money_text.dart';
@@ -17,27 +19,35 @@ import 'package:flutter/material.dart';
 /// sayfaları (kutu defter) aynı listeyi kurar, ve gruplama widget kurmadan
 /// test edilebilir.
 ///
-/// **Evren: DEFTERİN TAMAMI — kuplaj hareketleri dahil.** Dönem özeti
-/// (`TransactionSummaryStrip`) ve gün şeridi bunları bilerek dışarıda
-/// bırakır (bkz. `isSpendingMovement`), buradaki gün başlığı rozeti ise
-/// bırakMAZ: rozetin hemen altında o satırlar listeleniyor ve toplamı
-/// süzmek, kullanıcının gözüyle sayamadığı bir rakam üretirdi. Ayrım
-/// bilinçli — rozet "bu gün defterde ne oldu"yu, şerit "bu gün ne
-/// harcandı"yı söyler.
+/// **Evren: özetle AYNI.** Gelir/gider yalnız harcama hareketlerini sayar
+/// (bkz. `isSpendingMovement`); para taşıma hareketleri [moved]'da ayrı durur.
+/// Eskiden rozet kuplaj hareketlerini de sayıyordu, gerekçe "rozetin altında
+/// o satırlar listeleniyor, süzmek gözle sayılamayan bir rakam üretir" idi.
+/// Ama satırlar gider kırmızısıyla çizildiği için aynı dönemde özet şeridi
+/// "gider 0", gün rozeti "−2.500" diyordu. Artık para taşıma satırları NÖTR
+/// renkte ([MoneyColors.moved]) — gözle ayırt edilebiliyor, rozet de
+/// özetle aynı şeyi söylüyor.
 class LedgerDayGroup {
   final DateTime day;
   final List<TransactionWithBalance> items;
   final double income;
   final double expense;
 
+  /// Para taşıma hareketlerinin işaretli toplamı (giren +, çıkan −).
+  final double moved;
+
   const LedgerDayGroup({
     required this.day,
     required this.items,
     required this.income,
     required this.expense,
+    this.moved = 0,
   });
 
   double get net => income - expense;
+
+  /// Gün yalnız para taşıma hareketinden mi ibaret?
+  bool get isOnlyMoved => income == 0 && expense == 0 && moved != 0;
 
   /// Gün sonu bakiyesi = o günün EN YENİ işleminden sonraki bakiye.
   /// [items] defterle aynı sırayı (yeniden eskiye) taşır.
@@ -66,12 +76,16 @@ List<LedgerDayGroup> groupLedgerByDay(
     for (final day in days)
       () {
         final items = buckets[day]!;
-        double income = 0, expense = 0;
+        double income = 0, expense = 0, moved = 0;
         for (final e in items) {
-          if (e.transaction.isIncome) {
-            income += e.transaction.amount;
-          } else if (e.transaction.isExpense) {
-            expense += e.transaction.amount;
+          final t = e.transaction;
+          if (!isSpendingMovement(t)) {
+            if (t.isIncome) moved += t.amount;
+            if (t.isExpense) moved -= t.amount;
+          } else if (t.isIncome) {
+            income += t.amount;
+          } else if (t.isExpense) {
+            expense += t.amount;
           }
         }
         return LedgerDayGroup(
@@ -79,6 +93,7 @@ List<LedgerDayGroup> groupLedgerByDay(
           items: items,
           income: income,
           expense: expense,
+          moved: moved,
         );
       }(),
   ];
@@ -323,7 +338,9 @@ class _DayHeaderDelegate extends SliverPersistentHeaderDelegate {
                   ),
                 ),
                 const SizedBox(width: 8),
-                _NetBadge(net: group.net),
+                group.isOnlyMoved
+                    ? _NetBadge(net: group.moved, moved: true)
+                    : _NetBadge(net: group.net),
               ],
             ),
           ),
@@ -344,11 +361,18 @@ class _DayHeaderDelegate extends SliverPersistentHeaderDelegate {
 class _NetBadge extends StatelessWidget {
   final double net;
 
-  const _NetBadge({required this.net});
+  /// Yalnız para taşıma olan gün: nötr renk ve ⇄ işareti.
+  final bool moved;
+
+  const _NetBadge({required this.net, this.moved = false});
 
   @override
   Widget build(BuildContext context) {
-    final color = net >= 0 ? AppGradients.savings : AppGradients.debt;
+    final color = moved
+        ? MoneyColors.moved(Theme.of(context).brightness)
+        : net >= 0
+            ? MoneyColors.income
+            : MoneyColors.expense;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
@@ -356,15 +380,24 @@ class _NetBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(7),
         border: Border.all(color: color.withValues(alpha: 0.22), width: 0.5),
       ),
-      child: SignedMoneyText(
-        amount: net,
-        isExpense: net < 0,
-        currency: context.activeWalletCurrency,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
-          color: color,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (moved) ...[
+            Icon(Icons.swap_horiz_rounded, size: 12, color: color),
+            const SizedBox(width: 3),
+          ],
+          SignedMoneyText(
+            amount: net,
+            isExpense: net < 0,
+            currency: context.activeWalletCurrency,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }

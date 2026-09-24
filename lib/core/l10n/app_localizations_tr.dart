@@ -4276,7 +4276,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Cüzdanlar arası transfer, borç ödemesi ve yatırım alım/satımı harcama değildir: para harcanmaz, yalnızca yer değiştirir. Bakiye çizgisi bunları her zaman içerir.';
 
   @override
-  String get reportShareTooltip => 'Raporu paylaş';
+  String get reportShareTooltip => 'İşlemleri CSV olarak paylaş';
 
   @override
   String get reportNoIncomeForRate => 'Bu dönemde gelir yok';
@@ -5705,4 +5705,30 @@ class AppLocalizationsTr extends AppLocalizations {
   String bankImportUndoWillRemoveBatch(int count) {
     return 'Bu içe aktarımın eklediği $count işlem silinir.';
   }
+
+  @override
+  String get analysisNoFlowTitle => 'Bu dönemde gelir ya da gider yok';
+
+  @override
+  String analysisNoFlowMoved(int count) {
+    return '$count para taşıma hareketi var (transfer, borç, yatırım). Bunlar gelir–gidere sayılmaz.';
+  }
+
+  @override
+  String get analysisNoFlowCards => 'Kart harcamaları ayrı tutuluyor.';
+
+  @override
+  String get analysisIncludeMoved => 'Para taşımayı dahil et';
+
+  @override
+  String get analysisIncludeCards => 'Kartları dahil et';
+
+  @override
+  String analysisJumpToPeriod(String period) {
+    return '$period dönemine git';
+  }
+
+  @override
+  String get analysisPeriodEmptyBody =>
+      'Bu aralıkta kayıt yok. Başka bir döneme geçebilirsin.';
 }

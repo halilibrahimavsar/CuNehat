@@ -185,3 +185,39 @@ List<DateTime> daysOf(DateTimeRange range) {
   }
   return days;
 }
+
+/// [range] ile AYNI türden ve AYNI hizada olup [day]'i içeren dönem.
+///
+/// Oklarla ulaşılabilecek dönemi verir: aralık [shiftPeriod] ile adım adım
+/// kaydırılır, yani ay aralığı takvim ayına, özel aralık kendi uzunluğundaki
+/// bitişik pencerelere oturur. "Son hareketli döneme git" eylemi kullanıcıyı
+/// oklarla hiç varamayacağı bir pencereye götürmemeli.
+DateTimeRange periodContainingDay(DateTimeRange range, DateTime day) {
+  var current = range;
+  final target = dayOf(day);
+  // Üst sınır savunma amaçlı: günlük dönemde bile ~27 yıl.
+  for (var i = 0; i < 10000 && !isDayInRange(target, current); i++) {
+    final step = target.isBefore(dayOf(current.start)) ? -1 : 1;
+    current = shiftPeriod(current, step);
+  }
+  return current;
+}
+
+/// [range]'in DIŞINDAKİ en yakın hareketli gün: önce aralıktan önceki en
+/// geç gün (kullanıcı çoğunlukla geçmişe bakar), yoksa aralıktan sonraki en
+/// erken gün. Hiçbiri yoksa `null`.
+DateTime? nearestDayOutside(Iterable<DateTime> dates, DateTimeRange range) {
+  final start = dayOf(range.start);
+  final end = dayOf(range.end);
+  DateTime? before;
+  DateTime? after;
+  for (final raw in dates) {
+    final d = dayOf(raw);
+    if (d.isBefore(start)) {
+      if (before == null || d.isAfter(before)) before = d;
+    } else if (d.isAfter(end)) {
+      if (after == null || d.isBefore(after)) after = d;
+    }
+  }
+  return before ?? after;
+}

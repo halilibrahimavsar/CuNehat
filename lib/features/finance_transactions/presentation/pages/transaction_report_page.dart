@@ -35,6 +35,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/repor
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_summary_cards.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_system_movements_toggle.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/analysis_empty_card.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/core/config/feature_flags.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
@@ -359,11 +360,20 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     final state = context.read<TransactionBloc>().state;
     // Paylaşılan CSV de bu cüzdanın defteridir: süzülmediğinde başka
     // cüzdanların satırları dışarı gidiyordu.
-    final filtered =
-        _filterTransactionsByRange(_forWallet(state.currentTransactions));
+    //
+    // "Kartları dahil et" açıkken ekranda görülen kart harcamaları dosyaya da
+    // girer (eskiden anahtar yok sayılıyordu). Para taşıma hareketleri ise
+    // anahtardan bağımsız olarak HEP dosyadadır: CSV bir kayıt dökümüdür,
+    // gelir–gider toplamı değil — transferi atmak defteri eksik gösterirdi.
+    final filtered = _filterTransactionsByRange(
+        _analysisSource(_forWallet(state.currentTransactions)));
     if (filtered.isEmpty) return;
-    final rangeLabel = '${DateFormat('dd MMM yyyy').format(_range.start)} - '
-        '${DateFormat('dd MMM yyyy').format(_range.end)}';
+    // Ay adı arayüz dilinde: locale'siz `DateFormat` sistem diline bağlanıp
+    // Türkçe arayüzde "Sep" yazabiliyordu.
+    final format =
+        DateFormat.yMMMd(Localizations.localeOf(context).toLanguageTag());
+    final rangeLabel =
+        '${format.format(_range.start)} – ${format.format(_range.end)}';
     await getIt<CsvService>().exportTransactionsToCSV(
       filtered,
       shareText: '${context.l10n.islemRaporu} ($rangeLabel)',
@@ -713,6 +723,23 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
         }
       }
     }
+
+    // Dönemde hiç harcaması olmayan bütçe kırılımda yer almaz. Eskiden
+    // dokunuş burada SESSİZCE boşa gidiyordu (satır düğme gibi görünüyor,
+    // hiçbir şey olmuyor). Başlıklı, boş bir detay açılır: kullanıcı
+    // bütçenin adını, limitini ve "işlem yok" bilgisini görür; dönem içinde
+    // bir harcama eklenirse detay canlı olarak dolar.
+    _openCategoryDetails(
+      CategoryData(
+        status.categoryId,
+        0,
+        const [],
+        ReportCategoryPalette
+            .colors[ReportCategoryPalette.preferredIndex(status.categoryId)],
+      ),
+      true,
+      ReportSliceMode.full,
+    );
   }
 
   /// "En çok harcanan yer" satırına dokunmak o gruptaki işlemleri listeler.
@@ -740,6 +767,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       categoryIcons: _categoryIcons,
       categoryLabels: _categoryLabels,
       dataBuilder: _dataBuilder(context),
+      sourceOf: (all) => _analysisSource(_forWallet(all)),
     );
   }
 
@@ -855,106 +883,124 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (filteredTransactions.isEmpty) ...[
-                        _buildEmptyState(
-                          context,
-                          message: context.l10n.msgSecilenTarihAraligindaIslem,
-                        ),
+                        _periodEmptyCard(context, transactions),
                       ] else ...[
-                        ReportSummaryCards(
-                          totals: totals,
-                          previousTotals: previousTotals,
-                        ),
-                        // Kart yalnız dönemde kuplaj hareketi VARKEN çizilir;
-                        // yoksa hiçbir şeyi açıklamayan bir anahtar yer kaplardı.
-                        if (linkedCards.isNotEmpty) ...[
-                          const SizedBox(height: 12),
-                          ReportCardsToggle(
-                            included: _includeCards,
-                            cardCount: linkedCards.length,
-                            onChanged: _setIncludeCards,
-                          ),
-                        ],
-                        if (split.system.isNotEmpty) ...[
-                          const SizedBox(height: 12),
-                          ReportSystemMovementsToggle(
-                            included: _includeSystemMovements,
-                            count: split.system.length,
-                            onChanged: (v) =>
-                                setState(() => _includeSystemMovements = v),
-                          ),
-                        ],
-                        const SizedBox(height: 24),
-                        ReportSectionHeader(
-                          title: context.l10n.kategoriDagilimi,
-                          trailing: FinanceModeSegment(
-                            currentMode: _categoryMode,
-                            onModeChanged: (m) =>
-                                setState(() => _categoryMode = m),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        if (isCompare)
-                          ReportCompareChartCard(
-                            incomeSlices: derived.incomeRanked,
-                            expenseSlices: derived.expenseRanked,
-                            categoryLabels: _categoryLabels,
-                            // Bütçeler varsayılan modda GÖRÜNMÜYORDU: ilerleme
-                            // çubukları yalnız tek taraflı pasta kartına
-                            // geçiriliyordu, oysa açılış modu karşılaştırma.
-                            budgetProgressFor: dataBuilder.budgetProgressFor,
-                            onSliceTap: (slice, isExpense) =>
-                                _openCategoryDetails(
-                                    slice, isExpense, ReportSliceMode.ranked),
+                        // Dönemde kayıt var ama gelir–gider evreni BOŞ (yalnız
+                        // para taşıma hareketi ya da harcamalar kartlarda):
+                        // 0/0 özet, "↓%100" rozeti ve boş eksenli grafik yerine
+                        // nedeni ve bir sonraki adımı söyleyen kart. Bakiye
+                        // çizgisi aşağıda yine çizilir — orada hareket var.
+                        if (totals.totalIncome == 0 &&
+                            totals.totalExpense == 0)
+                          _noFlowCard(
+                            context,
+                            transactions,
+                            movedCount: split.system.length,
+                            hasCards: linkedCards.isNotEmpty,
                           )
-                        else if (_categoryMode == FinanceMode.expense)
-                          ReportCategoryChartCard(
-                            title: context.l10n.reportExpensesTitle,
-                            fullData: expenseFull,
-                            pieData: expensePie,
-                            isExpense: true,
-                            showBarChart: _showExpenseBarChart,
-                            onToggleBarChart: (v) =>
-                                setState(() => _showExpenseBarChart = v),
-                            onCategoryTap: (cat, mode) =>
-                                _openCategoryDetails(cat, true, mode),
-                            budgetProgressFor: dataBuilder.budgetProgressFor,
-                            categoryLabels: _categoryLabels,
-                          )
-                        else
-                          ReportCategoryChartCard(
-                            title: context.l10n.reportIncomesTitle,
-                            fullData: incomeFull,
-                            pieData: incomePie,
-                            isExpense: false,
-                            showBarChart: _showIncomeBarChart,
-                            onToggleBarChart: (v) =>
-                                setState(() => _showIncomeBarChart = v),
-                            onCategoryTap: (cat, mode) =>
-                                _openCategoryDetails(cat, false, mode),
-                            budgetProgressFor: dataBuilder.budgetProgressFor,
-                            categoryLabels: _categoryLabels,
+                        else ...[
+                          ReportSummaryCards(
+                            totals: totals,
+                            previousTotals: previousTotals,
                           ),
-                        // ── ürün önceliğine göre sıra ────────────────────────
-                        // Ölçüldü: sayfa 360×800'de 2.761dp'ye (3,5 ekran)
-                        // çıkmıştı ve uygulamanın ASIL sorusu olan kategori
-                        // dağılımı 1507dp'de, iki ekran aşağıdaydı. Sıra artık
-                        // kullanıcının sorduğu sırayla: ne oldu → nereye gitti →
-                        // bütçeyi aştım mı → eğilim ne → tam olarak nereye.
-                        // Koşul BÜTÇE VARLIĞINA bakar, durum listesine değil:
-                        // aralık bir ay olmadığında liste boş döner ama bölüm
-                        // kaybolmamalı — kullanıcı bütçelerini silinmiş sanır.
-                        // Kart o durumda sebebini yazar.
-                        if (_budgets.isNotEmpty) ...[
+                          // Anahtar yalnız bu hesaba bağlı kart VARKEN çizilir;
+                          // yoksa hiçbir şeyi açıklamayan bir anahtar yer kaplardı.
+                          if (linkedCards.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            ReportCardsToggle(
+                              included: _includeCards,
+                              cardCount: linkedCards.length,
+                              onChanged: _setIncludeCards,
+                            ),
+                          ],
+                          if (split.system.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            ReportSystemMovementsToggle(
+                              included: _includeSystemMovements,
+                              count: split.system.length,
+                              onChanged: (v) =>
+                                  setState(() => _includeSystemMovements = v),
+                            ),
+                          ],
                           const SizedBox(height: 24),
                           ReportSectionHeader(
-                              title: context.l10n.reportBudgetSummaryTitle),
-                          const SizedBox(height: 12),
-                          ReportBudgetSummaryCard(
-                            statuses: derived.budgetStatuses,
-                            monthScoped:
-                                DateRangeHelper.isSingleCalendarMonth(_range),
-                            onTap: _openBudgetCategory,
+                            title: context.l10n.kategoriDagilimi,
+                            trailing: FinanceModeSegment(
+                              currentMode: _categoryMode,
+                              onModeChanged: (m) =>
+                                  setState(() => _categoryMode = m),
+                            ),
                           ),
+                          const SizedBox(height: 12),
+                          if (isCompare)
+                            ReportCompareChartCard(
+                              incomeSlices: derived.incomeRanked,
+                              expenseSlices: derived.expenseRanked,
+                              categoryLabels: _categoryLabels,
+                              // Bütçeler varsayılan modda GÖRÜNMÜYORDU: ilerleme
+                              // çubukları yalnız tek taraflı pasta kartına
+                              // geçiriliyordu, oysa açılış modu karşılaştırma.
+                              budgetProgressFor: dataBuilder.budgetProgressFor,
+                              onSliceTap: (slice, isExpense) =>
+                                  _openCategoryDetails(
+                                      slice, isExpense, ReportSliceMode.ranked),
+                            )
+                          else if (_categoryMode == FinanceMode.expense)
+                            ReportCategoryChartCard(
+                              title: context.l10n.reportExpensesTitle,
+                              fullData: expenseFull,
+                              pieData: expensePie,
+                              isExpense: true,
+                              showBarChart: _showExpenseBarChart,
+                              onToggleBarChart: (v) =>
+                                  setState(() => _showExpenseBarChart = v),
+                              onCategoryTap: (cat, mode) =>
+                                  _openCategoryDetails(cat, true, mode),
+                              budgetProgressFor: dataBuilder.budgetProgressFor,
+                              categoryLabels: _categoryLabels,
+                            )
+                          else
+                            ReportCategoryChartCard(
+                              title: context.l10n.reportIncomesTitle,
+                              fullData: incomeFull,
+                              pieData: incomePie,
+                              isExpense: false,
+                              showBarChart: _showIncomeBarChart,
+                              onToggleBarChart: (v) =>
+                                  setState(() => _showIncomeBarChart = v),
+                              onCategoryTap: (cat, mode) =>
+                                  _openCategoryDetails(cat, false, mode),
+                              budgetProgressFor: dataBuilder.budgetProgressFor,
+                              categoryLabels: _categoryLabels,
+                            ),
+                          // ── ürün önceliğine göre sıra ────────────────────────
+                          // Ölçüldü: sayfa 360×800'de 2.761dp'ye (3,5 ekran)
+                          // çıkmıştı ve uygulamanın ASIL sorusu olan kategori
+                          // dağılımı 1507dp'de, iki ekran aşağıdaydı. Sıra artık
+                          // kullanıcının sorduğu sırayla: ne oldu → nereye gitti →
+                          // bütçeyi aştım mı → eğilim ne → tam olarak nereye.
+                          // Koşul BÜTÇE VARLIĞINA bakar, durum listesine değil:
+                          // aralık bir ay olmadığında liste boş döner ama bölüm
+                          // kaybolmamalı — kullanıcı bütçelerini silinmiş sanır.
+                          // Kart o durumda sebebini yazar.
+                          // Ay dışı aralıkta liste boştur ama kart sebebini
+                          // yazar; ay içinde liste boşsa (tüm limitler 0) kart
+                          // hiçbir şey çizmez — başlık da yetim kalmamalı.
+                          if (_budgets.isNotEmpty &&
+                              (derived.budgetStatuses.isNotEmpty ||
+                                  !DateRangeHelper.isSingleCalendarMonth(
+                                      _range))) ...[
+                            const SizedBox(height: 24),
+                            ReportSectionHeader(
+                                title: context.l10n.reportBudgetSummaryTitle),
+                            const SizedBox(height: 12),
+                            ReportBudgetSummaryCard(
+                              statuses: derived.budgetStatuses,
+                              monthScoped:
+                                  DateRangeHelper.isSingleCalendarMonth(_range),
+                              onTap: _openBudgetCategory,
+                            ),
+                          ],
                         ],
                         // Dönem içi seyir: akış çubukları ve bakiye çizgisi
                         // AYNI kartta, aynı zaman ekseninde (bkz.
@@ -1015,6 +1061,76 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
           );
         },
       ),
+    );
+  }
+
+  /// Seçili dönemin dışındaki en yakın HAREKETLİ döneme götüren eylem.
+  ///
+  /// Hareket, sayfanın gösterdiği evrende aranır (kuplaj anahtarı ve kartlar
+  /// dahil): yalnız transfer olan bir aya götürmek kullanıcıyı aynı boş
+  /// karta bırakırdı. Hedef, oklarla ulaşılan hizadadır
+  /// ([periodContainingDay]).
+  AnalysisEmptyAction? _jumpAction(
+      BuildContext context, List<TransactionEntity> account) {
+    final day = nearestDayOutside(
+      _universeOf(_analysisSource(account)).map((t) => t.date),
+      _range,
+    );
+    if (day == null) return null;
+    final target = periodContainingDay(_range, day);
+    return (
+      label: context.l10n
+          .analysisJumpToPeriod(periodLabel(target, context.l10n)),
+      onTap: () => setState(() {
+            _range = target;
+            _hasUserPickedRange = true;
+            _unitOverride = null;
+          }),
+    );
+  }
+
+  Widget _periodEmptyCard(
+      BuildContext context, List<TransactionEntity> account) {
+    final jump = _jumpAction(context, account);
+    return AnalysisEmptyCard(
+      icon: Icons.event_busy_rounded,
+      title: context.l10n.msgSecilenTarihAraligindaIslem,
+      lines: [context.l10n.analysisPeriodEmptyBody],
+      actions: [if (jump != null) jump],
+    );
+  }
+
+  Widget _noFlowCard(
+    BuildContext context,
+    List<TransactionEntity> account, {
+    required int movedCount,
+    required bool hasCards,
+  }) {
+    final l10n = context.l10n;
+    final offerCards = hasCards && !_includeCards;
+    final offerMoved = movedCount > 0 && !_includeSystemMovements;
+    final jump = _jumpAction(context, account);
+    return AnalysisEmptyCard(
+      icon: Icons.swap_horiz_rounded,
+      title: l10n.analysisNoFlowTitle,
+      lines: [
+        if (movedCount > 0) l10n.analysisNoFlowMoved(movedCount),
+        if (offerCards) l10n.analysisNoFlowCards,
+      ],
+      actions: [
+        // Kart önce: bu durumun en sık sebebi harcamanın kartta olması.
+        if (offerCards)
+          (
+            label: l10n.analysisIncludeCards,
+            onTap: () => _setIncludeCards(true),
+          ),
+        if (offerMoved)
+          (
+            label: l10n.analysisIncludeMoved,
+            onTap: () => setState(() => _includeSystemMovements = true),
+          ),
+        if (jump != null) jump,
+      ],
     );
   }
 

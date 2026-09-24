@@ -2333,7 +2333,7 @@
     }
   },
   "reportSystemMovementsHint": "Cüzdanlar arası transfer, borç ödemesi ve yatırım alım/satımı harcama değildir: para harcanmaz, yalnızca yer değiştirir. Bakiye çizgisi bunları her zaman içerir.",
-  "reportShareTooltip": "Raporu paylaş",
+  "reportShareTooltip": "İşlemleri CSV olarak paylaş",
   "reportNoIncomeForRate": "Bu dönemde gelir yok",
   "reportViewPie": "Pasta görünümü",
   "reportViewBars": "Çubuk görünümü",
@@ -3297,5 +3297,26 @@
         "type": "int"
       }
     }
-  }
+  },
+  "analysisNoFlowTitle": "Bu dönemde gelir ya da gider yok",
+  "analysisNoFlowMoved": "{count} para taşıma hareketi var (transfer, borç, yatırım). Bunlar gelir–gidere sayılmaz.",
+  "@analysisNoFlowMoved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "analysisNoFlowCards": "Kart harcamaları ayrı tutuluyor.",
+  "analysisIncludeMoved": "Para taşımayı dahil et",
+  "analysisIncludeCards": "Kartları dahil et",
+  "analysisJumpToPeriod": "{period} dönemine git",
+  "@analysisJumpToPeriod": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "analysisPeriodEmptyBody": "Bu aralıkta kayıt yok. Başka bir döneme geçebilirsin."
 }

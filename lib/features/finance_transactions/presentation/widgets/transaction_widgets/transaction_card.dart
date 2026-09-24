@@ -1,9 +1,10 @@
-import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/shared/widgets/money_text.dart';
 import 'package:cunehat/features/coupling/presentation/link_transaction_flow.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/single_transaction_detail_page.dart';
@@ -124,7 +125,11 @@ class TransactionCard extends StatelessWidget {
     final t = item.transaction;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final accent = t.isIncome ? AppGradients.savings : AppGradients.debt;
+    // Para taşıma (transfer, kart ödemesi, borç, yatırım) NÖTR: hiçbir
+    // toplamda gider sayılmıyor ama eskiden gider kırmızısı ve ↓ okuyla
+    // çiziliyordu (bkz. [MoneyColors]).
+    final moved = !isSpendingMovement(t);
+    final accent = MoneyColors.of(t, theme.brightness);
 
     return AppCard(
       accent: accent,
@@ -154,9 +159,11 @@ class TransactionCard extends StatelessWidget {
                 ),
                 child: Icon(
                   categoryIcon ??
-                      (t.isIncome
-                          ? Icons.arrow_upward_rounded
-                          : Icons.arrow_downward_rounded),
+                      (moved
+                          ? Icons.swap_horiz_rounded
+                          : t.isIncome
+                              ? Icons.arrow_upward_rounded
+                              : Icons.arrow_downward_rounded),
                   color: accent,
                   size: 18,
                 ),

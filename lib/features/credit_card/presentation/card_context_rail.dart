@@ -9,7 +9,7 @@ import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
-import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/features/credit_card/presentation/card_pay_sheet.dart';
 import 'package:cunehat/features/credit_card/presentation/card_statement_sheet.dart';
 import 'package:cunehat/features/credit_card/presentation/card_status.dart';
@@ -269,7 +269,7 @@ class _CardStrip extends StatelessWidget {
                               Text(
                                 status == null
                                     ? '…'
-                                    : '${guessed ? '≈ ' : ''}${formatMoney(status.remainingStatementDebt, currency: card.currency)}',
+                                    : '${guessed ? '≈ ' : ''}${MoneyWriter(currency: card.currency, visible: context.amountsVisible)(status.remainingStatementDebt)}',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
@@ -412,8 +412,12 @@ class _DueBand extends StatelessWidget {
                   ),
                   CardDueChip(status: status),
                   Text(
-                    formatMoney(status.remainingStatementDebt,
-                        currency: card.currency),
+                    // Göz düğmesi bu tutarı da gizlemeli: `formatMoney`
+                    // doğrudan çağrılınca şerit gizliyken açık kalıyordu.
+                    MoneyWriter(
+                      currency: card.currency,
+                      visible: context.amountsVisible,
+                    )(status.remainingStatementDebt),
                     style: TextStyle(fontWeight: FontWeight.w900, color: tone),
                   ),
                 ],

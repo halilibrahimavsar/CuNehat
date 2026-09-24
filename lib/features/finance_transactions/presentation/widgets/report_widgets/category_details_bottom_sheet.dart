@@ -2,6 +2,7 @@ import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
@@ -30,6 +31,16 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
   /// `tag` → görünen ad; kırılım anahtarı hep tag kalır (bkz. chart card).
   final Map<String, String> categoryLabels;
 
+  /// Bloc'un ham listesini SAYFANIN analiz kaynağına çevirir (cüzdan süzgeci,
+  /// "kartları dahil et" açıkken katılan kart harcamaları).
+  ///
+  /// Bu kanca yokken sayfa kırılımı kartlar DAHİL hesaplıyor, bu sayfa ise
+  /// yalnız hesabın defterinden: kart harcaması olan bir dilime dokunmak kart
+  /// satırlarını göstermiyor, yalnız kartta olan kategori "işlem yok"
+  /// diyordu — kuplaj anahtarındaki iki-evren hatasının aynısı (bkz.
+  /// [ReportCategoryDataBuilder.includeSystemMovements]).
+  final List<TransactionEntity> Function(List<TransactionEntity> all) sourceOf;
+
   const CategoryDetailsBottomSheet({
     super.key,
     required this.initialCategory,
@@ -37,6 +48,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
     required this.sliceMode,
     required this.categoryIcons,
     required this.dataBuilder,
+    required this.sourceOf,
     this.categoryLabels = const {},
   });
 
@@ -47,6 +59,8 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
     required ReportSliceMode sliceMode,
     required Map<String, IconData> categoryIcons,
     required ReportCategoryDataBuilder dataBuilder,
+    required List<TransactionEntity> Function(List<TransactionEntity> all)
+        sourceOf,
     Map<String, String> categoryLabels = const {},
   }) {
     // Modal route sayfanın provider'ının altında değil, Overlay'de kardeşi
@@ -66,6 +80,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
             sliceMode: sliceMode,
             categoryIcons: categoryIcons,
             dataBuilder: dataBuilder,
+            sourceOf: sourceOf,
             categoryLabels: categoryLabels,
           ),
         );
@@ -88,7 +103,8 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
         // hesaplıyordu — yüzde eşiği kayınca sayfada duran dilim burada
         // "Diğer"e katlanıyor ve liste boş çıkıyordu
         // (bkz. [ReportCategoryDataBuilder.includeSystemMovements]).
-        final universe = dataBuilder.universeIn(state.currentTransactions);
+        final universe =
+            dataBuilder.universeIn(sourceOf(state.currentTransactions));
         final fullList =
             dataBuilder.buildFull(universe, isExpense: isExpense);
         final categoryDataList = switch (sliceMode) {

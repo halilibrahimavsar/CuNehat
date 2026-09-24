@@ -207,4 +207,61 @@ void main() {
       expect(days.map((d) => d.day).toSet(), hasLength(31));
     });
   });
+
+  group('periodContainingDay', () {
+    test('ay aralığı hedef günün takvim ayına oturur', () {
+      final r = periodContainingDay(
+          monthRangeOf(DateTime(2026, 9, 1)), DateTime(2026, 8, 25, 14));
+      expect(r.start, DateTime(2026, 8, 1));
+      expect(isSameDayValue(r.end, DateTime(2026, 8, 31)), isTrue);
+    });
+
+    test('özel aralık oklarla ulaşılan BİTİŞİK pencereye oturur', () {
+      // 10 günlük pencere; 25 gün geride bir gün → üç adım geri.
+      final range = DateTimeRange(
+          start: DateTime(2026, 9, 11), end: DateTime(2026, 9, 20, 23, 59, 59));
+      final r = periodContainingDay(range, DateTime(2026, 8, 17));
+      expect(r.start, DateTime(2026, 8, 12));
+      expect(isSameDayValue(r.end, DateTime(2026, 8, 21)), isTrue);
+    });
+
+    test('gün zaten içerideyse aralık değişmez', () {
+      final range = monthRangeOf(DateTime(2026, 9, 1));
+      expect(periodContainingDay(range, DateTime(2026, 9, 15)), range);
+    });
+
+    test('ileri tarih de bulunur', () {
+      final r = periodContainingDay(
+          monthRangeOf(DateTime(2026, 9, 1)), DateTime(2026, 11, 2));
+      expect(r.start, DateTime(2026, 11, 1));
+    });
+  });
+
+  group('nearestDayOutside', () {
+    final sept = monthRangeOf(DateTime(2026, 9, 1));
+
+    test('önce aralıktan ÖNCEKİ en geç gün', () {
+      expect(
+        nearestDayOutside([
+          DateTime(2026, 7, 3),
+          DateTime(2026, 8, 25, 18),
+          DateTime(2026, 10, 1),
+          DateTime(2026, 9, 5),
+        ], sept),
+        DateTime(2026, 8, 25),
+      );
+    });
+
+    test('öncesi yoksa sonraki en erken gün', () {
+      expect(
+        nearestDayOutside([DateTime(2026, 12, 1), DateTime(2026, 10, 9)], sept),
+        DateTime(2026, 10, 9),
+      );
+    });
+
+    test('dışarıda gün yoksa null', () {
+      expect(nearestDayOutside([DateTime(2026, 9, 5)], sept), isNull);
+      expect(nearestDayOutside(const [], sept), isNull);
+    });
+  });
 }

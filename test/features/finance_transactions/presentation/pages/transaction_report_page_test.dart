@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/core/services/budgets_changed_notifier.dart';
+import 'package:cunehat/core/services/csv_service.dart';
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/config/di/injection.dart';
@@ -20,6 +21,9 @@ import 'package:cunehat/features/finance_transactions/presentation/pages/transac
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_compare_chart_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_summary_cards.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_budget_summary_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/category_details_bottom_sheet.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_daily_net_flow_chart.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_period_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
@@ -51,6 +55,8 @@ class _MockWalletBloc extends MockBloc<WalletEvent, WalletState>
     implements WalletBloc {}
 
 class _MockTxRepo extends Mock implements TransactionsRepository {}
+
+class _MockCsvService extends Mock implements CsvService {}
 
 void main() {
   // Para metni Intl.defaultLocale'e bakar; testte boş bırakılırsa intl onu
@@ -590,6 +596,83 @@ void main() {
       ];
     }
 
+    group('dönemde YALNIZ para taşıma hareketi varken', () {
+      /// Bu ay yalnız bir kart ödemesi (transfer); geçen ay gerçek harcama.
+      List<TransactionEntity> onlyMoved() {
+        final now = DateTime.now();
+        return [
+          TransactionEntity(
+            id: 'tx_transfer',
+            userId: 'user_123',
+            walletId: 'wallet_123',
+            title: 'Kart ödemesi',
+            tag: CashMovementTags.transfer,
+            amount: 2500,
+            date: DateTime(now.year, now.month, 1, 12),
+            type: TransactionTypeModel.expense,
+            isSystem: true,
+          ),
+          TransactionEntity(
+            id: 'tx_old',
+            userId: 'user_123',
+            walletId: 'wallet_123',
+            title: 'Market',
+            tag: 'Food',
+            amount: 300,
+            date: DateTime(now.year, now.month - 1, 10, 12),
+            type: TransactionTypeModel.expense,
+          ),
+        ];
+      }
+
+      Future<void> pump(WidgetTester tester) async {
+        tester.view.physicalSize = const Size(1080, 2400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        when(() => mockTransactionBloc.state).thenReturn(TransactionLoaded(
+            groupedTransactions: const {}, allTransactions: onlyMoved()));
+        await tester.pumpWidget(buildTestableWidget(
+          const TransactionReportPage(
+              userId: 'user_123', walletId: 'wallet_123'),
+        ));
+        await tester.pumpAndSettle();
+      }
+
+      testWidgets(
+          'REGRESYON: 0/0 özet ve "↓%100" yerine nedeni söyleyen kart çizilir',
+          (tester) async {
+        await pump(tester);
+        // Eskiden: Gelir 0, Gider 0, "↓%100 önceki döneme göre" ve boş
+        // eksenli karşılaştırma grafiği ("İki çubuk aynı ölçekte").
+        expect(find.byType(ReportSummaryCards), findsNothing);
+        expect(find.byType(ReportCompareChartCard), findsNothing);
+        expect(find.text('Bu dönemde gelir ya da gider yok'), findsOneWidget);
+        expect(find.textContaining('1 para taşıma hareketi var'),
+            findsOneWidget);
+      });
+
+      testWidgets('"Para taşımayı dahil et" normal rapora döner',
+          (tester) async {
+        await pump(tester);
+        await tester.tap(find.text('Para taşımayı dahil et'));
+        await tester.pumpAndSettle();
+        expect(find.byType(ReportSummaryCards), findsOneWidget);
+        expect(find.text('2.500,00 ₺'), findsWidgets);
+      });
+
+      testWidgets('"… dönemine git" son HAREKETLİ aya götürür', (tester) async {
+        await pump(tester);
+        final now = DateTime.now();
+        final previous =
+            DateFormat.yMMMM('tr').format(DateTime(now.year, now.month - 1));
+        await tester.tap(find.text('$previous dönemine git'));
+        await tester.pumpAndSettle();
+        expect(find.text(previous), findsOneWidget);
+        expect(find.byType(ReportSummaryCards), findsOneWidget);
+        expect(find.text('300,00 ₺'), findsWidgets);
+      });
+    });
+
     testWidgets('REGRESYON: transfer varsayılan olarak GİDERE sayılmaz',
         (tester) async {
       final txs = withTransfer();
@@ -817,6 +900,51 @@ void main() {
         ),
         findsOneWidget,
       );
+    });
+
+    testWidgets(
+        'REGRESYON: harcaması olmayan bütçe satırı dokununca detay AÇAR',
+        (tester) async {
+      tester.view.physicalSize = const Size(1080, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      when(() => mockBudgetRepository.getBudgets(any())).thenAnswer(
+        (_) async => const Right<Failure, List<BudgetEntity>>([
+          BudgetEntity(categoryId: 'Rent', limitAmount: 2000),
+        ]),
+      );
+      when(() => mockTransactionBloc.state).thenReturn(
+        TransactionLoaded(groupedTransactions: {}, allTransactions: withFood()),
+      );
+      await tester.pumpWidget(buildTestableWidget(
+        const TransactionReportPage(userId: 'user_123', walletId: 'wallet_123'),
+      ));
+      await tester.pumpAndSettle();
+
+      // Eskiden dokunuş sessizce boşa gidiyordu: kırılımda karşılığı yok.
+      await tester.tap(find.descendant(
+        of: find.byType(ReportBudgetSummaryCard),
+        matching: find.text('Rent'),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.byType(CategoryDetailsBottomSheet), findsOneWidget);
+    });
+
+    testWidgets('tüm limitler 0 iken bütçe başlığı YETİM kalmaz',
+        (tester) async {
+      when(() => mockBudgetRepository.getBudgets(any())).thenAnswer(
+        (_) async => const Right<Failure, List<BudgetEntity>>([
+          BudgetEntity(categoryId: 'Food', limitAmount: 0),
+        ]),
+      );
+      when(() => mockTransactionBloc.state).thenReturn(
+        TransactionLoaded(groupedTransactions: {}, allTransactions: withFood()),
+      );
+      await tester.pumpWidget(buildTestableWidget(
+        const TransactionReportPage(userId: 'user_123', walletId: 'wallet_123'),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.text('Bütçe durumu'), findsNothing);
     });
 
     testWidgets('bütçe değişince rapor kendi kopyasını TAZELER',
@@ -1178,6 +1306,47 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('report-cards-toggle')));
       await tester.pumpAndSettle();
       expect(find.textContaining('700,00'), findsWidgets);
+    });
+
+    testWidgets('paylaşılan CSV anahtar açıkken kart satırlarını da içerir',
+        (tester) async {
+      final csv = _MockCsvService();
+      getIt.registerSingleton<CsvService>(csv);
+      when(() => csv.exportTransactionsToCSV(any(),
+          shareText: any(named: 'shareText'))).thenAnswer((_) async {});
+      await pumpWith(tester, withCard: true);
+      await tester.tap(find.byKey(const ValueKey('report-cards-toggle')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.ios_share_rounded));
+      await tester.pumpAndSettle();
+
+      final captured = verify(() => csv.exportTransactionsToCSV(
+            captureAny(),
+            shareText: captureAny(named: 'shareText'),
+          )).captured;
+      final rows = captured[0] as List<TransactionEntity>;
+      expect(rows.map((t) => t.id), containsAll(['b1', 'c1']));
+      // Ay adı arayüz dilinde (locale'siz DateFormat sistem diline düşüyordu).
+      final month = DateFormat.MMM('tr').format(DateTime.now());
+      expect(captured[1] as String, contains(month));
+    });
+
+    testWidgets(
+        'REGRESYON: anahtar açıkken kategori detayı kart satırlarını da listeler',
+        (tester) async {
+      await pumpWith(tester, withCard: true);
+      await tester.tap(find.byKey(const ValueKey('report-cards-toggle')));
+      await tester.pumpAndSettle();
+
+      // Dilim kartlar DAHİL hesaplanıyor; detay aynı evrenden gelmeli. Kanca
+      // yokken sayfa kendi hesabını hesabın defterinden yapıyor, kart
+      // satırı ("Kartla market") listede hiç görünmüyordu.
+      await tester.tap(find.text('Food').first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Kartla market'), findsOneWidget);
+      expect(find.text('Market'), findsOneWidget);
     });
   });
 }

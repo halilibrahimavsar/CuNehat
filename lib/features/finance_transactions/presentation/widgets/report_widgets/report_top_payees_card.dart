@@ -80,8 +80,23 @@ class ReportTopPayeesCard extends StatelessWidget {
       maxDepth: 1,
     );
 
+    // Kart "en çok HARCANAN yerler" diyor ve çubuk TUTARI çiziyor; motor ise
+    // ekstre içe aktarmanın ihtiyacına göre İŞLEM SAYISINA göre sıralıyor
+    // (orada sık tekrar eden başlık daha güvenilir bir öneri). Sayıya göre
+    // bırakılınca 4.193 ₺'lik yer 2.607 ₺'liğin altında duruyordu, [maxRows]
+    // kesimi seyrek ama büyük yeri listeden atıyordu ve çubuk oranı ilk
+    // gruba göre kurulduğu için 1'i aşabiliyordu. Sıralama burada, motorda
+    // DEĞİL: içe aktarma motorun sırasına bağlı.
+    final byAmount = [...groups]..sort((a, b) {
+        final byTotal = b.totalAmount.compareTo(a.totalAmount);
+        if (byTotal != 0) return byTotal;
+        final byCount = b.indexes.length.compareTo(a.indexes.length);
+        if (byCount != 0) return byCount;
+        return a.label.compareTo(b.label);
+      });
+
     return [
-      for (final g in groups.take(maxRows))
+      for (final g in byAmount.take(maxRows))
         (
           label: g.label,
           total: g.totalAmount,
