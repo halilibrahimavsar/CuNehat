@@ -101,6 +101,22 @@ class TransferService {
   }) =>
       roundToCents(amount * srcRateToTry / dstRateToTry);
 
+  /// Kaynak bacağın başlığı. Hedef bir kredi kartıysa "Kart ödemesi": iki
+  /// defterde de ne olduğu okunsun ("Transfer → Bonus" kartın borcunun
+  /// kapandığını söylemiyordu). Başlık yalnız gösterimdir — hiçbir kod onu
+  /// ayrıştırmaz (tür bilgisi `tag` + `linkedRecordId`'de).
+  static String outgoingTransferTitle(WalletEntity to) =>
+      to.isCreditCard ? 'Kart ödemesi → ${to.name}' : 'Transfer → ${to.name}';
+
+  /// Hedef bacağın başlığı; bkz. [outgoingTransferTitle].
+  static String incomingTransferTitle({
+    required WalletEntity from,
+    required WalletEntity to,
+  }) =>
+      to.isCreditCard
+          ? 'Kart ödemesi ← ${from.name}'
+          : 'Transfer ← ${from.name}';
+
   /// [date] verilmezse "şimdi". Geçmişte yapılmış bir para taşımasını
   /// kaydeden kullanıcıda iki bacak da bugüne düşüyordu: bakiye doğru çıkar
   /// ama her iki cüzdanın DÖNEM defteri yanlış aya yazılırdı.
@@ -132,7 +148,7 @@ class TransferService {
           userId: from.userId,
           amount: amount,
           isIncome: false,
-          title: 'Transfer → ${to.name}',
+          title: outgoingTransferTitle(to),
           tag: CashMovementTags.transfer,
           date: date,
           linkedRecordId: pairId,
@@ -148,7 +164,7 @@ class TransferService {
           userId: to.userId,
           amount: converted,
           isIncome: true,
-          title: 'Transfer ← ${from.name}',
+          title: incomingTransferTitle(from: from, to: to),
           tag: CashMovementTags.transfer,
           date: date,
           linkedRecordId: pairId,
@@ -252,8 +268,8 @@ class TransferService {
           amount: converted,
           isIncome: outgoing,
           title: outgoing
-              ? 'Transfer ← ${wallet.name}'
-              : 'Transfer → ${wallet.name}',
+              ? incomingTransferTitle(from: wallet, to: counterpart)
+              : outgoingTransferTitle(wallet),
           tag: CashMovementTags.transfer,
           date: transaction.date,
           linkedRecordId: pairId,

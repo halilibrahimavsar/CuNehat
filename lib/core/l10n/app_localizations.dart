@@ -9496,6 +9496,54 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Ekstreyi gir'**
   String get kkEkstreyiGir;
+
+  /// No description provided for @kkKartiOde.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartı öde'**
+  String get kkKartiOde;
+
+  /// No description provided for @kkBaskaTutar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başka tutar'**
+  String get kkBaskaTutar;
+
+  /// No description provided for @kkOdemeKaynagi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hangi hesaptan?'**
+  String get kkOdemeKaynagi;
+
+  /// No description provided for @kkOdemeSonrasi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödemeden sonra {name}: {amount}'**
+  String kkOdemeSonrasi(String name, String amount);
+
+  /// No description provided for @kkTutariOde.
+  ///
+  /// In tr, this message translates to:
+  /// **'{amount} öde'**
+  String kkTutariOde(String amount);
+
+  /// No description provided for @kkOdemeKaydedildi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart ödemesi kaydedildi'**
+  String get kkOdemeKaydedildi;
+
+  /// No description provided for @kkKartlarDusulunce.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart ödemeleri düşülünce: {amount}'**
+  String kkKartlarDusulunce(String amount);
+
+  /// No description provided for @kkKullanilabilirLimitSatiri.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kullanılabilir limit: {amount}'**
+  String kkKullanilabilirLimitSatiri(String amount);
 }
 
 class _AppLocalizationsDelegate

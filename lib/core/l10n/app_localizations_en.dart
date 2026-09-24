@@ -5445,4 +5445,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kkEkstreyiGir => 'Enter statement';
+
+  @override
+  String get kkKartiOde => 'Pay card';
+
+  @override
+  String get kkBaskaTutar => 'Other amount';
+
+  @override
+  String get kkOdemeKaynagi => 'Pay from';
+
+  @override
+  String kkOdemeSonrasi(String name, String amount) {
+    return '$name after payment: $amount';
+  }
+
+  @override
+  String kkTutariOde(String amount) {
+    return 'Pay $amount';
+  }
+
+  @override
+  String get kkOdemeKaydedildi => 'Card payment recorded';
+
+  @override
+  String kkKartlarDusulunce(String amount) {
+    return 'After card payments: $amount';
+  }
+
+  @override
+  String kkKullanilabilirLimitSatiri(String amount) {
+    return 'Available limit: $amount';
+  }
 }

@@ -4,7 +4,9 @@ import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/credit_card/presentation/card_statement_sheet.dart';
 import 'package:cunehat/features/credit_card/presentation/credit_card_setup_sheet.dart';
+import 'package:cunehat/core/services/transfer_service.dart';
 import 'package:cunehat/features/credit_card/presentation/card_context_rail.dart';
+import 'package:cunehat/features/credit_card/presentation/card_pay_sheet.dart';
 import 'package:cunehat/features/credit_card/presentation/credit_card_tile.dart';
 import 'package:cunehat/features/credit_card/presentation/wallet_card_stack.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
@@ -14,7 +16,6 @@ import 'package:cunehat/features/wallet/domain/card_cycle.dart';
 import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
-import 'package:cunehat/features/wallet/presentation/widgets/transfer_sheet.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -28,6 +29,8 @@ class _MockWalletBloc extends MockBloc<WalletEvent, WalletState>
     implements WalletBloc {}
 
 class _MockTxRepo extends Mock implements TransactionsRepository {}
+
+class _MockTransferService extends Mock implements TransferService {}
 
 WalletEntity _wallet(
   String id, {
@@ -58,7 +61,10 @@ void main() {
   late _MockWalletBloc bloc;
 
   // WalletEvent mühürlü: sahte alt sınıf yazılamaz, gerçek bir olay verilir.
-  setUpAll(() => registerFallbackValue(const GetWalletsEvent('u')));
+  setUpAll(() {
+    registerFallbackValue(const GetWalletsEvent('u'));
+    registerFallbackValue(_wallet('fallback'));
+  });
 
   setUp(() {
     Intl.defaultLocale = 'tr_TR';
@@ -374,10 +380,31 @@ void main() {
       await tester.tap(find.text(l10n.kkOde));
       await tester.pumpAndSettle();
 
-      final sheet = tester.widget<TransferSheet>(find.byType(TransferSheet));
-      expect(sheet.initialFrom.id, 'bank');
-      expect(sheet.initialTo?.id, 'card');
-      expect(sheet.amountSuggestions.single.amount, 500);
+      // Özel ödeme sayfası: kaynak kartın SAHİBİ, seçili seçenek kalan dönem
+      // borcu; onay transferi o tutarla karta yazar.
+      final sheet = tester.widget<CardPaySheet>(find.byType(CardPaySheet));
+      expect(sheet.payers.map((w) => w.id), ['bank']);
+      expect(find.text(l10n.kkTutariOde('500,00 ₺')), findsOneWidget);
+
+      final transfers = _MockTransferService();
+      getIt.registerSingleton<TransferService>(transfers);
+      when(() => transfers.transfer(
+                from: any(named: 'from'),
+                to: any(named: 'to'),
+                amount: any(named: 'amount'),
+              ))
+          .thenAnswer((_) async =>
+              const TransferOutcome.failure(TransferResult.failed));
+      await tester.tap(find.byKey(const ValueKey('pay-confirm')));
+      await tester.pumpAndSettle();
+      final call = verify(() => transfers.transfer(
+            from: captureAny(named: 'from'),
+            to: captureAny(named: 'to'),
+            amount: captureAny(named: 'amount'),
+          )).captured;
+      expect((call[0] as WalletEntity).id, 'bank');
+      expect((call[1] as WalletEntity).id, 'card');
+      expect(call[2], 500);
     });
 
     testWidgets('360dp genişlikte taşma yok', (tester) async {

@@ -3,6 +3,7 @@ import 'package:cunehat/core/services/transfer_service.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
+import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -255,6 +256,35 @@ void main() {
       expect(outcome.pairId, out.linkedRecordId);
       expect(outcome.adoptedLegs, 0);
     });
+  });
+
+  // Kart ödemesi iki defterde de "Kart ödemesi" olarak okunsun.
+  test('hedef KREDİ KARTIYSA bacak başlıkları "Kart ödemesi"', () async {
+    stubLegs();
+    final card = WalletEntity(
+      id: 'b',
+      userId: 'u',
+      name: 'Bonus',
+      balance: -500,
+      debt: 0,
+      credit: 0,
+      investment: 0,
+      colorHex: '0xFF37474F',
+      iconName: 'credit_card',
+      createdAt: DateTime(2026, 1, 1),
+      openingBalance: 0,
+      creditCard: const CreditCardInfo(closingDay: 15, dueDay: 25),
+    );
+    await service.transfer(from: wallet('a'), to: card, amount: 100);
+    expect(capturedFor('a').single.title, 'Kart ödemesi → Bonus');
+    expect(capturedFor('b').single.title, 'Kart ödemesi ← Wa');
+  });
+
+  test('düz cüzdanlar arasında başlık "Transfer" kalır', () async {
+    stubLegs();
+    await service.transfer(from: wallet('a'), to: wallet('b'), amount: 100);
+    expect(capturedFor('a').single.title, 'Transfer → Wb');
+    expect(capturedFor('b').single.title, 'Transfer ← Wa');
   });
 
   group('undoTransfer', () {

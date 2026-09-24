@@ -3,105 +3,19 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
-import 'package:cunehat/core/messaging/app_messenger.dart';
-import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/credit_card/presentation/card_pay_sheet.dart';
 import 'package:cunehat/features/credit_card/presentation/card_statement_sheet.dart';
+import 'package:cunehat/features/credit_card/presentation/card_status.dart';
 import 'package:cunehat/features/credit_card/presentation/credit_card_setup_sheet.dart';
 import 'package:cunehat/features/credit_card/presentation/mini_credit_card.dart';
-import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
-import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/wallet/domain/card_cycle.dart';
 import 'package:cunehat/features/wallet/domain/card_family.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
-import 'package:cunehat/features/wallet/presentation/widgets/transfer_sheet.dart';
-
-/// Kartın dönem durumunu defterden CANLI türetir: defter değişince (harcama,
-/// karta ödeme) ve bakiye değişince yeniden okur. [builder] ilk okuma
-/// bitene kadar `null` alır.
-class CardStatusBuilder extends StatefulWidget {
-  final WalletEntity card;
-
-  /// "Bugün" — test edilebilirlik için.
-  final DateTime? today;
-
-  final Widget Function(BuildContext context, CardStatus? status) builder;
-
-  const CardStatusBuilder({
-    super.key,
-    required this.card,
-    required this.builder,
-    this.today,
-  });
-
-  @override
-  State<CardStatusBuilder> createState() => _CardStatusBuilderState();
-}
-
-class _CardStatusBuilderState extends State<CardStatusBuilder> {
-  List<TransactionEntity>? _ledger;
-  StreamSubscription<TransactionsChange>? _changes;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-    if (getIt.isRegistered<TransactionsChangedNotifier>()) {
-      _changes = getIt<TransactionsChangedNotifier>().stream.listen((c) {
-        if (c.walletId == null || c.walletId == widget.card.id) _load();
-      });
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant CardStatusBuilder oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Başka kart ya da bakiye değişti (transfer, harcama) → defter de.
-    if (oldWidget.card.id != widget.card.id ||
-        oldWidget.card.balance != widget.card.balance) {
-      _load();
-    }
-  }
-
-  @override
-  void dispose() {
-    _changes?.cancel();
-    super.dispose();
-  }
-
-  Future<void> _load() async {
-    if (!getIt.isRegistered<TransactionsRepository>()) return;
-    final id = widget.card.id!;
-    final result = await getIt<TransactionsRepository>().getTransactions(
-      userId: widget.card.userId,
-      walletId: id,
-    );
-    // Okuma sürerken başka karta geçildiyse bayat defteri yazma.
-    if (!mounted || widget.card.id != id) return;
-    setState(() => _ledger = result.getOrElse(() => const []));
-  }
-
-  CardStatus? get _status {
-    final ledger = _ledger;
-    final info = widget.card.creditCard;
-    if (ledger == null || info == null) return null;
-    return computeCardStatus(
-      card: info,
-      openingBalance: widget.card.openingBalance,
-      walletCreatedAt: widget.card.createdAt,
-      ledger: ledger,
-      today: widget.today ?? DateTime.now(),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) => widget.builder(context, _status);
-}
 
 /// Son ödeme çipi: "5 gün kaldı" / "Son gün bugün" / "3 gün gecikti" /
 /// ödendiyse "Son ödeme: 14.10.2026". Son 3 gün turuncu, gecikme kırmızı.
@@ -367,48 +281,6 @@ class _LimitBar extends StatelessWidget {
       ),
     );
   }
-}
-
-/// "Öde": sahibinden (yoksa ilk düz cüzdandan) karta transfer; kalan dönem
-/// borcu ve kalan asgari tutar önerisi olarak.
-void payCreditCard(
-  BuildContext context, {
-  required WalletEntity card,
-  required List<WalletEntity> wallets,
-  required CardStatus status,
-}) {
-  final l10n = context.l10n;
-  final payers = [
-    for (final w in wallets)
-      if (w.id != null && w.id != card.id && !w.isCreditCard) w,
-  ];
-  if (payers.isEmpty) {
-    AppMessenger.info(l10n.kkOdemeIcinCuzdanYok);
-    return;
-  }
-  final owner = cardOwner(card, wallets);
-  final from = payers.firstWhere(
-    (w) => w.id == owner?.id,
-    orElse: () => payers.first,
-  );
-  TransferSheet.show(
-    context,
-    wallets: [...payers, card],
-    initialFrom: from,
-    initialTo: card,
-    amountSuggestions: [
-      if (status.remainingStatementDebt > 0)
-        TransferAmountSuggestion(
-          label: l10n.kkKalanDonemBorcu,
-          amount: status.remainingStatementDebt,
-        ),
-      if ((status.remainingMinimum ?? 0) > 0)
-        TransferAmountSuggestion(
-          label: l10n.kkKalanAsgari,
-          amount: status.remainingMinimum!,
-        ),
-    ],
-  );
 }
 
 /// Kart ayrıntı sayfası: üstte kartın kendisi, altında [CreditCardTile] ve

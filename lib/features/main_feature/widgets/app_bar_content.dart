@@ -11,7 +11,10 @@ import 'package:cunehat/core/utils/tr_case.dart';
 import 'package:cunehat/features/main_feature/utils/app_constants.dart';
 import 'package:cunehat/features/main_feature/widgets/wallet_headline.dart';
 import 'package:showcaseview/showcaseview.dart';
+import 'package:cunehat/core/config/feature_flags.dart';
+import 'package:cunehat/features/credit_card/presentation/card_status.dart';
 import 'package:cunehat/features/wallet/domain/card_family.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_managment.dart';
@@ -212,7 +215,11 @@ class _AppBarContentState extends State<AppBarContent> {
           value = account.investment;
           valueName = upperTr(context.l10n.drawerInvestment);
         case SliderState.transactions:
-          value = active.balance;
+          // Kart bağlamında eksi bakiye değil BORÇ dili: "3.700 ₺" borç
+          // (eksi işaretli büyük rakam "−3.700" bakiye gibi okunuyordu).
+          value = active.isCreditCard && active.id != account.id
+              ? -active.balance
+              : active.balance;
           valueName = upperTr(context.l10n.drawerBalance);
         case SliderState.debt:
           value = account.debt;
@@ -250,19 +257,73 @@ class _AppBarContentState extends State<AppBarContent> {
         },
         child: Container(
           color: AppColors.transparent,
-          child: WalletHeadline(
-            badgeLabel: st == SliderState.transactions
-                ? walletName
+          child: _headline(
+            context,
+            state: state,
+            st: st,
+            shown: shown,
+            account: account,
+            badge: st == SliderState.transactions
+                ? (shown != null && shown.id != account?.id
+                    ? '$walletName • ${upperTr(context.l10n.drawerDebt)}'
+                    : walletName)
                 : "$walletName • $valueName",
-            amount: value,
-            currency: shown?.currency ?? context.activeWalletCurrency,
-            badgeIcon: (shown?.isCreditCard ?? false)
-                ? Icons.credit_card_rounded
-                : Icons.wallet,
-            secondaryLine: _tryEquivalentLine(context, state, st, value),
+            value: value,
           ),
         ),
       ),
+    );
+  }
+
+  /// Başlık + ikincil satır. İkincil satırın önceliği:
+  /// 1. kart bağlamı → "Kullanılabilir limit …" (limit biliniyorsa);
+  /// 2. kartı olan hesap → "Kart ödemeleri düşülünce: …" (kalan dönem
+  ///    borçları; yalnız ödenecek bir şey varsa — defter okunur, canlı);
+  /// 3. döviz cüzdanı → TL karşılığı.
+  Widget _headline(
+    BuildContext context, {
+    required WalletLoadedSt state,
+    required SliderState st,
+    required WalletEntity? shown,
+    required WalletEntity? account,
+    required String badge,
+    required double value,
+  }) {
+    Widget build(String? line) => WalletHeadline(
+          badgeLabel: badge,
+          amount: value,
+          currency: shown?.currency ?? context.activeWalletCurrency,
+          badgeIcon: (shown?.isCreditCard ?? false)
+              ? Icons.credit_card_rounded
+              : Icons.wallet,
+          secondaryLine: line,
+        );
+    final fxLine = _tryEquivalentLine(context, state, st, value);
+    if (!FeatureFlags.creditCards ||
+        st != SliderState.transactions ||
+        shown == null) {
+      return build(fxLine);
+    }
+    if (shown.id != account?.id) {
+      final limit = shown.creditCard?.limit;
+      return build(limit == null
+          ? fxLine
+          : context.l10n.kkKullanilabilirLimitSatiri(
+              formatMoney(limit + shown.balance, currency: shown.currency)));
+    }
+    final cards = cardsOf(shown.id, state.wallets)
+        .where((c) => c.currency == shown.currency)
+        .toList();
+    if (cards.isEmpty) return build(fxLine);
+    return CardsStatusBuilder(
+      cards: cards,
+      builder: (context, statuses, _) {
+        final due = totalRemainingStatementDebt(statuses.values);
+        return build(due > 0
+            ? context.l10n.kkKartlarDusulunce(
+                formatMoney(shown.balance - due, currency: shown.currency))
+            : fxLine);
+      },
     );
   }
 

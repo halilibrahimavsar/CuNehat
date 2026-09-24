@@ -2917,5 +2917,13 @@
   "kkCuzdanKartliSilinemez": "{name} has {count} credit card(s). Delete them or move them to another wallet first.",
   "kkCuzdanaBagla": "Attach to a wallet",
   "kkKartEklendi": "Credit card added",
-  "kkEkstreyiGir": "Enter statement"
+  "kkEkstreyiGir": "Enter statement",
+  "kkKartiOde": "Pay card",
+  "kkBaskaTutar": "Other amount",
+  "kkOdemeKaynagi": "Pay from",
+  "kkOdemeSonrasi": "{name} after payment: {amount}",
+  "kkTutariOde": "Pay {amount}",
+  "kkOdemeKaydedildi": "Card payment recorded",
+  "kkKartlarDusulunce": "After card payments: {amount}",
+  "kkKullanilabilirLimitSatiri": "Available limit: {amount}"
 }

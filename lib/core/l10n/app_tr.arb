@@ -2988,5 +2988,44 @@
     }
   },
   "kkKartEklendi": "Kredi kartı eklendi",
-  "kkEkstreyiGir": "Ekstreyi gir"
+  "kkEkstreyiGir": "Ekstreyi gir",
+  "kkKartiOde": "Kartı öde",
+  "kkBaskaTutar": "Başka tutar",
+  "kkOdemeKaynagi": "Hangi hesaptan?",
+  "kkOdemeSonrasi": "Ödemeden sonra {name}: {amount}",
+  "kkTutariOde": "{amount} öde",
+  "kkOdemeKaydedildi": "Kart ödemesi kaydedildi",
+  "@kkOdemeSonrasi": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "@kkTutariOde": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "kkKartlarDusulunce": "Kart ödemeleri düşülünce: {amount}",
+  "kkKullanilabilirLimitSatiri": "Kullanılabilir limit: {amount}",
+  "@kkKartlarDusulunce": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "@kkKullanilabilirLimitSatiri": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

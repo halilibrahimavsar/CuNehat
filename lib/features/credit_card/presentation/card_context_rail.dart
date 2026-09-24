@@ -6,9 +6,12 @@ import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/credit_card/presentation/card_pay_sheet.dart';
 import 'package:cunehat/features/credit_card/presentation/card_statement_sheet.dart';
+import 'package:cunehat/features/credit_card/presentation/card_status.dart';
 import 'package:cunehat/features/credit_card/presentation/credit_card_tile.dart';
 import 'package:cunehat/features/credit_card/presentation/mini_credit_card.dart';
+import 'package:cunehat/features/wallet/domain/card_cycle.dart';
 import 'package:cunehat/features/wallet/domain/card_family.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
@@ -102,9 +105,10 @@ class CardContextRail extends StatelessWidget {
                 ),
               ),
               child: activeCard == null
-                  ? const SizedBox(
-                      key: ValueKey('ctx-strip-none'),
-                      width: double.infinity,
+                  ? _DueBands(
+                      key: const ValueKey('ctx-due-bands'),
+                      cards: cards,
+                      wallets: state.wallets,
                     )
                   : _CardStrip(
                       key: ValueKey('ctx-strip-${activeCard.id}'),
@@ -304,6 +308,111 @@ class _CardStrip extends StatelessWidget {
               },
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Hesap bağlamında yaklaşan kart ödemeleri: kalan dönem borcu olan ve son
+/// ödemesine [dueSoonDays] gün ya da daha az kalmış (veya gecikmiş) her kart
+/// için ince bir bant. Kullanıcı çoğu zaman kartta değil hesapta durur;
+/// son ödeme bilgisi yalnız kart bağlamında görünseydi kaçardı.
+class _DueBands extends StatelessWidget {
+  final List<WalletEntity> cards;
+  final List<WalletEntity> wallets;
+
+  const _DueBands({super.key, required this.cards, required this.wallets});
+
+  static const int dueSoonDays = 3;
+
+  @override
+  Widget build(BuildContext context) {
+    return CardsStatusBuilder(
+      cards: cards,
+      builder: (context, statuses, _) {
+        final due = [
+          for (final c in cards)
+            if (statuses[c.id] case final s?
+                when s.remainingStatementDebt > 0 &&
+                    (s.isOverdue || s.daysToDue <= dueSoonDays))
+              (card: c, status: s),
+        ];
+        if (due.isEmpty) return const SizedBox(width: double.infinity);
+        return Column(
+          children: [
+            for (final d in due)
+              _DueBand(
+                key: ValueKey('ctx-due-${d.card.id}'),
+                card: d.card,
+                status: d.status,
+                wallets: wallets,
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _DueBand extends StatelessWidget {
+  final WalletEntity card;
+  final CardStatus status;
+  final List<WalletEntity> wallets;
+
+  const _DueBand({
+    super.key,
+    required this.card,
+    required this.status,
+    required this.wallets,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tone = status.isOverdue ? cs.error : Colors.orange.shade800;
+    final last4 = card.creditCard?.last4;
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
+        decoration: BoxDecoration(
+          color: tone.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: tone.withValues(alpha: 0.35)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.event_rounded, size: 18, color: tone),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 2,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    last4 == null ? card.name : '${card.name} ••$last4',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  CardDueChip(status: status),
+                  Text(
+                    formatMoney(status.remainingStatementDebt,
+                        currency: card.currency),
+                    style: TextStyle(fontWeight: FontWeight.w900, color: tone),
+                  ),
+                ],
+              ),
+            ),
+            TextButton(
+              key: ValueKey('ctx-due-pay-${card.id}'),
+              onPressed: () => payCreditCard(context,
+                  card: card, wallets: wallets, status: status),
+              child: Text(context.l10n.kkOde),
+            ),
+          ],
         ),
       ),
     );

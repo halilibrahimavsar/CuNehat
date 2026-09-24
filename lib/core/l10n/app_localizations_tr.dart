@@ -5412,4 +5412,36 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get kkEkstreyiGir => 'Ekstreyi gir';
+
+  @override
+  String get kkKartiOde => 'Kartı öde';
+
+  @override
+  String get kkBaskaTutar => 'Başka tutar';
+
+  @override
+  String get kkOdemeKaynagi => 'Hangi hesaptan?';
+
+  @override
+  String kkOdemeSonrasi(String name, String amount) {
+    return 'Ödemeden sonra $name: $amount';
+  }
+
+  @override
+  String kkTutariOde(String amount) {
+    return '$amount öde';
+  }
+
+  @override
+  String get kkOdemeKaydedildi => 'Kart ödemesi kaydedildi';
+
+  @override
+  String kkKartlarDusulunce(String amount) {
+    return 'Kart ödemeleri düşülünce: $amount';
+  }
+
+  @override
+  String kkKullanilabilirLimitSatiri(String amount) {
+    return 'Kullanılabilir limit: $amount';
+  }
 }
