@@ -73,3 +73,26 @@ String familyLabel(WalletEntity wallet, Iterable<WalletEntity> all) {
   final owner = cardOwner(wallet, all);
   return owner == null ? wallet.name : '${owner.name} › ${wallet.name}';
 }
+
+/// Kartı olan kullanıcıda TL cinsinden net kırılım: hesaplar (kart olmayan
+/// cüzdanlar) − kart borçları. Genel toplam eskiden kart cüzdanlarının eksi
+/// bakiyesini SESSİZCE düşüyordu. Kart yoksa ya da bir kur eksikse `null`
+/// (yanıltıcı eksik toplam göstermeyiz). TL için kur sorulmaz.
+({double net, double accounts, double cardDebt})? netBreakdown(
+  Iterable<WalletEntity> wallets, {
+  required double? Function(String currency) rateToTry,
+}) {
+  if (!wallets.any((w) => w.isCreditCard)) return null;
+  var accounts = 0.0;
+  var cardDebt = 0.0;
+  for (final w in wallets) {
+    final rate = w.currency == 'TRY' ? 1.0 : rateToTry(w.currency);
+    if (rate == null) return null;
+    if (w.isCreditCard) {
+      cardDebt += -w.balance * rate;
+    } else {
+      accounts += w.balance * rate;
+    }
+  }
+  return (net: accounts - cardDebt, accounts: accounts, cardDebt: cardDebt);
+}

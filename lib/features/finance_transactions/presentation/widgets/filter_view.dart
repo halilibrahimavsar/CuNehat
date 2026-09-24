@@ -40,6 +40,9 @@ class FilterView extends StatefulWidget {
 
   final VoidCallback onClose;
 
+  /// Dönem etiketinin yerine geçer (kart bağlamında ekstre dönemi).
+  final String? periodLabel;
+
   /// Kategori çiplerinin kapsamı: yalnız bu cüzdanda görünür kalemler
   /// listelenir — defterin kendisi zaten cüzdana ait.
   final String walletId;
@@ -54,6 +57,7 @@ class FilterView extends StatefulWidget {
     required this.onPeriodStep,
     required this.onClearAll,
     required this.onClose,
+    this.periodLabel,
   });
 
   @override
@@ -160,6 +164,7 @@ class _FilterViewState extends State<FilterView> {
                   ),
                   onStep: widget.onPeriodStep,
                   onPick: widget.onDateTap,
+                  label: widget.periodLabel,
                 ),
                 const SizedBox(height: 24),
                 PriceRangeFilterSection(

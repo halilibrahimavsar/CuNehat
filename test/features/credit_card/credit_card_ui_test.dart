@@ -118,6 +118,8 @@ void main() {
 
       await tester.enterText(
           find.widgetWithText(TextFormField, l10n.kkKartAdi), 'Bonus');
+      await tester.tap(find.byKey(const ValueKey('kk-more-toggle')));
+      await tester.pumpAndSettle();
       await tester.enterText(
           find.widgetWithText(TextFormField, l10n.kkSon4), '5690');
       await tester.enterText(
@@ -229,6 +231,41 @@ void main() {
       expect(event.wallet.creditCard!.paymentWalletId, 'bank');
     });
 
+    testWidgets(
+        'yeni kart KISA açılır: banka/son 4/limit/son ekstre "daha fazla" '
+        'altında; ayarlarda hepsi açık', (tester) async {
+      tall(tester);
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      await tester.pumpWidget(app(CreditCardSetupSheet(
+        userId: 'u',
+        wallets: [_wallet('bank')],
+        defaultCurrency: 'TRY',
+        ownerWalletId: 'bank',
+      )));
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(TextFormField, l10n.kkSon4), findsNothing);
+      expect(find.widgetWithText(TextFormField, l10n.kkLimit), findsNothing);
+      expect(find.widgetWithText(TextFormField, l10n.kkGuncelBorc),
+          findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('kk-more-toggle')));
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(TextFormField, l10n.kkSon4), findsOneWidget);
+
+      final card = _wallet('c',
+          card: const CreditCardInfo(
+              closingDay: 15, dueDay: 25, paymentWalletId: 'bank'));
+      await tester.pumpWidget(app(CreditCardSetupSheet(
+        key: const ValueKey('edit'),
+        userId: 'u',
+        wallets: [_wallet('bank'), card],
+        wallet: card,
+        defaultCurrency: 'TRY',
+      )));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('kk-more-toggle')), findsNothing);
+      expect(find.widgetWithText(TextFormField, l10n.kkSon4), findsOneWidget);
+    });
+
     testWidgets('son 4 hane eksikse kaydedilmez', (tester) async {
       tall(tester);
       final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
@@ -240,6 +277,8 @@ void main() {
       )));
       await tester.enterText(
           find.widgetWithText(TextFormField, l10n.kkKartAdi), 'Bonus');
+      await tester.tap(find.byKey(const ValueKey('kk-more-toggle')));
+      await tester.pumpAndSettle();
       await tester.enterText(
           find.widgetWithText(TextFormField, l10n.kkSon4), '56');
       await tester.tap(find.text(l10n.kaydet));

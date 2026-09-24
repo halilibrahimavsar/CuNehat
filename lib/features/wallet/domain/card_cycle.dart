@@ -56,6 +56,21 @@ class CardCycle {
     return (start: nextDay(prev), end: end);
   }
 
+  /// [day]'i içeren ekstre dönemi (kesim günü dahil; kesim günü yapılan
+  /// harcama o ekstreye girer).
+  ({DateTime start, DateTime end}) periodContaining(DateTime day) {
+    final d = dateOnly(day);
+    final thisMonth = closingIn(d.year, d.month);
+    final end =
+        thisMonth.isBefore(d) ? closingIn(d.year, d.month + 1) : thisMonth;
+    return periodEndingAt(end);
+  }
+
+  /// [closing] kesiminden [step] ekstre ileri/geri kesim — ay sonu kenetlemesi
+  /// [closingIn]'de (kesim 31 → Şubat'ta 28/29, Mart'ta yine 31).
+  DateTime shiftClosing(DateTime closing, int step) =>
+      closingIn(closing.year, closing.month + step);
+
   static DateTime dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
   /// Ertesi günün başı. `add(Duration(days: 1))` yaz saati geçişinde 23 ya

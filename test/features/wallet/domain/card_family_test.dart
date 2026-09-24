@@ -69,4 +69,35 @@ void main() {
     expect(familyLabel(bonus, all), 'bank › bonus');
     expect(familyLabel(orphan, all), 'orphan');
   });
+
+  group('netBreakdown', () {
+    WalletEntity money(String id, double balance,
+            {String currency = 'TRY', bool card = false}) =>
+        _w(id, card: card).copyWith(balance: balance, currency: currency);
+
+    test('kart yoksa null (kırılım gösterilmez)', () {
+      expect(netBreakdown([money('a', 100)], rateToTry: (_) => null), isNull);
+    });
+
+    test('hesaplar − kart borçları; döviz TL\'ye çevrilir', () {
+      final b = netBreakdown([
+        money('a', 13000),
+        money('usd', 100, currency: 'USD'),
+        money('c', -3700, card: true),
+      ], rateToTry: (c) => c == 'USD' ? 40 : null)!;
+      expect(b.accounts, 17000);
+      expect(b.cardDebt, 3700);
+      expect(b.net, 13300);
+    });
+
+    test('kur eksikse null (eksik toplam yanıltır)', () {
+      expect(
+        netBreakdown([
+          money('usd', 100, currency: 'USD'),
+          money('c', -1, card: true),
+        ], rateToTry: (_) => null),
+        isNull,
+      );
+    });
+  });
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/config/feature_flags.dart';
 import 'package:cunehat/core/error/error_handling.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
@@ -36,6 +37,8 @@ import 'package:cunehat/features/finance_transactions/domain/entities/category_e
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:unified_flutter_features/unified_flutter_features.dart'
+    show IboDateRangeQuickOption;
 
 /// İşlemler ekranı — uygulamanın açılış yüzü.
 ///
@@ -124,6 +127,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
   @override
   void initState() {
     super.initState();
+    _syncStatementCycle();
     _loadData();
     _loadCategoryIcons();
     _categoriesSub = getIt<CategoriesChangedNotifier>()
@@ -171,6 +175,10 @@ class _TransactionsViewState extends State<_TransactionsView> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.wallet.id != widget.wallet.id) {
       _loadData();
+    }
+    if (oldWidget.wallet.id != widget.wallet.id ||
+        oldWidget.wallet.creditCard != widget.wallet.creditCard) {
+      _syncStatementCycle();
     }
   }
 
@@ -236,13 +244,47 @@ class _TransactionsViewState extends State<_TransactionsView> {
     return _summaries;
   }
 
+  /// Kart bağlamında dönem EKSTRE dönemidir (bkz.
+  /// [TransactionFilterCubit.useStatementCycle]); hesapta takvim ayı.
+  void _syncStatementCycle() {
+    context.read<TransactionFilterCubit>().useStatementCycle(
+        FeatureFlags.creditCards ? widget.wallet.creditCard : null);
+  }
+
+  /// Ekstre dönemindeyken "Ekstre · 16 Eyl – 15 Eki".
+  String? _statementLabel(TransactionFilterCubit cubit) {
+    if (!cubit.isStatementPeriod) return null;
+    return context.l10n
+        .kkEkstreDonemEtiketi(periodLabel(cubit.period, context.l10n));
+  }
+
   Future<void> _pickDateRange(BuildContext context) async {
     final cubit = context.read<TransactionFilterCubit>();
+    final l10n = context.l10n;
+    final current = cubit.currentStatementPeriod();
+    final cycle = cubit.statementCycle;
 
     final dateRange = await AppDateRangePicker.pick(
       context,
       initialDateRange: cubit.period,
-      quickOptions: DateRangeHelper.buildDateRangeQuickOptions(context.l10n),
+      quickOptions: [
+        // Kart bağlamında ekstre seçenekleri başta.
+        if (current != null && cycle != null) ...[
+          IboDateRangeQuickOption(label: l10n.kkBuEkstre, range: current),
+          IboDateRangeQuickOption(
+            label: l10n.kkOncekiEkstre,
+            range: () {
+              final p = cycle
+                  .periodEndingAt(cycle.shiftClosing(dayOf(current.end), -1));
+              return DateTimeRange(
+                start: p.start,
+                end: DateTime(p.end.year, p.end.month, p.end.day, 23, 59, 59),
+              );
+            }(),
+          ),
+        ],
+        ...DateRangeHelper.buildDateRangeQuickOptions(l10n),
+      ],
     );
 
     if (dateRange != null) cubit.setPeriod(dateRange);
@@ -297,6 +339,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
                       onPeriodStep: cubit.stepPeriod,
                       onClearAll: cubit.clearAll,
                       onClose: () => Navigator.pop(builderContext),
+                      periodLabel: _statementLabel(cubit),
                     ),
                   ),
                 ),
@@ -433,6 +476,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
                   const CardContextRail(),
                   TransactionTopBar(
                     filter: filterState,
+                    periodLabel: _statementLabel(cubit),
                     categoryLabels: _categoryLabels,
                     onModeChanged: cubit.setFinanceMode,
                     onPeriodStep: cubit.stepPeriod,

@@ -37,6 +37,9 @@ class TransactionTopBar extends StatelessWidget {
   final VoidCallback onClearSearch;
   final VoidCallback onClearAllFilters;
 
+  /// Dönem etiketinin yerine geçer (kart bağlamında ekstre dönemi).
+  final String? periodLabel;
+
   const TransactionTopBar({
     super.key,
     required this.filter,
@@ -49,6 +52,7 @@ class TransactionTopBar extends StatelessWidget {
     required this.onClearPriceRange,
     required this.onClearSearch,
     required this.onClearAllFilters,
+    this.periodLabel,
   });
 
   static const double _controlRow = 44;
@@ -91,6 +95,7 @@ class TransactionTopBar extends StatelessWidget {
                       ),
                       onStep: onPeriodStep,
                       onPick: onPeriodPick,
+                      label: periodLabel,
                     ),
                   ),
                   const SizedBox(width: 8),

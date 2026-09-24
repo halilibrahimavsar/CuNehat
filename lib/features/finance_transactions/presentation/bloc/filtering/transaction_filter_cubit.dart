@@ -1,6 +1,8 @@
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/transaction_period.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
+import 'package:cunehat/features/wallet/domain/card_cycle.dart';
+import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
@@ -14,6 +16,50 @@ import 'package:injectable/injectable.dart';
 @injectable
 class TransactionFilterCubit extends Cubit<CombinedFilter> {
   TransactionFilterCubit() : super(createDefaultFilter());
+
+  /// Kredi kartı bağlamında EKSTRE döngüsü; hesapta `null`. Kart kullanıcısı
+  /// takvim ayıyla değil ekstreyle düşünür: kart bağlamında varsayılan dönem
+  /// içinde bulunulan ekstre, oklar bir ekstre atlar (ay uzunlukları farklı —
+  /// "özel aralık" olarak kendi uzunluğu kadar kaymak yanlış olurdu).
+  CardCycle? _cycle;
+
+  /// Etkin ekstre döngüsü (kart bağlamı).
+  CardCycle? get statementCycle => _cycle;
+
+  static DateTimeRange _toRange(({DateTime start, DateTime end}) p) =>
+      DateTimeRange(
+        start: p.start,
+        end: DateTime(p.end.year, p.end.month, p.end.day, 23, 59, 59),
+      );
+
+  /// İçinde bulunulan ekstre dönemi; döngü yoksa `null`.
+  DateTimeRange? currentStatementPeriod({DateTime? now}) {
+    final cycle = _cycle;
+    if (cycle == null) return null;
+    return _toRange(cycle.periodContaining(now ?? DateTime.now()));
+  }
+
+  /// Seçili dönem [cycle]'ın bir ekstre dönemi mi?
+  static bool _isStatementOf(CardCycle? cycle, DateTimeRange range) {
+    if (cycle == null) return false;
+    final p = cycle.periodContaining(range.start);
+    return isSameDayValue(p.start, range.start) &&
+        isSameDayValue(p.end, range.end);
+  }
+
+  /// Seçili dönem etkin kartın bir ekstre dönemi mi?
+  bool get isStatementPeriod => _isStatementOf(_cycle, period);
+
+  /// Bağlam değişti (hesap ↔ kart). Varsayılan dönemdeyken (bu ay ya da
+  /// önceki kartın bir ekstresi) yeni bağlamın varsayılanına geçilir;
+  /// kullanıcının seçtiği özel bir aralığa DOKUNULMAZ.
+  void useStatementCycle(CreditCardInfo? card) {
+    final next = card == null ? null : CardCycle(card);
+    final wasDefault = isDefaultPeriod || _isStatementOf(_cycle, period);
+    _cycle = next;
+    if (!wasDefault) return;
+    setPeriod(currentStatementPeriod() ?? monthRangeOf(DateTime.now()));
+  }
 
   /// Varsayılan görünüm: içinde bulunulan ay, karşılaştırma modu, filtresiz.
   static CombinedFilter createDefaultFilter({DateTime? now}) {
@@ -37,9 +83,9 @@ class TransactionFilterCubit extends Cubit<CombinedFilter> {
   /// görünürlüğü buna da bakar; yoksa yalnız tarihi değiştiren kullanıcının
   /// geri dönüş yolu kalmıyordu.
   bool get isDefaultPeriod {
-    final month = monthRangeOf(DateTime.now());
-    return isSameDayValue(state.viewFilter.startDate, month.start) &&
-        isSameDayValue(state.viewFilter.endDate, month.end);
+    final base = currentStatementPeriod() ?? monthRangeOf(DateTime.now());
+    return isSameDayValue(state.viewFilter.startDate, base.start) &&
+        isSameDayValue(state.viewFilter.endDate, base.end);
   }
 
   /// Herhangi bir filtre ya da varsayılan dışı dönem etkin mi?
@@ -76,7 +122,17 @@ class TransactionFilterCubit extends Cubit<CombinedFilter> {
 
   /// Dönemi kendi doğasına göre bir adım ileri/geri kaydırır (bkz.
   /// [shiftPeriod]).
-  void stepPeriod(int step) => setPeriod(shiftPeriod(period, step));
+  ///
+  /// Kart bağlamında ekstre dönemindeyken bir EKSTRE atlar.
+  void stepPeriod(int step) {
+    final cycle = _cycle;
+    if (cycle != null && isStatementPeriod) {
+      final closing = cycle.shiftClosing(dayOf(period.end), step);
+      setPeriod(_toRange(cycle.periodEndingAt(closing)));
+      return;
+    }
+    setPeriod(shiftPeriod(period, step));
+  }
 
   /// Boş/boşluk sorgu `null`'a iner: "arama etkin mi" sorusunun tek yanıtı
   /// olsun, `''` ile `null` iki ayrı "kapalı" durum üretmesin.
@@ -125,9 +181,13 @@ class TransactionFilterCubit extends Cubit<CombinedFilter> {
   /// "şu an giderlere bakıyorum" bağlamı bir temizleme eylemiyle kaybolmamalı.
   void clearAll() {
     final defaults = createDefaultFilter();
+    final statement = currentStatementPeriod();
     emit(CombinedFilter(
-      viewFilter: defaults.viewFilter
-          .copyWith(financeMode: state.viewFilter.financeMode),
+      viewFilter: defaults.viewFilter.copyWith(
+        financeMode: state.viewFilter.financeMode,
+        startDate: statement?.start,
+        endDate: statement?.end,
+      ),
       dataFilter: defaults.dataFilter,
     ));
   }

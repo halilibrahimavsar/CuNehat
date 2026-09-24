@@ -100,6 +100,21 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
     return total;
   }
 
+  /// Kart borcu olan kullanıcıda TL cinsinden net kırılım: hesaplar (kart
+  /// olmayan cüzdanlar) − kart borçları. Genel toplam eskiden kart
+  /// cüzdanlarının eksi bakiyesini SESSİZCE düşüyordu. Kart yoksa ya da bir
+  /// kur eksikse `null` (yanıltıcı eksik toplam göstermeyiz).
+  ({double net, double accounts, double cardDebt})? _netBreakdownFor(
+          WalletState state) =>
+      FeatureFlags.creditCards && state is WalletLoadedSt
+          ? _netBreakdown(state.wallets)
+          : null;
+
+  ({double net, double accounts, double cardDebt})? _netBreakdown(
+          List<WalletEntity> wallets) =>
+      netBreakdown(wallets,
+          rateToTry: getIt<ExchangeRateService>().cachedRateToTry);
+
   @override
   Widget build(BuildContext context) {
     // Kendi route'u olan yüzey: turu kabuğun dönüşümüne değil, sheet'in
@@ -241,9 +256,25 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      // Döviz cüzdanı varsa ve tüm kurlar biliniyorsa TL toplamı;
-                      // aksi halde standart alt başlık.
-                      if (state is WalletLoadedSt &&
+                      // Kartı olan kullanıcıda NET kırılım (hesaplar − kart
+                      // borçları); döviz cüzdanı varsa ve tüm kurlar
+                      // biliniyorsa TL toplamı; aksi halde standart alt başlık.
+                      if (_netBreakdownFor(state) case final b?)
+                        Text(
+                          context.l10n.kkNetKirilim(
+                            formatMoney(b.net),
+                            formatMoney(b.accounts),
+                            formatMoney(b.cardDebt),
+                          ),
+                          key: const ValueKey('wallet-net-breakdown'),
+                          maxLines: 2,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade600,
+                          ),
+                        )
+                      else if (state is WalletLoadedSt &&
                           state.wallets
                               .any((w) => w.currency != kDefaultCurrency) &&
                           _tlTotal(state.wallets) != null)

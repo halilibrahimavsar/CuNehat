@@ -9544,6 +9544,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kullanılabilir limit: {amount}'**
   String kkKullanilabilirLimitSatiri(String amount);
+
+  /// No description provided for @kkEkstreDonemEtiketi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekstre · {range}'**
+  String kkEkstreDonemEtiketi(String range);
+
+  /// No description provided for @kkBuEkstre.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu ekstre'**
+  String get kkBuEkstre;
+
+  /// No description provided for @kkOncekiEkstre.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önceki ekstre'**
+  String get kkOncekiEkstre;
+
+  /// No description provided for @kkNetKirilim.
+  ///
+  /// In tr, this message translates to:
+  /// **'Net {net} · hesaplar {accounts} · kart borcu {cards}'**
+  String kkNetKirilim(String net, String accounts, String cards);
+
+  /// No description provided for @kkDahaFazlaAyrinti.
+  ///
+  /// In tr, this message translates to:
+  /// **'Daha fazla ayrıntı (banka, son 4 hane, limit, son ekstre)'**
+  String get kkDahaFazlaAyrinti;
 }
 
 class _AppLocalizationsDelegate

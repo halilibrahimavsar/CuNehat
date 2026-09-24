@@ -16,17 +16,23 @@ class TransactionPeriodBar extends StatelessWidget {
   final ValueChanged<int> onStep;
   final VoidCallback onPick;
 
+  /// Etiketin yerine geçer (kart bağlamında "Ekstre · 16 Eyl – 15 Eki");
+  /// verilmezse [periodLabel].
+  final String? label;
+
   const TransactionPeriodBar({
     super.key,
     required this.range,
     required this.onStep,
     required this.onPick,
+    this.label,
   });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
+    final text = label ?? periodLabel(range, l10n);
 
     return Container(
       height: 44,
@@ -48,7 +54,7 @@ class TransactionPeriodBar extends StatelessWidget {
           Expanded(
             child: Semantics(
               button: true,
-              label: '${l10n.txPeriodPick}: ${periodLabel(range, l10n)}',
+              label: '${l10n.txPeriodPick}: $text',
               child: InkWell(
                 onTap: onPick,
                 borderRadius: BorderRadius.circular(10),
@@ -61,7 +67,7 @@ class TransactionPeriodBar extends StatelessWidget {
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Text(
-                        periodLabel(range, l10n),
+                        text,
                         maxLines: 1,
                         style: TextStyle(
                           fontSize: 13,

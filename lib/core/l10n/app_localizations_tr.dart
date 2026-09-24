@@ -5444,4 +5444,24 @@ class AppLocalizationsTr extends AppLocalizations {
   String kkKullanilabilirLimitSatiri(String amount) {
     return 'Kullanılabilir limit: $amount';
   }
+
+  @override
+  String kkEkstreDonemEtiketi(String range) {
+    return 'Ekstre · $range';
+  }
+
+  @override
+  String get kkBuEkstre => 'Bu ekstre';
+
+  @override
+  String get kkOncekiEkstre => 'Önceki ekstre';
+
+  @override
+  String kkNetKirilim(String net, String accounts, String cards) {
+    return 'Net $net · hesaplar $accounts · kart borcu $cards';
+  }
+
+  @override
+  String get kkDahaFazlaAyrinti =>
+      'Daha fazla ayrıntı (banka, son 4 hane, limit, son ekstre)';
 }

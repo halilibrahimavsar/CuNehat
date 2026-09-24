@@ -5477,4 +5477,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String kkKullanilabilirLimitSatiri(String amount) {
     return 'Available limit: $amount';
   }
+
+  @override
+  String kkEkstreDonemEtiketi(String range) {
+    return 'Statement · $range';
+  }
+
+  @override
+  String get kkBuEkstre => 'This statement';
+
+  @override
+  String get kkOncekiEkstre => 'Previous statement';
+
+  @override
+  String kkNetKirilim(String net, String accounts, String cards) {
+    return 'Net $net · accounts $accounts · card debt $cards';
+  }
+
+  @override
+  String get kkDahaFazlaAyrinti =>
+      'More details (bank, last 4 digits, limit, last statement)';
 }

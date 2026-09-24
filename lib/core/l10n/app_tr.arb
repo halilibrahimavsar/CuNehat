@@ -3027,5 +3027,30 @@
         "type": "String"
       }
     }
-  }
+  },
+  "kkEkstreDonemEtiketi": "Ekstre · {range}",
+  "kkBuEkstre": "Bu ekstre",
+  "kkOncekiEkstre": "Önceki ekstre",
+  "@kkEkstreDonemEtiketi": {
+    "placeholders": {
+      "range": {
+        "type": "String"
+      }
+    }
+  },
+  "kkNetKirilim": "Net {net} · hesaplar {accounts} · kart borcu {cards}",
+  "@kkNetKirilim": {
+    "placeholders": {
+      "net": {
+        "type": "String"
+      },
+      "accounts": {
+        "type": "String"
+      },
+      "cards": {
+        "type": "String"
+      }
+    }
+  },
+  "kkDahaFazlaAyrinti": "Daha fazla ayrıntı (banka, son 4 hane, limit, son ekstre)"
 }

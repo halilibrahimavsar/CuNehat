@@ -108,6 +108,16 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
   String? _paymentWalletId;
   bool _saving = false;
 
+  /// "Daha fazla ayrıntı" açık mı (yalnız yeni kart / çevirme; ayarlarda
+  /// alanlar hep açık).
+  bool _showMore = false;
+  bool get _moreOpen => _isEdit || _showMore;
+
+  Duration _motion(BuildContext context) =>
+      (MediaQuery.maybeDisableAnimationsOf(context) ?? false)
+          ? Duration.zero
+          : const Duration(milliseconds: 260);
+
   /// Çevrilecek/düzenlenecek cüzdan; yeni kartta `null`. Yeni kart formundan
   /// "var olan cüzdanı kart yap"a geçilince bu ayarlanır.
   WalletEntity? _target;
@@ -435,60 +445,6 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
                   ),
                   const SizedBox(height: 12),
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: TextFormField(
-                          controller: _bank,
-                          textCapitalization: TextCapitalization.words,
-                          decoration: _decoration(
-                            label: l10n.kkBanka,
-                            icon: Icons.account_balance_outlined,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        flex: 2,
-                        child: TextFormField(
-                          controller: _last4,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(4),
-                          ],
-                          decoration: _decoration(label: l10n.kkSon4),
-                          validator: (v) {
-                            final t = (v ?? '').trim();
-                            return t.isEmpty || t.length == 4
-                                ? null
-                                : l10n.kkSon4Hatasi;
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4, left: 4),
-                    child: Text(l10n.kkSon4Aciklama,
-                        style: theme.textTheme.bodySmall),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _limit,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [AmountInputFormatter()],
-                    decoration: _decoration(
-                      label: l10n.kkLimit,
-                      icon: Icons.speed_rounded,
-                      suffix: currencySymbol(currency),
-                    ),
-                    validator: _optionalMoney,
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
                     children: [
                       Expanded(
                         child: _dayField(
@@ -568,51 +524,144 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
                     ),
                   ],
                   if (!_isEdit) ...[
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n.kkSonEkstre,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      l10n.kkSonEkstreAciklama(
-                          AppFormatters.dateShort.format(_lastClosing)),
-                      style: theme.textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _statementBalance,
-                            keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true),
-                            inputFormatters: [AmountInputFormatter()],
-                            decoration: _decoration(
-                              label: l10n.kkDonemBorcu,
-                              suffix: currencySymbol(currency),
-                            ),
-                            validator: _optionalMoney,
-                          ),
+                    // Temel olmayan alanlar katlanır (yeni kartta 9 alan
+                    // birden kalabalıktı); ayarlarda hep açık.
+                    const SizedBox(height: 4),
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: TextButton.icon(
+                        key: const ValueKey('kk-more-toggle'),
+                        onPressed: () => setState(() => _showMore = !_showMore),
+                        icon: AnimatedRotation(
+                          turns: _moreOpen ? 0.5 : 0,
+                          duration: _motion(context),
+                          child: const Icon(Icons.expand_more_rounded),
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: TextFormField(
-                            controller: _minimum,
-                            keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true),
-                            inputFormatters: [AmountInputFormatter()],
-                            decoration: _decoration(
-                              label: l10n.kkAsgariOdeme,
-                              suffix: currencySymbol(currency),
-                            ),
-                            validator: _optionalMoney,
-                          ),
-                        ),
-                      ],
+                        label: Text(l10n.kkDahaFazlaAyrinti),
+                      ),
                     ),
                   ],
+                  AnimatedSize(
+                    duration: _motion(context),
+                    curve: Curves.easeOutCubic,
+                    alignment: Alignment.topCenter,
+                    child: !_moreOpen
+                        ? const SizedBox(width: double.infinity)
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const SizedBox(height: 12),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    flex: 3,
+                                    child: TextFormField(
+                                      controller: _bank,
+                                      textCapitalization:
+                                          TextCapitalization.words,
+                                      decoration: _decoration(
+                                        label: l10n.kkBanka,
+                                        icon: Icons.account_balance_outlined,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    flex: 2,
+                                    child: TextFormField(
+                                      controller: _last4,
+                                      keyboardType: TextInputType.number,
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.digitsOnly,
+                                        LengthLimitingTextInputFormatter(4),
+                                      ],
+                                      decoration:
+                                          _decoration(label: l10n.kkSon4),
+                                      validator: (v) {
+                                        final t = (v ?? '').trim();
+                                        return t.isEmpty || t.length == 4
+                                            ? null
+                                            : l10n.kkSon4Hatasi;
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4, left: 4),
+                                child: Text(l10n.kkSon4Aciklama,
+                                    style: theme.textTheme.bodySmall),
+                              ),
+                              const SizedBox(height: 12),
+                              TextFormField(
+                                controller: _limit,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                        decimal: true),
+                                inputFormatters: [AmountInputFormatter()],
+                                decoration: _decoration(
+                                  label: l10n.kkLimit,
+                                  icon: Icons.speed_rounded,
+                                  suffix: currencySymbol(currency),
+                                ),
+                                validator: _optionalMoney,
+                              ),
+                              if (!_isEdit) ...[
+                                const SizedBox(height: 16),
+                                Text(
+                                  l10n.kkSonEkstre,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w700),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  l10n.kkSonEkstreAciklama(AppFormatters
+                                      .dateShort
+                                      .format(_lastClosing)),
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: TextFormField(
+                                        controller: _statementBalance,
+                                        keyboardType: const TextInputType
+                                            .numberWithOptions(decimal: true),
+                                        inputFormatters: [
+                                          AmountInputFormatter()
+                                        ],
+                                        decoration: _decoration(
+                                          label: l10n.kkDonemBorcu,
+                                          suffix: currencySymbol(currency),
+                                        ),
+                                        validator: _optionalMoney,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: TextFormField(
+                                        controller: _minimum,
+                                        keyboardType: const TextInputType
+                                            .numberWithOptions(decimal: true),
+                                        inputFormatters: [
+                                          AmountInputFormatter()
+                                        ],
+                                        decoration: _decoration(
+                                          label: l10n.kkAsgariOdeme,
+                                          suffix: currencySymbol(currency),
+                                        ),
+                                        validator: _optionalMoney,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ],
+                          ),
+                  ),
                   const SizedBox(height: 20),
                   FilledButton.icon(
                     onPressed: _saving ? null : _save,

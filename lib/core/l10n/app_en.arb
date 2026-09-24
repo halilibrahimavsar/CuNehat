@@ -2925,5 +2925,10 @@
   "kkTutariOde": "Pay {amount}",
   "kkOdemeKaydedildi": "Card payment recorded",
   "kkKartlarDusulunce": "After card payments: {amount}",
-  "kkKullanilabilirLimitSatiri": "Available limit: {amount}"
+  "kkKullanilabilirLimitSatiri": "Available limit: {amount}",
+  "kkEkstreDonemEtiketi": "Statement · {range}",
+  "kkBuEkstre": "This statement",
+  "kkOncekiEkstre": "Previous statement",
+  "kkNetKirilim": "Net {net} · accounts {accounts} · card debt {cards}",
+  "kkDahaFazlaAyrinti": "More details (bank, last 4 digits, limit, last statement)"
 }

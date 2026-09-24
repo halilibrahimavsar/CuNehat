@@ -2,6 +2,8 @@ import 'package:cunehat/features/finance_transactions/domain/entities/filter_ent
 import 'package:cunehat/features/finance_transactions/domain/transaction_period.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
+import 'package:cunehat/features/wallet/domain/card_cycle.dart';
+import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -150,6 +152,83 @@ void main() {
       );
       cubit.updateFilter(next);
       expect(cubit.state, next);
+    });
+  });
+
+  // Kart bağlamında dönem EKSTRE dönemidir: kart kullanıcısı takvim ayıyla
+  // değil ekstreyle düşünür (kesim 15 → dönem 16 … 15).
+  group('ekstre dönemi (kart bağlamı)', () {
+    const card = CreditCardInfo(closingDay: 15, dueDay: 25);
+
+    test('karta geçince varsayılan dönem içinde bulunulan ekstre olur', () {
+      final cubit = TransactionFilterCubit();
+      cubit.useStatementCycle(card);
+      final expected = CardCycle(card).periodContaining(DateTime.now());
+      expect(dayOf(cubit.period.start), expected.start);
+      expect(dayOf(cubit.period.end), expected.end);
+      expect(cubit.isStatementPeriod, isTrue);
+      expect(cubit.isDefaultPeriod, isTrue);
+      expect(cubit.hasAnyActiveFilter, isFalse);
+    });
+
+    test('ok bir EKSTRE atlar (ay uzunluğu değil)', () {
+      final cubit = TransactionFilterCubit()..useStatementCycle(card);
+      cubit.setPeriod(DateTimeRange(
+          start: DateTime(2026, 1, 16), end: DateTime(2026, 2, 15)));
+      cubit.stepPeriod(1);
+      expect(dayOf(cubit.period.start), DateTime(2026, 2, 16));
+      expect(dayOf(cubit.period.end), DateTime(2026, 3, 15));
+      cubit.stepPeriod(-2);
+      expect(dayOf(cubit.period.start), DateTime(2025, 12, 16));
+      expect(dayOf(cubit.period.end), DateTime(2026, 1, 15));
+    });
+
+    test('kesim 31: Şubat ekstresi ayın son gününde kesilir', () {
+      final cubit = TransactionFilterCubit()
+        ..useStatementCycle(const CreditCardInfo(closingDay: 31, dueDay: 10));
+      cubit.setPeriod(DateTimeRange(
+          start: DateTime(2026, 1, 1), end: DateTime(2026, 1, 31)));
+      expect(cubit.isStatementPeriod, isTrue);
+      cubit.stepPeriod(1);
+      expect(dayOf(cubit.period.start), DateTime(2026, 2, 1));
+      expect(dayOf(cubit.period.end), DateTime(2026, 2, 28));
+      cubit.stepPeriod(1);
+      expect(dayOf(cubit.period.start), DateTime(2026, 3, 1));
+      expect(dayOf(cubit.period.end), DateTime(2026, 3, 31));
+    });
+
+    test('hesaba dönünce ekstre dönemi AYA döner', () {
+      final cubit = TransactionFilterCubit()..useStatementCycle(card);
+      cubit.useStatementCycle(null);
+      final month = monthRangeOf(DateTime.now());
+      expect(dayOf(cubit.period.start), dayOf(month.start));
+      expect(cubit.isStatementPeriod, isFalse);
+    });
+
+    test('kullanıcının seçtiği özel aralığa bağlam değişimi DOKUNMAZ', () {
+      final cubit = TransactionFilterCubit();
+      final custom = DateTimeRange(
+          start: DateTime(2025, 3, 3), end: DateTime(2025, 3, 9, 23, 59, 59));
+      cubit.setPeriod(custom);
+      cubit.useStatementCycle(card);
+      expect(dayOf(cubit.period.start), DateTime(2025, 3, 3));
+      cubit.useStatementCycle(null);
+      expect(dayOf(cubit.period.start), DateTime(2025, 3, 3));
+    });
+
+    test('ekstre dışı aralıkta ok eski kuralla kayar', () {
+      final cubit = TransactionFilterCubit()..useStatementCycle(card);
+      cubit.setPeriod(monthRangeOf(DateTime(2026, 4, 1)));
+      cubit.stepPeriod(1);
+      expect(dayOf(cubit.period.start), DateTime(2026, 5, 1));
+    });
+
+    test('"temizle" kart bağlamında içinde bulunulan ekstreye döner', () {
+      final cubit = TransactionFilterCubit()..useStatementCycle(card);
+      cubit.stepPeriod(-3);
+      cubit.clearAll();
+      expect(cubit.isDefaultPeriod, isTrue);
+      expect(cubit.isStatementPeriod, isTrue);
     });
   });
 }
