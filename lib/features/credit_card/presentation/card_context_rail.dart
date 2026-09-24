@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 import 'package:cunehat/core/config/feature_flags.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/onboarding/onboarding_keys.dart';
+import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
@@ -49,75 +53,84 @@ class CardContextRail extends StatelessWidget {
     final activeCard =
         active.isCreditCard && active.id != owner.id ? active : null;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                for (final w in [owner, ...cards]) ...[
-                  _ContextPill(
-                    key: ValueKey('ctx-${w.id}'),
-                    wallet: w,
-                    selected: w.id == active.id,
-                    onTap: () {
-                      if (w.id == active.id) {
-                        if (w.isCreditCard) {
-                          CardDetailsSheet.show(context, card: w);
-                        }
-                        return;
-                      }
-                      context.read<WalletBloc>().add(SetActiveWalletEvent(
-                            userId: w.userId,
-                            walletId: w.id!,
-                            // Aynı cüzdanın içinde sekme değişimi: şeridin
-                            // kendisi zaten değişimi gösteriyor.
-                            announce: false,
-                          ));
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                ],
-              ],
-            ),
-          ),
-          AnimatedSize(
-            duration:
-                reduce ? Duration.zero : const Duration(milliseconds: 280),
-            curve: Curves.easeOutCubic,
-            alignment: Alignment.topCenter,
-            child: AnimatedSwitcher(
-              duration:
-                  reduce ? Duration.zero : const Duration(milliseconds: 220),
-              switchInCurve: Curves.easeOut,
-              switchOutCurve: Curves.easeIn,
-              transitionBuilder: (child, anim) => FadeTransition(
-                opacity: anim,
-                child: SlideTransition(
-                  position: Tween(
-                    begin: const Offset(0, -0.15),
-                    end: Offset.zero,
-                  ).animate(anim),
-                  child: child,
+    return OnboardingTour(
+      flow: OnboardingFlow.cardRail,
+      keys: [OnboardingKeys.cardRail],
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Showcase(
+              key: OnboardingKeys.cardRail,
+              title: context.l10n.onboardingCardRailTitle,
+              description: context.l10n.onboardingCardRailDesc,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (final w in [owner, ...cards]) ...[
+                      _ContextPill(
+                        key: ValueKey('ctx-${w.id}'),
+                        wallet: w,
+                        selected: w.id == active.id,
+                        onTap: () {
+                          if (w.id == active.id) {
+                            if (w.isCreditCard) {
+                              CardDetailsSheet.show(context, card: w);
+                            }
+                            return;
+                          }
+                          context.read<WalletBloc>().add(SetActiveWalletEvent(
+                                userId: w.userId,
+                                walletId: w.id!,
+                                // Aynı cüzdanın içinde sekme değişimi: şeridin
+                                // kendisi zaten değişimi gösteriyor.
+                                announce: false,
+                              ));
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                  ],
                 ),
               ),
-              child: activeCard == null
-                  ? _DueBands(
-                      key: const ValueKey('ctx-due-bands'),
-                      cards: cards,
-                      wallets: state.wallets,
-                    )
-                  : _CardStrip(
-                      key: ValueKey('ctx-strip-${activeCard.id}'),
-                      card: activeCard,
-                      wallets: state.wallets,
-                    ),
             ),
-          ),
-        ],
+            AnimatedSize(
+              duration:
+                  reduce ? Duration.zero : const Duration(milliseconds: 280),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: AnimatedSwitcher(
+                duration:
+                    reduce ? Duration.zero : const Duration(milliseconds: 220),
+                switchInCurve: Curves.easeOut,
+                switchOutCurve: Curves.easeIn,
+                transitionBuilder: (child, anim) => FadeTransition(
+                  opacity: anim,
+                  child: SlideTransition(
+                    position: Tween(
+                      begin: const Offset(0, -0.15),
+                      end: Offset.zero,
+                    ).animate(anim),
+                    child: child,
+                  ),
+                ),
+                child: activeCard == null
+                    ? _DueBands(
+                        key: const ValueKey('ctx-due-bands'),
+                        cards: cards,
+                        wallets: state.wallets,
+                      )
+                    : _CardStrip(
+                        key: ValueKey('ctx-strip-${activeCard.id}'),
+                        card: activeCard,
+                        wallets: state.wallets,
+                      ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

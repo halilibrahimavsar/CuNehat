@@ -36,6 +36,13 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/repor
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_system_movements_toggle.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
+import 'package:cunehat/core/config/feature_flags.dart';
+import 'package:cunehat/core/services/transactions_changed_notifier.dart';
+import 'package:cunehat/features/credit_card/domain/card_spending_merge.dart';
+import 'package:cunehat/features/credit_card/presentation/report_cards_toggle.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
+import 'package:cunehat/features/wallet/domain/card_family.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -103,6 +110,16 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   /// [TransactionReportService.splitSystemMovements]).
   bool _includeSystemMovements = false;
 
+  /// Hesabın raporu bağlı kartlarının HARCAMALARINI da kapsasın mı ("kartlar
+  /// dahil"; bkz. [mergeCardSpending]). Varsayılan KAPALI: kart cüzdanın
+  /// içinde ayrı bir sekmedir; rapor önce hesabın kendi hareketidir. Bakiye
+  /// çizgisi anahtardan bağımsız hep hesabın defteri.
+  bool _includeCards = false;
+
+  /// Bağlı kartların defterleri (birleşik); yalnız anahtar açıkken okunur.
+  List<TransactionEntity> _cardLedger = const [];
+  StreamSubscription<TransactionsChange>? _cardChangesSub;
+
   Map<String, IconData> _categoryIcons = {};
 
   /// `tag` → görünen ad. Kırılım anahtarı hep `tag` (kategori id'si) kalır;
@@ -129,6 +146,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   /// ya da anahtar açmak gibi her `setState` bunu tekrarlıyordu.
   ({
     List<TransactionEntity> transactions,
+    List<TransactionEntity> ledger,
     DateTimeRange range,
     bool includeSystem,
     ReportBucketUnit? unit,
@@ -204,7 +222,69 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   void dispose() {
     _categoriesSub?.cancel();
     _budgetsSub?.cancel();
+    _cardChangesSub?.cancel();
     super.dispose();
+  }
+
+  /// Bu hesaba bağlı, AYNI birimdeki kartlar (tutarlar tek birimde toplanır).
+  /// Rapor bir kartın kendisininse ya da bayrak kapalıysa boş.
+  List<WalletEntity> _linkedCards(BuildContext context) {
+    if (!FeatureFlags.creditCards) return const [];
+    final self = context.walletById(widget.walletId);
+    if (self == null || self.isCreditCard) return const [];
+    return [
+      for (final c in cardsOf(widget.walletId, context.allWallets))
+        if (c.currency == self.currency) c,
+    ];
+  }
+
+  Future<void> _setIncludeCards(bool value) async {
+    setState(() => _includeCards = value);
+    await _cardChangesSub?.cancel();
+    _cardChangesSub = null;
+    if (!value) return;
+    await _loadCardLedger();
+    if (!mounted || !_includeCards) return;
+    if (getIt.isRegistered<TransactionsChangedNotifier>()) {
+      _cardChangesSub = getIt<TransactionsChangedNotifier>().stream.listen((c) {
+        if (!mounted) return;
+        final ids = _linkedCards(context).map((w) => w.id).toSet();
+        if (c.walletId == null || ids.contains(c.walletId)) _loadCardLedger();
+      });
+    }
+  }
+
+  Future<void> _loadCardLedger() async {
+    final cards = _linkedCards(context);
+    if (!getIt.isRegistered<TransactionsRepository>()) return;
+    final repo = getIt<TransactionsRepository>();
+    final results = await Future.wait(cards
+        .map((c) => repo.getTransactions(userId: c.userId, walletId: c.id!)));
+    if (!mounted) return;
+    setState(() {
+      _cardLedger = [
+        for (final r in results) ...r.getOrElse(() => const []),
+      ];
+    });
+  }
+
+  /// Analiz kaynağı: anahtar kapalıyken hesabın defteri; açıkken kart
+  /// harcamaları katılmış liste. Girdi kimliklerine göre önbelleklenir
+  /// ([_derive]'in önbelleği kimlik tabanlı).
+  List<TransactionEntity>? _mergeAccountSource;
+  List<TransactionEntity>? _mergeCardSource;
+  List<TransactionEntity> _merged = const [];
+
+  List<TransactionEntity> _analysisSource(List<TransactionEntity> account) {
+    if (!_includeCards) return account;
+    if (identical(_mergeAccountSource, account) &&
+        identical(_mergeCardSource, _cardLedger)) {
+      return _merged;
+    }
+    _mergeAccountSource = account;
+    _mergeCardSource = _cardLedger;
+    _merged = mergeCardSpending(account: account, cards: _cardLedger);
+    return _merged;
   }
 
   Future<void> _loadCategoryIcons() async {
@@ -357,9 +437,14 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   }
 
   /// Bir build turunun türetilmiş rapor verisi — hepsi tek yerde, tek kez.
+  ///
+  /// [transactions] analiz evrenidir (kartlar dahilse onların harcamalarıyla
+  /// birlikte); [ledger] hesabın KENDİ defteri — bakiye çizgisi yalnız ondan
+  /// türer.
   _ReportDerived _derive(
     BuildContext context,
     List<TransactionEntity> transactions,
+    List<TransactionEntity> ledger,
     Brightness brightness,
   ) {
     final otherLabel = _otherLabel(context);
@@ -371,6 +456,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     // değiştiriliyor — yani kimlik değişimi gerçek bir veri değişimidir.
     final key = (
       transactions: transactions,
+      ledger: ledger,
       range: _range,
       includeSystem: _includeSystemMovements,
       unit: _unitOverride,
@@ -451,12 +537,14 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
         unit: _unitOverride,
       ),
       balanceSeries: _seriesService.build(
-        inRange: filtered,
+        inRange: identical(transactions, ledger)
+            ? filtered
+            : _filterTransactionsByRange(ledger),
         start: _range.start,
         end: chartEnd,
         unit: _unitOverride,
         openingBalance: _seriesService.openingBalanceFor(
-          all: transactions,
+          all: ledger,
           start: _range.start,
           walletOpeningBalance: walletOpening,
         ),
@@ -606,7 +694,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     final builder = _dataBuilder(context);
     final full = builder.buildFull(
       builder.universeIn(
-        _forWallet(context.read<TransactionBloc>().state.currentTransactions),
+        _analysisSource(_forWallet(
+            context.read<TransactionBloc>().state.currentTransactions)),
       ),
       isExpense: true,
     );
@@ -682,7 +771,9 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
 
           final brightness =
               (theme.extension<AppSurface>() ?? AppSurface.light).brightness;
-          final derived = _derive(context, transactions, brightness);
+          final derived = _derive(
+              context, _analysisSource(transactions), transactions, brightness);
+          final linkedCards = _linkedCards(context);
 
           final dataBuilder = derived.dataBuilder;
           final filteredTransactions = derived.filtered;
@@ -775,6 +866,14 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                         ),
                         // Kart yalnız dönemde kuplaj hareketi VARKEN çizilir;
                         // yoksa hiçbir şeyi açıklamayan bir anahtar yer kaplardı.
+                        if (linkedCards.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          ReportCardsToggle(
+                            included: _includeCards,
+                            cardCount: linkedCards.length,
+                            onChanged: _setIncludeCards,
+                          ),
+                        ],
                         if (split.system.isNotEmpty) ...[
                           const SizedBox(height: 12),
                           ReportSystemMovementsToggle(
@@ -987,6 +1086,7 @@ class _ReportDerived {
   final List<CategoryData> incomePie;
   final List<CategoryData> incomeRanked;
   final List<CategoryData> expenseRanked;
+
   /// Grafiklerin çizdiği pencerenin sonu (bkz.
   /// [_TransactionReportViewState._chartEnd]).
   final DateTime chartEnd;

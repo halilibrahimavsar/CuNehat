@@ -208,13 +208,14 @@ void main() {
     expect(notified, 1);
   });
 
-  test('kabuk kapısını yalnız shell akışı ister', () {
+  test('kabuk kapısını yalnız kabuktaki akışlar ister (shell, cardRail)', () {
     // Kalan turların hepsinin kendi route'u var (sheet); kabuğun konumu
-    // onları hiç ilgilendirmez.
+    // onları hiç ilgilendirmez. Kart şeridi işlemler ekranının üstünde,
+    // yani kabukta.
     for (final flow in OnboardingFlow.values) {
       expect(
         flow.requiresHomeShellAtRoot,
-        flow == OnboardingFlow.shell,
+        flow == OnboardingFlow.shell || flow == OnboardingFlow.cardRail,
         reason: flow.name,
       );
     }

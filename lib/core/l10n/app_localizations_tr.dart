@@ -5464,4 +5464,27 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get kkDahaFazlaAyrinti =>
       'Daha fazla ayrıntı (banka, son 4 hane, limit, son ekstre)';
+
+  @override
+  String get kkKartRengi => 'Kart rengi';
+
+  @override
+  String get onboardingCardRailTitle => 'Kartın bu cüzdanın içinde';
+
+  @override
+  String get onboardingCardRailDesc =>
+      'Hesap ile kartları arasında buradan geç. Kart harcaması eklemek için karta geçmen de gerekmez: gider formunda \"Nereden ödendi?\" ile kartı seç.';
+
+  @override
+  String get kkRaporKartlarDahil => 'Kart harcamalarını dahil et';
+
+  @override
+  String kkRaporKartlarAcik(int count) {
+    return '$count kartın harcamaları analizde; bakiye çizgisi yalnız hesabın.';
+  }
+
+  @override
+  String kkRaporKartlarKapali(int count) {
+    return '$count bağlı kartın harcamaları ayrı tutuluyor.';
+  }
 }

@@ -28,6 +28,12 @@ enum OnboardingFlow {
 
   /// Yatırım formu: mevcut değer → toplam maliyet → (altın/hisse) miktar.
   investmentAdd,
+
+  /// Kredi kartı bağlam şeridi ("Hesap | Kart"): ilk kart eklendikten sonra,
+  /// işlemler ekranında TEK adım — kartın ayrı bir cüzdan değil hesabın
+  /// içinde bir sekme olduğu ekranda yazmıyor. Enum SONUNA eklendi (bayrak
+  /// ada göre saklanır; sıra = öncelik, en düşük).
+  cardRail,
 }
 
 extension OnboardingFlowSurface on OnboardingFlow {
@@ -39,5 +45,8 @@ extension OnboardingFlowSurface on OnboardingFlow {
   /// kökte ve durur haldeyken oynayabilir. Diğer turların kendi route'u
   /// vardır (sheet / itilmiş sayfa); görünürlükleri yalnızca route
   /// durumundan belirlenir.
-  bool get requiresHomeShellAtRoot => this == OnboardingFlow.shell;
+  ///
+  /// [OnboardingFlow.cardRail] de kabuktadır (işlemler ekranının üstü).
+  bool get requiresHomeShellAtRoot =>
+      this == OnboardingFlow.shell || this == OnboardingFlow.cardRail;
 }

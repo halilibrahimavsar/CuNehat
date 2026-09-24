@@ -111,6 +111,10 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
   /// "Daha fazla ayrıntı" açık mı (yalnız yeni kart / çevirme; ayarlarda
   /// alanlar hep açık).
   bool _showMore = false;
+
+  /// Kullanıcının seçtiği kart rengi; `null` = seçmedi (yeni kartta sıradaki
+  /// kullanılmamış renk, çevirmede cüzdanın kendi rengi).
+  String? _color;
   bool get _moreOpen => _isEdit || _showMore;
 
   Duration _motion(BuildContext context) =>
@@ -285,7 +289,7 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
         debt: 0,
         credit: 0,
         investment: 0,
-        colorHex: _nextCardColor(payer),
+        colorHex: _color ?? _nextCardColor(payer),
         iconName: 'credit_card',
         createdAt: DateTime.now(),
         openingBalance: opening,
@@ -300,6 +304,9 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
         name: _name.text.trim(),
         creditCard: info,
         iconName: _isEdit ? null : 'credit_card',
+        // Çevirmede renk yalnız kullanıcı seçtiyse değişir (cüzdanın kendi
+        // rengi korunur); ayarlarda seçilen renk yazılır.
+        colorHex: _color,
       );
       bloc.add(UpdateWalletEvent(
         updated,
@@ -470,6 +477,17 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 12),
+                  _ColorRow(
+                    selected: _color ??
+                        (_isNew
+                            ? _nextCardColor(_payers
+                                .where((p) => p.id == _paymentWalletId)
+                                .firstOrNull)
+                            : _target!.colorHex),
+                    colors: _cardColors,
+                    onSelect: (c) => setState(() => _color = c),
                   ),
                   if (_isNew) ...[
                     const SizedBox(height: 12),
@@ -710,6 +728,79 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
       onChanged: (d) {
         if (d != null) onChanged(d);
       },
+    );
+  }
+}
+
+/// Kart rengi seçici: koyu kart renkleri; seçili olan beyaz halkalı ve
+/// hafif büyütülmüş (hareket azaltmada animasyonsuz).
+class _ColorRow extends StatelessWidget {
+  final String selected;
+  final List<String> colors;
+  final ValueChanged<String> onSelect;
+
+  const _ColorRow({
+    required this.selected,
+    required this.colors,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final reduce = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    return Row(
+      children: [
+        Text(
+          context.l10n.kkKartRengi,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: cs.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final hex in colors)
+                Semantics(
+                  button: true,
+                  selected: hex == selected,
+                  child: GestureDetector(
+                    key: ValueKey('kk-color-$hex'),
+                    onTap: () => onSelect(hex),
+                    child: AnimatedScale(
+                      scale: hex == selected ? 1.12 : 1,
+                      duration: reduce
+                          ? Duration.zero
+                          : const Duration(milliseconds: 180),
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: WalletColors.hexToColor(hex),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: hex == selected
+                                ? cs.primary
+                                : cs.outlineVariant,
+                            width: hex == selected ? 3 : 1,
+                          ),
+                        ),
+                        child: hex == selected
+                            ? const Icon(Icons.check_rounded,
+                                size: 16, color: Colors.white)
+                            : null,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

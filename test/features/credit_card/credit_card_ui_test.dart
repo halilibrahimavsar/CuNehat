@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
+import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/credit_card/presentation/card_statement_sheet.dart';
 import 'package:cunehat/features/credit_card/presentation/credit_card_setup_sheet.dart';
@@ -23,6 +24,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 class _MockWalletBloc extends MockBloc<WalletEvent, WalletState>
@@ -62,12 +65,15 @@ void main() {
 
   // WalletEvent mühürlü: sahte alt sınıf yazılamaz, gerçek bir olay verilir.
   setUpAll(() {
+    // Şeritteki tanıtım turu (Showcase) — uygulamada küresel kayıtlı.
+    ShowcaseView.register(onFinish: () {}, onDismiss: (_) {});
     registerFallbackValue(const GetWalletsEvent('u'));
     registerFallbackValue(_wallet('fallback'));
   });
 
   setUp(() {
     Intl.defaultLocale = 'tr_TR';
+    SharedPreferences.setMockInitialValues({});
     bloc = _MockWalletBloc();
   });
 
@@ -264,6 +270,30 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('kk-more-toggle')), findsNothing);
       expect(find.widgetWithText(TextFormField, l10n.kkSon4), findsOneWidget);
+    });
+
+    testWidgets('ayarlarda seçilen kart rengi kaydedilir', (tester) async {
+      tall(tester);
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      final card = _wallet('c',
+              name: 'Bonus',
+              card: const CreditCardInfo(
+                  closingDay: 15, dueDay: 25, paymentWalletId: 'bank'))
+          .copyWith(colorHex: '0xFF37474F');
+      await tester.pumpWidget(app(CreditCardSetupSheet(
+        userId: 'u',
+        wallets: [_wallet('bank'), card],
+        wallet: card,
+        defaultCurrency: 'TRY',
+      )));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('kk-color-0xFF7B1F3A')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(l10n.kaydet));
+      await tester.pumpAndSettle();
+      final event = verify(() => bloc.add(captureAny())).captured.single
+          as UpdateWalletEvent;
+      expect(event.wallet.colorHex, '0xFF7B1F3A');
     });
 
     testWidgets('son 4 hane eksikse kaydedilmez', (tester) async {
@@ -524,6 +554,12 @@ void main() {
       expect(find.text('Banka'), findsOneWidget);
       expect(find.text('Bonus ••5690'), findsOneWidget);
       expect(find.text('Nakit'), findsNothing, reason: 'başka aile değil');
+      // İlk kart turunun hedefi şeritte (OnboardingFlow.cardRail).
+      // (Showcase anahtarı widget anahtarı olarak değil `showcaseKey`de.)
+      expect(
+          find.byWidgetPredicate(
+              (w) => w is Showcase && w.showcaseKey == OnboardingKeys.cardRail),
+          findsOneWidget);
       expect(find.byKey(const ValueKey('ctx-card-pay')), findsNothing);
 
       await tester.tap(find.text('Bonus ••5690'));

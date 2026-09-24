@@ -66,6 +66,10 @@ class OnboardingKeys {
   /// Altın/hisse/özel sheet'lerinin üçü de aynı flow'u kullanır; hangisi önce
   /// açılırsa tur onda gösterilir. İlk iki adım üçünde de vardır, miktar adımı
   /// yalnız altın ve hissede (aynı anda yalnız biri mount olur).
+  // ============== Kart bağlam şeridi (OnboardingFlow.cardRail) ============
+  static final GlobalKey cardRail =
+      GlobalKey(debugLabel: 'onboarding.cardRail');
+
   static final GlobalKey investmentAddForm =
       GlobalKey(debugLabel: 'onboarding_investment_add_form');
   static final GlobalKey investmentAddCost =

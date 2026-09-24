@@ -9574,6 +9574,42 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Daha fazla ayrıntı (banka, son 4 hane, limit, son ekstre)'**
   String get kkDahaFazlaAyrinti;
+
+  /// No description provided for @kkKartRengi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart rengi'**
+  String get kkKartRengi;
+
+  /// No description provided for @onboardingCardRailTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartın bu cüzdanın içinde'**
+  String get onboardingCardRailTitle;
+
+  /// No description provided for @onboardingCardRailDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesap ile kartları arasında buradan geç. Kart harcaması eklemek için karta geçmen de gerekmez: gider formunda \"Nereden ödendi?\" ile kartı seç.'**
+  String get onboardingCardRailDesc;
+
+  /// No description provided for @kkRaporKartlarDahil.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart harcamalarını dahil et'**
+  String get kkRaporKartlarDahil;
+
+  /// No description provided for @kkRaporKartlarAcik.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kartın harcamaları analizde; bakiye çizgisi yalnız hesabın.'**
+  String kkRaporKartlarAcik(int count);
+
+  /// No description provided for @kkRaporKartlarKapali.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} bağlı kartın harcamaları ayrı tutuluyor.'**
+  String kkRaporKartlarKapali(int count);
 }
 
 class _AppLocalizationsDelegate

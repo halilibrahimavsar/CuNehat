@@ -24,6 +24,10 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/repor
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_period_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_system_movements_toggle.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
+import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
+import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -42,6 +46,11 @@ class MockCategoryRepository extends Mock implements CategoryRepository {}
 class MockBudgetRepository extends Mock implements BudgetRepository {}
 
 class MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
+
+class _MockWalletBloc extends MockBloc<WalletEvent, WalletState>
+    implements WalletBloc {}
+
+class _MockTxRepo extends Mock implements TransactionsRepository {}
 
 void main() {
   // Para metni Intl.defaultLocale'e bakar; testte boş bırakılırsa intl onu
@@ -1082,5 +1091,93 @@ void main() {
     // Kullanıcının kategorisi adını korur, kova kendi adını alır.
     expect(find.text('Diğer'), findsOneWidget);
     expect(find.text('Küçük kalemler'), findsOneWidget);
+  });
+
+  // Hesabın raporu bağlı kartların harcamalarını İSTEĞE bağlı kapsar.
+  group('kartlar dahil anahtarı', () {
+    WalletEntity w(String id, {CreditCardInfo? card}) => WalletEntity(
+          id: id,
+          userId: 'user_123',
+          name: id,
+          balance: 0,
+          debt: 0,
+          credit: 0,
+          investment: 0,
+          colorHex: '0xFF2196F3',
+          iconName: 'wallet',
+          createdAt: DateTime(2025, 1, 1),
+          openingBalance: 0,
+          creditCard: card,
+        );
+
+    Future<void> pumpWith(WidgetTester tester, {required bool withCard}) async {
+      final now = DateTime.now();
+      final day = DateTime(now.year, now.month, 1, 12);
+      final bank = w('bank');
+      final card = w('card',
+          card: const CreditCardInfo(
+              closingDay: 15, dueDay: 25, paymentWalletId: 'bank'));
+      final walletBloc = _MockWalletBloc();
+      when(() => walletBloc.state)
+          .thenReturn(WalletLoadedSt(withCard ? [bank, card] : [bank], bank));
+      final repo = _MockTxRepo();
+      getIt.registerSingleton<TransactionsRepository>(repo);
+      when(() => repo.getTransactions(
+            userId: any(named: 'userId'),
+            walletId: 'card',
+          )).thenAnswer((_) async => Right([
+            TransactionEntity(
+              id: 'c1',
+              userId: 'user_123',
+              walletId: 'card',
+              title: 'Kartla market',
+              tag: 'Food',
+              amount: 500,
+              date: day,
+              type: TransactionTypeModel.expense,
+            ),
+          ]));
+      when(() => mockTransactionBloc.state).thenReturn(TransactionLoaded(
+        groupedTransactions: const {},
+        allTransactions: [
+          TransactionEntity(
+            id: 'b1',
+            userId: 'user_123',
+            walletId: 'bank',
+            title: 'Market',
+            tag: 'Food',
+            amount: 200,
+            date: day,
+            type: TransactionTypeModel.expense,
+          ),
+        ],
+      ));
+      tester.view.physicalSize = const Size(1080, 2600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(BlocProvider<WalletBloc>.value(
+        value: walletBloc,
+        child: buildTestableWidget(const TransactionReportPage(
+          userId: 'user_123',
+          walletId: 'bank',
+        )),
+      ));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('bağlı kart yoksa anahtar görünmez', (tester) async {
+      await pumpWith(tester, withCard: false);
+      expect(find.byKey(const ValueKey('report-cards-toggle')), findsNothing);
+    });
+
+    testWidgets('açınca gider özeti kartın harcamasını da kapsar',
+        (tester) async {
+      await pumpWith(tester, withCard: true);
+      expect(find.textContaining('700,00'), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('report-cards-toggle')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('700,00'), findsWidgets);
+    });
   });
 }

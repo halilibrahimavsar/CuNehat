@@ -2930,5 +2930,11 @@
   "kkBuEkstre": "This statement",
   "kkOncekiEkstre": "Previous statement",
   "kkNetKirilim": "Net {net} · accounts {accounts} · card debt {cards}",
-  "kkDahaFazlaAyrinti": "More details (bank, last 4 digits, limit, last statement)"
+  "kkDahaFazlaAyrinti": "More details (bank, last 4 digits, limit, last statement)",
+  "kkKartRengi": "Card colour",
+  "onboardingCardRailTitle": "Your card lives inside this wallet",
+  "onboardingCardRailDesc": "Switch between the account and its cards here. You don't even need to switch to add card spending: pick the card under \"Paid with\" in the expense form.",
+  "kkRaporKartlarDahil": "Include card spending",
+  "kkRaporKartlarAcik": "Spending of {count} card(s) is included; the balance line stays the account's own.",
+  "kkRaporKartlarKapali": "Spending of {count} linked card(s) is kept separate."
 }

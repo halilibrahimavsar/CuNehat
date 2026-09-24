@@ -5497,4 +5497,27 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get kkDahaFazlaAyrinti =>
       'More details (bank, last 4 digits, limit, last statement)';
+
+  @override
+  String get kkKartRengi => 'Card colour';
+
+  @override
+  String get onboardingCardRailTitle => 'Your card lives inside this wallet';
+
+  @override
+  String get onboardingCardRailDesc =>
+      'Switch between the account and its cards here. You don\'t even need to switch to add card spending: pick the card under \"Paid with\" in the expense form.';
+
+  @override
+  String get kkRaporKartlarDahil => 'Include card spending';
+
+  @override
+  String kkRaporKartlarAcik(int count) {
+    return 'Spending of $count card(s) is included; the balance line stays the account\'s own.';
+  }
+
+  @override
+  String kkRaporKartlarKapali(int count) {
+    return 'Spending of $count linked card(s) is kept separate.';
+  }
 }
