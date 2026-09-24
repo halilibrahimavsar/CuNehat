@@ -1270,7 +1270,6 @@
       }
     }
   },
-  "bankImportDonePastDatesHint": "Some transactions are dated in earlier months. The transactions list shows the current month by default; widen the date filter to see them all.",
   "bankImportReconcileMatched": "Verified against balance: the income/expense direction of transactions matches the bank's balance column.",
   "bankImportVerified": "Arithmetically verified",
   "bankImportVerifiedHint": "The amounts read match the statement's own balance and total figures exactly.",
@@ -1301,7 +1300,6 @@
     }
   },
   "bankImportUndo": "Undo import",
-  "bankImportUndoDone": "Import undone.",
   "bankImportBatchTypeLabel": "Set all to:",
   "bankImportSetAllExpense": "Expense",
   "bankImportSetAllIncome": "Income",
@@ -1312,7 +1310,6 @@
   "bankImportSyncDialogTitle": "Sync Balance",
   "bankImportSyncDialogHint": "Enter your bank's real current balance; the wallet will be adjusted to match. Past transactions stay unchanged — only the opening balance is corrected.",
   "bankImportSyncDialogLabel": "Real balance",
-  "bankImportSyncSuccess": "Wallet balance synced.",
   "bankImportCategorySuggestionTitle": "New category suggestions",
   "bankImportCategorySuggestionHint": "Some transactions don't match any of your existing categories. Checked ones will be created and assigned automatically; unchecked ones won't be created and those transactions stay in the default category.",
   "bankImportCategorySuggestionContinue": "Continue",
@@ -1321,17 +1318,6 @@
   "bankImportExitFullscreen": "Exit full screen",
   "bankImportSummarySheet": "Summary and warnings",
   "bankImportMoreActions": "More actions",
-  "bankImportAssignVisibleDone": "{count} rows moved to “{category}”.",
-  "@bankImportAssignVisibleDone": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      },
-      "category": {
-        "type": "String"
-      }
-    }
-  },
   "bankImportAssignUncategorized": "Assign to the {count} uncategorized rows",
   "@bankImportAssignUncategorized": {
     "placeholders": {
@@ -1373,18 +1359,6 @@
       }
     }
   },
-  "bankImportApplyToSimilar": "{count} more uncategorized rows look like this: {sample}",
-  "@bankImportApplyToSimilar": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      },
-      "sample": {
-        "type": "String"
-      }
-    }
-  },
-  "bankImportApplyToSimilarAction": "Apply to all",
   "bankImportUncategorizedBlocked": "{count} selected rows have no category. They can't be added without one: they would count towards no category in budgets and reports.",
   "@bankImportUncategorizedBlocked": {
     "placeholders": {
@@ -1394,7 +1368,6 @@
     }
   },
   "bankImportShowUncategorized": "Show",
-  "bankImportStepNeedsCategory": "Pick a category for the uncategorized rows first.",
   "bankImportMapTitle": "How should we read this file?",
   "bankImportMapHint": "We tried to recognise the columns but aren't sure. If the transactions below look right, continue; if not, tap a column and tell us what it is.",
   "bankImportMapResultTitle": "This is how it will be read",
@@ -2756,14 +2729,6 @@
   "bagliTransferNotu": "This entry is one leg of a transfer between your own wallets; it isn't counted as spending or income.",
   "bagliSatirKisaNotu": "This entry was linked as the payment of a record (investment, debt…) and is managed there. Deleting that record returns the entry to how it was.",
   "transferiKaldirAciklama": "Removes both legs; a statement entry goes back to how it was",
-  "bankImportUndoKeptLinked": "Import undone. {count} entries you linked to a record were kept; delete that record to remove them.",
-  "@bankImportUndoKeptLinked": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "bankImportLinkTitle": "Entries you may want to link",
   "bankImportLinkBody": "These look like investment purchases, debt payments or loan disbursements. If you'll also record them in their section, link them here first — otherwise they're counted twice.",
   "linkHintInvestment": "Possibly an investment purchase",
@@ -2936,5 +2901,265 @@
   "onboardingCardRailDesc": "Switch between the account and its cards here. You don't even need to switch to add card spending: pick the card under \"Paid with\" in the expense form.",
   "kkRaporKartlarDahil": "Include card spending",
   "kkRaporKartlarAcik": "Spending of {count} card(s) is included; the balance line stays the account's own.",
-  "kkRaporKartlarKapali": "Spending of {count} linked card(s) is kept separate."
+  "kkRaporKartlarKapali": "Spending of {count} linked card(s) is kept separate.",
+  "bankImportSimilarTitle": "Apply “{category}” to similar rows too?",
+  "@bankImportSimilarTitle": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportSimilarBody": "{count} uncategorized rows look like this one. Untick any that aren't the same kind of spending.",
+  "@bankImportSimilarBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportSimilarOnlyThis": "Only this row",
+  "bankImportBulkTitle": "Apply “{category}”",
+  "@bankImportBulkTitle": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportBulkBody": "The category is applied to the ticked rows. Untick any you want to leave out.",
+  "bankImportBulkOverwriteNote": "{count} ticked rows will lose their current category.",
+  "@bankImportBulkOverwriteNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportBulkApply": "Apply to {count} rows",
+  "@bankImportBulkApply": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportBulkNothingTitle": "No rows to apply to",
+  "bankImportExitTitle": "Leave the import?",
+  "bankImportExitBody": "Nothing has been saved yet. If you leave, the choices and categories you made for this statement are lost.",
+  "bankImportExitConfirm": "Leave",
+  "bankImportSelectVisible": "Select shown rows (except duplicates)",
+  "bankImportDeselectVisible": "Deselect shown rows",
+  "bankImportSetTypeExpenseTitle": "Make every row an expense?",
+  "bankImportSetTypeIncomeTitle": "Make every row income?",
+  "bankImportSetTypeBody": "{count} rows will change type. Their categories are guessed again; any you picked by hand on those rows are lost.",
+  "@bankImportSetTypeBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportSetTypeConfirm": "Convert",
+  "bankImportStepMissingTitle": "Some rows have no category",
+  "bankImportStepMissingShow": "Show uncategorized",
+  "bankImportUndoTitle": "Undo this import?",
+  "bankImportUndoWillRemove": "The {count} transactions just added are deleted.",
+  "@bankImportUndoWillRemove": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportUndoWillRevert": "{count} corrected entries go back to their old amount.",
+  "@bankImportUndoWillRevert": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportUndoWillCard": "The card's last statement goes back to how it was before the import.",
+  "bankImportUndoWillKeepLinked": "Entries you've linked to a record in the meantime are not deleted.",
+  "bankImportUndoRunning": "Undoing…",
+  "bankImportUndoDoneTitle": "Import undone",
+  "bankImportUndoRemoved": "{count} transactions deleted.",
+  "@bankImportUndoRemoved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportUndoReverted": "{count} entries restored to their old amount.",
+  "@bankImportUndoReverted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportUndoCardReverted": "The card's last statement was restored.",
+  "bankImportUndoKept": "{count} entries you linked to a record were kept; delete that record to remove them.",
+  "@bankImportUndoKept": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportUndoNothing": "There was nothing left to undo.",
+  "bankImportSynced": "Matched to your bank",
+  "bankImportRawEmpty": "(empty)",
+  "bankImportAccountOnCard": "This looks like an ACCOUNT statement (it has a running balance) but the target is a credit card. Account movements written to the card would show a wrong card debt.",
+  "bankImportAllKnownTitle": "No new transactions in this statement",
+  "bankImportAllKnownBody": "All {count} transactions are already recorded in this wallet. The statement was most likely imported before.",
+  "@bankImportAllKnownBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportAllKnownShowRows": "Show the rows anyway",
+  "bankImportClosingTitle": "Balance on {date} according to the statement",
+  "@bankImportClosingTitle": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportClosingMatched": "The wallet matches the bank exactly on that day.",
+  "bankImportClosingLedger": "The wallet showed {ledger} on that day — {diff} off from the bank.",
+  "@bankImportClosingLedger": {
+    "placeholders": {
+      "ledger": {
+        "type": "String"
+      },
+      "diff": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportClosingSync": "Match the bank",
+  "bankImportClosingSyncBody": "The wallet's opening balance is shifted by {diff} so it matches the bank on the statement's last day. No transaction is changed.",
+  "@bankImportClosingSyncBody": {
+    "placeholders": {
+      "diff": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportFilterToCheck": "To check",
+  "bankImportKnownHidden": "{count} rows are hidden because they are already recorded",
+  "@bankImportKnownHidden": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportKnownShown": "Showing {count} already recorded rows",
+  "@bankImportKnownShown": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportKnownHide": "Hide",
+  "bankImportRecentTitle": "Recent imports",
+  "bankImportRecentRow": "{wallet} · {count} transactions",
+  "@bankImportRecentRow": {
+    "placeholders": {
+      "wallet": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportShowAdded": "Show the added transactions",
+  "bankImportSourceBankTag": "Guessed only from the bank's own label — check it",
+  "bankImportSourceHistory": "Learned from your history",
+  "bankImportSuggestionRows": "{count} rows",
+  "@bankImportSuggestionRows": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportSummaryMore": "Show details",
+  "bankImportSummaryLess": "Hide details",
+  "bankImportTargetElsewhere": "{count} transactions of this statement are already recorded in “{wallet}”. Did you pick the wrong wallet?",
+  "@bankImportTargetElsewhere": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "wallet": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportTargetCard": "This statement belongs to card •••• {last4}: “{wallet}”.",
+  "@bankImportTargetCard": {
+    "placeholders": {
+      "last4": {
+        "type": "String"
+      },
+      "wallet": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportTargetAccount": "This is an account statement (it has a running balance) but the target is a credit card. The card is paid from “{wallet}”.",
+  "@bankImportTargetAccount": {
+    "placeholders": {
+      "wallet": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportTargetUsedBefore": "Last time you imported a statement in this format into “{wallet}”.",
+  "@bankImportTargetUsedBefore": {
+    "placeholders": {
+      "wallet": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportTargetSwitch": "Import into “{wallet}”",
+  "@bankImportTargetSwitch": {
+    "placeholders": {
+      "wallet": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportTotals": "To add: expenses {expense} · income {income}",
+  "@bankImportTotals": {
+    "placeholders": {
+      "expense": {
+        "type": "String"
+      },
+      "income": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportUndoLaterNote": "Only the transactions this import added are deleted; entries whose amount was corrected and the card statement stay as they are.",
+  "bankImportVerifiedChip": "Verified",
+  "bankImportUndoWillRemoveBatch": "The {count} transactions this import added are deleted.",
+  "@bankImportUndoWillRemoveBatch": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

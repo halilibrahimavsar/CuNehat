@@ -28,6 +28,7 @@ import 'package:cunehat/features/bank_import/data/pdf_statement_parser.dart';
 import 'package:cunehat/features/bank_import/data/statement_ocr_service.dart';
 import 'package:cunehat/features/bank_import/data/raw_table_reader.dart';
 import 'package:cunehat/features/bank_import/data/statement_currency_detector.dart';
+import 'package:cunehat/features/bank_import/data/statement_closing.dart';
 import 'package:cunehat/features/bank_import/data/statement_verification.dart';
 import 'package:cunehat/features/bank_import/data/xls/biff8_reader.dart';
 import 'package:cunehat/features/bank_import/data/xls/ole2_reader.dart';
@@ -42,6 +43,8 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/wallet_category_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
+import 'package:cunehat/features/wallet/domain/card_family.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 
 /// Banka ekstresi içe aktarma akışının durum makinesi.
 ///
@@ -135,6 +138,33 @@ class BankImportCubit extends Cubit<BankImportState>
   /// DÜZELTME ÖNCEKİ hâlleri; "Geri al" bunları geri yazar.
   List<TransactionEntity> _lastCorrectedOriginals = const [];
 
+  /// Son `commit`in karta yazdığı ekstre künyesi + yazmadan ÖNCEKİ değerler;
+  /// "Geri al" künyeyi de geri çevirir (yanlış karta aktarılan ekstrenin son
+  /// ödeme tarihi ve hatırlatması kalmasın). Künye yazılmadıysa `null`.
+  _CardStatementWrite? _lastCardWrite;
+
+  /// Son ayrıştırmanın ham taslakları (kategorisiz, eşleşmesiz). Hedef
+  /// cüzdan inceleme sırasında değiştirilince ([switchTarget]) dosya yeniden
+  /// okunmadan buradan yeniden kurulur.
+  List<ImportDraft> _rawDrafts = const [];
+  int _rawSkipped = 0;
+
+  /// Taslaklarla aynı sırada satır bakiyeleri (sütun yoksa boş/`null` dolu);
+  /// kapanış bakiyesi buradan okunur (bkz. [statementClosing]).
+  List<double?> _balances = const [];
+
+  /// Ekstrenin kanıtlanmış kapanış bakiyesi; yoksa `null`.
+  StatementClosing? _closing;
+
+  /// Tablo dosyalarında başlık imzası: "bu biçimdeki ekstreyi geçen sefer
+  /// hangi cüzdana aktarmıştın" hafızasının anahtarı. PDF/OCR'da `null`.
+  String? _sourceKey;
+
+  /// Son incelemenin hedefi kart mı / ekstre başka para biriminde mi —
+  /// bitiş ekranındaki kapanış kıyası bu durumlarda yapılmaz.
+  bool _targetIsCard = false;
+  String? _foreignCurrency;
+
   /// İncelemenin başında çekilen defter (id → kayıt). Yaklaşık eşleşmede
   /// "tutarı düzelt" kararı, kaydın TAMAMINI (kategori, not, fiş…) koruyarak
   /// yalnız tutarını değiştirmek için buradan okur.
@@ -213,6 +243,13 @@ class BankImportCubit extends Cubit<BankImportState>
     _lastTable = null;
     _lastMapping = null;
     _dismissedLeftovers = {};
+    _rawDrafts = const [];
+    _rawSkipped = 0;
+    _balances = const [];
+    _closing = null;
+    _sourceKey = null;
+    _targetIsCard = false;
+    _foreignCurrency = null;
 
     final DetectedStatementFormat detected;
     try {
@@ -381,6 +418,7 @@ class BankImportCubit extends Cubit<BankImportState>
     _reconciliation = result.reconciliation;
     _verification = result.verification;
     _cardFacts = result.cardFacts;
+    _balances = result.balances;
   }
 
   /// Biçim imzası için dosyanın ilk baytları. 512 bayt hem her imzayı hem de
@@ -540,6 +578,10 @@ class BankImportCubit extends Cubit<BankImportState>
     try {
       final result = assessment.result;
       _reconciliation = result.reconciliation;
+      _balances = result.balances;
+      _sourceKey = _mapper
+          .headerSignature(table, assessment.mapping.headerRowIndex)
+          .join('\u001f');
       final sourceText = table.rows.map((r) => r.join(' ')).join('\n');
       _statementCurrency = detectDominantCurrency(sourceText);
       // CSV/Excel de PDF ile aynı doğrulama kapısından geçer: bakiye zinciri
@@ -732,6 +774,8 @@ class BankImportCubit extends Cubit<BankImportState>
       normalizeCategoryName(a) == normalizeCategoryName(b);
 
   Future<void> _toReview(List<ImportDraft> raw, int skipped) async {
+    _rawDrafts = raw;
+    _rawSkipped = skipped;
     // Kullanıcının TÜM geçmişi tek sorguda çekilir: hem geçmişe dayalı kategori
     // tahmini (öğrenen) hem dedup için ortak kullanılır.
     var history = const <TransactionEntity>[];
@@ -752,19 +796,24 @@ class BankImportCubit extends Cubit<BankImportState>
     };
 
     var drafts = [
-      for (final d in raw) d.copyWith(categoryId: _guessCategory(d, d.type)),
+      for (final d in raw)
+        () {
+          final g = _guessCategory(d, d.type);
+          return d.withCategory(g.id, g.source);
+        }(),
     ];
 
+    // Bakiye zinciri tutan ekstrede her satır bakiyeyi değiştirir: aynı
+    // gün aynı tutarlı iki satır İKİ gerçek harekettir, dosya içi tekrar
+    // sayılmamalı (bkz. `markDuplicateDrafts`).
+    final rowsProvenDistinct =
+        _verification.status == StatementVerificationStatus.verified ||
+            _reconciliation?.status == ReconcileStatus.matched;
     if (drafts.isNotEmpty) {
       drafts = markDuplicateDrafts(
         drafts,
         history,
-        // Bakiye zinciri tutan ekstrede her satır bakiyeyi değiştirir: aynı
-        // gün aynı tutarlı iki satır İKİ gerçek harekettir, dosya içi tekrar
-        // sayılmamalı (bkz. `markDuplicateDrafts`).
-        rowsProvenDistinct:
-            _verification.status == StatementVerificationStatus.verified ||
-                _reconciliation?.status == ReconcileStatus.matched,
+        rowsProvenDistinct: rowsProvenDistinct,
         rootOf: _rootOf,
       );
     }
@@ -772,10 +821,10 @@ class BankImportCubit extends Cubit<BankImportState>
     // Hedef cüzdanın birimi HER ZAMAN okunur: inceleme ekranı tutarları bu
     // birimle biçimlendirir (eskiden yalnız uyarı gerektiğinde okunuyordu, bu
     // yüzden tutarlar hep ₺ ile gösteriliyordu — USD/EUR cüzdanda yanlış).
-    final wRes = await _metrics.walletRepository.getWalletById(_walletId);
-    final walletCurrency = wRes.fold((_) => null, (w) => w?.currency);
-    final targetIsCard =
-        wRes.fold((_) => false, (w) => w?.isCreditCard ?? false);
+    final target = (await _metrics.walletRepository.getWalletById(_walletId))
+        .fold((_) => null, (w) => w);
+    final walletCurrency = target?.currency;
+    final targetIsCard = target?.isCreditCard ?? false;
 
     // Ekstre belirgin bir para birimi taşıyor ve bu hedef cüzdanınkinden
     // farklıysa ayrıca uyar (ör. USD ekstresi TRY cüzdana).
@@ -784,6 +833,28 @@ class BankImportCubit extends Cubit<BankImportState>
             _statementCurrency != walletCurrency)
         ? _statementCurrency
         : null;
+    _targetIsCard = targetIsCard;
+    _foreignCurrency = foreignCurrency;
+    _closing = statementClosing(
+      drafts: raw,
+      balances: _balances,
+      reconciliation: _reconciliation,
+      verification: _verification,
+    );
+
+    // Satır satır bakiye taşıyan dosya bir HESAP ekstresidir; kart
+    // ekstrelerinde bakiye sütunu olmaz (kart künyesi ayrı okunur).
+    final accountOnCard =
+        targetIsCard && _cardFacts == null && _balances.any((b) => b != null);
+
+    final wallets = await _wallets();
+    final suggestion = await _suggestTarget(
+      drafts: drafts,
+      wallets: wallets,
+      target: target,
+      accountOnCard: accountOnCard,
+      rowsProvenDistinct: rowsProvenDistinct,
+    );
 
     emit(BankImportReview(
       drafts: drafts,
@@ -801,7 +872,179 @@ class BankImportCubit extends Cubit<BankImportState>
       leftovers: _leftoversFor(drafts),
       cardFacts: _cardFacts,
       targetIsCard: targetIsCard,
+      targetSuggestion: suggestion,
+      accountStatementOnCard: accountOnCard,
     ));
+  }
+
+  /// Kullanıcının cüzdanları; okunamazsa boş (öneriler yalnız ipucudur,
+  /// okunamamaları akışı durdurmamalı).
+  Future<List<WalletEntity>> _wallets() async =>
+      (await _metrics.walletRepository.getWallets(_userId))
+          .fold((_) => const <WalletEntity>[], (list) => list);
+
+  /// Hedef cüzdan yanlış görünüyorsa daha uygun olanı (bkz.
+  /// [TargetSuggestionReason]); sıra kanıtın gücüne göre.
+  ///
+  /// En güçlüsü "satırlar başka cüzdanda BİREBİR kayıtlı": cihazda ölçüldü —
+  /// "Banka Kartm"a aktarılmış bir ekstre aynen "World" kartına da uyarısız
+  /// aktarılabiliyordu, çünkü tekrar tespiti yalnız HEDEF cüzdanın defterine
+  /// bakıyordu.
+  Future<TargetSuggestion?> _suggestTarget({
+    required List<ImportDraft> drafts,
+    required List<WalletEntity> wallets,
+    required WalletEntity? target,
+    required bool accountOnCard,
+    required bool rowsProvenDistinct,
+  }) async {
+    if (drafts.isEmpty || wallets.isEmpty) return null;
+    String nameOf(WalletEntity w) => familyLabel(w, wallets);
+    WalletEntity? byId(String? id) =>
+        id == null ? null : wallets.where((w) => w.id == id).firstOrNull;
+
+    // (1) Satırlar başka bir cüzdanda birebir kayıtlı. Hedefte zaten
+    // çoğunluk birebir eşleşiyorsa (ekstre bu cüzdana tekrar aktarılıyor)
+    // bakmaya gerek yok.
+    final exactHere =
+        drafts.where((d) => d.duplicateOf?.kind == DuplicateKind.exact).length;
+    if (exactHere * 2 < drafts.length) {
+      WalletEntity? best;
+      var bestCount = 0;
+      for (final w in wallets) {
+        if (w.id == null || w.id == _walletId) continue;
+        final other = (await _txRepo.getTransactions(
+          userId: _userId,
+          walletId: w.id!,
+        ))
+            .fold((_) => const <TransactionEntity>[], (l) => l);
+        if (other.isEmpty) continue;
+        final count = markDuplicateDrafts(
+          _rawDrafts,
+          other,
+          rowsProvenDistinct: rowsProvenDistinct,
+        ).where((d) => d.duplicateOf?.kind == DuplicateKind.exact).length;
+        if (count > bestCount) {
+          best = w;
+          bestCount = count;
+        }
+      }
+      final n = drafts.length;
+      final enough =
+          n <= 3 ? bestCount == n : bestCount >= 3 && bestCount >= n * 0.3;
+      if (best != null && enough) {
+        return TargetSuggestion(
+          walletId: best.id!,
+          walletName: nameOf(best),
+          reason: TargetSuggestionReason.entriesElsewhere,
+          matchCount: bestCount,
+        );
+      }
+    }
+
+    // (2) Kart ekstresi: son 4 hanesi TEK bir kart cüzdanıyla eşleşiyor.
+    final last4 = _cardFacts?.last4;
+    if (last4 != null) {
+      final cards = wallets.where((w) => w.creditCard?.last4 == last4).toList();
+      if (cards.length == 1 && cards.single.id != _walletId) {
+        return TargetSuggestion(
+          walletId: cards.single.id!,
+          walletName: nameOf(cards.single),
+          reason: TargetSuggestionReason.cardNumber,
+          last4: last4,
+        );
+      }
+    }
+
+    // (3) Hesap ekstresi kart cüzdanına gidiyor: kartın ödendiği hesap.
+    if (accountOnCard) {
+      final owner = byId(target?.creditCard?.paymentWalletId);
+      if (owner != null && !owner.isCreditCard) {
+        return TargetSuggestion(
+          walletId: owner.id!,
+          walletName: nameOf(owner),
+          reason: TargetSuggestionReason.accountOnCard,
+        );
+      }
+    }
+
+    // (4) Aynı biçimdeki ekstre daha önce başka cüzdana aktarıldı.
+    final key = _sourceKey;
+    if (key != null) {
+      final remembered = byId((await _sourceWallets())[key]);
+      if (remembered != null && remembered.id != _walletId) {
+        return TargetSuggestion(
+          walletId: remembered.id!,
+          walletName: nameOf(remembered),
+          reason: TargetSuggestionReason.usedBefore,
+        );
+      }
+    }
+    return null;
+  }
+
+  /// İnceleme sırasında hedef cüzdanı değiştirir. Dosya yeniden okunmaz:
+  /// ham taslaklar yeni cüzdanın defteri ve kategori havuzuyla yeniden
+  /// eşleştirilip tahmin edilir. İncelemedeki düzenlemeler bu yüzden gider
+  /// — eylem akışın başında, öneri şeridinden kullanılmak üzere.
+  Future<void> switchTarget(String walletId) async {
+    if (state is! BankImportReview || walletId == _walletId) return;
+    _walletId = walletId;
+    _dismissedLeftovers = {};
+    emit(const BankImportParsing());
+    try {
+      _expenseCats = await _walletCategories.categoriesFor(
+        walletId: walletId,
+        isExpense: true,
+      );
+      _incomeCats = await _walletCategories.categoriesFor(
+        walletId: walletId,
+        isExpense: false,
+      );
+      await _toReview(_rawDrafts, _rawSkipped);
+    } catch (e) {
+      emit(BankImportError('Cüzdan değiştirilemedi: $e'));
+    }
+  }
+
+  static const _lastWalletPrefsKey = 'bank_import_last_wallet';
+  static const _sourceWalletsPrefsKey = 'bank_import_source_wallets';
+
+  /// Son içe aktarımın hedef cüzdanı (kurulum adımının varsayılanı); yoksa
+  /// `null`. Çoğu kullanıcı hep aynı hesabın ekstresini aktarır — varsayılanın
+  /// o an AKTİF cüzdan olması her seferinde yanlış cüzdanla başlatıyordu.
+  Future<String?> lastTargetWalletId() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(_lastWalletPrefsKey);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// `kaynak imzası → cüzdan kimliği` hafızası (best-effort).
+  Future<Map<String, String>> _sourceWallets() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_sourceWalletsPrefsKey);
+      if (raw == null) return const {};
+      return (jsonDecode(raw) as Map).cast<String, String>();
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  /// Bu içe aktarımın hedefini hatırlar: son hedef + (tablo dosyasında)
+  /// başlık imzasına göre hedef. Best-effort.
+  Future<void> _rememberTarget() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_lastWalletPrefsKey, _walletId);
+      final key = _sourceKey;
+      if (key != null) {
+        final map = {...await _sourceWallets(), key: _walletId};
+        await prefs.setString(_sourceWalletsPrefsKey, jsonEncode(map));
+      }
+    } catch (_) {}
   }
 
   /// Ekstre döneminde defterde duran ama hiçbir satırla eşleşmemiş, olası
@@ -838,28 +1081,39 @@ class BankImportCubit extends Cubit<BankImportState>
   /// Etiket sözlükten SONRA gelir: gerçek bir Garanti ekstresinde banka tüm
   /// kart harcamalarını "Alışveriş" etiketliyor, önde durunca Market/İlaç/
   /// Fatura satırlarını eziyordu (bkz. `CategoryGuesser.guessFromSourceTag`).
-  String? _guessCategory(ImportDraft d, TransactionTypeModel type) {
+  ({String? id, CategorySource? source}) _guessCategory(
+      ImportDraft d, TransactionTypeModel type) {
     final isIncome = type == TransactionTypeModel.income;
     final candidates = isIncome ? _incomeCats : _expenseCats;
     final index = _historyIndex;
-    return (index == null
-            ? null
-            : _guesser.guessFromHistory(
-                description: d.description,
-                isIncome: isIncome,
-                index: index,
-                candidates: candidates,
-              )) ??
-        _guesser.guess(
-          description: d.description,
-          isIncome: isIncome,
-          candidates: candidates,
-        ) ??
-        _guesser.guessFromSourceTag(
-          sourceTag: d.sourceTag,
-          isIncome: isIncome,
-          candidates: candidates,
-        );
+    final fromHistory = index == null
+        ? null
+        : _guesser.guessFromHistory(
+            description: d.description,
+            isIncome: isIncome,
+            index: index,
+            candidates: candidates,
+          );
+    if (fromHistory != null) {
+      return (id: fromHistory, source: CategorySource.history);
+    }
+    final fromKeyword = _guesser.guess(
+      description: d.description,
+      isIncome: isIncome,
+      candidates: candidates,
+    );
+    if (fromKeyword != null) {
+      return (id: fromKeyword, source: CategorySource.keyword);
+    }
+    final fromTag = _guesser.guessFromSourceTag(
+      sourceTag: d.sourceTag,
+      isIncome: isIncome,
+      candidates: candidates,
+    );
+    return (
+      id: fromTag,
+      source: fromTag == null ? null : CategorySource.bankTag
+    );
   }
 
   /// Türü değişen taslağı yeniden kurar. `copyWith` DEĞİL: yeni tür için
@@ -875,12 +1129,14 @@ class BankImportCubit extends Cubit<BankImportState>
     final match = d.duplicateOf;
     final keepMatch = match != null && match.kind == DuplicateKind.withinFile;
     final dropsLedgerMatch = match != null && !keepMatch;
+    final guess = _guessCategory(d, type);
     return ImportDraft(
       date: d.date,
       description: d.description,
       amount: d.amount,
       type: type,
-      categoryId: _guessCategory(d, type),
+      categoryId: guess.id,
+      categorySource: guess.source,
       sourceTag: d.sourceTag,
       reference: d.reference,
       duplicateOf: keepMatch ? match : null,
@@ -938,7 +1194,7 @@ class BankImportCubit extends Cubit<BankImportState>
   void setDraftCategory(int i, String categoryId) => _mutate(
         (d) => _rematch([
           for (var k = 0; k < d.length; k++)
-            k == i ? d[k].copyWith(categoryId: categoryId) : d[k]
+            k == i ? d[k].withCategory(categoryId, CategorySource.user) : d[k]
         ], [
           i
         ]),
@@ -982,8 +1238,24 @@ class BankImportCubit extends Cubit<BankImportState>
         rootOf: _rootOf,
       );
 
-  void setAllSelected(bool value) =>
-      _mutate((d) => [for (final x in d) _withSelected(x, value)]);
+  /// Toplu seçim, yalnız [indexes]'e (inceleme ekranında GÖRÜNEN satırlar).
+  ///
+  /// Seçerken tekrar sanılan satırlar ATLANIR: eskiden "Tümü" onları da
+  /// seçiyor (ve "tutarı düzelt" kararını düşürüyordu) — defterde zaten olan
+  /// harcama ikinci kez yazılıyordu. Tekrar satırı ancak kendi panelindeki
+  /// açık kararla ("Farklı işlem, ekle") eklenir. Seçimi kaldırmak ise
+  /// hepsine uygulanır; kaldırmak veri riski taşımaz.
+  void setSelectedAt(Iterable<int> indexes, bool value) {
+    final target = indexes.toSet();
+    if (target.isEmpty) return;
+    _mutate((d) => [
+          for (var k = 0; k < d.length; k++)
+            if (target.contains(k) && (!value || !d[k].isDuplicate))
+              _withSelected(d[k], value)
+            else
+              d[k],
+        ]);
+  }
 
   /// Tüm taslakları tek türe (gider/gelir) çevirir. Tek pozitif "Tutar"
   /// sütunlu (işaretsiz) ekstrelerde tüm satırlar yanlışlıkla aynı yöne
@@ -1020,7 +1292,9 @@ class BankImportCubit extends Cubit<BankImportState>
     if (target.isEmpty) return;
     _mutate((d) => _rematch([
           for (var k = 0; k < d.length; k++)
-            target.contains(k) ? d[k].copyWith(categoryId: categoryId) : d[k],
+            target.contains(k)
+                ? d[k].withCategory(categoryId, CategorySource.user)
+                : d[k],
         ], target));
   }
 
@@ -1146,6 +1420,10 @@ class BankImportCubit extends Cubit<BankImportState>
 
     final total = selected.length + corrections.length;
     emit(BankImportCommitting(done: 0, total: total));
+    // Bu içe aktarımın bütün satırları aynı kimliği taşır: "Son içe
+    // aktarımlar" listesi ve bitiş ekranından çıkıldıktan sonra geri alma
+    // buna dayanır. UUIDv7: yazıldığı an kimliğin içinde.
+    final batchId = UidGenerator.generateV7();
     var added = 0;
     final importedIds = <String>[];
     final linkable = <LinkSuggestion>[];
@@ -1158,6 +1436,7 @@ class BankImportCubit extends Cubit<BankImportState>
         userId: _userId,
         walletId: _walletId,
         categoryName: _categoryNameOf(draft.categoryId, draft.isIncome),
+        importBatchId: batchId,
       );
       final res = await _txRepo.addTransaction(entity);
       res.fold((_) {}, (_) {
@@ -1199,6 +1478,7 @@ class BankImportCubit extends Cubit<BankImportState>
     final cardSaved = await _saveCardStatement();
     await _metrics.syncBalance(_walletId);
     _notifier.notify(userId: _userId, walletId: _walletId);
+    await _rememberTarget();
 
     emit(await _buildDone(
       added: added,
@@ -1215,6 +1495,7 @@ class BankImportCubit extends Cubit<BankImportState>
   /// olarak yazar (kesim, son ödeme, dönem borcu, asgari; limit ve eksikse son
   /// 4 hane). Daha YENİ bir beyan zaten varsa eski ekstre onu ezmez.
   Future<bool> _saveCardStatement() async {
+    _lastCardWrite = null;
     final facts = _cardFacts;
     if (facts == null || !facts.isClosedStatement) return false;
     final wallet = (await _metrics.walletRepository.getWalletById(_walletId))
@@ -1224,21 +1505,63 @@ class BankImportCubit extends Cubit<BankImportState>
     final closing = CardCycle.dateOnly(facts.closingDate!);
     final existing = card.lastStatement;
     if (existing != null && existing.closingDate.isAfter(closing)) return false;
+    final written = CardStatement(
+      closingDate: closing,
+      dueDate: facts.dueDate ?? CardCycle(card).dueFor(closing),
+      statementBalance: facts.statementBalance!,
+      minimumPayment: facts.minimumPayment,
+      source: CardStatementSource.bankImport,
+      recordedAt: DateTime.now(),
+    );
     final updated = wallet.copyWith(
       creditCard: card.copyWith(
-        lastStatement: CardStatement(
-          closingDate: closing,
-          dueDate: facts.dueDate ?? CardCycle(card).dueFor(closing),
-          statementBalance: facts.statementBalance!,
-          minimumPayment: facts.minimumPayment,
-          source: CardStatementSource.bankImport,
-          recordedAt: DateTime.now(),
-        ),
+        lastStatement: written,
         limit: facts.limit,
         last4: card.last4 ?? facts.last4,
       ),
     );
-    return (await _metrics.walletRepository.updateWallet(updated)).isRight();
+    final ok =
+        (await _metrics.walletRepository.updateWallet(updated)).isRight();
+    if (ok) {
+      _lastCardWrite = _CardStatementWrite(
+        written: written,
+        before: card,
+        limitWritten: facts.limit,
+        last4Written: card.last4 == null ? facts.last4 : null,
+      );
+    }
+    return ok;
+  }
+
+  /// Künyeyi içe aktarım öncesine döndürür — yalnız karttaki ekstre HÂLÂ
+  /// bizim yazdığımızsa. Arada kullanıcı ya da başka bir içe aktarım yeni bir
+  /// beyan yazdıysa o beyan kullanıcınındır, ezilmez. Limit ve son 4 hane de
+  /// yalnız bizim yazdığımız değerde duruyorsa geri alınır (kullanıcı bu
+  /// arada kart formundan düzelttiyse onun düzeltmesi kalır).
+  Future<bool> _revertCardStatement() async {
+    final write = _lastCardWrite;
+    _lastCardWrite = null;
+    if (write == null) return false;
+    final wallet = (await _metrics.walletRepository.getWalletById(_walletId))
+        .fold((_) => null, (w) => w);
+    final card = wallet?.creditCard;
+    if (wallet == null || card == null) return false;
+    if (card.lastStatement != write.written) return false;
+    final before = write.before;
+    final restoreLimit =
+        write.limitWritten != null && card.limit == write.limitWritten;
+    final restoreLast4 =
+        write.last4Written != null && card.last4 == write.last4Written;
+    final reverted = wallet.copyWith(
+      creditCard: card.copyWith(
+        lastStatement: before.lastStatement,
+        clearLastStatement: before.lastStatement == null,
+        limit: restoreLimit ? before.limit : null,
+        clearLimit: restoreLimit && before.limit == null,
+        clearLast4: restoreLast4,
+      ),
+    );
+    return (await _metrics.walletRepository.updateWallet(reverted)).isRight();
   }
 
   /// Kullanıcının gider tarafındaki "Yatırım" kategorisi ve alt kategorileri
@@ -1261,24 +1584,29 @@ class BankImportCubit extends Cubit<BankImportState>
   /// başa döner. İkinci çağrı no-op (id listesi boşalır). Oturum kapanınca
   /// (yeni dosya/`reset`) geri alma imkânı da doğal olarak biter.
   ///
-  /// Dönüş: bu arada bir kayda BAĞLANDIĞI (benimsendiği) için yerinde
-  /// bırakılan satır sayısı. Bağlanmış satır artık bir birikimin, borcun ya
-  /// da transferin nakit bacağıdır: silmek o kaydı parasız bırakır, eski
-  /// hâlini geri yazmak bağı sessizce koparırdı — ikisinde de bakiye kaydın
-  /// tutarı kadar kayardı.
-  Future<int> undoImport() async {
+  /// Dönüş: silinen, eski tutarına dönen ve bu arada bir kayda BAĞLANDIĞI
+  /// (benimsendiği) için yerinde bırakılan satır sayıları. Bağlanmış satır
+  /// artık bir birikimin, borcun ya da transferin nakit bacağıdır: silmek o
+  /// kaydı parasız bırakır, eski hâlini geri yazmak bağı sessizce koparırdı —
+  /// ikisinde de bakiye kaydın tutarı kadar kayardı.
+  Future<ImportUndoResult> undoImport() async {
     final ids = _lastImportedIds;
     final originals = _lastCorrectedOriginals;
-    if (ids.isEmpty && originals.isEmpty) return 0;
+    if (ids.isEmpty && originals.isEmpty && _lastCardWrite == null) {
+      return ImportUndoResult.none;
+    }
     _lastImportedIds = const [];
     _lastCorrectedOriginals = const [];
     var kept = 0;
+    var removed = 0;
+    var reverted = 0;
     for (final id in ids) {
       if (await _isAdopted(id)) {
         kept++;
         continue;
       }
-      await _txRepo.deleteTransaction(id);
+      final res = await _txRepo.deleteTransaction(id);
+      if (res.isRight()) removed++;
     }
     // Düzeltilen kayıtlar eski tutarlarına (ve referanslarına) döner.
     for (final original in originals) {
@@ -1287,12 +1615,20 @@ class BankImportCubit extends Cubit<BankImportState>
         kept++;
         continue;
       }
-      await _txRepo.updateTransaction(original);
+      final res = await _txRepo.updateTransaction(original);
+      if (res.isRight()) reverted++;
     }
+    // Künye bakiye senkronundan ÖNCE (commit'teki sırayla aynı gerekçe).
+    final cardReverted = await _revertCardStatement();
     await _metrics.syncBalance(_walletId);
     _notifier.notify(userId: _userId, walletId: _walletId);
     emit(const BankImportInitial());
-    return kept;
+    return ImportUndoResult(
+      removed: removed,
+      reverted: reverted,
+      kept: kept,
+      cardStatementReverted: cardReverted,
+    );
   }
 
   /// Satır bu arada bir kayda bağlandı mı (taze okuma). Okunamazsa `false`:
@@ -1319,6 +1655,34 @@ class BankImportCubit extends Cubit<BankImportState>
       rawDrafts: const [],
       skippedRows: 0,
     ));
+  }
+
+  /// Test tohumu: ayrıştırılmış HAM taslakları gerçek inceleme kurulumundan
+  /// (tahmin, tekrar tespiti, hedef önerisi, kapanış bakiyesi) geçirir —
+  /// dosya okumadan. [debugSeedReview] bu adımları atlar.
+  @visibleForTesting
+  Future<void> debugParsed({
+    required String userId,
+    required String walletId,
+    required List<ImportDraft> raw,
+    List<double?> balances = const [],
+    StatementVerification verification = StatementVerification.none,
+    BalanceReconciliation? reconciliation,
+    CardStatementFacts? cardFacts,
+    String? sourceKey,
+    List<CategoryEntity> expenseCategories = const [],
+    List<CategoryEntity> incomeCategories = const [],
+  }) async {
+    _userId = userId;
+    _walletId = walletId;
+    _balances = balances;
+    _verification = verification;
+    _reconciliation = reconciliation;
+    _cardFacts = cardFacts;
+    _sourceKey = sourceKey;
+    _expenseCats = expenseCategories;
+    _incomeCats = incomeCategories;
+    await _toReview(raw, 0);
   }
 
   /// Test tohumu: cubit'i doğrudan inceleme durumuna sokar (normalde dosya
@@ -1373,6 +1737,22 @@ class BankImportCubit extends Cubit<BankImportState>
     final hasOutOfMonthRows = committed.any(
       (d) => d.date.isBefore(monthStart) || d.date.isAfter(monthEnd),
     );
+    DateTime? first;
+    DateTime? last;
+    for (final d in committed) {
+      if (first == null || d.date.isBefore(first)) first = d.date;
+      if (last == null || d.date.isAfter(last)) last = d.date;
+    }
+
+    // Kapanış kıyası yalnız hesap ekstresinde ve aynı birimde anlamlı: kart
+    // cüzdanının bakiyesi borçtur, yabancı birimli ekstrenin bakiyesi
+    // cüzdanın biriminde değildir.
+    final closing =
+        (_targetIsCard || _foreignCurrency != null) ? null : _closing;
+    double? ledgerAtClosing;
+    if (closing != null) {
+      ledgerAtClosing = await _ledgerBalanceAt(balance, closing.date);
+    }
 
     return BankImportDone(
       added: added,
@@ -1385,6 +1765,146 @@ class BankImportCubit extends Cubit<BankImportState>
       unresolvedLeftovers: unresolvedLeftovers,
       linkSuggestions: linkSuggestions,
       cardStatementSaved: cardStatementSaved,
+      firstDate: first,
+      lastDate: last,
+      closing: closing,
+      ledgerAtClosing: ledgerAtClosing,
     );
   }
+
+  /// Cüzdanın [day] günü SONUNDAKİ defter bakiyesi: bugünkü bakiyeden o
+  /// günden sonra yazılmış hareketler geri çıkarılır. Bakiye defterden
+  /// türediği için (bkz. `syncBalance`) bu, o günkü bakiyenin kendisidir.
+  Future<double?> _ledgerBalanceAt(double balanceNow, DateTime day) async {
+    final res = await _txRepo.getTransactions(
+      userId: _userId,
+      walletId: _walletId,
+    );
+    return res.fold((_) => null, (list) {
+      final end = DateTime(day.year, day.month, day.day + 1);
+      var after = 0.0;
+      for (final t in list) {
+        if (t.date.isBefore(end)) continue;
+        after += t.isIncome ? t.amount : -t.amount;
+      }
+      return ((balanceNow - after) * 100).round() / 100;
+    });
+  }
+
+  // --- içe aktarım geçmişi ---
+
+  /// Son içe aktarımlar (en yenisi önce), defterdeki `importBatchId`'lerden
+  /// kurulur — ayrı bir kayıt tutulmaz, yani satırlar silindikçe liste de
+  /// kendiliğinden küçülür. Bitiş ekranından çıkıldıktan SONRA da bir içe
+  /// aktarımı tek seferde geri almayı sağlar: eskiden bu imkân bitiş
+  /// ekranıyla birlikte kayboluyor, 157 satırı tek tek silmek gerekiyordu.
+  Future<List<ImportBatch>> importHistory({
+    required String userId,
+    int limit = 5,
+  }) async {
+    final wallets = (await _metrics.walletRepository.getWallets(userId))
+        .fold((_) => const <WalletEntity>[], (l) => l);
+    final groups = <String, List<TransactionEntity>>{};
+    for (final w in wallets) {
+      if (w.id == null) continue;
+      final txs = (await _txRepo.getTransactions(
+        userId: userId,
+        walletId: w.id!,
+      ))
+          .fold((_) => const <TransactionEntity>[], (l) => l);
+      for (final t in txs) {
+        final batch = t.importBatchId;
+        if (batch != null) groups.putIfAbsent(batch, () => []).add(t);
+      }
+    }
+    final batches = <ImportBatch>[];
+    for (final MapEntry(key: id, value: rows) in groups.entries) {
+      final importedAt = importedAtOf(id);
+      if (importedAt == null) continue;
+      final wallet = wallets.where((w) => w.id == rows.first.walletId);
+      var first = rows.first.date;
+      var last = rows.first.date;
+      for (final t in rows) {
+        if (t.date.isBefore(first)) first = t.date;
+        if (t.date.isAfter(last)) last = t.date;
+      }
+      batches.add(ImportBatch(
+        id: id,
+        walletId: rows.first.walletId,
+        walletName: wallet.isEmpty
+            ? rows.first.walletId
+            : familyLabel(wallet.first, wallets),
+        count: rows.length,
+        importedAt: importedAt,
+        firstDate: first,
+        lastDate: last,
+      ));
+    }
+    batches.sort((a, b) => b.importedAt.compareTo(a.importedAt));
+    return batches.take(limit).toList();
+  }
+
+  /// UUIDv7 kimliğinin içindeki yazılma anı (ilk 48 bit, milisaniye);
+  /// kimlik v7 değilse `null`.
+  @visibleForTesting
+  static DateTime? importedAtOf(String id) {
+    final hex = id.replaceAll('-', '');
+    if (hex.length != 32 || hex[12] != '7') return null;
+    final ms = int.tryParse(hex.substring(0, 12), radix: 16);
+    return ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
+  }
+
+  /// Geçmişteki bir içe aktarımı geri alır: o partinin HÂLÂ duran satırları
+  /// silinir, bu arada bir kayda bağlananlar yerinde kalır ([undoImport] ile
+  /// aynı gerekçe). Tutar düzeltmeleri ve kart künyesi burada geri alınamaz —
+  /// onların önceki hâli yalnız bitiş ekranındayken bellekte tutuluyor.
+  Future<ImportUndoResult> undoBatch(ImportBatch batch,
+      {required String userId}) async {
+    final txs = (await _txRepo.getTransactions(
+      userId: userId,
+      walletId: batch.walletId,
+    ))
+        .fold((_) => const <TransactionEntity>[], (l) => l)
+        .where((t) => t.importBatchId == batch.id);
+    var removed = 0;
+    var kept = 0;
+    for (final t in txs) {
+      final id = t.id;
+      if (id == null) continue;
+      if (t.isAdopted) {
+        kept++;
+        continue;
+      }
+      if ((await _txRepo.deleteTransaction(id)).isRight()) removed++;
+    }
+    // Aynı parti bu oturumun bitiş ekranında da duruyorsa oradaki "geri al"
+    // ikinci kez silmeye çalışmasın.
+    _lastImportedIds = [
+      for (final id in _lastImportedIds)
+        if (!txs.any((t) => t.id == id)) id,
+    ];
+    await _metrics.syncBalance(batch.walletId);
+    _notifier.notify(userId: userId, walletId: batch.walletId);
+    return ImportUndoResult(removed: removed, kept: kept);
+  }
+}
+
+/// Karta yazılan ekstre künyesi ve yazımdan önceki kart bilgisi (bkz.
+/// [BankImportCubit._revertCardStatement]).
+class _CardStatementWrite {
+  final CardStatement written;
+  final CreditCardInfo before;
+
+  /// Künyeyle birlikte yazılan limit (`null` → limit yazılmadı).
+  final double? limitWritten;
+
+  /// Kartta son 4 hane yokken künyeden yazılan değer (`null` → yazılmadı).
+  final String? last4Written;
+
+  const _CardStatementWrite({
+    required this.written,
+    required this.before,
+    required this.limitWritten,
+    required this.last4Written,
+  });
 }

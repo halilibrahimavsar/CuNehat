@@ -89,6 +89,9 @@ void main() {
             openingBalance: 0,
           ),
         ));
+    // Hedef önerisi diğer cüzdanlara bakar; bu dosyanın konusu değil.
+    when(() => walletRepo.getWallets(any()))
+        .thenAnswer((_) async => const Right(<WalletEntity>[]));
     final metrics = _MockMetrics();
     when(() => metrics.walletRepository).thenReturn(walletRepo);
 

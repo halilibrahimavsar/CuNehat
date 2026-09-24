@@ -3,6 +3,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'package:cunehat/core/services/recent_categories_service.dart';
+import 'package:cunehat/features/bank_import/data/card_statement_parser.dart';
 import 'package:cunehat/features/bank_import/data/statement_verification.dart';
 import 'package:cunehat/features/bank_import/domain/import_draft.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit.dart';
@@ -79,6 +80,7 @@ void main() {
     Intl.defaultLocale = 'tr';
     getIt.allowReassignment = true;
     registerFallbackValue(FakeCategoryEntity());
+    registerFallbackValue(TransactionTypeModel.expense);
   });
 
   late MockBankImportCubit cubit;
@@ -96,7 +98,9 @@ void main() {
     fullscreenToggles = 0;
     // Kategori seçicileri kapsamlarını cubit'in hedef cüzdanından alır.
     when(() => cubit.walletId).thenReturn('w1');
-    when(() => cubit.setAllSelected(any())).thenReturn(null);
+    when(() => cubit.setSelectedAt(any(), any())).thenReturn(null);
+    when(() => cubit.setAllType(any())).thenReturn(null);
+    when(() => cubit.switchTarget(any())).thenAnswer((_) async {});
     when(() => cubit.toggleDraft(any())).thenReturn(null);
     when(() => cubit.setDraftCategory(any(), any())).thenReturn(null);
     when(() => cubit.applyCategoryToIndexes(any(), any())).thenReturn(null);
@@ -155,6 +159,9 @@ void main() {
     StatementVerification verification = StatementVerification.none,
     List<CategoryEntity>? expenseCategories,
     List<LedgerLeftover> leftovers = const [],
+    TargetSuggestion? targetSuggestion,
+    CardStatementFacts? cardFacts,
+    bool accountStatementOnCard = false,
   }) =>
       BankImportReview(
         drafts: drafts,
@@ -169,6 +176,9 @@ void main() {
         sourceUnresolvedCells: sourceUnresolvedCells,
         verification: verification,
         leftovers: leftovers,
+        targetSuggestion: targetSuggestion,
+        cardFacts: cardFacts,
+        accountStatementOnCard: accountStatementOnCard,
       );
 
   Future<void> pump(
@@ -352,6 +362,13 @@ void main() {
         ),
       ),
     );
+
+    // Sıkı kipte olumlu sonuç tek çip: ayrıntılı kart ekranın ~%40'ını
+    // kaplıyordu (cihazda ölçüldü). Döküm bir dokunuşla açılır.
+    expect(find.text('Doğrulandı'), findsOneWidget);
+    expect(find.text('Aritmetik olarak doğrulandı'), findsNothing);
+    await tester.tap(find.byTooltip('Ayrıntıları göster'));
+    await tester.pumpAndSettle();
 
     expect(find.text('Aritmetik olarak doğrulandı'), findsOneWidget);
     // Kullanıcı neye güvendiğini görebilmeli: kontrollerin dökümü de basılır.
@@ -552,6 +569,10 @@ void main() {
     // (seçilebilir satır) görünür. Seçen satır sağdaki, yani sonuncusu.
     await tester.tap(find.text('Fatura').last);
     await tester.pumpAndSettle();
+    // Önizleme diyaloğu: uygulanacak satır listelenir, onaylanınca uygulanır.
+    expect(find.text('“Fatura” kategorisini uygula'), findsOneWidget);
+    await tester.tap(find.text('1 satıra uygula'));
+    await tester.pumpAndSettle();
 
     // Doğru tahmin edilmiş 0. satıra DOKUNULMAZ: kapsamı süzgeç belirler.
     final captured = verify(
@@ -582,6 +603,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Fatura').last);
     await tester.pumpAndSettle();
+    await tester.tap(find.text('2 satıra uygula'));
+    await tester.pumpAndSettle();
 
     final captured = verify(
       () => cubit.applyCategoryToIndexes(captureAny(), 'Fatura'),
@@ -604,6 +627,14 @@ void main() {
     await tester.tap(find.textContaining('Görünen 2 satırı değiştir'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Fatura').last);
+    await tester.pumpAndSettle();
+
+    // Üzerine yazma onaydan ÖNCE görünür: hangi satırın kategorisi neden
+    // neye dönecek.
+    expect(find.text('Market → Fatura'), findsOneWidget);
+    expect(find.textContaining('1 satırın mevcut kategorisi değişecek'),
+        findsOneWidget);
+    await tester.tap(find.text('2 satıra uygula'));
     await tester.pumpAndSettle();
 
     final captured = verify(
@@ -697,6 +728,8 @@ void main() {
     // (seçilebilir satır) görünür, seçen sonuncusu.
     await tester.tap(find.text('Fatura').last);
     await tester.pumpAndSettle();
+    await tester.tap(find.text('2 satıra uygula'));
+    await tester.pumpAndSettle();
 
     final captured = verify(
       () => cubit.applyCategoryToIndexes(captureAny(), 'Fatura'),
@@ -753,6 +786,9 @@ void main() {
 
     await tester.tap(find.textContaining('Kalanını'));
     await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('1 satıra uygula'));
+    await tester.pumpAndSettle();
 
     // Yalnız BOŞ satır doldurulur; kategorili ikisinin üzerine yazılmaz.
     final captured = verify(
@@ -763,28 +799,220 @@ void main() {
   });
   // F1 güvenlik ağı: kümeleme ortak ÖN EKE bakıyor ve ön ek her zaman marka
   // değil ("TURK HAVA YOLLARI" + "TURK EKONOMI BANKASI" tek grup —
-  // `description_grouper.dart` "BİLİNEN SINIR"). Tek dokunuşluk kısayol yalnız
-  // SAYI gösterirse kullanıcı neye dokunduğunu görmeden onaylar; öneri
-  // etkilenecek satırdan örnek metin taşımalı.
-  testWidgets('benzer satır önerisi örnek açıklama gösterir', (tester) async {
+  // `description_grouper.dart` "BİLİNEN SINIR"). Öneri artık snackbar değil
+  // diyalog: etkilenecek satırlar listelenir ve tek tek çıkarılabilir.
+  group('benzer satır önerisi (diyalog)', () {
     final drafts = [
       _draft(description: 'MIGROS SANAL MARKET'),
       _draft(description: 'MIGROS JET KADIKOY', day: 6),
+      _draft(description: 'MIGROS 3421 USKUDAR', day: 7),
     ];
 
-    await pump(tester, review(drafts: drafts));
+    Future<void> pickFirstRow(WidgetTester tester) async {
+      await pump(tester, review(drafts: drafts));
+      await tester.tap(find.text('Kategori seç').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Fatura').last);
+      await tester.pumpAndSettle();
+    }
 
-    await tester.tap(find.text('Kategori seç').first);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Fatura').last);
+    testWidgets('satır seçilince kendiliğinden açılır, satırları listeler',
+        (tester) async {
+      await pickFirstRow(tester);
+
+      expect(
+          find.text('“Fatura” benzerlerine de uygulansın mı?'), findsOneWidget);
+      expect(find.byType(Dialog), findsOneWidget);
+      final inDialog = find.descendant(
+          of: find.byType(Dialog), matching: find.text('MIGROS JET KADIKOY'));
+      expect(inDialog, findsOneWidget);
+      // Snackbar YOK (eski 6 sn'lik öneri alttaki "Ekle"yi örtüyordu).
+      expect(find.byType(SnackBar), findsNothing);
+    });
+
+    testWidgets('işareti kaldırılan satır uygulanmaz', (tester) async {
+      await pickFirstRow(tester);
+
+      await tester.tap(find.descendant(
+          of: find.byType(Dialog), matching: find.text('MIGROS JET KADIKOY')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('1 satıra uygula'));
+      await tester.pumpAndSettle();
+
+      final captured = verify(
+        () => cubit.applyCategoryToIndexes(captureAny(), 'Fatura'),
+      ).captured;
+      expect(captured.single, [2]);
+    });
+
+    testWidgets('"Yalnız bu satır" başka hiçbir satıra dokunmaz',
+        (tester) async {
+      await pickFirstRow(tester);
+
+      await tester.tap(find.text('Yalnız bu satır'));
+      await tester.pumpAndSettle();
+
+      verify(() => cubit.setDraftCategory(0, 'Fatura')).called(1);
+      verifyNever(() => cubit.applyCategoryToIndexes(any(), any()));
+      expect(find.byType(Dialog), findsNothing);
+    });
+
+    testWidgets('dar ekranda (360dp) diyalog taşmaz', (tester) async {
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      // Tam ekran: 640dp'de özet kartı + alt çubuk ilk satırı örtüyor.
+      await pump(
+        tester,
+        fullscreen: true,
+        review(drafts: [
+          for (var i = 0; i < 14; i++)
+            _draft(
+              description:
+                  'ENERJISA ELEKTRIK FATURA ODEMESI 2026/$i ISTANBUL SUBESI',
+              amount: 1234567.89,
+              day: i + 1,
+            ),
+        ]),
+      );
+      await tester.tap(find.text('Kategori seç').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Fatura').last);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(Dialog), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  testWidgets('incelemeden geri çıkış onay ister; vazgeçilirse kalınır',
+      (tester) async {
+    await pump(tester, review(drafts: [_draft(description: 'A')]));
+
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+    await navigator.maybePop();
     await tester.pumpAndSettle();
 
-    // Satırın kendisi de aynı metni taşıyor; iddia MESAJIN tamamına kurulur.
-    expect(
-      find.textContaining('daha var: MIGROS JET KADIKOY'),
-      findsOneWidget,
+    expect(find.text('İçe aktarımdan çıkılsın mı?'), findsOneWidget);
+    await tester.tap(find.text('İptal'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BankImportReviewView), findsOneWidget);
+  });
+
+  testWidgets('"Görünenleri seç" yalnız görünen satırları verir',
+      (tester) async {
+    await pump(
+      tester,
+      review(drafts: [
+        _draft(description: 'MARKET ALISVERISI', categoryId: 'Market')
+            .copyWith(selected: false),
+        _draft(description: 'BILINMEYEN ISLEM', day: 6)
+            .copyWith(selected: false),
+      ]),
     );
-    expect(find.text('Hepsine uygula'), findsOneWidget);
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Kategorisiz (1)'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Görünenleri seç (tekrarlar hariç)'));
+    await tester.pumpAndSettle();
+
+    final captured =
+        verify(() => cubit.setSelectedAt(captureAny(), true)).captured;
+    expect(captured.single, [1]);
+  });
+
+  testWidgets('yalnız tekrarlar görünürken "seç" pasif (sessiz no-op değil)',
+      (tester) async {
+    // Cihazda ölçüldü: dosya zaten aktarılmışken 157 satırın hepsi tekrardı,
+    // düğmeye basınca hiçbir şey olmuyor ama düğme etkin görünüyordu.
+    await pump(
+      tester,
+      review(drafts: [
+        _draft(description: 'A', categoryId: 'Market', duplicate: true)
+            .copyWith(selected: false),
+        _draft(description: 'B', categoryId: 'Market', day: 6),
+      ]),
+    );
+    // Kayıtlı satır katlanmış olabilir; açıp yine de denenir.
+    if (find.text('Göster').evaluate().isNotEmpty) {
+      await tester.tap(find.text('Göster').first);
+      await tester.pumpAndSettle();
+    }
+
+    final select = tester.widget<IconButton>(find.ancestor(
+        of: find.byIcon(Icons.done_all_rounded),
+        matching: find.byType(IconButton)));
+    expect(select.onPressed, isNull);
+  });
+
+  testWidgets('menü/diyalog kapanınca odak aramaya DÖNMEZ (klavye açılmaz)',
+      (tester) async {
+    // Cihazda ölçüldü: aranıp klavye kapatıldıktan sonra açılan her menü ya
+    // da diyalog kapanınca Flutter odağı arama alanına iade ediyor, klavye
+    // kendiliğinden açılıyordu.
+    await pump(tester, review(drafts: [_draft(description: 'A')]));
+    await tester.tap(find.byType(TextField));
+    await tester.pumpAndSettle();
+    expect(tester.testTextInput.isVisible, isTrue);
+    tester.testTextInput.hide();
+
+    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.pumpAndSettle();
+    await tester.tapAt(const Offset(5, 5)); // menüyü kapat
+    await tester.pumpAndSettle();
+
+    expect(tester.testTextInput.isVisible, isFalse);
+  });
+
+  testWidgets('aranırken özet kartı çekilir, odak bırakılınca geri gelir',
+      (tester) async {
+    // Cihazda ölçüldü: birkaç uyarılı ekstrede klavye açılınca kaydırılmayan
+    // özet kartı sayfayı 41px taşırıyordu.
+    await pump(tester, review(drafts: [_draft(description: 'A')]));
+    expect(find.textContaining('otomatik algılandı'), findsOneWidget);
+
+    await tester.tap(find.byType(TextField));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('otomatik algılandı'), findsNothing);
+
+    await tester.tapAt(const Offset(5, 590)); // alan dışına
+    await tester.pumpAndSettle();
+    expect(find.textContaining('otomatik algılandı'), findsOneWidget);
+  });
+
+  testWidgets('toplu tür çevirme önce kaç satırın değişeceğini sorar',
+      (tester) async {
+    await pump(
+      tester,
+      review(drafts: [
+        _draft(description: 'A', categoryId: 'Market'),
+        _draft(description: 'B', income: true, day: 6),
+      ]),
+    );
+
+    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('Tümünü çevir: Gider'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Tümü gider yapılsın mı?'), findsOneWidget);
+    expect(find.textContaining('1 satırın türü değişecek'), findsOneWidget);
+    verifyNever(() => cubit.setAllType(any()));
+
+    await tester.tap(find.text('Çevir'));
+    await tester.pumpAndSettle();
+    verify(() => cubit.setAllType(TransactionTypeModel.expense)).called(1);
+  });
+
+  testWidgets('hepsi zaten gider ise "gider yap" menüde yok', (tester) async {
+    await pump(tester, review(drafts: [_draft(description: 'A')]));
+
+    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Tümünü çevir: Gider'), findsNothing);
+    expect(find.textContaining('Tümünü çevir: Gelir'), findsOneWidget);
   });
 
   group('yaklaşık tekrar paneli', () {
@@ -944,8 +1172,8 @@ void main() {
 
       expect(find.widgetWithText(FilledButton, 'Atla'), findsOneWidget);
       expect(find.widgetWithText(FilledButton, 'Ekle'), findsNothing);
-      expect(find.widgetWithText(OutlinedButton, 'Yine de ekle'),
-          findsOneWidget);
+      expect(
+          find.widgetWithText(OutlinedButton, 'Yine de ekle'), findsOneWidget);
 
       await tester.tap(find.widgetWithText(FilledButton, 'Atla'));
       await tester.pumpAndSettle();
@@ -997,8 +1225,7 @@ void main() {
     );
     List<ImportDraft> drafts() => [
           _draft(description: 'MARKET ALISVERISI', categoryId: 'Market'),
-          _draft(
-              description: 'DEMKAR GIDA ISTANBUL', amount: 913.15, day: 5),
+          _draft(description: 'DEMKAR GIDA ISTANBUL', amount: 913.15, day: 5),
         ];
 
     setUp(() {
@@ -1006,7 +1233,8 @@ void main() {
       when(() => cubit.dismissLeftover(any())).thenReturn(null);
     });
 
-    testWidgets('şerit sayıyla görünür, sayfa kaydı ve adayı gerekçeleriyle '
+    testWidgets(
+        'şerit sayıyla görünür, sayfa kaydı ve adayı gerekçeleriyle '
         'gösterir; "bu satırla aynı" kararı cubit\'e gider', (tester) async {
       await pump(tester, review(drafts: drafts(), leftovers: [leftover]));
 
@@ -1132,5 +1360,210 @@ void main() {
     await tester.tap(find.text('Diğer satırla eşleştir'));
     await tester.pumpAndSettle();
     verify(() => cubit.moveMatch(1, 0)).called(1);
+  });
+
+  group('elden geçirme (2026-09-24)', () {
+    ImportDraft known(String description, {int day = 5}) => _draft(
+            description: description,
+            categoryId: 'Market',
+            duplicate: true,
+            day: day)
+        .copyWith(selected: false);
+
+    testWidgets('yanlış cüzdan önerisi en üstte ve tek dokunuşla değiştirir',
+        (tester) async {
+      await pump(
+        tester,
+        review(
+          drafts: [_draft(description: 'KIRA', categoryId: 'Fatura')],
+          targetSuggestion: const TargetSuggestion(
+            walletId: 'w2',
+            walletName: 'Banka',
+            reason: TargetSuggestionReason.entriesElsewhere,
+            matchCount: 157,
+          ),
+        ),
+      );
+
+      expect(find.textContaining('157 hareket “Banka”'), findsOneWidget);
+      await tester.tap(find.text('Hedefi “Banka” yap'));
+      await tester.pump();
+      verify(() => cubit.switchTarget('w2')).called(1);
+    });
+
+    testWidgets('hesap ekstresi karta gidiyorsa (öneri yoksa) uyarı çıkar',
+        (tester) async {
+      await pump(
+        tester,
+        review(
+          drafts: [_draft(description: 'KIRA', categoryId: 'Fatura')],
+          accountStatementOnCard: true,
+        ),
+      );
+      expect(find.textContaining('HESAP ekstresi'), findsOneWidget);
+    });
+
+    testWidgets(
+        'REGRESYON (cihaz): ekstrenin TAMAMI kayıtlıysa liste yerine "yeni '
+        'hareket yok"', (tester) async {
+      await pump(
+        tester,
+        review(drafts: [known('A'), known('B', day: 6)]),
+      );
+
+      expect(find.text('Bu ekstrede yeni hareket yok'), findsOneWidget);
+      expect(find.text('A'), findsNothing);
+
+      await tester.tap(find.text('Satırları yine de göster'));
+      await tester.pumpAndSettle();
+      expect(find.text('A'), findsOneWidget);
+    });
+
+    testWidgets('birebir kayıtlı satırlar tek satıra katlanır, açılabilir',
+        (tester) async {
+      await pump(
+        tester,
+        review(drafts: [
+          known('ESKI HAREKET'),
+          _draft(description: 'YENI HAREKET', categoryId: 'Market', day: 6),
+        ]),
+      );
+
+      expect(find.text('YENI HAREKET'), findsOneWidget);
+      expect(find.text('ESKI HAREKET'), findsNothing);
+      expect(find.text('1 satır zaten kayıtlı olduğu için gizlendi'),
+          findsOneWidget);
+
+      await tester.tap(find.text('1 satır zaten kayıtlı olduğu için gizlendi'));
+      await tester.pumpAndSettle();
+      expect(find.text('ESKI HAREKET'), findsOneWidget);
+      expect(find.text('Gizle'), findsOneWidget);
+    });
+
+    testWidgets('"Olası tekrar" süzgecinde kayıtlılar katlanmaz',
+        (tester) async {
+      await pump(
+        tester,
+        review(drafts: [
+          known('ESKI HAREKET'),
+          _draft(description: 'YENI HAREKET', categoryId: 'Market', day: 6),
+        ]),
+      );
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Olası tekrar (1)'));
+      await tester.pumpAndSettle();
+      expect(find.text('ESKI HAREKET'), findsOneWidget);
+    });
+
+    testWidgets('arama tutarı da bulur (913 → 913,15)', (tester) async {
+      await pump(
+        tester,
+        review(drafts: [
+          _draft(description: 'BIM', categoryId: 'Market', amount: 913.15),
+          _draft(description: 'SOK', categoryId: 'Market', amount: 45, day: 6),
+        ]),
+      );
+      await tester.enterText(find.byType(TextField), '913');
+      await tester.pumpAndSettle();
+      expect(find.text('BIM'), findsOneWidget);
+      expect(find.text('SOK'), findsNothing);
+    });
+
+    testWidgets(
+        'yalnız banka etiketinden tahmin edilenler işaretli ve süzülebilir',
+        (tester) async {
+      await pump(
+        tester,
+        review(drafts: [
+          _draft(description: 'POS 1234', categoryId: 'Market')
+              .withCategory('Market', CategorySource.bankTag),
+          _draft(description: 'MIGROS', categoryId: 'Market', day: 6)
+              .withCategory('Market', CategorySource.keyword),
+        ]),
+      );
+
+      expect(
+          find.byTooltip(
+              'Yalnız bankanın etiketinden tahmin edildi — kontrol et'),
+          findsOneWidget);
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Kontrol et (1)'));
+      await tester.pumpAndSettle();
+      expect(find.text('POS 1234'), findsOneWidget);
+      expect(find.text('MIGROS'), findsNothing);
+    });
+
+    testWidgets('Gelir/Gider süzgeci ve eklenecek toplamlar', (tester) async {
+      await pump(
+        tester,
+        review(drafts: [
+          _draft(description: 'MARKET', categoryId: 'Market', amount: 100),
+          _draft(
+              description: 'MAAS',
+              categoryId: 'Maaş',
+              income: true,
+              amount: 250,
+              day: 6),
+        ]),
+      );
+
+      expect(find.textContaining('Eklenecek: gider'), findsOneWidget);
+      expect(find.textContaining('250,00'), findsWidgets);
+
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Gelir'));
+      await tester.pumpAndSettle();
+      expect(find.text('MAAS'), findsOneWidget);
+      expect(find.text('MARKET'), findsNothing);
+    });
+
+    testWidgets('kart künyesi sıkı kipte tek satır, ayrıntı açılınca tam',
+        (tester) async {
+      await pump(
+        tester,
+        review(
+          drafts: [_draft(description: 'A', categoryId: 'Market')],
+          cardFacts: CardStatementFacts(
+            closingDate: DateTime(2026, 8, 25),
+            dueDate: DateTime(2026, 9, 4),
+            statementBalance: 1750,
+            last4: '4321',
+          ),
+        ),
+      );
+
+      expect(find.textContaining('•••• 4321 ·'), findsOneWidget);
+      expect(find.text('Asgari ödeme'), findsNothing);
+      await tester.tap(find.byTooltip('Ayrıntıları göster'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('4321'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('dar ekranda (360dp) öneri şeridi ve sıkı kart taşmaz',
+        (tester) async {
+      tester.view.physicalSize = const Size(360, 780);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await pump(
+        tester,
+        review(
+          drafts: [
+            known('ESKI'),
+            _draft(description: 'YENI', categoryId: 'Market', day: 6),
+          ],
+          targetSuggestion: const TargetSuggestion(
+            walletId: 'w2',
+            walletName: 'Çok Uzun Adlı Vadesiz Hesap › Bonus Platinum Kart',
+            reason: TargetSuggestionReason.cardNumber,
+            last4: '4321',
+          ),
+          cardFacts: CardStatementFacts(
+            dueDate: DateTime(2026, 9, 4),
+            statementBalance: 1234567.89,
+            last4: '4321',
+          ),
+        ),
+      );
+      expect(tester.takeException(), isNull);
+    });
   });
 }

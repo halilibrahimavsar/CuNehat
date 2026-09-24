@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:cunehat/features/main_feature/controllers/home_navigation_requests.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
@@ -343,6 +344,52 @@ void main() {
       // Bir önceki ayda bu kayıtlar yok.
       expect(find.text('ŞOK 4712'), findsNothing);
       expect(find.text('Elektrik faturası'), findsNothing);
+    });
+
+    group('dışarıdan dönem isteği (ekstre "Eklenenleri göster")', () {
+      // Sayfa KENDİ süzgeç cubit'ini kuruyor; uygulama seviyesindeki süzgece
+      // yazılan dönem buraya hiç ulaşmıyordu (cihazda ölçüldü). İstek artık
+      // HomeNavigationRequests ile taşınıyor.
+      final old = TransactionEntity(
+        id: 'tx-old',
+        userId: 'u',
+        walletId: 'w1',
+        title: 'ESKI EKSTRE SATIRI',
+        tag: 'cat-market',
+        amount: 42,
+        date: DateTime(2025, 6, 10),
+        type: TransactionTypeModel.expense,
+      );
+      final june = DateTimeRange(
+        start: DateTime(2025, 6, 1),
+        end: DateTime(2025, 6, 30, 23, 59, 59),
+      );
+
+      testWidgets('sayfa kurulurken bekleyen istek uygulanır', (tester) async {
+        final requests = HomeNavigationRequests();
+        getIt.registerSingleton<HomeNavigationRequests>(requests);
+        requests.showTransactions(period: june);
+        seed([txMarket, old]);
+
+        await pumpPage(tester);
+
+        expect(find.text('ESKI EKSTRE SATIRI'), findsOneWidget);
+        expect(find.text('ŞOK 4712'), findsNothing);
+        expect(requests.pendingPeriod, isNull, reason: 'bir kez uygulanır');
+      });
+
+      testWidgets('açık sayfada istek gelince dönem değişir', (tester) async {
+        final requests = HomeNavigationRequests();
+        getIt.registerSingleton<HomeNavigationRequests>(requests);
+        seed([txMarket, old]);
+        await pumpPage(tester);
+        expect(find.text('ESKI EKSTRE SATIRI'), findsNothing);
+
+        requests.showTransactions(period: june);
+        await tester.pumpAndSettle();
+
+        expect(find.text('ESKI EKSTRE SATIRI'), findsOneWidget);
+      });
     });
 
     testWidgets('dönem etiketi üst çubukta görünür', (tester) async {

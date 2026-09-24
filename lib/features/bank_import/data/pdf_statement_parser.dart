@@ -42,6 +42,10 @@ class PdfParseResult {
   /// borcu, asgari, limit, son 4 hane); banka hesabı ekstresinde `null`.
   final CardStatementFacts? cardFacts;
 
+  /// Taslaklarla AYNI sırada satır başına okunan bakiye (geometri yolu dışında
+  /// boş). Kapanış bakiyesi buradan okunur (bkz. `statementClosing`).
+  final List<double?> balances;
+
   const PdfParseResult(
     this.drafts,
     this.skippedLines,
@@ -50,6 +54,7 @@ class PdfParseResult {
     this.verification = StatementVerification.none,
     this.fromLayout = false,
     this.cardFacts,
+    this.balances = const [],
   });
 }
 
@@ -187,6 +192,7 @@ class PdfStatementParser {
       reconciliation: layout.hasBalanceColumn ? reconciliation : null,
       verification: verification,
       fromLayout: true,
+      balances: balances,
     );
   }
 

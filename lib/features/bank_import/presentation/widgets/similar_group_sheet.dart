@@ -3,13 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
-import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/bank_import/data/description_grouper.dart';
 import 'package:cunehat/features/bank_import/domain/import_draft.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state.dart';
 import 'package:cunehat/features/bank_import/presentation/import_category_labels.dart';
+import 'package:cunehat/features/bank_import/presentation/widgets/bulk_category_dialog.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_picker_sheet.dart';
 
@@ -427,34 +427,49 @@ class _SimilarGroupSheetState extends State<SimilarGroupSheet> {
       onCreated: _cubit.registerCreatedCategory,
     );
     if (picked == null || !mounted) return;
-    _apply(group.indexes, picked.id, picked.isExpense == !group.isIncome,
-        isIncome: group.isIncome);
+    final typeMatches = picked.isExpense == !group.isIncome;
+    await _confirmAndApply(
+      typeMatches ? group.indexes : const [],
+      picked.id,
+      isIncome: group.isIncome,
+    );
   }
 
-  void _fillRest(BankImportReview state, DraftGroup group, String categoryId) {
+  Future<void> _fillRest(
+      BankImportReview state, DraftGroup group, String categoryId) {
     final targets = [
       for (final i in group.indexes)
         if (state.drafts[i].categoryId == null) i,
     ];
-    _apply(targets, categoryId, true, isIncome: group.isIncome);
+    return _confirmAndApply(targets, categoryId, isIncome: group.isIncome);
   }
 
-  void _apply(
+  /// Uygulamadan önce satırları gösterir (bkz. [showBulkCategoryDialog]):
+  /// grup ortak ön eke göre kuruluyor ve ön ek her zaman marka değil —
+  /// kullanıcı yanlış giren satırı burada dışarıda bırakır.
+  ///
+  /// Sonuç ayrıca bildirilmez: grup satırının kategori özeti canlı değişir.
+  /// (Eskiden bir snackbar vardı; modal sayfanın ARKASINDAKİ Scaffold'da
+  /// çizildiği için zaten görünmüyordu.)
+  Future<void> _confirmAndApply(
     List<int> targets,
-    String categoryId,
-    bool typeMatches, {
+    String categoryId, {
     required bool isIncome,
-  }) {
-    if (!typeMatches || targets.isEmpty) {
-      AppMessenger.warning(context.l10n.bankImportAssignTypeMismatch);
-      return;
-    }
-    _cubit.applyCategoryToIndexes(targets, categoryId);
+  }) async {
     final fresh = _cubit.state;
-    final label = fresh is BankImportReview
-        ? _labelsFor(fresh, isIncome)[categoryId]
-        : null;
-    AppMessenger.success(context.l10n
-        .bankImportAssignVisibleDone(targets.length, label ?? categoryId));
+    if (fresh is! BankImportReview) return;
+    final labels = _labelsFor(fresh, isIncome);
+    final l10n = context.l10n;
+    final chosen = await showBulkCategoryDialog(
+      context,
+      title: l10n.bankImportBulkTitle(labels[categoryId] ?? categoryId),
+      message: l10n.bankImportBulkBody,
+      rows: [for (final i in targets) (i, fresh.drafts[i])],
+      categoryId: categoryId,
+      currency: fresh.walletCurrency ?? kDefaultCurrency,
+      categoryLabels: labels,
+    );
+    if (chosen == null || chosen.isEmpty || !mounted) return;
+    _cubit.applyCategoryToIndexes(chosen, categoryId);
   }
 }

@@ -38,6 +38,7 @@ List<TransactionEntity> splitIntoInstallments(
         type: purchase.type,
         receiptFileName: k == 0 ? purchase.receiptFileName : null,
         origin: purchase.origin,
+        importBatchId: purchase.importBatchId,
       ),
   ];
 }

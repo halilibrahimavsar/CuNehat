@@ -31,13 +31,14 @@ class TransactionModelAdapter extends TypeAdapter<TransactionModel> {
       linkedRecordId: fields[11] as String?,
       adoptedFromTag: fields[12] as String?,
       origin: fields[13] as String?,
+      importBatchId: fields[14] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, TransactionModel obj) {
     writer
-      ..writeByte(14)
+      ..writeByte(15)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -65,7 +66,9 @@ class TransactionModelAdapter extends TypeAdapter<TransactionModel> {
       ..writeByte(12)
       ..write(obj.adoptedFromTag)
       ..writeByte(13)
-      ..write(obj.origin);
+      ..write(obj.origin)
+      ..writeByte(14)
+      ..write(obj.importBatchId);
   }
 
   @override

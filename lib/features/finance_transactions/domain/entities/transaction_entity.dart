@@ -82,6 +82,13 @@ class TransactionEntity extends Equatable {
   /// kullanıcının kaydı ekstreden gelmiş sanılıp bulunamıyordu.
   final String? origin;
 
+  /// Bu kaydı yazan ekstre içe aktarımının kimliği (UUIDv7 — yazıldığı an
+  /// kimliğin içinde). Aynı içe aktarımın bütün satırları aynı kimliği taşır;
+  /// "Son içe aktarımlar" listesi bunlardan kurulur ve bitiş ekranından
+  /// çıkıldıktan SONRA da bir içe aktarımı tek seferde geri almayı sağlar.
+  /// Elle girilen kayıtlarda ve bu alandan önce içe aktarılanlarda `null`.
+  final String? importBatchId;
+
   const TransactionEntity({
     required this.id,
     required this.userId,
@@ -97,6 +104,7 @@ class TransactionEntity extends Equatable {
     this.linkedRecordId,
     this.adoptedFromTag,
     this.origin,
+    this.importBatchId,
   });
 
   /// Kullanıcının düz satırı bir alan kaydına benimsenmiş mi (bkz.
@@ -118,6 +126,7 @@ class TransactionEntity extends Equatable {
     String? linkedRecordId,
     String? adoptedFromTag,
     String? origin,
+    String? importBatchId,
   }) {
     return TransactionEntity(
       id: id ?? this.id,
@@ -134,6 +143,7 @@ class TransactionEntity extends Equatable {
       linkedRecordId: linkedRecordId ?? this.linkedRecordId,
       adoptedFromTag: adoptedFromTag ?? this.adoptedFromTag,
       origin: origin ?? this.origin,
+      importBatchId: importBatchId ?? this.importBatchId,
     );
   }
 
@@ -154,6 +164,7 @@ class TransactionEntity extends Equatable {
         receiptFileName: receiptFileName,
         reference: reference,
         origin: origin,
+        importBatchId: importBatchId,
       );
 
   /// Düzenleme formunun ürettiği kayıt: formun gösterdiği alanlar yeni
@@ -190,6 +201,7 @@ class TransactionEntity extends Equatable {
         linkedRecordId: linkedRecordId,
         adoptedFromTag: adoptedFromTag,
         origin: origin,
+        importBatchId: importBatchId,
       );
 
   bool get isIncome => type == TransactionTypeModel.income;
@@ -211,6 +223,7 @@ class TransactionEntity extends Equatable {
       'linkedRecordId': linkedRecordId,
       'adoptedFromTag': adoptedFromTag,
       'origin': origin,
+      'importBatchId': importBatchId,
     };
   }
 
@@ -230,5 +243,6 @@ class TransactionEntity extends Equatable {
         linkedRecordId,
         adoptedFromTag,
         origin,
+        importBatchId,
       ];
 }

@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
-import 'package:cunehat/core/messaging/app_messenger.dart';
+import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/currencies.dart';
@@ -19,6 +19,8 @@ import 'package:cunehat/features/bank_import/domain/import_draft.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state.dart';
 import 'package:cunehat/features/bank_import/presentation/import_category_labels.dart';
+import 'package:cunehat/features/bank_import/presentation/review_search.dart';
+import 'package:cunehat/features/bank_import/presentation/widgets/bulk_category_dialog.dart';
 import 'package:cunehat/features/bank_import/presentation/widgets/duplicate_match_panel.dart';
 import 'package:cunehat/features/bank_import/presentation/widgets/leftover_review_sheet.dart';
 import 'package:cunehat/features/bank_import/presentation/widgets/similar_group_sheet.dart';
@@ -27,7 +29,17 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_picker_sheet.dart';
 
 /// İnceleme listesinde hangi taslakların gösterileceği.
-enum _ReviewFilter { all, uncategorized, duplicates, leftoverCandidates }
+enum _ReviewFilter {
+  all,
+  uncategorized,
+
+  /// Kategorisi yalnız bankanın genel etiketinden tahmin edilenler.
+  toCheck,
+  duplicates,
+  leftoverCandidates,
+  expenses,
+  incomes,
+}
 
 /// Kategori seçiminin sonucu: seçilen kategori + hangi türe ait olduğu. Toplu
 /// atamada tür de gerekir; kategori yalnız KENDİ türündeki satırlara uygulanır
@@ -64,7 +76,33 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
   int _step = 0;
   _ReviewFilter _filter = _ReviewFilter.all;
   String _query = '';
+
+  /// Katlanmamış arama metni — tutar araması virgül/noktayı görmeli.
+  String _rawQuery = '';
   final _searchController = TextEditingController();
+
+  /// Defterde BİREBİR kayıtlı (eklenmeyecek) satırlar gösterilsin mi. Varsayılan
+  /// kapalı: ardışık ekstrelerde her örtüşen satır ayrı bir "zaten kayıtlı"
+  /// paneli çiziyor, yeni hareketler bunların arasında kayboluyordu.
+  bool _showKnown = false;
+
+  /// Özet kartı ayrıntılı mı (doğrulama dökümü, kart künyesi satırları).
+  bool _summaryExpanded = false;
+
+  /// Arama alanının odağı. Bu ekranda klavyeyi açan tek alan bu; özet kartı
+  /// odak varken çekilir (bkz. [_buildList]).
+  final _searchFocus = FocusNode();
+  bool _searching = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchFocus.addListener(() {
+      if (_searching != _searchFocus.hasFocus) {
+        setState(() => _searching = _searchFocus.hasFocus);
+      }
+    });
+  }
 
   BankImportCubit get _cubit => context.read<BankImportCubit>();
   BankImportReview get _s => widget.state;
@@ -75,6 +113,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
 
@@ -84,12 +123,19 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
   _ReviewFilter get _effectiveFilter => switch (_filter) {
         _ReviewFilter.uncategorized when _s.uncategorizedCount == 0 =>
           _ReviewFilter.all,
+        _ReviewFilter.toCheck when _s.toCheckCount == 0 => _ReviewFilter.all,
         _ReviewFilter.duplicates when _s.duplicateCount == 0 =>
           _ReviewFilter.all,
         _ReviewFilter.leftoverCandidates when _s.leftovers.isEmpty =>
           _ReviewFilter.all,
+        _ReviewFilter.expenses when !_hasBothTypes => _ReviewFilter.all,
+        _ReviewFilter.incomes when !_hasBothTypes => _ReviewFilter.all,
         _ => _filter,
       };
+
+  /// Gelir/Gider süzgeçleri yalnız ikisi birden varken anlamlı.
+  bool get _hasBothTypes =>
+      _s.drafts.any((d) => d.isIncome) && _s.drafts.any((d) => !d.isIncome);
 
   /// Görünür taslaklar; cubit mutasyonları İNDEKS tabanlı olduğu için gerçek
   /// (filtrelenmemiş) indeks satırla birlikte taşınır — aksi halde filtreliyken
@@ -98,27 +144,46 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
   /// Arama `toLowerCase()` DEĞİL [matchesFolded] ile yapılır: Dart noktasız
   /// `I`'yı `i`'ye çevirir, `ı`'ya değil. Ekstre açıklamaları BÜYÜK HARF
   /// olduğu için "IŞIK ELEKTRİK" satırı `işik...` diye küçülüyor ve
-  /// kullanıcının doğal yazımı olan "ışık" onu hiç bulamıyordu.
-  List<(int, ImportDraft)> get _visible {
+  /// kullanıcının doğal yazımı olan "ışık" onu hiç bulamıyordu. Tutar da
+  /// aranır (bkz. [draftAmountMatches]).
+  ///
+  /// Birebir kayıtlı satırlar ([BankImportReview.isKnown]) "Olası tekrar"
+  /// süzgeci dışında katlanır; kaç tanesinin katlandığı `hiddenKnown`'da.
+  List<(int, ImportDraft)> get _visible => _filtered().visible;
+
+  ({List<(int, ImportDraft)> visible, int hiddenKnown}) _filtered() {
     final q = _query;
     final filter = _effectiveFilter;
     final candidates = filter == _ReviewFilter.leftoverCandidates
         ? _s.leftoverCandidateIndexes
         : const <int>{};
+    final foldKnown = !_showKnown && filter != _ReviewFilter.duplicates;
     final out = <(int, ImportDraft)>[];
+    var hidden = 0;
     for (var i = 0; i < _s.drafts.length; i++) {
       final d = _s.drafts[i];
       final passesFilter = switch (filter) {
         _ReviewFilter.all => true,
         _ReviewFilter.uncategorized => d.categoryId == null,
+        _ReviewFilter.toCheck =>
+          d.categoryId != null && d.categorySource == CategorySource.bankTag,
         _ReviewFilter.duplicates => d.isDuplicate,
         _ReviewFilter.leftoverCandidates => candidates.contains(i),
+        _ReviewFilter.expenses => !d.isIncome,
+        _ReviewFilter.incomes => d.isIncome,
       };
       if (!passesFilter) continue;
-      if (!matchesFolded(d.description, q)) continue;
+      if (!matchesFolded(d.description, q) &&
+          !draftAmountMatches(d.amount, _rawQuery)) {
+        continue;
+      }
+      if (foldKnown && BankImportReview.isKnown(d)) {
+        hidden++;
+        continue;
+      }
       out.add((i, d));
     }
-    return out;
+    return (visible: out, hiddenKnown: hidden);
   }
 
   @override
@@ -126,16 +191,100 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     if (_s.drafts.isEmpty) {
       return Center(child: Text(context.l10n.bankImportNoRows));
     }
-    final body = _stepper ? _buildStepper(context) : _buildList(context);
+    // Ekstrenin TAMAMI zaten kayıtlıysa liste yerine tek bir sonuç: eskiden
+    // 157 satırın her biri ayrı bir "zaten kayıtlı" paneliyle çiziliyor ve
+    // altta "Seçilenleri ekle (0)" duruyordu (cihazda ölçüldü).
+    final allKnownView = _s.allKnown && !_showKnown && !_stepper;
+    final body = allKnownView
+        ? _allKnownView(context)
+        : _stepper
+            ? _buildStepper(context)
+            : _buildList(context);
     return PopScope(
-      // Tam ekranda geri hareketi önce KİPTEN çıkar: AppBar gizli olduğu için
-      // ekranda başka çıkış yolu yok ve kullanıcı istemeden akıştan düşerdi.
-      canPop: !widget.fullscreen,
+      // İnceleme adımından geri hareketi hiçbir zaman doğrudan çıkmaz:
+      // tam ekrandaysa önce KİPTEN çıkar (AppBar gizli, başka çıkış yolu yok),
+      // değilse onay ister — 80 satırlık bir ekstrede yapılan kategori emeği
+      // tek bir kaydırmayla sessizce gidiyordu. "Yeni hareket yok" ekranında
+      // kaybolacak bir emek yok, doğrudan çıkılır.
+      canPop: allKnownView && !widget.fullscreen,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) widget.onToggleFullscreen();
+        if (didPop) return;
+        if (widget.fullscreen) {
+          widget.onToggleFullscreen();
+        } else {
+          _confirmLeave();
+        }
       },
       // AppBar gizliyken üst çentik/durum çubuğu alanını Scaffold tüketmez.
       child: widget.fullscreen ? SafeArea(bottom: false, child: body) : body,
+    );
+  }
+
+  /// İncelemeden çıkış. Henüz hiçbir şey yazılmadı; çıkmak yalnız bu
+  /// ekstre için yapılan seçimleri atar — ama bu emek kullanıcının, onay
+  /// istenir. Stepper'daki "Tümünü iptal" de buradan geçer.
+  Future<void> _confirmLeave() async {
+    final l10n = context.l10n;
+    final leave = await ConfirmDialog.show(
+      context,
+      title: l10n.bankImportExitTitle,
+      message: l10n.bankImportExitBody,
+      confirmText: l10n.bankImportExitConfirm,
+      danger: true,
+    );
+    if (leave && mounted) Navigator.of(context).pop();
+  }
+
+  /// "Bu ekstrede yeni hareket yok" ekranı (bkz. [BankImportReview.allKnown]).
+  Widget _allKnownView(BuildContext context) {
+    final l10n = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.task_alt_rounded,
+                  size: 36, color: Colors.green),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              l10n.bankImportAllKnownTitle,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              l10n.bankImportAllKnownBody(_s.drafts.length),
+              textAlign: TextAlign.center,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: 28),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(l10n.bankImportClose),
+              ),
+            ),
+            const SizedBox(height: 4),
+            TextButton(
+              onPressed: () => setState(() => _showKnown = true),
+              child: Text(l10n.bankImportAllKnownShowRows),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -175,21 +324,52 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
   // ---------------------------------------------------------------- List mode
 
   Widget _buildList(BuildContext context) {
-    final visible = _visible;
+    final filtered = _filtered();
+    final visible = filtered.visible;
+    final hidden = filtered.hiddenKnown;
+    // Katlama satırı: kaç satırın neden gizlendiği ve geri açma yolu. Birebir
+    // kayıtlılar gösterilirken de "gizle" olarak durur.
+    final showKnownTile = hidden > 0 ||
+        (_showKnown &&
+            _s.knownCount > 0 &&
+            _effectiveFilter != _ReviewFilter.duplicates);
+    final extra = showKnownTile ? 1 : 0;
     return Column(
       children: [
-        if (!widget.fullscreen) _statusCard(context),
+        // Aranırken (klavye açık) özet kartı çekilir: kart kaydırılmayan
+        // başlıkta duruyor ve birkaç uyarı varken klavyeyle birlikte sayfayı
+        // taşırıyordu (cihazda ölçüldü: 41px). Kart tam ekranda olduğu gibi
+        // kaybolmaz, odak bırakılınca geri gelir.
+        //
+        // Ölçüt klavye yüksekliği DEĞİL: Scaffold gövdenin MediaQuery'sinden
+        // alt boşluğu siliyor (orada klavye hep "kapalı"), `View` ise
+        // değişince yeniden çizim tetiklemiyor.
+        //
+        // Kart ayrıca ekranın en çok %38'ine sınırlanır ve kendi içinde
+        // kayar: kaydırılmayan başlıkta olduğu için birkaç uyarı + öneri
+        // şeridi + kart künyesi dar/alçak ekranda sayfayı taşırıyordu
+        // (ölçüldü: 360×780'de 13px) ve listeye hiç yer kalmıyordu.
+        if (!widget.fullscreen && !_searching)
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.sizeOf(context).height * 0.38,
+            ),
+            child: SingleChildScrollView(child: _statusCard(context)),
+          ),
         _toolbar(context),
         Expanded(
-          child: visible.isEmpty
+          child: visible.isEmpty && !showKnownTile
               ? Center(child: Text(context.l10n.bankImportNoMatch))
               : ListView.separated(
                   padding: const EdgeInsets.only(bottom: 8),
-                  itemCount: visible.length,
+                  itemCount: visible.length + extra,
                   separatorBuilder: (_, __) =>
                       const Divider(height: 1, indent: 16, endIndent: 16),
                   itemBuilder: (context, k) {
-                    final (index, draft) = visible[k];
+                    if (showKnownTile && k == 0) {
+                      return _knownTile(context, hidden);
+                    }
+                    final (index, draft) = visible[k - extra];
                     return _row(context, index, draft);
                   },
                 ),
@@ -199,17 +379,64 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     );
   }
 
+  /// "N satır zaten kayıtlı olduğu için gizlendi · Göster" / "Gizle".
+  Widget _knownTile(BuildContext context, int hidden) {
+    final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    return InkWell(
+      onTap: () => setState(() => _showKnown = hidden > 0),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 12, 10),
+        child: Row(
+          children: [
+            Icon(Icons.copy_all_rounded, size: 18, color: cs.onSurfaceVariant),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                hidden > 0
+                    ? l10n.bankImportKnownHidden(hidden)
+                    : l10n.bankImportKnownShown(_s.knownCount),
+                style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+              ),
+            ),
+            Text(
+              hidden > 0
+                  ? l10n.bankImportShowUncategorized
+                  : l10n.bankImportKnownHide,
+              style: TextStyle(
+                  fontSize: 12, fontWeight: FontWeight.w800, color: cs.primary),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ------------------------------------------------------------- Status card
 
   /// Özet + uyarılar TEK kartta. Eskiden üst üste üç tam genişlik şerit
   /// (genel uyarı, mutabakat, para birimi) vardı ve listeye yer kalmıyordu;
   /// olumlu bilgi (bakiye doğrulandı) artık çip olarak, uyarılar tek blokta.
   ///
+  /// Varsayılan SIKI: bilgilendirici ayrıntılar (doğrulama dökümü, kart
+  /// künyesinin satırları) tek satıra iner, dokununca açılır. Cihazda
+  /// ölçüldü — ayrıntılı kart 6,7" ekranın ~%40'ını kaplıyor, liste ancak
+  /// ortadan başlıyordu. Eylem isteyen şeritler (hedef önerisi, tahminle
+  /// atlananlar, karşılıksız kayıtlar) ve hatalar her zaman görünür.
+  ///
   /// Tam ekran kipinde listeden çıkar ama KAYBOLMAZ: taşma menüsünden aynı
-  /// kart bir sayfa olarak açılır (bkz. [_showSummarySheet]).
-  Widget _statusCard(BuildContext context) {
+  /// kart ayrıntılı olarak bir sayfada açılır (bkz. [_showSummarySheet]).
+  Widget _statusCard(BuildContext context, {bool? expanded}) {
     final cs = Theme.of(context).colorScheme;
+    final full = expanded ?? _summaryExpanded;
     final warnings = _warnings(context);
+    final verified =
+        _s.verification.status == StatementVerificationStatus.verified;
+    final failed = _s.verification.status == StatementVerificationStatus.failed;
+    final reconciled =
+        _s.verification.status == StatementVerificationStatus.unavailable &&
+            _s.reconciliation?.status == ReconcileStatus.matched;
+    final hasDetails = verified || _s.cardFacts != null;
 
     return Container(
       width: double.infinity,
@@ -218,36 +445,64 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _stat(context, '${_s.drafts.length}',
-                  context.l10n.bankImportStatRows, cs.primary),
-              if (_s.duplicateCount > 0)
-                _stat(context, '${_s.duplicateCount}',
-                    context.l10n.bankImportStatDuplicates, AppGradients.debt),
-              if (_s.uncategorizedCount > 0)
-                _stat(context, '${_s.uncategorizedCount}',
-                    context.l10n.bankImportStatUncategorized, cs.error),
-              if (_s.skippedRows > 0)
-                _stat(context, '${_s.skippedRows}',
-                    context.l10n.bankImportStatSkipped, cs.onSurfaceVariant),
-              if (_s.verification.status ==
-                      StatementVerificationStatus.unavailable &&
-                  _s.reconciliation?.status == ReconcileStatus.matched)
-                _chip(context, Icons.verified_rounded,
-                    context.l10n.bankImportRoleBalance, Colors.green),
+              Expanded(
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    _stat(context, '${_s.drafts.length}',
+                        context.l10n.bankImportStatRows, cs.primary),
+                    if (_s.duplicateCount > 0)
+                      _stat(
+                          context,
+                          '${_s.duplicateCount}',
+                          context.l10n.bankImportStatDuplicates,
+                          AppGradients.debt),
+                    if (_s.uncategorizedCount > 0)
+                      _stat(context, '${_s.uncategorizedCount}',
+                          context.l10n.bankImportStatUncategorized, cs.error),
+                    if (_s.skippedRows > 0)
+                      _stat(
+                          context,
+                          '${_s.skippedRows}',
+                          context.l10n.bankImportStatSkipped,
+                          cs.onSurfaceVariant),
+                    if ((verified && !full) || reconciled)
+                      _chip(context, Icons.verified_rounded,
+                          context.l10n.bankImportVerifiedChip, Colors.green),
+                  ],
+                ),
+              ),
+              if (hasDetails && expanded == null)
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  tooltip: full
+                      ? context.l10n.bankImportSummaryLess
+                      : context.l10n.bankImportSummaryMore,
+                  icon: Icon(full
+                      ? Icons.expand_less_rounded
+                      : Icons.expand_more_rounded),
+                  onPressed: () =>
+                      setState(() => _summaryExpanded = !_summaryExpanded),
+                ),
             ],
           ),
-          if (_s.verification.status !=
-              StatementVerificationStatus.unavailable) ...[
+          if (_s.targetSuggestion case final t?) ...[
+            const SizedBox(height: 10),
+            _targetBanner(context, t),
+          ],
+          if (failed || (verified && full)) ...[
             const SizedBox(height: 10),
             _verificationBanner(context),
           ],
           if (_s.cardFacts case final facts?) ...[
             const SizedBox(height: 10),
-            _cardFactsBanner(context, facts),
+            full
+                ? _cardFactsBanner(context, facts)
+                : _cardFactsLine(context, facts),
           ],
           if (_s.approximateSkippedCount > 0) ...[
             const SizedBox(height: 10),
@@ -257,7 +512,15 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
             const SizedBox(height: 10),
             _leftoverBanner(context, _s.leftovers.length),
           ],
-          if (warnings.isNotEmpty) ...[
+          // Genel "otomatik algılandı" uyarısı HER ZAMAN görünür (kullanıcı
+          // talebi) ama sıkı kipte kutusuz tek bir satırdır; asıl hatalar
+          // (OCR, para birimi, tutmayan bakiye…) kutuda kalır.
+          if (!full) ...[
+            const SizedBox(height: 8),
+            _inlineNote(context, Icons.warning_amber_rounded,
+                context.l10n.bankImportReviewWarning, Colors.orange),
+          ],
+          if (full ? warnings.isNotEmpty : warnings.length > 1) ...[
             const SizedBox(height: 10),
             Container(
               width: double.infinity,
@@ -269,7 +532,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  for (final w in warnings)
+                  for (final w in full ? warnings : warnings.skip(1))
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 3),
                       child: Row(
@@ -293,7 +556,119 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     );
   }
 
-  /// Tam ekran kipinde gizlenen özet/uyarı kartını sayfa olarak gösterir.
+  Widget _inlineNote(
+      BuildContext context, IconData icon, String text, Color color) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 11,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// "Hedefi X yap" şeridi (bkz. [TargetSuggestion]). Yanlış cüzdan en pahalı
+  /// hatadır — satırlar yanlış deftere yazılır ve sonradan tek tek taşınması
+  /// gerekir — bu yüzden kartın en üstünde ve tek dokunuşla düzeltilebilir.
+  Widget _targetBanner(BuildContext context, TargetSuggestion t) {
+    final l10n = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final strong = t.reason == TargetSuggestionReason.entriesElsewhere ||
+        t.reason == TargetSuggestionReason.accountOnCard;
+    final color = strong ? cs.error : cs.primary;
+    final message = switch (t.reason) {
+      TargetSuggestionReason.entriesElsewhere =>
+        l10n.bankImportTargetElsewhere(t.matchCount, t.walletName),
+      TargetSuggestionReason.cardNumber =>
+        l10n.bankImportTargetCard(t.last4 ?? '', t.walletName),
+      TargetSuggestionReason.accountOnCard =>
+        l10n.bankImportTargetAccount(t.walletName),
+      TargetSuggestionReason.usedBefore =>
+        l10n.bankImportTargetUsedBefore(t.walletName),
+    };
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.account_balance_wallet_outlined,
+                  size: 16, color: color),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(message, style: const TextStyle(fontSize: 12)),
+              ),
+            ],
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: () => _cubit.switchTarget(t.walletId),
+              icon: const Icon(Icons.swap_horiz_rounded, size: 18),
+              label: Text(
+                l10n.bankImportTargetSwitch(t.walletName),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Kart künyesinin sıkı hâli: tek satır, dokununca ayrıntı açılır.
+  Widget _cardFactsLine(BuildContext context, CardStatementFacts facts) {
+    final l10n = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final parts = [
+      facts.isClosedStatement
+          ? l10n.bankImportCardStatement
+          : l10n.bankImportCardPeriod,
+      if (facts.last4 case final l?) '•••• $l',
+      if (facts.dueDate case final d?)
+        '${l10n.kkSonOdemeTarihi} ${AppFormatters.dateShort.format(d)}',
+      if (facts.statementBalance case final v?) _money(v),
+    ];
+    return InkWell(
+      onTap: () => setState(() => _summaryExpanded = true),
+      borderRadius: BorderRadius.circular(8),
+      child: Row(
+        children: [
+          Icon(Icons.credit_card_rounded, size: 16, color: cs.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              parts.join(' · '),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Tam ekran kipinde gizlenen özet/uyarı kartını sayfa olarak gösterir
+  /// (ayrıntılı hâliyle).
   void _showSummarySheet(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
@@ -303,7 +678,8 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
           constraints: BoxConstraints(
             maxHeight: MediaQuery.of(ctx).size.height * 0.8,
           ),
-          child: SingleChildScrollView(child: _statusCard(context)),
+          child: SingleChildScrollView(
+              child: _statusCard(context, expanded: true)),
         ),
       ),
     );
@@ -559,6 +935,12 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
           context.l10n.bankImportReconcileMismatch(rec.mismatchCount),
           cs.error,
         ),
+      // Hesap ekstresi kart cüzdanına: öneri şeridi zaten söylüyorsa tekrar
+      // etme (kartın ödendiği hesap tanımlı değilse öneri yoktur).
+      if (_s.accountStatementOnCard &&
+          _s.targetSuggestion?.reason != TargetSuggestionReason.accountOnCard)
+        _Warning(Icons.credit_card_off_rounded,
+            context.l10n.bankImportAccountOnCard, cs.error),
       if (_s.cardFacts != null && !_s.targetIsCard && FeatureFlags.creditCards)
         _Warning(Icons.credit_card_off_rounded,
             context.l10n.bankImportCardTargetNotCard, cs.error),
@@ -634,8 +1016,16 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
   // ----------------------------------------------------------------- Toolbar
 
   Widget _toolbar(BuildContext context) {
-    final visibleCount = _visible.length;
-    final filtered = _effectiveFilter != _ReviewFilter.all || _query.isNotEmpty;
+    final f = _filtered();
+    final visible = f.visible;
+    final visibleCount = visible.length;
+    // Düğme yapacak bir şey yoksa pasif görünür: tekrar satırları seçilmediği
+    // için yalnız tekrarlar görünürken "seç" sessizce hiçbir şey yapmıyordu.
+    final canSelect = visible.any((r) => !r.$2.selected && !r.$2.isDuplicate);
+    final canDeselect = visible.any((r) => r.$2.selected);
+    final filtered = _effectiveFilter != _ReviewFilter.all ||
+        _query.isNotEmpty ||
+        f.hiddenKnown > 0;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
@@ -643,8 +1033,19 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
         children: [
           TextField(
             controller: _searchController,
+            focusNode: _searchFocus,
+            // Dışarı dokununca odak bırakılır. Bırakılmazsa klavye kapansa da
+            // alan odakta kalıyor ve her diyalog/menü kapanışında Flutter
+            // odağı ona iade edip klavyeyi yeniden açıyordu (cihazda ölçüldü).
+            // `FocusScope.of(context).unfocus()` YETMEZ: kapsam, son odaklanan
+            // çocuğunu (bu alanı) hatırlamaya devam ediyor ve rota kapanınca
+            // yine ona dönüyor — alanın KENDİ düğümü bırakılmalı.
+            onTapOutside: (_) => _searchFocus.unfocus(),
             // Sorgu tuş başına BİR kez katlanır, aday satır başına değil.
-            onChanged: (v) => setState(() => _query = foldTr(v)),
+            onChanged: (v) => setState(() {
+              _query = foldTr(v);
+              _rawQuery = v;
+            }),
             decoration: InputDecoration(
               isDense: true,
               prefixIcon: const Icon(Icons.search_rounded, size: 20),
@@ -658,6 +1059,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                       icon: const Icon(Icons.close_rounded, size: 18),
                       onPressed: () => setState(() {
                         _query = '';
+                        _rawQuery = '';
                         _searchController.clear();
                       }),
                     ),
@@ -675,6 +1077,11 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                   _filterChip(context, _ReviewFilter.uncategorized,
                       '${context.l10n.bankImportFilterUncategorized} (${_s.uncategorizedCount})'),
                 if (_s.uncategorizedCount > 0) const SizedBox(width: 6),
+                if (_s.toCheckCount > 0) ...[
+                  _filterChip(context, _ReviewFilter.toCheck,
+                      '${context.l10n.bankImportFilterToCheck} (${_s.toCheckCount})'),
+                  const SizedBox(width: 6),
+                ],
                 if (_s.duplicateCount > 0)
                   _filterChip(context, _ReviewFilter.duplicates,
                       '${context.l10n.bankImportFilterDuplicates} (${_s.duplicateCount})'),
@@ -682,6 +1089,14 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                   const SizedBox(width: 6),
                   _filterChip(context, _ReviewFilter.leftoverCandidates,
                       '${context.l10n.bankImportFilterLeftover} (${_s.leftoverCandidateIndexes.length})'),
+                ],
+                if (_hasBothTypes) ...[
+                  const SizedBox(width: 6),
+                  _filterChip(context, _ReviewFilter.expenses,
+                      context.l10n.detailLabelGider),
+                  const SizedBox(width: 6),
+                  _filterChip(context, _ReviewFilter.incomes,
+                      context.l10n.detailLabelGelir),
                 ],
               ],
             ),
@@ -700,15 +1115,24 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              // Kapsam GÖRÜNEN satırlar: süzgeç açıkken ekranda olmayan
+              // satırların seçimi değişmiyor. Seçim tekrarları atlar (bkz.
+              // `BankImportCubit.setSelectedAt`).
               IconButton(
-                tooltip: context.l10n.bankImportSelectAll,
+                tooltip: context.l10n.bankImportSelectVisible,
                 icon: const Icon(Icons.done_all_rounded, size: 20),
-                onPressed: () => _cubit.setAllSelected(true),
+                onPressed: canSelect
+                    ? () => _cubit
+                        .setSelectedAt([for (final (i, _) in visible) i], true)
+                    : null,
               ),
               IconButton(
-                tooltip: context.l10n.bankImportDeselectAll,
+                tooltip: context.l10n.bankImportDeselectVisible,
                 icon: const Icon(Icons.remove_done_rounded, size: 20),
-                onPressed: () => _cubit.setAllSelected(false),
+                onPressed: canDeselect
+                    ? () => _cubit
+                        .setSelectedAt([for (final (i, _) in visible) i], false)
+                    : null,
               ),
               IconButton(
                 tooltip: widget.fullscreen
@@ -803,20 +1227,43 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
             label: context.l10n.bankImportSummarySheet,
             onTap: () => _showSummarySheet(context),
           ),
-        _menuItem(
-          icon: Icons.trending_down_rounded,
-          label:
-              '${context.l10n.bankImportBatchTypeLabel} ${context.l10n.bankImportSetAllExpense}',
-          onTap: () => _cubit.setAllType(TransactionTypeModel.expense),
-        ),
-        _menuItem(
-          icon: Icons.trending_up_rounded,
-          label:
-              '${context.l10n.bankImportBatchTypeLabel} ${context.l10n.bankImportSetAllIncome}',
-          onTap: () => _cubit.setAllType(TransactionTypeModel.income),
-        ),
+        // Yalnız türü GERÇEKTEN değişecek satır varsa: hepsi zaten giderse
+        // "Tümünü gider yap" bir şey yapmayan düğmedir.
+        if (_s.drafts.any((d) => d.type != TransactionTypeModel.expense))
+          _menuItem(
+            icon: Icons.trending_down_rounded,
+            label:
+                '${context.l10n.bankImportBatchTypeLabel} ${context.l10n.bankImportSetAllExpense}',
+            onTap: () => _confirmSetAllType(TransactionTypeModel.expense),
+          ),
+        if (_s.drafts.any((d) => d.type != TransactionTypeModel.income))
+          _menuItem(
+            icon: Icons.trending_up_rounded,
+            label:
+                '${context.l10n.bankImportBatchTypeLabel} ${context.l10n.bankImportSetAllIncome}',
+            onTap: () => _confirmSetAllType(TransactionTypeModel.income),
+          ),
       ],
     );
+  }
+
+  /// Toplu tür çevirme onayla. Çevrilen satırın kategorisi yeniden tahmin
+  /// edilir (gider kategorisi gelir satırına yazılamaz), yani o satırlarda
+  /// elle yapılmış seçim gider — kullanıcı bunu kaç satır olduğuyla birlikte
+  /// bilmeden onaylamamalı.
+  Future<void> _confirmSetAllType(TransactionTypeModel type) async {
+    final l10n = context.l10n;
+    final changing = _s.drafts.where((d) => d.type != type).length;
+    if (changing == 0) return;
+    final ok = await ConfirmDialog.show(
+      context,
+      title: type == TransactionTypeModel.expense
+          ? l10n.bankImportSetTypeExpenseTitle
+          : l10n.bankImportSetTypeIncomeTitle,
+      message: l10n.bankImportSetTypeBody(changing),
+      confirmText: l10n.bankImportSetTypeConfirm,
+    );
+    if (ok && mounted) _cubit.setAllType(type);
   }
 
   /// Menü satırı. Etiket `Flexible`: çeviriler ve "{n} satır" gibi değişken
@@ -874,64 +1321,55 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     );
     if (picked == null || !mounted) return;
     _cubit.setDraftCategory(i, picked.id);
-    _offerSimilar(i, picked.id);
+    await _offerSimilar(i, picked.id);
   }
 
-  /// Bu satıra benzeyen KATEGORİSİZ satırlar varsa tek dokunuşla hepsine
-  /// uygulamayı önerir.
+  /// Bu satıra benzeyen KATEGORİSİZ satırlar varsa onlara da uygulamayı
+  /// önerir — diyalogda, etkilenecek satırlar listelenip tek tek
+  /// çıkarılabilir halde (bkz. [showBulkCategoryDialog]).
   ///
   /// Öneri, kullanıcı zaten doğru kararı verdiği anda gelir: aynı üye
-  /// işyerinin 12 satırını tek tek gezmek yerine ilkini seçip "hepsine uygula"
-  /// demek yeter. Eylem basıldığında hedefler YENİDEN süzülür — arada elle
-  /// kategori verilmiş bir satırın üzerine yazmaz.
-  void _offerSimilar(int index, String categoryId) {
+  /// işyerinin 12 satırını tek tek gezmek yerine ilkini seçip onaylamak
+  /// yeter. Onaydan sonra hedefler YENİDEN süzülür — arada elle kategori
+  /// verilmiş bir satırın üzerine yazmaz.
+  Future<void> _offerSimilar(int index, String categoryId) async {
     final state = _cubit.state;
     if (state is! BankImportReview) return;
     final similar = [
       for (final i in similarDraftIndexes(state.drafts, index))
-        if (state.drafts[i].categoryId == null) i,
+        if (state.drafts[i].categoryId == null) (i, state.drafts[i]),
     ];
     if (similar.isEmpty) return;
 
-    AppMessenger.info(
-      context.l10n.bankImportApplyToSimilar(
-        similar.length,
-        _sampleDescription(state.drafts, similar),
-      ),
-      action: AppMessageAction(
-        label: context.l10n.bankImportApplyToSimilarAction,
-        onPressed: () {
-          final fresh = _cubit.state;
-          if (fresh is! BankImportReview) return;
-          final targets = [
-            for (final i in similar)
-              if (fresh.drafts[i].categoryId == null) i,
-          ];
-          if (targets.isNotEmpty) {
-            _cubit.applyCategoryToIndexes(targets, categoryId);
-          }
-        },
-      ),
+    final labels = _labelsOf(state);
+    final l10n = context.l10n;
+    final chosen = await showBulkCategoryDialog(
+      context,
+      title: l10n.bankImportSimilarTitle(labels[categoryId] ?? categoryId),
+      message: l10n.bankImportSimilarBody(similar.length),
+      rows: similar,
+      categoryId: categoryId,
+      currency: _currency,
+      categoryLabels: labels,
+      cancelLabel: l10n.bankImportSimilarOnlyThis,
     );
+    if (chosen == null || chosen.isEmpty || !mounted) return;
+    final fresh = _cubit.state;
+    if (fresh is! BankImportReview) return;
+    final targets = [
+      for (final i in chosen)
+        if (fresh.drafts[i].categoryId == null) i,
+    ];
+    if (targets.isNotEmpty) _cubit.applyCategoryToIndexes(targets, categoryId);
   }
 
-  /// Önerinin ETKİLEYECEĞİ satırlardan bir örnek.
-  ///
-  /// Kritik: kümeleme ortak ÖN EKE bakıyor ve ön ek her zaman marka olmuyor.
-  /// Ölçüldü — "TURK HAVA YOLLARI" ile "TURK EKONOMI BANKASI" tek grupta
-  /// birleşiyor, tıpkı "ŞOK Üsküdar" + "ŞOK Kadıköy" gibi; ikisi yapısal
-  /// olarak AYNI ve hiçbir eşik birini kesip diğerini bırakamıyor
-  /// (bkz. `description_grouper.dart` "BİLİNEN SINIR").
-  ///
-  /// Bu yüzden öneri sayı ile yetinmez: kullanıcı neye dokunacağını görmeden
-  /// "hepsine uygula" dememeli. Grup sayfası zaten örnek gösteriyordu; tek
-  /// dokunuşluk bu kısayol göstermiyordu.
-  static String _sampleDescription(
-      List<ImportDraft> drafts, List<int> indexes) {
-    final first = drafts[indexes.first].description.trim();
-    final shown = first.length <= 40 ? first : '${first.substring(0, 39)}…';
-    return indexes.length > 1 ? '$shown …' : shown;
-  }
+  /// Taze durumdan kategori adları. Diyaloglar [_categoryLabels] yerine bunu
+  /// kullanır: seçici içinden yeni kategori kurulduysa `widget.state` o
+  /// karede henüz eski listeyi taşıyor ve ad yerine kimlik görünürdü.
+  static Map<String, String> _labelsOf(BankImportReview s) => {
+        ...buildImportCategoryLabels(s.expenseCategories),
+        ...buildImportCategoryLabels(s.incomeCategories),
+      };
 
   /// [targets] indekslerine toplu kategori uygular. Kapsamı ÇAĞIRAN belirler
   /// (yalnız kategorisiz olanlar / görünenlerin tamamı); bu fonksiyon verilen
@@ -958,19 +1396,27 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     if (picked == null || !mounted) return;
 
     final matching = [
-      for (final (index, draft) in rows)
-        if (draft.isIncome != picked.isExpense) index,
+      for (final row in rows)
+        if (row.$2.isIncome != picked.isExpense) row,
     ];
-    if (matching.isEmpty) {
-      AppMessenger.warning(context.l10n.bankImportAssignTypeMismatch);
-      return;
-    }
-    _cubit.applyCategoryToIndexes(matching, picked.id);
-
-    AppMessenger.success(context.l10n.bankImportAssignVisibleDone(
-      matching.length,
-      _categoryLabels[picked.id] ?? picked.id,
-    ));
+    final fresh = _cubit.state;
+    final labels =
+        fresh is BankImportReview ? _labelsOf(fresh) : _categoryLabels;
+    final l10n = context.l10n;
+    // Önizleme: hangi satırlara uygulanacağı (ve kimin kategorisinin
+    // DEĞİŞECEĞİ) onaydan önce görünür. Uygulamanın kendisi zaten listede
+    // görünür, ayrıca "yapıldı" mesajı gerekmez.
+    final chosen = await showBulkCategoryDialog(
+      context,
+      title: l10n.bankImportBulkTitle(labels[picked.id] ?? picked.id),
+      message: l10n.bankImportBulkBody,
+      rows: matching,
+      categoryId: picked.id,
+      currency: _currency,
+      categoryLabels: labels,
+    );
+    if (chosen == null || chosen.isEmpty || !mounted) return;
+    _cubit.applyCategoryToIndexes(chosen, picked.id);
   }
 
   // --------------------------------------------------------------------- Row
@@ -1143,12 +1589,41 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                 ),
               ),
             ),
+            if (!missing) ..._sourceMarker(context, d.categorySource),
             Icon(Icons.arrow_drop_down_rounded,
                 size: 16, color: cs.onSurfaceVariant),
           ],
         ),
       ),
     );
+  }
+
+  /// Kategorinin nereden geldiğini gösteren küçük işaret: geçmişten
+  /// öğrenilen (saat) ve yalnız bankanın etiketinden tahmin edilen (soru —
+  /// "buna bir bak"). Sözlükten kesin eşleşen ve elle seçilen işaretsizdir.
+  List<Widget> _sourceMarker(BuildContext context, CategorySource? source) {
+    final cs = Theme.of(context).colorScheme;
+    final (icon, color, tip) = switch (source) {
+      CategorySource.history => (
+          Icons.history_rounded,
+          cs.onSurfaceVariant,
+          context.l10n.bankImportSourceHistory
+        ),
+      CategorySource.bankTag => (
+          Icons.help_outline_rounded,
+          cs.tertiary,
+          context.l10n.bankImportSourceBankTag
+        ),
+      _ => (null, null, null),
+    };
+    if (icon == null) return const [];
+    return [
+      const SizedBox(width: 3),
+      Tooltip(
+        message: tip!,
+        child: Icon(icon, size: 13, color: color),
+      ),
+    ];
   }
 
   Widget _bottomBar(BuildContext context) {
@@ -1178,6 +1653,20 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                     ),
                   ),
                 ],
+              ),
+            ),
+          // Eklenecek satırların toplamı: eklemeden önce ekstrenin kendi
+          // Borç/Alacak toplamlarıyla karşılaştırılabilsin.
+          if (_s.selectedCount > 0)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Text(
+                context.l10n.bankImportTotals(
+                  _money(_s.selectedExpenseTotal),
+                  _money(_s.selectedIncomeTotal),
+                ),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
           SizedBox(
@@ -1418,7 +1907,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                   ),
                   Expanded(
                     child: TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: _confirmLeave,
                       child: Text(context.l10n.bankImportStepCancelAll),
                     ),
                   ),
@@ -1446,14 +1935,25 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
   ///
   /// Durum cubit'ten TAZE okunur: `widget.state` bu karede hâlâ mutasyon
   /// öncesini taşıyor olabilir.
-  void _finish() {
+  Future<void> _finish() async {
     final s = _cubit.state;
     if (s is BankImportReview && !s.canCommit && s.selectedCount > 0) {
-      setState(() {
-        _stepper = false;
-        _filter = _ReviewFilter.uncategorized;
-      });
-      AppMessenger.warning(context.l10n.bankImportStepNeedsCategory);
+      // Kullanıcı açıklamasız listeye atılmasın: neden eklenemediği ve
+      // nereye gidileceği sorulur; vazgeçerse stepper'da kalır.
+      final l10n = context.l10n;
+      final show = await ConfirmDialog.show(
+        context,
+        title: l10n.bankImportStepMissingTitle,
+        message:
+            l10n.bankImportUncategorizedBlocked(s.selectedUncategorizedCount),
+        confirmText: l10n.bankImportStepMissingShow,
+      );
+      if (show && mounted) {
+        setState(() {
+          _stepper = false;
+          _filter = _ReviewFilter.uncategorized;
+        });
+      }
       return;
     }
     _cubit.commit();

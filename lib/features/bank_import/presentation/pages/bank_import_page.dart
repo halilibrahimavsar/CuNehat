@@ -18,6 +18,10 @@ import 'package:cunehat/features/bank_import/domain/statement_format.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state.dart';
 import 'package:cunehat/features/bank_import/presentation/pages/bank_import_mapping_view.dart';
 import 'package:cunehat/features/bank_import/presentation/pages/bank_import_review_view.dart';
+import 'package:cunehat/features/bank_import/presentation/widgets/import_undo_dialog.dart';
+import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
+import 'package:cunehat/features/main_feature/controllers/home_navigation_requests.dart';
 import 'package:cunehat/features/wallet/domain/card_family.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
@@ -182,6 +186,38 @@ class _SetupStep extends StatefulWidget {
 }
 
 class _SetupStepState extends State<_SetupStep> {
+  /// Kullanıcının bu ekranda seçtiği cüzdan; seçmediyse `null`.
+  String? _picked;
+
+  /// Son içe aktarımın hedefi (varsayılan). Çoğu kullanıcı hep aynı hesabın
+  /// ekstresini aktarır; varsayılanın o an AKTİF cüzdan olması her seferinde
+  /// yanlış cüzdanla başlatıyordu.
+  String? _remembered;
+
+  late Future<List<ImportBatch>> _history;
+
+  @override
+  void initState() {
+    super.initState();
+    final cubit = context.read<BankImportCubit>();
+    cubit.lastTargetWalletId().then((id) {
+      if (mounted && id != null) setState(() => _remembered = id);
+    });
+    _history = _loadHistory();
+  }
+
+  Future<List<ImportBatch>> _loadHistory() => context
+      .read<BankImportCubit>()
+      .importHistory(userId: _currentUserId(context) ?? 'local_user');
+
+  /// Geçerli hedef: kullanıcının seçimi > son hedef > aktif cüzdan > ilk.
+  String? _walletIdOf(List<WalletEntity> wallets, WalletEntity? active) {
+    bool exists(String? id) => id != null && wallets.any((w) => w.id == id);
+    if (exists(_picked)) return _picked;
+    if (exists(_remembered)) return _remembered;
+    return active?.id ?? (wallets.isNotEmpty ? wallets.first.id : null);
+  }
+
   String? _walletId;
 
   @override
@@ -191,7 +227,7 @@ class _SetupStepState extends State<_SetupStep> {
         walletState is WalletLoadedSt ? walletState.wallets : <WalletEntity>[];
     final active =
         walletState is WalletLoadedSt ? walletState.activeWallet : null;
-    _walletId ??= active?.id ?? (wallets.isNotEmpty ? wallets.first.id : null);
+    _walletId = _walletIdOf(wallets, active);
 
     if (wallets.isEmpty) {
       return Center(child: Text(context.l10n.bankImportNoWallet));
@@ -249,7 +285,7 @@ class _SetupStepState extends State<_SetupStep> {
                       ),
                     ),
                 ],
-                onChanged: (v) => setState(() => _walletId = v),
+                onChanged: (v) => setState(() => _picked = v),
               ),
             ],
           ),
@@ -295,8 +331,36 @@ class _SetupStepState extends State<_SetupStep> {
             icon: const Icon(Icons.folder_open_rounded, size: 18),
             label: Text(context.l10n.bankImportPickAnother),
           ),
+        FutureBuilder<List<ImportBatch>>(
+          future: _history,
+          builder: (context, snap) {
+            final batches = snap.data ?? const <ImportBatch>[];
+            if (batches.isEmpty) return const SizedBox.shrink();
+            return _RecentImports(
+              batches: batches,
+              onUndo: (b) => _undoBatch(context, b),
+            );
+          },
+        ),
       ],
     );
+  }
+
+  Future<void> _undoBatch(BuildContext context, ImportBatch batch) async {
+    await showBatchUndoDialog(
+      context,
+      cubit: context.read<BankImportCubit>(),
+      batch: batch,
+      userId: _currentUserId(context) ?? 'local_user',
+    );
+    // Gövde BLOK olmalı: `=> _history = …` atanan Future'ı döndürür ve
+    // setState bunu reddedip güncellemeyi yapmaz (geri alınan parti listede
+    // kalıyordu — testte ve cihazda ölçüldü).
+    if (mounted) {
+      setState(() {
+        _history = _loadHistory();
+      });
+    }
   }
 
   /// [sharedPath] doluysa paylaşılan dosya ayrıştırılır, boşsa dosya seçici
@@ -320,6 +384,80 @@ class _SetupStepState extends State<_SetupStep> {
     if (s is AppAuthenticated) return s.user.uid;
     if (s is AppAuthLocked) return s.user.uid;
     return null;
+  }
+}
+
+/// "Son içe aktarımlar": bitiş ekranından çıkıldıktan sonra da bir içe
+/// aktarımı tek seferde geri almanın yolu. Eskiden bu imkân bitiş ekranıyla
+/// birlikte kayboluyordu ve yanlış bir içe aktarım satır satır silinmek
+/// zorundaydı.
+class _RecentImports extends StatelessWidget {
+  final List<ImportBatch> batches;
+  final ValueChanged<ImportBatch> onUndo;
+
+  const _RecentImports({required this.batches, required this.onUndo});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.bankImportRecentTitle,
+              style: theme.textTheme.titleSmall
+                  ?.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          AppCard(
+            child: Column(
+              children: [
+                for (var i = 0; i < batches.length; i++) ...[
+                  if (i > 0) const Divider(height: 16),
+                  Row(
+                    children: [
+                      Icon(Icons.receipt_long_rounded,
+                          size: 20, color: cs.onSurfaceVariant),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.bankImportRecentRow(
+                                  batches[i].walletName, batches[i].count),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            Text(
+                              '${AppFormatters.dateShort.format(batches[i].importedAt)} '
+                              '${AppFormatters.time.format(batches[i].importedAt)}'
+                              ' · ${AppFormatters.dateShort.format(batches[i].firstDate)}'
+                              '–${AppFormatters.dateShort.format(batches[i].lastDate)}',
+                              style: TextStyle(
+                                  fontSize: 12, color: cs.onSurfaceVariant),
+                            ),
+                          ],
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => onUndo(batches[i]),
+                        style: TextButton.styleFrom(foregroundColor: cs.error),
+                        child: Text(l10n.geriAl),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -429,9 +567,21 @@ class _CategorySuggestionStepState extends State<_CategorySuggestionStep> {
                   title: Text(s.parentName == null
                       ? s.name
                       : '${s.parentName} $kCategorySeparator ${s.name}'),
-                  subtitle: Text(s.isIncome
-                      ? context.l10n.detailLabelGelir
-                      : context.l10n.detailLabelGider),
+                  // Hangi satırlar için önerildiği görünür: eskiden öneriler
+                  // hepsi işaretli geliyor ama neye dayandıkları
+                  // görünmüyordu, kullanıcı körlemesine onaylıyordu.
+                  subtitle: Text(
+                    [
+                      s.isIncome
+                          ? context.l10n.detailLabelGelir
+                          : context.l10n.detailLabelGider,
+                      if (s.rowCount > 0)
+                        context.l10n.bankImportSuggestionRows(s.rowCount),
+                      if (s.samples.isNotEmpty) s.samples.join(', '),
+                    ].join(' · '),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
             ],
           ),
@@ -498,9 +648,25 @@ class _Committing extends StatelessWidget {
   }
 }
 
-class _Done extends StatelessWidget {
+class _Done extends StatefulWidget {
   final BankImportDone state;
   const _Done({required this.state});
+
+  @override
+  State<_Done> createState() => _DoneState();
+}
+
+class _DoneState extends State<_Done> {
+  BankImportDone get state => widget.state;
+
+  /// Eşitlemeden sonra gösterilecek bakiye. `state.balance` bitiş anında
+  /// dondurulmuş bir okumadır; eskiden eşitleme "eşitlendi" derken kart
+  /// eski bakiyeyi göstermeye devam ediyordu.
+  double? _syncedBalance;
+
+  /// Hedef cüzdan bu ekrandan çıkarken bir kez aktif edilir (düğme de geri
+  /// hareketi de aynı yoldan geçer).
+  bool _activated = false;
 
   WalletEntity? _findWallet(BuildContext context) {
     final walletState = context.watch<WalletBloc>().state;
@@ -514,6 +680,18 @@ class _Done extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wallet = _findWallet(context);
+    // Geri hareketiyle çıkan kullanıcı da eklediği hareketleri gördüğü
+    // cüzdanda bulmalı: eskiden yalnız "Kapat" düğmesi aktif ediyordu.
+    return PopScope(
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) _activateTargetWallet(context);
+      },
+      child: _body(context, wallet),
+    );
+  }
+
+  Widget _body(BuildContext context, WalletEntity? wallet) {
+    final cs = Theme.of(context).colorScheme;
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(32).plusSystemBottom(context),
@@ -544,24 +722,6 @@ class _Done extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
-            if (state.hasPastMonthRows) ...[
-              const SizedBox(height: 12),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.info_outline_rounded,
-                      size: 16, color: Theme.of(context).colorScheme.primary),
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Text(
-                      context.l10n.bankImportDonePastDatesHint,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ),
-                ],
-              ),
-            ],
             if (wallet != null) ...[
               const SizedBox(height: 20),
               _balanceCard(context, wallet),
@@ -574,35 +734,55 @@ class _Done extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 24),
-            FilledButton(
-              onPressed: () {
-                _activateTargetWallet(context);
-                Navigator.of(context).pop();
-              },
-              child: Text(context.l10n.bankImportClose),
+            // Eklenenler işlem listesinde ekstrenin tarih aralığıyla açılır.
+            // Eskiden burada yalnız "tarih filtresini genişlet" yazıyordu —
+            // geçmiş aylara ait hareketleri bulmak kullanıcının işiydi.
+            if (state.added > 0 && state.firstDate != null) ...[
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.tonalIcon(
+                  onPressed: () => _showAdded(context),
+                  icon: const Icon(Icons.list_alt_rounded, size: 18),
+                  label: Text(context.l10n.bankImportShowAdded),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () {
+                  _activateTargetWallet(context);
+                  Navigator.of(context).pop();
+                },
+                child: Text(context.l10n.bankImportClose),
+              ),
             ),
-            if (state.added > 0 || state.corrected > 0) ...[
-              const SizedBox(height: 4),
-              TextButton.icon(
-                onPressed: () => _undo(context),
-                icon: const Icon(Icons.undo_rounded, size: 18),
-                label: Text(context.l10n.bankImportUndo),
+            if (state.added > 0 ||
+                state.corrected > 0 ||
+                state.cardStatementSaved) ...[
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: cs.error,
+                    side: BorderSide(color: cs.error.withValues(alpha: 0.5)),
+                  ),
+                  onPressed: () => showImportUndoDialog(
+                    context,
+                    cubit: context.read<BankImportCubit>(),
+                    done: state,
+                  ),
+                  icon: const Icon(Icons.undo_rounded, size: 18),
+                  label: Text(context.l10n.bankImportUndo),
+                ),
               ),
             ],
           ],
         ),
       ),
     );
-  }
-
-  /// Son içe aktarımı geri alır (yalnız az önce eklenen işlemleri siler) ve
-  /// başa döner; kullanıcıya kısa bir onay gösterir.
-  Future<void> _undo(BuildContext context) async {
-    final l10n = context.l10n;
-    final kept = await context.read<BankImportCubit>().undoImport();
-    AppMessenger.success(kept == 0
-        ? l10n.bankImportUndoDone
-        : l10n.bankImportUndoKeptLinked(kept));
   }
 
   /// İçe aktarım sonrası hesaplanan bakiyeyi gösterir + isteğe bağlı olarak
@@ -631,9 +811,28 @@ class _Done extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            formatMoney(state.balance, currency: wallet.currency),
+            formatMoney(_syncedBalance ?? state.balance,
+                currency: wallet.currency),
             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
           ),
+          if (_syncedBalance != null) ...[
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.check_circle_rounded,
+                    size: 16, color: Colors.green),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    context.l10n.bankImportSynced,
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          _closingSection(context, wallet),
           const SizedBox(height: 8),
           Text(
             context.l10n.bankImportDoneBalanceHint,
@@ -653,10 +852,144 @@ class _Done extends StatelessWidget {
     );
   }
 
+  /// Bu ekranda yapılan eşitlemelerin bakiyeye kattığı toplam kayma.
+  double get _shift => (_syncedBalance ?? state.balance) - state.balance;
+
+  /// Bankanın kapanışı ile defterin o günkü bakiyesi arasındaki güncel fark
+  /// (bu ekranda yapılmış eşitlemeler dahil); kıyas yoksa `null`.
+  double? get _closingDiff {
+    final base = state.closingDifference;
+    if (base == null) return null;
+    return ((base - _shift) * 100).round() / 100;
+  }
+
+  /// Ekstrenin kendi kapanış bakiyesi ile defterin o günkü bakiyesinin
+  /// kıyası. Eskiden kullanıcıdan bankadaki bakiyeyi YAZMASI isteniyordu,
+  /// oysa bakiye zinciri kanıtlanmış bir hesap ekstresinin son satırı bu
+  /// sayıyı zaten taşıyor. Kıyas bugünkü bakiyeyle değil ekstrenin son
+  /// günüyle yapılır: sonradan girilmiş işlemler bir tutarsızlık değildir.
+  Widget _closingSection(BuildContext context, WalletEntity wallet) {
+    final closing = state.closing;
+    final diff = _closingDiff;
+    if (closing == null || diff == null) return const SizedBox.shrink();
+    final l10n = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    String money(double v) => formatMoney(v, currency: wallet.currency);
+    final matched = diff.abs() < 0.005;
+    final color = matched ? Colors.green : Colors.orange.shade800;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.bankImportClosingTitle(
+                AppFormatters.dateShort.format(closing.date)),
+            style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+          ),
+          Text(
+            money(closing.amount),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 6),
+          if (matched)
+            Row(
+              children: [
+                Icon(Icons.check_circle_rounded, size: 16, color: color),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    l10n.bankImportClosingMatched,
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            )
+          else ...[
+            Text(
+              l10n.bankImportClosingLedger(
+                  money(state.ledgerAtClosing! + _shift), money(diff.abs())),
+              style: const TextStyle(fontSize: 12),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => _syncToClosing(context, wallet, diff),
+                icon: const Icon(Icons.sync_rounded, size: 18),
+                label: Text(l10n.bankImportClosingSync),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Farkı açılış bakiyesine yansıtır: geçmiş hareketler değişmez, bakiye
+  /// ekstrenin son gününde bankayla tutar (sonradan girilmiş işlemler
+  /// üstüne eklenmeye devam eder).
+  Future<void> _syncToClosing(
+      BuildContext context, WalletEntity wallet, double diff) async {
+    final l10n = context.l10n;
+    final current = _syncedBalance ?? state.balance;
+    final ok = await ConfirmDialog.show(
+      context,
+      title: l10n.bankImportSyncDialogTitle,
+      message: [
+        l10n.bankImportClosingSyncBody(
+            formatMoney(diff, currency: wallet.currency)),
+        if (state.unresolvedLeftovers > 0)
+          l10n.bankImportDoneLeftoverWarning(state.unresolvedLeftovers),
+      ].join('\n\n'),
+      confirmText: l10n.bankImportClosingSync,
+    );
+    if (!ok || !context.mounted) return;
+    final target = ((current + diff) * 100).round() / 100;
+    context.read<WalletBloc>().add(
+          UpdateWalletEvent(
+            wallet.copyWith(balance: target),
+            baselineBalance: current,
+          ),
+        );
+    setState(() => _syncedBalance = target);
+  }
+
+  /// Eklenenleri işlem listesinde gösterir: liste ekstrenin tarih
+  /// aralığına ayarlanır, hedef cüzdan aktif olur ve ana sayfa İşlemler
+  /// sekmesine geçer.
+  void _showAdded(BuildContext context) {
+    final first = state.firstDate!;
+    final last = state.lastDate ?? first;
+    // Dönem istekle taşınır; İşlemler sayfası kendi süzgecine uygular (bkz.
+    // [HomeNavigationRequests]). İstek cüzdan değişiminden ÖNCE bırakılır:
+    // özel bir aralık, kart bağlamına geçişte ekstre dönemine ezilmez.
+    if (getIt.isRegistered<HomeNavigationRequests>()) {
+      getIt<HomeNavigationRequests>().showTransactions(
+        period: DateTimeRange(
+          start: DateTime(first.year, first.month, first.day),
+          end: DateTime(last.year, last.month, last.day, 23, 59, 59),
+        ),
+      );
+    }
+    _activateTargetWallet(context);
+    Navigator.of(context).pop();
+  }
+
   /// Hedef cüzdan o an aktif değilse aktif yapar: kullanıcı geri döndüğünde
   /// eklediği hareketleri gördüğü cüzdanda bulur (aksi halde başka cüzdana
   /// bakıp "hiçbir şey olmadı" sanabilir). Zaten aktifse dokunmaz.
   void _activateTargetWallet(BuildContext context) {
+    if (_activated) return;
+    _activated = true;
     final ws = context.read<WalletBloc>().state;
     if (ws is WalletLoadedSt && ws.activeWallet?.id != state.walletId) {
       context.read<WalletBloc>().add(
@@ -668,80 +1001,13 @@ class _Done extends StatelessWidget {
 
   Future<void> _showSyncDialog(
       BuildContext context, WalletEntity wallet) async {
-    final controller =
-        TextEditingController(text: formatAmountForInput(state.balance));
-    try {
-      return await _runSyncDialog(context, wallet, controller);
-    } finally {
-      controller.dispose();
-    }
-  }
-
-  Future<void> _runSyncDialog(
-    BuildContext context,
-    WalletEntity wallet,
-    TextEditingController controller,
-  ) async {
+    final baseline = _syncedBalance ?? state.balance;
     final result = await showDialog<double>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(ctx.l10n.bankImportSyncDialogTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              ctx.l10n.bankImportSyncDialogHint,
-              style: Theme.of(ctx).textTheme.bodySmall,
-            ),
-            // Eşitleme açılış bakiyesini kaydırır: defterde bir tekrar varsa
-            // bakiye bankayla tutar ama rapor harcamayı yine iki kez sayar —
-            // tekrar görünmez olur. Çözülmemiş öneri varken önce uyarılır.
-            if (state.unresolvedLeftovers > 0) ...[
-              const SizedBox(height: 12),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.warning_amber_rounded,
-                      size: 18, color: Theme.of(ctx).colorScheme.error),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      ctx.l10n.bankImportDoneLeftoverWarning(
-                          state.unresolvedLeftovers),
-                      style: Theme.of(ctx).textTheme.bodySmall,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              autofocus: true,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [AmountInputFormatter(allowNegative: true)],
-              decoration: InputDecoration(
-                labelText: ctx.l10n.bankImportSyncDialogLabel,
-                suffixText: currencySymbol(wallet.currency),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(ctx.l10n.iptal),
-          ),
-          FilledButton(
-            onPressed: () {
-              final val = parseMoneyInput(controller.text);
-              if (val != null) Navigator.pop(ctx, val);
-            },
-            child: Text(ctx.l10n.kaydet),
-          ),
-        ],
+      builder: (_) => _SyncBalanceDialog(
+        initial: baseline,
+        currency: wallet.currency,
+        unresolvedLeftovers: state.unresolvedLeftovers,
       ),
     );
     if (result != null && context.mounted) {
@@ -751,11 +1017,112 @@ class _Done extends StatelessWidget {
       context.read<WalletBloc>().add(
             UpdateWalletEvent(
               wallet.copyWith(balance: result),
-              baselineBalance: state.balance,
+              baselineBalance: baseline,
             ),
           );
-      AppMessenger.success(context.l10n.bankImportSyncSuccess);
+      // Sonuç kartın kendisinde görünür (yeni bakiye + "eşitlendi"); ayrıca
+      // bir snackbar gerekmez.
+      setState(() => _syncedBalance = result);
     }
+  }
+}
+
+/// "Bakiyeyi eşitle" diyaloğu. Metin denetleyicisinin sahibi diyaloğun
+/// KENDİSİ: eskiden çağıran taraf `showDialog` döner dönmez denetleyiciyi
+/// dispose ediyordu, oysa diyalog o anda hâlâ kapanış animasyonunda ve
+/// TextField'ı yeniden çiziyordu ("TextEditingController was used after
+/// being disposed" — testte ölçüldü).
+class _SyncBalanceDialog extends StatefulWidget {
+  final double initial;
+  final String currency;
+  final int unresolvedLeftovers;
+
+  const _SyncBalanceDialog({
+    required this.initial,
+    required this.currency,
+    required this.unresolvedLeftovers,
+  });
+
+  @override
+  State<_SyncBalanceDialog> createState() => _SyncBalanceDialogState();
+}
+
+class _SyncBalanceDialogState extends State<_SyncBalanceDialog> {
+  late final _controller =
+      TextEditingController(text: formatAmountForInput(widget.initial));
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    return AlertDialog(
+      title: Text(l10n.bankImportSyncDialogTitle),
+      // Klavye açıkken alçak ekranda içerik kayabilsin.
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.bankImportSyncDialogHint,
+              style: theme.textTheme.bodySmall,
+            ),
+            // Eşitleme açılış bakiyesini kaydırır: defterde bir tekrar varsa
+            // bakiye bankayla tutar ama rapor harcamayı yine iki kez sayar —
+            // tekrar görünmez olur. Çözülmemiş öneri varken önce uyarılır.
+            if (widget.unresolvedLeftovers > 0) ...[
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.warning_amber_rounded,
+                      size: 18, color: theme.colorScheme.error),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.bankImportDoneLeftoverWarning(
+                          widget.unresolvedLeftovers),
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 16),
+            TextField(
+              controller: _controller,
+              autofocus: true,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [AmountInputFormatter(allowNegative: true)],
+              decoration: InputDecoration(
+                labelText: l10n.bankImportSyncDialogLabel,
+                suffixText: currencySymbol(widget.currency),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.iptal),
+        ),
+        FilledButton(
+          onPressed: () {
+            final val = parseMoneyInput(_controller.text);
+            if (val != null) Navigator.pop(context, val);
+          },
+          child: Text(l10n.kaydet),
+        ),
+      ],
+    );
   }
 }
 
@@ -792,7 +1159,7 @@ class _RawTextView extends StatelessWidget {
             ),
             child: SingleChildScrollView(
               child: SelectableText(
-                text.isEmpty ? '(boş)' : text,
+                text.isEmpty ? context.l10n.bankImportRawEmpty : text,
                 style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
               ),
             ),

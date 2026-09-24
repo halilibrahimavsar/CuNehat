@@ -162,7 +162,12 @@ class DataSerializationService {
   /// v12 (2026-09-24): cüzdanlara `creditCard` (kredi kartı bilgileri: kesim
   /// ve son ödeme günü, limit, son ekstre özeti). Düz cüzdanda `null`; v11
   /// yedekleri `_v11ToV12` ile açıkça `null` alır.
-  static const int schemaVersion = 12;
+  ///
+  /// v13 (2026-09-24): işlemlere `importBatchId` (kaydı yazan ekstre içe
+  /// aktarımının kimliği — "Son içe aktarımlar" ve sonradan geri alma buna
+  /// dayanır). Elle girilmiş kayıtta `null`; v12 yedekleri `_v12ToV13` ile
+  /// açıkça `null` alır.
+  static const int schemaVersion = 13;
 
   final HiveInterface _hive;
   final ReceiptStorageService _receiptStorage;

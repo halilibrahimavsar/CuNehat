@@ -240,6 +240,68 @@ void main() {
     });
   });
 
+  group('v12 → v13 (işlemlere içe aktarım partisi)', () {
+    Map<String, dynamic> v12Backup() => {
+          'version': 12,
+          'timestamp': '2026-09-24T10:00:00.000',
+          'wallets': [
+            {
+              'id': 'w1',
+              'name': 'Nakit',
+              'categoryIds': null,
+              'creditCard': null
+            },
+          ],
+          'transactions': [
+            {'id': 't1', 'tag': 'cat-1', 'origin': 'import'},
+            {'id': 't2', 'tag': 'cat-2', 'origin': 'manual'},
+          ],
+          'users': <String, dynamic>{},
+        };
+
+    test('sürüm damgası 13 olur', () {
+      expect(migrateBackup(v12Backup(), targetVersion: 13)['version'], 13);
+    });
+
+    test('her işleme importBatchId AÇIKÇA null yazılır ("bilinmiyor")', () {
+      // v12'de parti saklanmıyordu: eski içe aktarımlar "Son içe aktarımlar"
+      // listesinde görünmez, başka hiçbir şeyleri değişmez.
+      final result = migrateBackup(v12Backup(), targetVersion: 13);
+      final txs = (result['transactions'] as List).cast<Map<String, dynamic>>();
+      expect(txs, hasLength(2));
+      for (final t in txs) {
+        expect(t.containsKey('importBatchId'), isTrue);
+        expect(t['importBatchId'], isNull);
+      }
+      expect(txs.map((t) => t['origin']), ['import', 'manual']);
+    });
+
+    test('işlem dışındaki bölümlere DOKUNULMAZ; dönüşüm SAFTIR', () {
+      final source = v12Backup();
+      final result = migrateBackup(source, targetVersion: 13);
+      expect(result['wallets'], source['wallets']);
+      expect(source['version'], 12);
+      expect((source['transactions'] as List).first,
+          isNot(contains('importBatchId')));
+    });
+
+    test('işlem listesi yoksa çökmez', () {
+      final result = migrateBackup(
+        {'version': 12, 'users': <String, dynamic>{}},
+        targetVersion: 13,
+      );
+      expect(result['transactions'], isEmpty);
+    });
+
+    test('v9 yedeği dört adımda (9→10→11→12→13) yükselir', () {
+      final result = migrateBackup(v9Backup(), targetVersion: 13);
+      expect(result['version'], 13);
+      final tx = (result['transactions'] as List).first as Map;
+      expect(tx, containsPair('origin', null));
+      expect(tx, containsPair('importBatchId', null));
+    });
+  });
+
   group('zincir bütünlüğü', () {
     test('desteklenen en eskiden güncele kadar HER adım tanımlı', () {
       // Zincirde bir boşluk kalırsa (ör. v11 eklenip 10→11 yazılmazsa) o

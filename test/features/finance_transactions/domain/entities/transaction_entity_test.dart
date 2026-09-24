@@ -99,6 +99,7 @@ void main() {
         'linkedRecordId': null,
         'adoptedFromTag': null,
         'origin': null,
+        'importBatchId': null,
       });
     });
 

@@ -3,6 +3,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/core/models/local_user.dart';
+import 'package:cunehat/features/bank_import/data/category_guesser.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state.dart';
 import 'package:cunehat/features/bank_import/presentation/pages/bank_import_page.dart';
@@ -25,10 +26,10 @@ class _MockAuthBloc extends MockBloc<AppAuthEvent, AppAuthState>
 
 const _sharedPath = '/data/cache/bank_import_shared/Hesap Özeti.pdf';
 
-WalletEntity _wallet() => WalletEntity(
-      id: 'w1',
+WalletEntity _wallet({String id = 'w1', String name = 'Nakit'}) => WalletEntity(
+      id: id,
       userId: 'local_user',
-      name: 'Nakit',
+      name: name,
       balance: 0,
       debt: 0,
       credit: 0,
@@ -53,6 +54,9 @@ void main() {
     when(() => cubit.lastPdfRawText).thenReturn(null);
     when(() => cubit.attachSharedFile(any())).thenReturn(null);
     when(() => cubit.sharedFilePath).thenReturn(null);
+    when(() => cubit.lastTargetWalletId()).thenAnswer((_) async => null);
+    when(() => cubit.importHistory(userId: any(named: 'userId')))
+        .thenAnswer((_) async => const <ImportBatch>[]);
     when(() => cubit.parseFile(
           userId: any(named: 'userId'),
           walletId: any(named: 'walletId'),
@@ -184,5 +188,101 @@ void main() {
 
     verify(() => cubit.pickAndParse(userId: 'local_user', walletId: 'w1'))
         .called(1);
+  });
+
+  testWidgets(
+      'hedef cüzdanın varsayılanı SON içe aktarımın hedefi (aktif cüzdan değil)',
+      (tester) async {
+    whenListen(
+      walletBloc,
+      const Stream<WalletState>.empty(),
+      initialState: WalletLoadedSt(
+        [_wallet(), _wallet(id: 'w2', name: 'Maaş hesabı')],
+        _wallet(),
+      ),
+    );
+    when(() => cubit.lastTargetWalletId()).thenAnswer((_) async => 'w2');
+
+    await pump(tester);
+
+    expect(find.text('Maaş hesabı'), findsOneWidget);
+    await tester.tap(find.text('Dosya seç ve tara'));
+    await tester.pump();
+    verify(() => cubit.pickAndParse(
+          userId: any(named: 'userId'),
+          walletId: 'w2',
+        )).called(1);
+  });
+
+  testWidgets('son içe aktarımlar listelenir ve geri alma diyaloğu açılır',
+      (tester) async {
+    final batch = ImportBatch(
+      id: '01922b7e-3f00-7abc-8def-0123456789ab',
+      walletId: 'w1',
+      walletName: 'Nakit',
+      count: 157,
+      importedAt: DateTime(2026, 9, 24, 9, 50),
+      firstDate: DateTime(2026, 5, 30),
+      lastDate: DateTime(2026, 8, 25),
+    );
+    var undone = false;
+    when(() => cubit.importHistory(userId: any(named: 'userId')))
+        .thenAnswer((_) async => undone ? const <ImportBatch>[] : [batch]);
+    when(() => cubit.undoBatch(batch, userId: any(named: 'userId')))
+        .thenAnswer((_) async {
+      undone = true;
+      return const ImportUndoResult(removed: 157);
+    });
+
+    await pump(tester);
+
+    expect(find.text('Son içe aktarımlar'), findsOneWidget);
+    expect(find.text('Nakit · 157 işlem'), findsOneWidget);
+
+    await tester.tap(find.text('Geri al'));
+    await tester.pumpAndSettle();
+    // Sonradan geri almada düzeltmeler/kart künyesi geri dönmez: söylenir.
+    expect(find.textContaining('olduğu gibi kalır'), findsOneWidget);
+    expect(find.text('Bu içe aktarımın eklediği 157 işlem silinir.'),
+        findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Geri al'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('157 işlem silindi.'), findsOneWidget);
+    verify(() => cubit.undoBatch(batch, userId: any(named: 'userId')))
+        .called(1);
+
+    // Sonuç kapanınca liste TAZELENİR: geri alınan parti kaybolur (cihazda
+    // ölçüldü — eskiden satır ekranda kalıyordu).
+    await tester.tap(find.text('Tamam'));
+    await tester.pumpAndSettle();
+    expect(find.text('Nakit · 157 işlem'), findsNothing);
+    expect(find.text('Son içe aktarımlar'), findsNothing);
+  });
+
+  testWidgets('kategori önerisi kaç satırı kapsadığını ve örnekleri gösterir',
+      (tester) async {
+    whenListen(
+      cubit,
+      const Stream<BankImportState>.empty(),
+      initialState: const BankImportCategorySuggestion(
+        suggestions: [
+          CategorySuggestion(
+            name: 'Yatırım',
+            isIncome: false,
+            iconName: 'category',
+            rowCount: 3,
+            samples: ['MIDAS MENKUL', 'BORSA ISTANBUL'],
+          ),
+        ],
+        rawDrafts: [],
+        skippedRows: 0,
+      ),
+    );
+
+    await pump(tester);
+
+    expect(find.text('Gider · 3 satır · MIDAS MENKUL, BORSA ISTANBUL'),
+        findsOneWidget);
   });
 }

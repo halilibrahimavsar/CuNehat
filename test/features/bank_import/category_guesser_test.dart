@@ -554,6 +554,30 @@ void main() {
       expect(suggestions.single.isIncome, isFalse);
     });
 
+    test('öneri kaç satırı kapsadığını ve iki örnek açıklamayı taşır', () {
+      // Onay adımı körlemesine onaylatmasın: hangi satırlar için önerildiği
+      // görünmeli.
+      final drafts = [
+        _draft('MIDAS MENKUL DEGERLER'),
+        _draft('MB Transfer - Alıcı:Midas Menkul Değerler'),
+        _draft('MIDAS MENKUL DEGERLER'),
+        _draft('5411 MIGROS TIC.A.S.'),
+      ];
+      final suggestions = guesser.suggestNewCategories(
+        drafts: drafts,
+        expenseCategories:
+            defaultExpenseCats.where((c) => c.name != 'Yatırım').toList(),
+        incomeCategories: defaultIncomeCats,
+        languageCode: 'tr',
+      );
+      final s = suggestions.single;
+      expect(s.rowCount, 3);
+      expect(s.samples, [
+        'MIDAS MENKUL DEGERLER',
+        'MB Transfer - Alıcı:Midas Menkul Değerler',
+      ]);
+    });
+
     test('eşleşen grup yoksa boş liste döner', () {
       final drafts = [_draft('HAVALE GELEN EFT REF 123456')];
       final suggestions = guesser.suggestNewCategories(

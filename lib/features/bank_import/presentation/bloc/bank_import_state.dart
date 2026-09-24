@@ -4,6 +4,7 @@ import 'package:cunehat/features/bank_import/data/category_guesser.dart';
 import 'package:cunehat/features/bank_import/data/column_mapper.dart';
 import 'package:cunehat/features/bank_import/data/link_hint.dart';
 import 'package:cunehat/features/bank_import/data/raw_table_reader.dart';
+import 'package:cunehat/features/bank_import/data/statement_closing.dart';
 import 'package:cunehat/features/bank_import/data/statement_verification.dart';
 import 'package:cunehat/features/bank_import/domain/column_mapping.dart';
 import 'package:cunehat/features/bank_import/domain/import_draft.dart';
@@ -48,6 +49,48 @@ class BankImportCategorySuggestion extends BankImportState {
     required this.suggestions,
     required this.rawDrafts,
     required this.skippedRows,
+  });
+}
+
+/// Hedef cüzdanın neden değiştirilmesinin önerildiği.
+enum TargetSuggestionReason {
+  /// Ekstrenin satırlarının belirgin bir kısmı BAŞKA bir cüzdanda birebir
+  /// kayıtlı: büyük olasılıkla yanlış cüzdan seçildi (ya da ekstre ikinci kez
+  /// başka bir cüzdana aktarılıyor).
+  entriesElsewhere,
+
+  /// Kart ekstresinin son 4 hanesi başka bir kart cüzdanınınkiyle aynı.
+  cardNumber,
+
+  /// Satır satır bakiye taşıyan bir HESAP ekstresi kart cüzdanına
+  /// aktarılıyor; kartın ödendiği hesap öneriliyor.
+  accountOnCard,
+
+  /// Aynı biçimdeki (aynı başlıklı) ekstre daha önce başka cüzdana aktarıldı.
+  usedBefore,
+}
+
+/// "Hedefi X yap" önerisi (inceleme ekranının en üstünde, tek dokunuşla).
+class TargetSuggestion {
+  final String walletId;
+
+  /// Gösterilecek ad (kartlarda "Hesap › Kart").
+  final String walletName;
+  final TargetSuggestionReason reason;
+
+  /// [TargetSuggestionReason.entriesElsewhere]: o cüzdanda birebir kayıtlı
+  /// satır sayısı; diğerlerinde 0.
+  final int matchCount;
+
+  /// [TargetSuggestionReason.cardNumber]: kartın son 4 hanesi.
+  final String? last4;
+
+  const TargetSuggestion({
+    required this.walletId,
+    required this.walletName,
+    required this.reason,
+    this.matchCount = 0,
+    this.last4,
   });
 }
 
@@ -107,6 +150,14 @@ class BankImportReview extends BankImportState {
   /// Hedef cüzdan kredi kartı mı (künye aktarımda karta yazılır).
   final bool targetIsCard;
 
+  /// Hedef cüzdan için daha uygun görünen cüzdan; yoksa `null`.
+  final TargetSuggestion? targetSuggestion;
+
+  /// Satır satır bakiye taşıyan bir hesap ekstresi kart cüzdanına
+  /// aktarılıyor (öneri olmasa da uyarılır: kartın ödendiği hesap
+  /// tanımlanmamış olabilir).
+  final bool accountStatementOnCard;
+
   const BankImportReview({
     required this.drafts,
     required this.expenseCategories,
@@ -123,6 +174,8 @@ class BankImportReview extends BankImportState {
     this.leftovers = const [],
     this.cardFacts,
     this.targetIsCard = false,
+    this.targetSuggestion,
+    this.accountStatementOnCard = false,
   });
 
   int get selectedCount => drafts.where((d) => d.selected).length;
@@ -160,6 +213,33 @@ class BankImportReview extends BankImportState {
   /// tahmin yoksa `categoryId` bilerek `null` bırakılır.
   int get uncategorizedCount =>
       drafts.where((d) => d.categoryId == null).length;
+
+  /// Kategorisi yalnız bankanın genel etiketinden tahmin edilen satırlar —
+  /// en zayıf kanıt (bkz. [CategorySource.bankTag]); "Kontrol et" süzgeci.
+  int get toCheckCount => drafts
+      .where((d) =>
+          d.categoryId != null && d.categorySource == CategorySource.bankTag)
+      .length;
+
+  /// Defterde BİREBİR kayıtlı olduğu için eklenmeyecek satır mı. Bu satırlar
+  /// listede varsayılan olarak tek bir satıra katlanır: ardışık ekstrelerde
+  /// her örtüşen satır ayrı bir "zaten kayıtlı" paneli çiziyordu.
+  static bool isKnown(ImportDraft d) =>
+      !d.selected && d.duplicateOf?.kind == DuplicateKind.exact;
+
+  int get knownCount => drafts.where(isKnown).length;
+
+  /// Ekstrenin TAMAMI defterde birebir kayıtlı: eklenecek yeni hareket yok.
+  bool get allKnown => drafts.isNotEmpty && drafts.every(isKnown);
+
+  /// Seçili (eklenecek) satırların gider/gelir toplamı. Eklemeden önce
+  /// ekstrenin kendi toplamlarıyla karşılaştırmak için alt çubukta durur.
+  double get selectedExpenseTotal => drafts
+      .where((d) => d.selected && !d.isIncome)
+      .fold(0.0, (sum, d) => sum + d.amount);
+  double get selectedIncomeTotal => drafts
+      .where((d) => d.selected && d.isIncome)
+      .fold(0.0, (sum, d) => sum + d.amount);
 
   /// İÇE AKTARILACAK (seçili) ama kategorisi olmayan taslak sayısı.
   ///
@@ -201,6 +281,8 @@ class BankImportReview extends BankImportState {
         leftovers: leftovers ?? this.leftovers,
         cardFacts: cardFacts,
         targetIsCard: targetIsCard,
+        targetSuggestion: targetSuggestion,
+        accountStatementOnCard: accountStatementOnCard,
       );
 }
 
@@ -241,6 +323,20 @@ class BankImportDone extends BankImportState {
   /// Kart ekstresinin künyesi hedef kartın "son ekstresi" olarak yazıldı mı.
   final bool cardStatementSaved;
 
+  /// Eklenen hareketlerin en eski ve en yeni tarihi ("Eklenenleri göster"
+  /// işlem listesini bu aralıkla açar); hiçbir şey eklenmediyse `null`.
+  final DateTime? firstDate;
+  final DateTime? lastDate;
+
+  /// Ekstrenin kendi beyan ettiği kapanış bakiyesi (bakiye zinciri
+  /// kanıtlanmış hesap ekstresinde); yoksa `null`.
+  final StatementClosing? closing;
+
+  /// Cüzdanın [closing] tarihindeki defter bakiyesi. Bugünkü bakiyeyle değil
+  /// bununla kıyaslanır: ekstreden SONRA girilmiş işlemler bugünkü bakiyeyi
+  /// ekstreninkinden zaten ayırır, bu bir tutarsızlık değildir.
+  final double? ledgerAtClosing;
+
   const BankImportDone({
     required this.added,
     this.corrected = 0,
@@ -252,7 +348,71 @@ class BankImportDone extends BankImportState {
     this.unresolvedLeftovers = 0,
     this.linkSuggestions = const [],
     this.cardStatementSaved = false,
+    this.firstDate,
+    this.lastDate,
+    this.closing,
+    this.ledgerAtClosing,
   });
+
+  /// Bankanın kapanış bakiyesi ile defterin o günkü bakiyesi arasındaki fark
+  /// (banka − defter, kuruşa yuvarlı); kıyas yapılamıyorsa `null`.
+  double? get closingDifference {
+    final c = closing;
+    final l = ledgerAtClosing;
+    if (c == null || l == null) return null;
+    return ((c.amount - l) * 100).round() / 100;
+  }
+}
+
+/// Geçmişteki bir ekstre içe aktarımı ("Son içe aktarımlar" listesi). Aynı
+/// `importBatchId`'yi taşıyan işlemlerden kurulur; ayrı bir kayıt tutulmaz.
+class ImportBatch {
+  final String id;
+  final String walletId;
+  final String walletName;
+
+  /// Defterde hâlâ duran satır sayısı (bu arada silinenler düşer).
+  final int count;
+
+  /// İçe aktarımın yapıldığı an (UUIDv7 kimliğinin içinden okunur).
+  final DateTime importedAt;
+  final DateTime firstDate;
+  final DateTime lastDate;
+
+  const ImportBatch({
+    required this.id,
+    required this.walletId,
+    required this.walletName,
+    required this.count,
+    required this.importedAt,
+    required this.firstDate,
+    required this.lastDate,
+  });
+}
+
+/// "İçe aktarımı geri al"ın sonucu. Geri alma diyaloğu sonucu sayılarıyla
+/// anlatır: kullanıcı neyin silindiğini, neyin yerinde kaldığını görmeli.
+class ImportUndoResult {
+  /// Silinen (az önce eklenmiş) işlem sayısı.
+  final int removed;
+
+  /// Eski tutarına döndürülen (düzeltilmiş) defter kaydı sayısı.
+  final int reverted;
+
+  /// Bu arada bir kayda BAĞLANDIĞI için yerinde bırakılan satır sayısı.
+  final int kept;
+
+  /// Kartın "son ekstre" bilgisi içe aktarım öncesine döndü mü.
+  final bool cardStatementReverted;
+
+  const ImportUndoResult({
+    this.removed = 0,
+    this.reverted = 0,
+    this.kept = 0,
+    this.cardStatementReverted = false,
+  });
+
+  static const none = ImportUndoResult();
 }
 
 class BankImportError extends BankImportState {

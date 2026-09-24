@@ -7,6 +7,7 @@ import 'package:cunehat/features/debt_and_receivable/data/models/debt_type_adapt
 import 'package:cunehat/features/debt_and_receivable/data/models/receivable_model.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
+import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/investments/data/models/investment_model.dart';
 import 'package:cunehat/features/investments/data/models/investment_type_adapter.dart';
@@ -42,6 +43,31 @@ void main() {
   final created = DateTime(2026, 1, 1);
 
   group('eski kayıt (geç eklenen alan YOK) okunabilir', () {
+    test('TransactionModel — alan 14 (importBatchId, v13) yok → null', () {
+      // Alan nullable olduğu için ÜRETİLEN adapter yeter (`as String?`);
+      // bu test, alan bir gün non-null yapılırsa kutunun açılamaz hâle
+      // geleceğini yakalar.
+      final model = TransactionModelAdapter().read(legacyRecord({
+        0: 't1',
+        1: 'u1',
+        2: 'w1',
+        3: 'MIGROS',
+        4: 'cat',
+        5: 91.5,
+        6: created,
+        7: TransactionTypeModel.expense,
+        8: false,
+        9: null,
+        10: 'DK-1',
+        11: null,
+        12: null,
+        13: 'import',
+      }));
+      expect(model.importBatchId, isNull);
+      expect(model.origin, 'import');
+      expect(model.reference, 'DK-1');
+    });
+
     test('InvestmentModel — alan 15 (unbookedCost, v8) yok', () {
       final model = SafeInvestmentModelAdapter().read(legacyRecord({
         0: 'i1',

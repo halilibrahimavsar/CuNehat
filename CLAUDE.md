@@ -23,14 +23,15 @@ verisi geçersiz sayılır; çözüm veri silme/yeniden kurulumdur, migrasyon de
 - `typeId` silinmez, adapter kaydı kaldırılmaz.
 - Sıradaki serbest numaralar için ilgili hafıza notlarına bak; tahmin etme.
   (24 Eyl 2026 itibarıyla: `WalletModel` typeId 0 → sıradaki alan **16**;
-  `TransactionModel` typeId 1 → sıradaki alan **14**; `CategoryModel`
+  `TransactionModel` typeId 1 → sıradaki alan **15** (14 = `importBatchId`,
+  şema 13); `CategoryModel`
   typeId 15 → sıradaki alan **6**; `CreditCardInfoModel` typeId 17 →
   sıradaki alan **7**; `CardStatementModel` typeId 18 → sıradaki alan **6**;
   sıradaki typeId **19**.)
 
 ### Yedek şeması — `DataSerializationService.schemaVersion`
 
-- Mevcut sürüm **12**. Kapı artık sıkı eşitlik DEĞİL: `migrateBackup`
+- Mevcut sürüm **13** (12→13: işlemlere `importBatchId`). Kapı artık sıkı eşitlik DEĞİL: `migrateBackup`
   (`lib/core/services/backup_migrations.dart`) desteklenen aralıktaki eski
   yedeği güncel biçime yükseltir, aralık dışındakini `BackupVersionMismatch`
   ile reddeder. Desteklenen en eski sürüm **9**

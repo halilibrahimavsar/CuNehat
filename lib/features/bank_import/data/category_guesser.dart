@@ -47,12 +47,22 @@ class CategorySuggestion extends Equatable {
 
   final bool isIncome;
   final String iconName;
+
+  /// Bu kategoriye düşecek satır sayısı ve ilk iki örnek açıklama. Onay
+  /// adımı bunları gösterir: eskiden öneriler hepsi işaretli geliyor ama
+  /// hangi satırlar için önerildikleri görünmüyordu — kullanıcı körlemesine
+  /// onaylıyordu. Kimliğin (props) parçası DEĞİL: aynı öneri aynı öneridir.
+  final int rowCount;
+  final List<String> samples;
+
   const CategorySuggestion({
     required this.name,
     required this.isIncome,
     required this.iconName,
     this.parentName,
     this.parentIconName,
+    this.rowCount = 0,
+    this.samples = const [],
   });
 
   @override
@@ -641,20 +651,33 @@ class CategoryGuesser {
     required String languageCode,
   }) {
     final wanted = <String, ({CategoryTarget target, bool isIncome})>{};
-    void want(String? path, bool isIncome) {
-      if (path == null) return;
-      wanted['$isIncome|$path'] =
-          (target: parseCategoryTarget(path), isIncome: isIncome);
-    }
-
+    final rows = <String, int>{};
+    final samples = <String, List<String>>{};
     for (final d in drafts) {
-      want(_matchGroup(d.description, d.isIncome), d.isIncome);
-      final tag = d.sourceTag;
-      if (tag != null) want(_matchGroup(tag, d.isIncome), d.isIncome);
+      // Satır bir hedefe BİR KEZ sayılır (açıklama ve etiket aynı hedefe
+      // gidebilir).
+      final keys = <String>{};
+      for (final path in [
+        _matchGroup(d.description, d.isIncome),
+        if (d.sourceTag case final tag?) _matchGroup(tag, d.isIncome),
+      ]) {
+        if (path == null) continue;
+        final key = '${d.isIncome}|$path';
+        wanted[key] = (target: parseCategoryTarget(path), isIncome: d.isIncome);
+        keys.add(key);
+      }
+      for (final key in keys) {
+        rows.update(key, (v) => v + 1, ifAbsent: () => 1);
+        final list = samples.putIfAbsent(key, () => []);
+        final text = d.description.trim();
+        if (list.length < 2 && text.isNotEmpty && !list.contains(text)) {
+          list.add(text);
+        }
+      }
     }
 
     final result = <CategorySuggestion>[];
-    for (final entry in wanted.values) {
+    for (final MapEntry(key: wantedKey, value: entry) in wanted.entries) {
       final existing = entry.isIncome ? incomeCategories : expenseCategories;
       if (resolveTarget(entry.target, existing) != null) continue;
 
@@ -673,6 +696,8 @@ class CategoryGuesser {
             parentKey == null ? null : _iconFor(parentKey, isExpense),
         isIncome: entry.isIncome,
         iconName: _iconFor(key, isExpense),
+        rowCount: rows[wantedKey] ?? 0,
+        samples: samples[wantedKey] ?? const [],
       ));
     }
     return result;

@@ -234,6 +234,26 @@ class DuplicateMatch extends Equatable {
       ];
 }
 
+/// Taslağın kategorisi nereden geldi. İnceleme ekranı buna göre "buna
+/// güvenebilirsin" ile "buna bir bak" ayrımını gösterir: eskiden sözlükten
+/// kesin eşleşen satırla bankanın genel etiketinden zayıf tahmin edilen satır
+/// birebir aynı görünüyordu ve kullanıcı ya hepsini ya hiçbirini kontrol
+/// ediyordu.
+enum CategorySource {
+  /// Kullanıcının kendi geçmişinden öğrenildi ("bu işyerini geçen sefer…").
+  history,
+
+  /// Açıklamadaki üye işyeri sabit sözlükte tanındı.
+  keyword,
+
+  /// Yalnız bankanın kendi etiketinden ("Alışveriş") — en zayıf kanıt: bazı
+  /// bankalar tüm kart harcamalarına aynı etiketi basıyor.
+  bankTag,
+
+  /// Kullanıcı inceleme ekranında seçti.
+  user,
+}
+
 /// Banka ekstresinden çıkarılan tek bir hareket taslağı. Format-bağımsız ortak
 /// birim: CSV/Excel (kolon eşleme) ve PDF (satır-sezgisel) yolları hep bunu üretir.
 ///
@@ -248,6 +268,9 @@ class ImportDraft extends Equatable {
 
   /// Atanan kategori (tag). Toplu varsayılandan gelir, satır bazında düzenlenir.
   final String? categoryId;
+
+  /// [categoryId]'nin kaynağı; kategori yoksa `null`.
+  final CategorySource? categorySource;
 
   /// Bankanın ekstrede verdiği KENDİ kategori etiketi ("Alışveriş",
   /// "Para Çekme", "Maaş"…). Yalnız kategori tahmininde ipucu olarak
@@ -279,6 +302,7 @@ class ImportDraft extends Equatable {
     required this.amount,
     required this.type,
     this.categoryId,
+    this.categorySource,
     this.sourceTag,
     this.reference,
     this.duplicateOf,
@@ -290,13 +314,15 @@ class ImportDraft extends Equatable {
   bool get isDuplicate => duplicateOf != null;
 
   /// [duplicateOf] `copyWith` ile TEMİZLENEMEZ (`??` deseni); eşleşmeyi
-  /// düşürmek için [withoutDuplicate] kullanılır.
+  /// düşürmek için [withoutDuplicate] kullanılır. Kategori değiştirilirken
+  /// kaynağı da verilmeli ([withCategory]); yoksa eski kaynak kalır.
   ImportDraft copyWith({
     DateTime? date,
     String? description,
     double? amount,
     TransactionTypeModel? type,
     String? categoryId,
+    CategorySource? categorySource,
     String? sourceTag,
     String? reference,
     DuplicateMatch? duplicateOf,
@@ -309,6 +335,7 @@ class ImportDraft extends Equatable {
       amount: amount ?? this.amount,
       type: type ?? this.type,
       categoryId: categoryId ?? this.categoryId,
+      categorySource: categorySource ?? this.categorySource,
       sourceTag: sourceTag ?? this.sourceTag,
       reference: reference ?? this.reference,
       duplicateOf: duplicateOf ?? this.duplicateOf,
@@ -317,6 +344,22 @@ class ImportDraft extends Equatable {
     );
   }
 
+  /// Kategorisi (ve kaynağı) değiştirilmiş kopya. Kategori `null` olabilir
+  /// — `copyWith`'in `??` deseni kategoriyi boşaltamaz.
+  ImportDraft withCategory(String? id, CategorySource? source) => ImportDraft(
+        date: date,
+        description: description,
+        amount: amount,
+        type: type,
+        categoryId: id,
+        categorySource: id == null ? null : source,
+        sourceTag: sourceTag,
+        reference: reference,
+        duplicateOf: duplicateOf,
+        selected: selected,
+        correctExisting: correctExisting,
+      );
+
   /// Eşleşmesi düşürülmüş kopya (düzeltme kararı da düşer).
   ImportDraft withoutDuplicate() => ImportDraft(
         date: date,
@@ -324,6 +367,7 @@ class ImportDraft extends Equatable {
         amount: amount,
         type: type,
         categoryId: categoryId,
+        categorySource: categorySource,
         sourceTag: sourceTag,
         reference: reference,
         selected: selected,
@@ -339,6 +383,7 @@ class ImportDraft extends Equatable {
     required String userId,
     required String walletId,
     String? categoryName,
+    String? importBatchId,
   }) {
     final title = description.trim().isEmpty
         ? (categoryName ?? 'İşlem')
@@ -355,6 +400,7 @@ class ImportDraft extends Equatable {
       isSystem: false,
       reference: reference,
       origin: TransactionOrigin.bankImport,
+      importBatchId: importBatchId,
     );
   }
 
@@ -365,6 +411,7 @@ class ImportDraft extends Equatable {
         amount,
         type,
         categoryId,
+        categorySource,
         sourceTag,
         reference,
         duplicateOf,

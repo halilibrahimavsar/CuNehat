@@ -160,6 +160,19 @@ class HomeNavigationController extends ChangeNotifier {
     );
   }
 
+  /// Alt sayfaları kapatıp [state] ana sayfasına kayar (dışarıdan gezinme
+  /// isteği; bkz. `HomeNavigationRequests`).
+  Future<void> showMain(SliderState state) async {
+    if (_isDisposed) return;
+    await closeToMain();
+    if (_isDisposed) return;
+    await _horizontalController.animateTo(
+      SliderStateHelper.getTargetValue(state, SliderState.values.length),
+      duration: kMainSettleDuration,
+      curve: kMainSettleCurve,
+    );
+  }
+
   /// Set up the view stack for current slider state
   void setupViewStack({
     required Widget mainView,

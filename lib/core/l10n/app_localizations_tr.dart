@@ -2708,10 +2708,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get bankImportDonePastDatesHint =>
-      'Bazı hareketler geçmiş aylara ait. İşlemler listesi varsayılan olarak içinde bulunduğun ayı gösterir; hepsini görmek için tarih filtresini genişlet.';
-
-  @override
   String get bankImportReconcileMatched =>
       'Bakiye ile doğrulandı: işlemlerin gider/gelir yönü bankanın bakiye sütunuyla eşleşiyor.';
 
@@ -2758,9 +2754,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bankImportUndo => 'İçe aktarımı geri al';
 
   @override
-  String get bankImportUndoDone => 'İçe aktarım geri alındı.';
-
-  @override
   String get bankImportBatchTypeLabel => 'Tümünü çevir:';
 
   @override
@@ -2794,9 +2787,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bankImportSyncDialogLabel => 'Gerçek bakiye';
 
   @override
-  String get bankImportSyncSuccess => 'Cüzdan bakiyesi eşitlendi.';
-
-  @override
   String get bankImportCategorySuggestionTitle => 'Yeni kategori önerileri';
 
   @override
@@ -2820,11 +2810,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bankImportMoreActions => 'Diğer işlemler';
-
-  @override
-  String bankImportAssignVisibleDone(int count, String category) {
-    return '$count satır “$category” kategorisine alındı.';
-  }
 
   @override
   String bankImportAssignUncategorized(int count) {
@@ -2876,24 +2861,12 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String bankImportApplyToSimilar(int count, String sample) {
-    return 'Buna benzeyen $count kategorisiz satır daha var: $sample';
-  }
-
-  @override
-  String get bankImportApplyToSimilarAction => 'Hepsine uygula';
-
-  @override
   String bankImportUncategorizedBlocked(int count) {
     return 'Seçili $count satırın kategorisi yok. Kategori seçilmeden eklenemez: bütçe ve raporlarda hiçbir kategoriye sayılmazlar.';
   }
 
   @override
   String get bankImportShowUncategorized => 'Göster';
-
-  @override
-  String get bankImportStepNeedsCategory =>
-      'Önce kategorisiz satırlara kategori seç.';
 
   @override
   String get bankImportMapTitle => 'Dosyayı nasıl okuyalım?';
@@ -5139,11 +5112,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'İki bacağı da kaldırır; ekstreden gelen satır eski hâline döner';
 
   @override
-  String bankImportUndoKeptLinked(int count) {
-    return 'İçe aktarım geri alındı. Bir kayda bağladığın $count satır yerinde bırakıldı; onları bağlı kaydı silerek kaldırabilirsin.';
-  }
-
-  @override
   String get bankImportLinkTitle => 'Bir kayda bağlanabilecek satırlar';
 
   @override
@@ -5486,5 +5454,255 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String kkRaporKartlarKapali(int count) {
     return '$count bağlı kartın harcamaları ayrı tutuluyor.';
+  }
+
+  @override
+  String bankImportSimilarTitle(String category) {
+    return '“$category” benzerlerine de uygulansın mı?';
+  }
+
+  @override
+  String bankImportSimilarBody(int count) {
+    return 'Bu satıra benzeyen $count kategorisiz satır var. Aynı türden harcama olmayanların işaretini kaldır.';
+  }
+
+  @override
+  String get bankImportSimilarOnlyThis => 'Yalnız bu satır';
+
+  @override
+  String bankImportBulkTitle(String category) {
+    return '“$category” kategorisini uygula';
+  }
+
+  @override
+  String get bankImportBulkBody =>
+      'Kategori işaretli satırlara uygulanır. Dışarıda kalmasını istediklerinin işaretini kaldır.';
+
+  @override
+  String bankImportBulkOverwriteNote(int count) {
+    return 'İşaretli $count satırın mevcut kategorisi değişecek.';
+  }
+
+  @override
+  String bankImportBulkApply(int count) {
+    return '$count satıra uygula';
+  }
+
+  @override
+  String get bankImportBulkNothingTitle => 'Uygulanacak satır yok';
+
+  @override
+  String get bankImportExitTitle => 'İçe aktarımdan çıkılsın mı?';
+
+  @override
+  String get bankImportExitBody =>
+      'Henüz hiçbir şey kaydedilmedi. Çıkarsan bu ekstre için yaptığın seçimler ve kategoriler kaybolur.';
+
+  @override
+  String get bankImportExitConfirm => 'Çık';
+
+  @override
+  String get bankImportSelectVisible => 'Görünenleri seç (tekrarlar hariç)';
+
+  @override
+  String get bankImportDeselectVisible => 'Görünenlerin seçimini kaldır';
+
+  @override
+  String get bankImportSetTypeExpenseTitle => 'Tümü gider yapılsın mı?';
+
+  @override
+  String get bankImportSetTypeIncomeTitle => 'Tümü gelir yapılsın mı?';
+
+  @override
+  String bankImportSetTypeBody(int count) {
+    return '$count satırın türü değişecek. Bu satırların kategorisi yeniden tahmin edilir; onlarda elle seçtiğin kategoriler kaybolur.';
+  }
+
+  @override
+  String get bankImportSetTypeConfirm => 'Çevir';
+
+  @override
+  String get bankImportStepMissingTitle => 'Kategorisiz satırlar var';
+
+  @override
+  String get bankImportStepMissingShow => 'Kategorisizleri göster';
+
+  @override
+  String get bankImportUndoTitle => 'İçe aktarım geri alınsın mı?';
+
+  @override
+  String bankImportUndoWillRemove(int count) {
+    return 'Az önce eklenen $count işlem silinir.';
+  }
+
+  @override
+  String bankImportUndoWillRevert(int count) {
+    return 'Tutarı düzeltilen $count kayıt eski tutarına döner.';
+  }
+
+  @override
+  String get bankImportUndoWillCard =>
+      'Kartın son ekstre bilgisi içe aktarım öncesine döner.';
+
+  @override
+  String get bankImportUndoWillKeepLinked =>
+      'Bu arada bir kayda bağladığın satırlar silinmez, yerinde kalır.';
+
+  @override
+  String get bankImportUndoRunning => 'Geri alınıyor…';
+
+  @override
+  String get bankImportUndoDoneTitle => 'İçe aktarım geri alındı';
+
+  @override
+  String bankImportUndoRemoved(int count) {
+    return '$count işlem silindi.';
+  }
+
+  @override
+  String bankImportUndoReverted(int count) {
+    return '$count kayıt eski tutarına döndü.';
+  }
+
+  @override
+  String get bankImportUndoCardReverted =>
+      'Kartın son ekstre bilgisi geri alındı.';
+
+  @override
+  String bankImportUndoKept(int count) {
+    return 'Bir kayda bağladığın $count satır yerinde bırakıldı; onları bağlı kaydı silerek kaldırabilirsin.';
+  }
+
+  @override
+  String get bankImportUndoNothing => 'Geri alınacak bir şey kalmamıştı.';
+
+  @override
+  String get bankImportSynced => 'Bankayla eşitlendi';
+
+  @override
+  String get bankImportRawEmpty => '(boş)';
+
+  @override
+  String get bankImportAccountOnCard =>
+      'Bu bir HESAP ekstresi (satır satır bakiye var) ama hedef bir kredi kartı. Hesap hareketleri kartın defterine yazılırsa kart borcu yanlış görünür.';
+
+  @override
+  String get bankImportAllKnownTitle => 'Bu ekstrede yeni hareket yok';
+
+  @override
+  String bankImportAllKnownBody(int count) {
+    return '$count hareketin hepsi bu cüzdanda zaten kayıtlı. Ekstre büyük olasılıkla daha önce aktarıldı.';
+  }
+
+  @override
+  String get bankImportAllKnownShowRows => 'Satırları yine de göster';
+
+  @override
+  String bankImportClosingTitle(String date) {
+    return 'Ekstreye göre $date bakiyesi';
+  }
+
+  @override
+  String get bankImportClosingMatched =>
+      'Cüzdan o gün bankayla birebir tutuyor.';
+
+  @override
+  String bankImportClosingLedger(String ledger, String diff) {
+    return 'Cüzdanın o günkü bakiyesi $ledger — bankayla $diff fark var.';
+  }
+
+  @override
+  String get bankImportClosingSync => 'Bankayla eşitle';
+
+  @override
+  String bankImportClosingSyncBody(String diff) {
+    return 'Cüzdanın açılış bakiyesi $diff kaydırılır; böylece ekstrenin son gününde bankayla tutar. Hareketlerin hiçbiri değişmez.';
+  }
+
+  @override
+  String get bankImportFilterToCheck => 'Kontrol et';
+
+  @override
+  String bankImportKnownHidden(int count) {
+    return '$count satır zaten kayıtlı olduğu için gizlendi';
+  }
+
+  @override
+  String bankImportKnownShown(int count) {
+    return 'Zaten kayıtlı $count satır gösteriliyor';
+  }
+
+  @override
+  String get bankImportKnownHide => 'Gizle';
+
+  @override
+  String get bankImportRecentTitle => 'Son içe aktarımlar';
+
+  @override
+  String bankImportRecentRow(String wallet, int count) {
+    return '$wallet · $count işlem';
+  }
+
+  @override
+  String get bankImportShowAdded => 'Eklenenleri işlemlerde göster';
+
+  @override
+  String get bankImportSourceBankTag =>
+      'Yalnız bankanın etiketinden tahmin edildi — kontrol et';
+
+  @override
+  String get bankImportSourceHistory => 'Geçmişinden öğrenildi';
+
+  @override
+  String bankImportSuggestionRows(int count) {
+    return '$count satır';
+  }
+
+  @override
+  String get bankImportSummaryMore => 'Ayrıntıları göster';
+
+  @override
+  String get bankImportSummaryLess => 'Ayrıntıları gizle';
+
+  @override
+  String bankImportTargetElsewhere(int count, String wallet) {
+    return 'Bu ekstredeki $count hareket “$wallet” cüzdanında zaten kayıtlı. Yanlış cüzdanı mı seçtin?';
+  }
+
+  @override
+  String bankImportTargetCard(String last4, String wallet) {
+    return 'Bu ekstre •••• $last4 kartına ait: “$wallet”.';
+  }
+
+  @override
+  String bankImportTargetAccount(String wallet) {
+    return 'Bu bir hesap ekstresi (satır satır bakiye var) ama hedef bir kredi kartı. Kartın ödendiği hesap: “$wallet”.';
+  }
+
+  @override
+  String bankImportTargetUsedBefore(String wallet) {
+    return 'Bu biçimdeki ekstreyi geçen sefer “$wallet” cüzdanına aktarmıştın.';
+  }
+
+  @override
+  String bankImportTargetSwitch(String wallet) {
+    return 'Hedefi “$wallet” yap';
+  }
+
+  @override
+  String bankImportTotals(String expense, String income) {
+    return 'Eklenecek: gider $expense · gelir $income';
+  }
+
+  @override
+  String get bankImportUndoLaterNote =>
+      'Yalnız bu içe aktarımın eklediği işlemler silinir; o sırada tutarı düzeltilen kayıtlar ve kart ekstresi bilgisi olduğu gibi kalır.';
+
+  @override
+  String get bankImportVerifiedChip => 'Doğrulandı';
+
+  @override
+  String bankImportUndoWillRemoveBatch(int count) {
+    return 'Bu içe aktarımın eklediği $count işlem silinir.';
   }
 }

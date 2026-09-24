@@ -76,6 +76,8 @@ void main() {
         'linkedRecordId': null,
         'adoptedFromTag': null,
         'origin': null,
+        // v13
+        'importBatchId': null,
       });
     });
 
@@ -121,6 +123,54 @@ void main() {
       final back = TransactionModel.fromJson('tx_9', model.toJson());
       expect(back, model);
       expect(TransactionModel.fromEntity(model.toEntity()), model);
+    });
+
+    test('v13 içe aktarım partisi JSON ve varlık gidiş-dönüşünde korunur', () {
+      final model = TransactionModel(
+        id: 'tx_10',
+        userId: 'user_1',
+        walletId: 'wallet_1',
+        title: 'MIGROS',
+        tag: 'cat-market',
+        amount: 91.5,
+        date: date,
+        type: TransactionTypeModel.expense,
+        origin: 'import',
+        importBatchId: '01922b7e-3f00-7abc-8def-0123456789ab',
+      );
+      final back = TransactionModel.fromJson('tx_10', model.toJson());
+      expect(back.importBatchId, '01922b7e-3f00-7abc-8def-0123456789ab');
+      expect(back, model);
+      expect(TransactionModel.fromEntity(model.toEntity()), model);
+      // Düzenleme formu ve benimsemeden dönüş partiyi DÜŞÜRMEZ: aksi hâlde
+      // kategorisi düzeltilen satır "Son içe aktarımlar"dan kopardı.
+      expect(
+          model
+              .edited(
+                title: 'MIGROS',
+                tag: 'cat-other',
+                amount: 91.5,
+                date: date,
+                type: TransactionTypeModel.expense,
+                receiptFileName: null,
+              )
+              .importBatchId,
+          model.importBatchId);
+      expect(model.released().importBatchId, model.importBatchId);
+    });
+
+    test('v12 JSON\'u (anahtar yok) partisiz okunur', () {
+      final model = TransactionModel.fromJson('tx_1', {
+        'userId': 'user_1',
+        'walletId': 'wallet_1',
+        'title': 'Lunch',
+        'tag': 'Food',
+        'amount': 250.0,
+        'date': date.toIso8601String(),
+        'type': 'expense',
+        'isSystem': false,
+      });
+      expect(model.importBatchId, isNull);
     });
 
     test('fromJson throws Exception for invalid date format', () {

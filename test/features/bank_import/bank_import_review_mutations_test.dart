@@ -16,6 +16,7 @@ import 'package:cunehat/features/finance_transactions/domain/repositories/catego
 import 'package:cunehat/features/finance_transactions/domain/services/wallet_category_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -188,6 +189,75 @@ void main() {
     });
   });
 
+  group('setSelectedAt', () {
+    ImportDraft dup(String d) => ImportDraft(
+          date: DateTime(2026, 3, 5),
+          description: d,
+          amount: 100,
+          type: TransactionTypeModel.expense,
+          categoryId: 'id-Market',
+          selected: false,
+          duplicateOf: DuplicateMatch(
+            kind: DuplicateKind.exact,
+            existingId: 'tx-$d',
+            existingTitle: d,
+            existingAmount: 100,
+            existingDate: DateTime(2026, 3, 5),
+          ),
+        );
+
+    List<bool> selected(BankImportCubit c) =>
+        (c.state as BankImportReview).drafts.map((d) => d.selected).toList();
+
+    test('REGRESYON: seçim tekrar sanılan satırı SEÇMEZ', () {
+      // "Tümü" eskiden tekrarları da seçiyordu: defterde zaten olan harcama
+      // ikinci kez yazılırdı.
+      final cubit = _build();
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [
+          _draft(description: 'A').copyWith(selected: false),
+          dup('B'),
+        ],
+      );
+
+      cubit.setSelectedAt([0, 1], true);
+
+      expect(selected(cubit), [true, false]);
+    });
+
+    test('yalnız verilen (görünen) indeksler değişir', () {
+      final cubit = _build();
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [
+          _draft(description: 'A'),
+          _draft(description: 'B'),
+          _draft(description: 'C'),
+        ],
+      );
+
+      cubit.setSelectedAt([1], false);
+
+      expect(selected(cubit), [true, false, true]);
+    });
+
+    test('seçimi kaldırmak tekrar satırlarına da uygulanır', () {
+      final cubit = _build();
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [dup('B').copyWith(selected: true)],
+      );
+
+      cubit.setSelectedAt([0], false);
+
+      expect(selected(cubit), [false]);
+    });
+  });
+
   group('resolveCategorySuggestions', () {
     // Kategori deposu `Either` DEĞİL, EXCEPTION fırlatır. Eskiden öneri
     // adımında kalınıyor, "devam" düğmesi hiçbir şey yapmıyordu.
@@ -259,6 +329,8 @@ void main() {
       when(() => metrics.walletRepository).thenReturn(walletRepo);
       when(() => walletRepo.getWalletById(any()))
           .thenAnswer((_) async => const Right(null));
+      when(() => walletRepo.getWallets(any()))
+          .thenAnswer((_) async => const Right(<WalletEntity>[]));
 
       final cubit = BankImportCubit(
         _MockReader(),
@@ -325,6 +397,8 @@ void main() {
       when(() => metrics.walletRepository).thenReturn(walletRepo);
       when(() => walletRepo.getWalletById(any()))
           .thenAnswer((_) async => const Right(null));
+      when(() => walletRepo.getWallets(any()))
+          .thenAnswer((_) async => const Right(<WalletEntity>[]));
 
       final cubit = BankImportCubit(
         _MockReader(),

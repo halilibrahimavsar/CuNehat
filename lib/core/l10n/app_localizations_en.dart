@@ -2707,10 +2707,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get bankImportDonePastDatesHint =>
-      'Some transactions are dated in earlier months. The transactions list shows the current month by default; widen the date filter to see them all.';
-
-  @override
   String get bankImportReconcileMatched =>
       'Verified against balance: the income/expense direction of transactions matches the bank\'s balance column.';
 
@@ -2757,9 +2753,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bankImportUndo => 'Undo import';
 
   @override
-  String get bankImportUndoDone => 'Import undone.';
-
-  @override
   String get bankImportBatchTypeLabel => 'Set all to:';
 
   @override
@@ -2793,9 +2786,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bankImportSyncDialogLabel => 'Real balance';
 
   @override
-  String get bankImportSyncSuccess => 'Wallet balance synced.';
-
-  @override
   String get bankImportCategorySuggestionTitle => 'New category suggestions';
 
   @override
@@ -2819,11 +2809,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bankImportMoreActions => 'More actions';
-
-  @override
-  String bankImportAssignVisibleDone(int count, String category) {
-    return '$count rows moved to “$category”.';
-  }
 
   @override
   String bankImportAssignUncategorized(int count) {
@@ -2875,24 +2860,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String bankImportApplyToSimilar(int count, String sample) {
-    return '$count more uncategorized rows look like this: $sample';
-  }
-
-  @override
-  String get bankImportApplyToSimilarAction => 'Apply to all';
-
-  @override
   String bankImportUncategorizedBlocked(int count) {
     return '$count selected rows have no category. They can\'t be added without one: they would count towards no category in budgets and reports.';
   }
 
   @override
   String get bankImportShowUncategorized => 'Show';
-
-  @override
-  String get bankImportStepNeedsCategory =>
-      'Pick a category for the uncategorized rows first.';
 
   @override
   String get bankImportMapTitle => 'How should we read this file?';
@@ -5172,11 +5145,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Removes both legs; a statement entry goes back to how it was';
 
   @override
-  String bankImportUndoKeptLinked(int count) {
-    return 'Import undone. $count entries you linked to a record were kept; delete that record to remove them.';
-  }
-
-  @override
   String get bankImportLinkTitle => 'Entries you may want to link';
 
   @override
@@ -5519,5 +5487,255 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String kkRaporKartlarKapali(int count) {
     return 'Spending of $count linked card(s) is kept separate.';
+  }
+
+  @override
+  String bankImportSimilarTitle(String category) {
+    return 'Apply “$category” to similar rows too?';
+  }
+
+  @override
+  String bankImportSimilarBody(int count) {
+    return '$count uncategorized rows look like this one. Untick any that aren\'t the same kind of spending.';
+  }
+
+  @override
+  String get bankImportSimilarOnlyThis => 'Only this row';
+
+  @override
+  String bankImportBulkTitle(String category) {
+    return 'Apply “$category”';
+  }
+
+  @override
+  String get bankImportBulkBody =>
+      'The category is applied to the ticked rows. Untick any you want to leave out.';
+
+  @override
+  String bankImportBulkOverwriteNote(int count) {
+    return '$count ticked rows will lose their current category.';
+  }
+
+  @override
+  String bankImportBulkApply(int count) {
+    return 'Apply to $count rows';
+  }
+
+  @override
+  String get bankImportBulkNothingTitle => 'No rows to apply to';
+
+  @override
+  String get bankImportExitTitle => 'Leave the import?';
+
+  @override
+  String get bankImportExitBody =>
+      'Nothing has been saved yet. If you leave, the choices and categories you made for this statement are lost.';
+
+  @override
+  String get bankImportExitConfirm => 'Leave';
+
+  @override
+  String get bankImportSelectVisible => 'Select shown rows (except duplicates)';
+
+  @override
+  String get bankImportDeselectVisible => 'Deselect shown rows';
+
+  @override
+  String get bankImportSetTypeExpenseTitle => 'Make every row an expense?';
+
+  @override
+  String get bankImportSetTypeIncomeTitle => 'Make every row income?';
+
+  @override
+  String bankImportSetTypeBody(int count) {
+    return '$count rows will change type. Their categories are guessed again; any you picked by hand on those rows are lost.';
+  }
+
+  @override
+  String get bankImportSetTypeConfirm => 'Convert';
+
+  @override
+  String get bankImportStepMissingTitle => 'Some rows have no category';
+
+  @override
+  String get bankImportStepMissingShow => 'Show uncategorized';
+
+  @override
+  String get bankImportUndoTitle => 'Undo this import?';
+
+  @override
+  String bankImportUndoWillRemove(int count) {
+    return 'The $count transactions just added are deleted.';
+  }
+
+  @override
+  String bankImportUndoWillRevert(int count) {
+    return '$count corrected entries go back to their old amount.';
+  }
+
+  @override
+  String get bankImportUndoWillCard =>
+      'The card\'s last statement goes back to how it was before the import.';
+
+  @override
+  String get bankImportUndoWillKeepLinked =>
+      'Entries you\'ve linked to a record in the meantime are not deleted.';
+
+  @override
+  String get bankImportUndoRunning => 'Undoing…';
+
+  @override
+  String get bankImportUndoDoneTitle => 'Import undone';
+
+  @override
+  String bankImportUndoRemoved(int count) {
+    return '$count transactions deleted.';
+  }
+
+  @override
+  String bankImportUndoReverted(int count) {
+    return '$count entries restored to their old amount.';
+  }
+
+  @override
+  String get bankImportUndoCardReverted =>
+      'The card\'s last statement was restored.';
+
+  @override
+  String bankImportUndoKept(int count) {
+    return '$count entries you linked to a record were kept; delete that record to remove them.';
+  }
+
+  @override
+  String get bankImportUndoNothing => 'There was nothing left to undo.';
+
+  @override
+  String get bankImportSynced => 'Matched to your bank';
+
+  @override
+  String get bankImportRawEmpty => '(empty)';
+
+  @override
+  String get bankImportAccountOnCard =>
+      'This looks like an ACCOUNT statement (it has a running balance) but the target is a credit card. Account movements written to the card would show a wrong card debt.';
+
+  @override
+  String get bankImportAllKnownTitle => 'No new transactions in this statement';
+
+  @override
+  String bankImportAllKnownBody(int count) {
+    return 'All $count transactions are already recorded in this wallet. The statement was most likely imported before.';
+  }
+
+  @override
+  String get bankImportAllKnownShowRows => 'Show the rows anyway';
+
+  @override
+  String bankImportClosingTitle(String date) {
+    return 'Balance on $date according to the statement';
+  }
+
+  @override
+  String get bankImportClosingMatched =>
+      'The wallet matches the bank exactly on that day.';
+
+  @override
+  String bankImportClosingLedger(String ledger, String diff) {
+    return 'The wallet showed $ledger on that day — $diff off from the bank.';
+  }
+
+  @override
+  String get bankImportClosingSync => 'Match the bank';
+
+  @override
+  String bankImportClosingSyncBody(String diff) {
+    return 'The wallet\'s opening balance is shifted by $diff so it matches the bank on the statement\'s last day. No transaction is changed.';
+  }
+
+  @override
+  String get bankImportFilterToCheck => 'To check';
+
+  @override
+  String bankImportKnownHidden(int count) {
+    return '$count rows are hidden because they are already recorded';
+  }
+
+  @override
+  String bankImportKnownShown(int count) {
+    return 'Showing $count already recorded rows';
+  }
+
+  @override
+  String get bankImportKnownHide => 'Hide';
+
+  @override
+  String get bankImportRecentTitle => 'Recent imports';
+
+  @override
+  String bankImportRecentRow(String wallet, int count) {
+    return '$wallet · $count transactions';
+  }
+
+  @override
+  String get bankImportShowAdded => 'Show the added transactions';
+
+  @override
+  String get bankImportSourceBankTag =>
+      'Guessed only from the bank\'s own label — check it';
+
+  @override
+  String get bankImportSourceHistory => 'Learned from your history';
+
+  @override
+  String bankImportSuggestionRows(int count) {
+    return '$count rows';
+  }
+
+  @override
+  String get bankImportSummaryMore => 'Show details';
+
+  @override
+  String get bankImportSummaryLess => 'Hide details';
+
+  @override
+  String bankImportTargetElsewhere(int count, String wallet) {
+    return '$count transactions of this statement are already recorded in “$wallet”. Did you pick the wrong wallet?';
+  }
+
+  @override
+  String bankImportTargetCard(String last4, String wallet) {
+    return 'This statement belongs to card •••• $last4: “$wallet”.';
+  }
+
+  @override
+  String bankImportTargetAccount(String wallet) {
+    return 'This is an account statement (it has a running balance) but the target is a credit card. The card is paid from “$wallet”.';
+  }
+
+  @override
+  String bankImportTargetUsedBefore(String wallet) {
+    return 'Last time you imported a statement in this format into “$wallet”.';
+  }
+
+  @override
+  String bankImportTargetSwitch(String wallet) {
+    return 'Import into “$wallet”';
+  }
+
+  @override
+  String bankImportTotals(String expense, String income) {
+    return 'To add: expenses $expense · income $income';
+  }
+
+  @override
+  String get bankImportUndoLaterNote =>
+      'Only the transactions this import added are deleted; entries whose amount was corrected and the card statement stay as they are.';
+
+  @override
+  String get bankImportVerifiedChip => 'Verified';
+
+  @override
+  String bankImportUndoWillRemoveBatch(int count) {
+    return 'The $count transactions this import added are deleted.';
   }
 }

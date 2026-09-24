@@ -1291,7 +1291,6 @@
       }
     }
   },
-  "bankImportDonePastDatesHint": "Bazı hareketler geçmiş aylara ait. İşlemler listesi varsayılan olarak içinde bulunduğun ayı gösterir; hepsini görmek için tarih filtresini genişlet.",
   "bankImportReconcileMatched": "Bakiye ile doğrulandı: işlemlerin gider/gelir yönü bankanın bakiye sütunuyla eşleşiyor.",
   "bankImportVerified": "Aritmetik olarak doğrulandı",
   "bankImportVerifiedHint": "Okunan tutarlar ekstrenin kendi bakiye/toplam bilgileriyle birebir tutuyor.",
@@ -1322,7 +1321,6 @@
     }
   },
   "bankImportUndo": "İçe aktarımı geri al",
-  "bankImportUndoDone": "İçe aktarım geri alındı.",
   "bankImportBatchTypeLabel": "Tümünü çevir:",
   "bankImportSetAllExpense": "Gider",
   "bankImportSetAllIncome": "Gelir",
@@ -1333,7 +1331,6 @@
   "bankImportSyncDialogTitle": "Bakiyeyi Eşitle",
   "bankImportSyncDialogHint": "Bankandaki gerçek güncel bakiyeni gir; cüzdanın buna göre ayarlanır. Geçmiş hareketlerin değişmez, yalnızca başlangıç bakiyesi düzeltilir.",
   "bankImportSyncDialogLabel": "Gerçek bakiye",
-  "bankImportSyncSuccess": "Cüzdan bakiyesi eşitlendi.",
   "bankImportCategorySuggestionTitle": "Yeni kategori önerileri",
   "bankImportCategorySuggestionHint": "Bazı hareketler mevcut kategorilerinden hiçbirine uymuyor. İşaretlediklerin oluşturulup otomatik atanır; işaretini kaldırdıkların oluşturulmaz ve o hareketler varsayılan kategoride kalır.",
   "bankImportCategorySuggestionContinue": "Devam et",
@@ -1342,17 +1339,6 @@
   "bankImportExitFullscreen": "Tam ekrandan çık",
   "bankImportSummarySheet": "Özet ve uyarılar",
   "bankImportMoreActions": "Diğer işlemler",
-  "bankImportAssignVisibleDone": "{count} satır “{category}” kategorisine alındı.",
-  "@bankImportAssignVisibleDone": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      },
-      "category": {
-        "type": "String"
-      }
-    }
-  },
   "bankImportAssignUncategorized": "Kategorisiz {count} satıra ata",
   "@bankImportAssignUncategorized": {
     "placeholders": {
@@ -1394,18 +1380,6 @@
       }
     }
   },
-  "bankImportApplyToSimilar": "Buna benzeyen {count} kategorisiz satır daha var: {sample}",
-  "@bankImportApplyToSimilar": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      },
-      "sample": {
-        "type": "String"
-      }
-    }
-  },
-  "bankImportApplyToSimilarAction": "Hepsine uygula",
   "bankImportUncategorizedBlocked": "Seçili {count} satırın kategorisi yok. Kategori seçilmeden eklenemez: bütçe ve raporlarda hiçbir kategoriye sayılmazlar.",
   "@bankImportUncategorizedBlocked": {
     "placeholders": {
@@ -1415,7 +1389,6 @@
     }
   },
   "bankImportShowUncategorized": "Göster",
-  "bankImportStepNeedsCategory": "Önce kategorisiz satırlara kategori seç.",
   "bankImportMapTitle": "Dosyayı nasıl okuyalım?",
   "bankImportMapHint": "Sütunları kendimiz tanımaya çalıştık ama emin olamadık. Aşağıdaki hareketler doğru görünüyorsa devam et; yanlışsa ilgili sütuna dokunup ne olduğunu seç.",
   "bankImportMapResultTitle": "Böyle okunacak",
@@ -2817,14 +2790,6 @@
   "bagliTransferNotu": "Bu satır kendi cüzdanların arasındaki bir transferin bacağı; harcama ya da gelir sayılmaz.",
   "bagliSatirKisaNotu": "Bu satır bir kaydın (birikim, borç…) ödemesi olarak bağlandı; o kayıttan yönetilir. Kaydı silersen satır eski hâline döner.",
   "transferiKaldirAciklama": "İki bacağı da kaldırır; ekstreden gelen satır eski hâline döner",
-  "bankImportUndoKeptLinked": "İçe aktarım geri alındı. Bir kayda bağladığın {count} satır yerinde bırakıldı; onları bağlı kaydı silerek kaldırabilirsin.",
-  "@bankImportUndoKeptLinked": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "bankImportLinkTitle": "Bir kayda bağlanabilecek satırlar",
   "bankImportLinkBody": "Bunlar birikim alımı, borç ödemesi ya da kredi girişi gibi görünüyor. Aynı hareketi ilgili bölüme de gireceksen önce buradan bağla; yoksa iki kez sayılır.",
   "linkHintInvestment": "Birikim alımı olabilir",
@@ -3067,6 +3032,266 @@
     }
   },
   "@kkRaporKartlarKapali": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportSimilarTitle": "“{category}” benzerlerine de uygulansın mı?",
+  "@bankImportSimilarTitle": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportSimilarBody": "Bu satıra benzeyen {count} kategorisiz satır var. Aynı türden harcama olmayanların işaretini kaldır.",
+  "@bankImportSimilarBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportSimilarOnlyThis": "Yalnız bu satır",
+  "bankImportBulkTitle": "“{category}” kategorisini uygula",
+  "@bankImportBulkTitle": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportBulkBody": "Kategori işaretli satırlara uygulanır. Dışarıda kalmasını istediklerinin işaretini kaldır.",
+  "bankImportBulkOverwriteNote": "İşaretli {count} satırın mevcut kategorisi değişecek.",
+  "@bankImportBulkOverwriteNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportBulkApply": "{count} satıra uygula",
+  "@bankImportBulkApply": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportBulkNothingTitle": "Uygulanacak satır yok",
+  "bankImportExitTitle": "İçe aktarımdan çıkılsın mı?",
+  "bankImportExitBody": "Henüz hiçbir şey kaydedilmedi. Çıkarsan bu ekstre için yaptığın seçimler ve kategoriler kaybolur.",
+  "bankImportExitConfirm": "Çık",
+  "bankImportSelectVisible": "Görünenleri seç (tekrarlar hariç)",
+  "bankImportDeselectVisible": "Görünenlerin seçimini kaldır",
+  "bankImportSetTypeExpenseTitle": "Tümü gider yapılsın mı?",
+  "bankImportSetTypeIncomeTitle": "Tümü gelir yapılsın mı?",
+  "bankImportSetTypeBody": "{count} satırın türü değişecek. Bu satırların kategorisi yeniden tahmin edilir; onlarda elle seçtiğin kategoriler kaybolur.",
+  "@bankImportSetTypeBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportSetTypeConfirm": "Çevir",
+  "bankImportStepMissingTitle": "Kategorisiz satırlar var",
+  "bankImportStepMissingShow": "Kategorisizleri göster",
+  "bankImportUndoTitle": "İçe aktarım geri alınsın mı?",
+  "bankImportUndoWillRemove": "Az önce eklenen {count} işlem silinir.",
+  "@bankImportUndoWillRemove": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportUndoWillRevert": "Tutarı düzeltilen {count} kayıt eski tutarına döner.",
+  "@bankImportUndoWillRevert": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportUndoWillCard": "Kartın son ekstre bilgisi içe aktarım öncesine döner.",
+  "bankImportUndoWillKeepLinked": "Bu arada bir kayda bağladığın satırlar silinmez, yerinde kalır.",
+  "bankImportUndoRunning": "Geri alınıyor…",
+  "bankImportUndoDoneTitle": "İçe aktarım geri alındı",
+  "bankImportUndoRemoved": "{count} işlem silindi.",
+  "@bankImportUndoRemoved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportUndoReverted": "{count} kayıt eski tutarına döndü.",
+  "@bankImportUndoReverted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportUndoCardReverted": "Kartın son ekstre bilgisi geri alındı.",
+  "bankImportUndoKept": "Bir kayda bağladığın {count} satır yerinde bırakıldı; onları bağlı kaydı silerek kaldırabilirsin.",
+  "@bankImportUndoKept": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportUndoNothing": "Geri alınacak bir şey kalmamıştı.",
+  "bankImportSynced": "Bankayla eşitlendi",
+  "bankImportRawEmpty": "(boş)",
+  "bankImportAccountOnCard": "Bu bir HESAP ekstresi (satır satır bakiye var) ama hedef bir kredi kartı. Hesap hareketleri kartın defterine yazılırsa kart borcu yanlış görünür.",
+  "bankImportAllKnownTitle": "Bu ekstrede yeni hareket yok",
+  "bankImportAllKnownBody": "{count} hareketin hepsi bu cüzdanda zaten kayıtlı. Ekstre büyük olasılıkla daha önce aktarıldı.",
+  "@bankImportAllKnownBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportAllKnownShowRows": "Satırları yine de göster",
+  "bankImportClosingTitle": "Ekstreye göre {date} bakiyesi",
+  "@bankImportClosingTitle": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportClosingMatched": "Cüzdan o gün bankayla birebir tutuyor.",
+  "bankImportClosingLedger": "Cüzdanın o günkü bakiyesi {ledger} — bankayla {diff} fark var.",
+  "@bankImportClosingLedger": {
+    "placeholders": {
+      "ledger": {
+        "type": "String"
+      },
+      "diff": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportClosingSync": "Bankayla eşitle",
+  "bankImportClosingSyncBody": "Cüzdanın açılış bakiyesi {diff} kaydırılır; böylece ekstrenin son gününde bankayla tutar. Hareketlerin hiçbiri değişmez.",
+  "@bankImportClosingSyncBody": {
+    "placeholders": {
+      "diff": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportFilterToCheck": "Kontrol et",
+  "bankImportKnownHidden": "{count} satır zaten kayıtlı olduğu için gizlendi",
+  "@bankImportKnownHidden": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportKnownShown": "Zaten kayıtlı {count} satır gösteriliyor",
+  "@bankImportKnownShown": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportKnownHide": "Gizle",
+  "bankImportRecentTitle": "Son içe aktarımlar",
+  "bankImportRecentRow": "{wallet} · {count} işlem",
+  "@bankImportRecentRow": {
+    "placeholders": {
+      "wallet": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportShowAdded": "Eklenenleri işlemlerde göster",
+  "bankImportSourceBankTag": "Yalnız bankanın etiketinden tahmin edildi — kontrol et",
+  "bankImportSourceHistory": "Geçmişinden öğrenildi",
+  "bankImportSuggestionRows": "{count} satır",
+  "@bankImportSuggestionRows": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportSummaryMore": "Ayrıntıları göster",
+  "bankImportSummaryLess": "Ayrıntıları gizle",
+  "bankImportTargetElsewhere": "Bu ekstredeki {count} hareket “{wallet}” cüzdanında zaten kayıtlı. Yanlış cüzdanı mı seçtin?",
+  "@bankImportTargetElsewhere": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "wallet": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportTargetCard": "Bu ekstre •••• {last4} kartına ait: “{wallet}”.",
+  "@bankImportTargetCard": {
+    "placeholders": {
+      "last4": {
+        "type": "String"
+      },
+      "wallet": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportTargetAccount": "Bu bir hesap ekstresi (satır satır bakiye var) ama hedef bir kredi kartı. Kartın ödendiği hesap: “{wallet}”.",
+  "@bankImportTargetAccount": {
+    "placeholders": {
+      "wallet": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportTargetUsedBefore": "Bu biçimdeki ekstreyi geçen sefer “{wallet}” cüzdanına aktarmıştın.",
+  "@bankImportTargetUsedBefore": {
+    "placeholders": {
+      "wallet": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportTargetSwitch": "Hedefi “{wallet}” yap",
+  "@bankImportTargetSwitch": {
+    "placeholders": {
+      "wallet": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportTotals": "Eklenecek: gider {expense} · gelir {income}",
+  "@bankImportTotals": {
+    "placeholders": {
+      "expense": {
+        "type": "String"
+      },
+      "income": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportUndoLaterNote": "Yalnız bu içe aktarımın eklediği işlemler silinir; o sırada tutarı düzeltilen kayıtlar ve kart ekstresi bilgisi olduğu gibi kalır.",
+  "bankImportVerifiedChip": "Doğrulandı",
+  "bankImportUndoWillRemoveBatch": "Bu içe aktarımın eklediği {count} işlem silinir.",
+  "@bankImportUndoWillRemoveBatch": {
     "placeholders": {
       "count": {
         "type": "int"

@@ -4919,12 +4919,6 @@ abstract class AppLocalizations {
   /// **'{added} işlem eklendi, {skipped} atlandı.'**
   String bankImportDoneMsg(int added, int skipped);
 
-  /// No description provided for @bankImportDonePastDatesHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bazı hareketler geçmiş aylara ait. İşlemler listesi varsayılan olarak içinde bulunduğun ayı gösterir; hepsini görmek için tarih filtresini genişlet.'**
-  String get bankImportDonePastDatesHint;
-
   /// No description provided for @bankImportReconcileMatched.
   ///
   /// In tr, this message translates to:
@@ -5003,12 +4997,6 @@ abstract class AppLocalizations {
   /// **'İçe aktarımı geri al'**
   String get bankImportUndo;
 
-  /// No description provided for @bankImportUndoDone.
-  ///
-  /// In tr, this message translates to:
-  /// **'İçe aktarım geri alındı.'**
-  String get bankImportUndoDone;
-
   /// No description provided for @bankImportBatchTypeLabel.
   ///
   /// In tr, this message translates to:
@@ -5069,12 +5057,6 @@ abstract class AppLocalizations {
   /// **'Gerçek bakiye'**
   String get bankImportSyncDialogLabel;
 
-  /// No description provided for @bankImportSyncSuccess.
-  ///
-  /// In tr, this message translates to:
-  /// **'Cüzdan bakiyesi eşitlendi.'**
-  String get bankImportSyncSuccess;
-
   /// No description provided for @bankImportCategorySuggestionTitle.
   ///
   /// In tr, this message translates to:
@@ -5122,12 +5104,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Diğer işlemler'**
   String get bankImportMoreActions;
-
-  /// No description provided for @bankImportAssignVisibleDone.
-  ///
-  /// In tr, this message translates to:
-  /// **'{count} satır “{category}” kategorisine alındı.'**
-  String bankImportAssignVisibleDone(int count, String category);
 
   /// No description provided for @bankImportAssignUncategorized.
   ///
@@ -5207,18 +5183,6 @@ abstract class AppLocalizations {
   /// **'Kalanını “{category}” yap'**
   String bankImportGroupFillRest(String category);
 
-  /// No description provided for @bankImportApplyToSimilar.
-  ///
-  /// In tr, this message translates to:
-  /// **'Buna benzeyen {count} kategorisiz satır daha var: {sample}'**
-  String bankImportApplyToSimilar(int count, String sample);
-
-  /// No description provided for @bankImportApplyToSimilarAction.
-  ///
-  /// In tr, this message translates to:
-  /// **'Hepsine uygula'**
-  String get bankImportApplyToSimilarAction;
-
   /// No description provided for @bankImportUncategorizedBlocked.
   ///
   /// In tr, this message translates to:
@@ -5230,12 +5194,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Göster'**
   String get bankImportShowUncategorized;
-
-  /// No description provided for @bankImportStepNeedsCategory.
-  ///
-  /// In tr, this message translates to:
-  /// **'Önce kategorisiz satırlara kategori seç.'**
-  String get bankImportStepNeedsCategory;
 
   /// No description provided for @bankImportMapTitle.
   ///
@@ -9023,12 +8981,6 @@ abstract class AppLocalizations {
   /// **'İki bacağı da kaldırır; ekstreden gelen satır eski hâline döner'**
   String get transferiKaldirAciklama;
 
-  /// No description provided for @bankImportUndoKeptLinked.
-  ///
-  /// In tr, this message translates to:
-  /// **'İçe aktarım geri alındı. Bir kayda bağladığın {count} satır yerinde bırakıldı; onları bağlı kaydı silerek kaldırabilirsin.'**
-  String bankImportUndoKeptLinked(int count);
-
   /// No description provided for @bankImportLinkTitle.
   ///
   /// In tr, this message translates to:
@@ -9610,6 +9562,384 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{count} bağlı kartın harcamaları ayrı tutuluyor.'**
   String kkRaporKartlarKapali(int count);
+
+  /// No description provided for @bankImportSimilarTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'“{category}” benzerlerine de uygulansın mı?'**
+  String bankImportSimilarTitle(String category);
+
+  /// No description provided for @bankImportSimilarBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu satıra benzeyen {count} kategorisiz satır var. Aynı türden harcama olmayanların işaretini kaldır.'**
+  String bankImportSimilarBody(int count);
+
+  /// No description provided for @bankImportSimilarOnlyThis.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız bu satır'**
+  String get bankImportSimilarOnlyThis;
+
+  /// No description provided for @bankImportBulkTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'“{category}” kategorisini uygula'**
+  String bankImportBulkTitle(String category);
+
+  /// No description provided for @bankImportBulkBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori işaretli satırlara uygulanır. Dışarıda kalmasını istediklerinin işaretini kaldır.'**
+  String get bankImportBulkBody;
+
+  /// No description provided for @bankImportBulkOverwriteNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşaretli {count} satırın mevcut kategorisi değişecek.'**
+  String bankImportBulkOverwriteNote(int count);
+
+  /// No description provided for @bankImportBulkApply.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} satıra uygula'**
+  String bankImportBulkApply(int count);
+
+  /// No description provided for @bankImportBulkNothingTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulanacak satır yok'**
+  String get bankImportBulkNothingTitle;
+
+  /// No description provided for @bankImportExitTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'İçe aktarımdan çıkılsın mı?'**
+  String get bankImportExitTitle;
+
+  /// No description provided for @bankImportExitBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz hiçbir şey kaydedilmedi. Çıkarsan bu ekstre için yaptığın seçimler ve kategoriler kaybolur.'**
+  String get bankImportExitBody;
+
+  /// No description provided for @bankImportExitConfirm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çık'**
+  String get bankImportExitConfirm;
+
+  /// No description provided for @bankImportSelectVisible.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görünenleri seç (tekrarlar hariç)'**
+  String get bankImportSelectVisible;
+
+  /// No description provided for @bankImportDeselectVisible.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görünenlerin seçimini kaldır'**
+  String get bankImportDeselectVisible;
+
+  /// No description provided for @bankImportSetTypeExpenseTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümü gider yapılsın mı?'**
+  String get bankImportSetTypeExpenseTitle;
+
+  /// No description provided for @bankImportSetTypeIncomeTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümü gelir yapılsın mı?'**
+  String get bankImportSetTypeIncomeTitle;
+
+  /// No description provided for @bankImportSetTypeBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} satırın türü değişecek. Bu satırların kategorisi yeniden tahmin edilir; onlarda elle seçtiğin kategoriler kaybolur.'**
+  String bankImportSetTypeBody(int count);
+
+  /// No description provided for @bankImportSetTypeConfirm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çevir'**
+  String get bankImportSetTypeConfirm;
+
+  /// No description provided for @bankImportStepMissingTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategorisiz satırlar var'**
+  String get bankImportStepMissingTitle;
+
+  /// No description provided for @bankImportStepMissingShow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategorisizleri göster'**
+  String get bankImportStepMissingShow;
+
+  /// No description provided for @bankImportUndoTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'İçe aktarım geri alınsın mı?'**
+  String get bankImportUndoTitle;
+
+  /// No description provided for @bankImportUndoWillRemove.
+  ///
+  /// In tr, this message translates to:
+  /// **'Az önce eklenen {count} işlem silinir.'**
+  String bankImportUndoWillRemove(int count);
+
+  /// No description provided for @bankImportUndoWillRevert.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutarı düzeltilen {count} kayıt eski tutarına döner.'**
+  String bankImportUndoWillRevert(int count);
+
+  /// No description provided for @bankImportUndoWillCard.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartın son ekstre bilgisi içe aktarım öncesine döner.'**
+  String get bankImportUndoWillCard;
+
+  /// No description provided for @bankImportUndoWillKeepLinked.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu arada bir kayda bağladığın satırlar silinmez, yerinde kalır.'**
+  String get bankImportUndoWillKeepLinked;
+
+  /// No description provided for @bankImportUndoRunning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geri alınıyor…'**
+  String get bankImportUndoRunning;
+
+  /// No description provided for @bankImportUndoDoneTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'İçe aktarım geri alındı'**
+  String get bankImportUndoDoneTitle;
+
+  /// No description provided for @bankImportUndoRemoved.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} işlem silindi.'**
+  String bankImportUndoRemoved(int count);
+
+  /// No description provided for @bankImportUndoReverted.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kayıt eski tutarına döndü.'**
+  String bankImportUndoReverted(int count);
+
+  /// No description provided for @bankImportUndoCardReverted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartın son ekstre bilgisi geri alındı.'**
+  String get bankImportUndoCardReverted;
+
+  /// No description provided for @bankImportUndoKept.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir kayda bağladığın {count} satır yerinde bırakıldı; onları bağlı kaydı silerek kaldırabilirsin.'**
+  String bankImportUndoKept(int count);
+
+  /// No description provided for @bankImportUndoNothing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geri alınacak bir şey kalmamıştı.'**
+  String get bankImportUndoNothing;
+
+  /// No description provided for @bankImportSynced.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bankayla eşitlendi'**
+  String get bankImportSynced;
+
+  /// No description provided for @bankImportRawEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'(boş)'**
+  String get bankImportRawEmpty;
+
+  /// No description provided for @bankImportAccountOnCard.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu bir HESAP ekstresi (satır satır bakiye var) ama hedef bir kredi kartı. Hesap hareketleri kartın defterine yazılırsa kart borcu yanlış görünür.'**
+  String get bankImportAccountOnCard;
+
+  /// No description provided for @bankImportAllKnownTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu ekstrede yeni hareket yok'**
+  String get bankImportAllKnownTitle;
+
+  /// No description provided for @bankImportAllKnownBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} hareketin hepsi bu cüzdanda zaten kayıtlı. Ekstre büyük olasılıkla daha önce aktarıldı.'**
+  String bankImportAllKnownBody(int count);
+
+  /// No description provided for @bankImportAllKnownShowRows.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satırları yine de göster'**
+  String get bankImportAllKnownShowRows;
+
+  /// No description provided for @bankImportClosingTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekstreye göre {date} bakiyesi'**
+  String bankImportClosingTitle(String date);
+
+  /// No description provided for @bankImportClosingMatched.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan o gün bankayla birebir tutuyor.'**
+  String get bankImportClosingMatched;
+
+  /// No description provided for @bankImportClosingLedger.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdanın o günkü bakiyesi {ledger} — bankayla {diff} fark var.'**
+  String bankImportClosingLedger(String ledger, String diff);
+
+  /// No description provided for @bankImportClosingSync.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bankayla eşitle'**
+  String get bankImportClosingSync;
+
+  /// No description provided for @bankImportClosingSyncBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdanın açılış bakiyesi {diff} kaydırılır; böylece ekstrenin son gününde bankayla tutar. Hareketlerin hiçbiri değişmez.'**
+  String bankImportClosingSyncBody(String diff);
+
+  /// No description provided for @bankImportFilterToCheck.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kontrol et'**
+  String get bankImportFilterToCheck;
+
+  /// No description provided for @bankImportKnownHidden.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} satır zaten kayıtlı olduğu için gizlendi'**
+  String bankImportKnownHidden(int count);
+
+  /// No description provided for @bankImportKnownShown.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zaten kayıtlı {count} satır gösteriliyor'**
+  String bankImportKnownShown(int count);
+
+  /// No description provided for @bankImportKnownHide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizle'**
+  String get bankImportKnownHide;
+
+  /// No description provided for @bankImportRecentTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son içe aktarımlar'**
+  String get bankImportRecentTitle;
+
+  /// No description provided for @bankImportRecentRow.
+  ///
+  /// In tr, this message translates to:
+  /// **'{wallet} · {count} işlem'**
+  String bankImportRecentRow(String wallet, int count);
+
+  /// No description provided for @bankImportShowAdded.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eklenenleri işlemlerde göster'**
+  String get bankImportShowAdded;
+
+  /// No description provided for @bankImportSourceBankTag.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız bankanın etiketinden tahmin edildi — kontrol et'**
+  String get bankImportSourceBankTag;
+
+  /// No description provided for @bankImportSourceHistory.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçmişinden öğrenildi'**
+  String get bankImportSourceHistory;
+
+  /// No description provided for @bankImportSuggestionRows.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} satır'**
+  String bankImportSuggestionRows(int count);
+
+  /// No description provided for @bankImportSummaryMore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayrıntıları göster'**
+  String get bankImportSummaryMore;
+
+  /// No description provided for @bankImportSummaryLess.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayrıntıları gizle'**
+  String get bankImportSummaryLess;
+
+  /// No description provided for @bankImportTargetElsewhere.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu ekstredeki {count} hareket “{wallet}” cüzdanında zaten kayıtlı. Yanlış cüzdanı mı seçtin?'**
+  String bankImportTargetElsewhere(int count, String wallet);
+
+  /// No description provided for @bankImportTargetCard.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu ekstre •••• {last4} kartına ait: “{wallet}”.'**
+  String bankImportTargetCard(String last4, String wallet);
+
+  /// No description provided for @bankImportTargetAccount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu bir hesap ekstresi (satır satır bakiye var) ama hedef bir kredi kartı. Kartın ödendiği hesap: “{wallet}”.'**
+  String bankImportTargetAccount(String wallet);
+
+  /// No description provided for @bankImportTargetUsedBefore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu biçimdeki ekstreyi geçen sefer “{wallet}” cüzdanına aktarmıştın.'**
+  String bankImportTargetUsedBefore(String wallet);
+
+  /// No description provided for @bankImportTargetSwitch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedefi “{wallet}” yap'**
+  String bankImportTargetSwitch(String wallet);
+
+  /// No description provided for @bankImportTotals.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eklenecek: gider {expense} · gelir {income}'**
+  String bankImportTotals(String expense, String income);
+
+  /// No description provided for @bankImportUndoLaterNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız bu içe aktarımın eklediği işlemler silinir; o sırada tutarı düzeltilen kayıtlar ve kart ekstresi bilgisi olduğu gibi kalır.'**
+  String get bankImportUndoLaterNote;
+
+  /// No description provided for @bankImportVerifiedChip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğrulandı'**
+  String get bankImportVerifiedChip;
+
+  /// No description provided for @bankImportUndoWillRemoveBatch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu içe aktarımın eklediği {count} işlem silinir.'**
+  String bankImportUndoWillRemoveBatch(int count);
 }
 
 class _AppLocalizationsDelegate

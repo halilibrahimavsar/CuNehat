@@ -337,8 +337,10 @@ void main() {
       );
       await cubit.commit();
 
-      await cubit.undoImport();
+      final result = await cubit.undoImport();
 
+      expect(result.reverted, 1);
+      expect(result.removed, 0);
       final writes = verify(() => txRepo.updateTransaction(captureAny()))
           .captured
           .cast<TransactionEntity>();
@@ -924,6 +926,81 @@ void main() {
 
       verifyNever(() => walletRepo.updateWallet(any()));
     });
+
+    /// Cüzdan deposu gibi davranan sahte: yazılanı saklar, okumada onu verir.
+    WalletEntity stubStoredWallet(WalletEntity initial) {
+      var stored = initial;
+      when(() => walletRepo.getWalletById(any()))
+          .thenAnswer((_) async => Right(stored));
+      when(() => walletRepo.updateWallet(any())).thenAnswer((inv) async {
+        stored = inv.positionalArguments.first as WalletEntity;
+        return const Right(null);
+      });
+      return stored;
+    }
+
+    test(
+        'geri alma künyeyi, limiti ve son 4 haneyi içe aktarım öncesine '
+        'döndürür', () async {
+      // Yanlış karta aktarılan ekstre geri alınınca kartta son ödeme tarihi,
+      // dönem borcu ve hatırlatma KALIYORDU.
+      final cubit = build();
+      final previous = CardStatement(
+        closingDate: DateTime(2026, 7, 25),
+        dueDate: DateTime(2026, 8, 4),
+        statementBalance: 300,
+        recordedAt: DateTime(2026, 7, 26),
+      );
+      stubStoredWallet(cardWallet(statement: previous));
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [_draft(DateTime(2026, 8, 10), 500)],
+        cardFacts: facts,
+      );
+      await cubit.commit();
+
+      final result = await cubit.undoImport();
+
+      expect(result.cardStatementReverted, isTrue);
+      final restored = (verify(() => walletRepo.updateWallet(captureAny()))
+              .captured
+              .last as WalletEntity)
+          .creditCard!;
+      expect(restored.lastStatement, previous);
+      expect(restored.limit, isNull);
+      expect(restored.last4, isNull);
+    });
+
+    test('arada daha yeni bir ekstre yazıldıysa geri alma künyeye dokunmaz',
+        () async {
+      final cubit = build();
+      stubStoredWallet(cardWallet());
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [_draft(DateTime(2026, 8, 10), 500)],
+        cardFacts: facts,
+      );
+      await cubit.commit();
+      // Kullanıcı bu arada ekstre bilgisini elle girdi.
+      final manual = CardStatement(
+        closingDate: DateTime(2026, 8, 25),
+        dueDate: DateTime(2026, 9, 4),
+        statementBalance: 1800,
+        recordedAt: DateTime(2026, 8, 27),
+      );
+      final current =
+          (await walletRepo.getWalletById('w1')).fold((_) => null, (w) => w)!;
+      await walletRepo.updateWallet(current.copyWith(
+          creditCard: current.creditCard!.copyWith(lastStatement: manual)));
+      clearInteractions(walletRepo);
+
+      final result = await cubit.undoImport();
+
+      expect(result.cardStatementReverted, isFalse);
+      verifyNever(() => walletRepo.updateWallet(any()));
+    });
   });
 
   group('undoImport', () {
@@ -940,8 +1017,10 @@ void main() {
       );
       await cubit.commit();
 
-      await cubit.undoImport();
+      final result = await cubit.undoImport();
 
+      expect(result.removed, 2);
+      expect(result.kept, 0);
       verify(() => txRepo.deleteTransaction(any())).called(2);
       // Bir commit + bir undo = 2 syncBalance.
       verify(() => metrics.syncBalance('w1')).called(2);
@@ -984,9 +1063,10 @@ void main() {
         )),
       );
 
-      final kept = await cubit.undoImport();
+      final result = await cubit.undoImport();
 
-      expect(kept, 1);
+      expect(result.kept, 1);
+      expect(result.removed, 1);
       verifyNever(() => txRepo.deleteTransaction(ids.first));
       verify(() => txRepo.deleteTransaction(ids.last)).called(1);
     });

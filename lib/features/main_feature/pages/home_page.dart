@@ -10,6 +10,7 @@ import 'package:cunehat/features/debt_and_receivable/presentation/pages/debt_and
 import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_page.dart';
 import 'package:cunehat/features/investments/presentation/pages/investment_money_page.dart';
 import 'package:cunehat/features/main_feature/controllers/home_navigation_controller.dart';
+import 'package:cunehat/features/main_feature/controllers/home_navigation_requests.dart';
 import 'package:cunehat/features/main_feature/factories/sub_view_factory.dart';
 import 'package:cunehat/features/main_feature/pages/modern_appbar.dart';
 import 'package:cunehat/features/main_feature/utils/slider_peek_store.dart';
@@ -105,6 +106,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _navController = HomeNavigationController(this);
     _lastSliderState = _navController.currentSliderState;
     _navController.horizontalController.addListener(_onSliderStateMaybeChanged);
+    if (getIt.isRegistered<HomeNavigationRequests>()) {
+      getIt<HomeNavigationRequests>().addListener(_onShowTransactions);
+    }
     _loadWallets();
     // Bekleyen işlemleri yükle. Uygulamaya dönüş ve bildirim dokunuşu
     // yollarını NotificationTapListener (app seviyesi) besler.
@@ -233,6 +237,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     context.read<WalletBloc>().add(WatchWalletsEvent(userId));
   }
 
+  /// Dışarıdan "İşlemler'i göster" isteği (bkz. [HomeNavigationRequests]).
+  void _onShowTransactions() {
+    if (!mounted) return;
+    unawaited(_navController.showMain(SliderState.transactions));
+  }
+
   @override
   void dispose() {
     // Kapıyı bekleyen listener'lar askıda kalmasın.
@@ -240,6 +250,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _navController.horizontalController
         .removeListener(_onSliderStateMaybeChanged);
     _navController.viewStack.removeListener(_pumpOnboarding);
+    if (getIt.isRegistered<HomeNavigationRequests>()) {
+      getIt<HomeNavigationRequests>().removeListener(_onShowTransactions);
+    }
     getIt<OnboardingCoordinator>().shellStatusProvider = null;
     _navController.dispose();
     super.dispose();

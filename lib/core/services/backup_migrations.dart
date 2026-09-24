@@ -34,6 +34,7 @@ const Map<int, BackupMigration> backupMigrations = {
   9: _v9ToV10,
   10: _v10ToV11,
   11: _v11ToV12,
+  12: _v12ToV13,
 };
 
 /// [raw]'ı [targetVersion]'a yükseltir.
@@ -127,6 +128,27 @@ Map<String, dynamic> _v11ToV12(Map<String, dynamic> raw) {
     'wallets': [
       for (final w in wallets)
         {...Map<String, dynamic>.from(w as Map), 'creditCard': null},
+    ],
+  };
+}
+
+/// v12 → v13: işlemlere `importBatchId` (kaydı yazan ekstre içe aktarımı).
+///
+/// v12'de içe aktarım partisi saklanmıyordu: bir içe aktarım ancak bitiş
+/// ekranındayken geri alınabiliyordu. `null` tam olarak bunu söyler ("hangi
+/// partiden geldiği bilinmiyor"); eski yedekten dönen kayıtlar "Son içe
+/// aktarımlar" listesinde görünmez, başka hiçbir davranışları değişmez.
+///
+/// Alan AÇIKÇA yazılıyor (yokluğu da `null` okunurdu): dönüşümün ne yaptığı
+/// veriye bakınca görünsün ve testi tam olarak bunu ölçsün.
+Map<String, dynamic> _v12ToV13(Map<String, dynamic> raw) {
+  final transactions = (raw['transactions'] as List?) ?? const [];
+  return {
+    ...raw,
+    'version': 13,
+    'transactions': [
+      for (final t in transactions)
+        {...Map<String, dynamic>.from(t as Map), 'importBatchId': null},
     ],
   };
 }

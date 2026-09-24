@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cunehat/features/main_feature/controllers/home_navigation_requests.dart';
 import 'dart:math' as math;
 
 import 'package:cunehat/config/di/injection.dart';
@@ -128,6 +129,13 @@ class _TransactionsViewState extends State<_TransactionsView> {
   void initState() {
     super.initState();
     _syncStatementCycle();
+    // Dışarıdan istenen dönem (ekstre içe aktarımı "Eklenenleri göster");
+    // sayfa isteğe göre sonradan kurulduysa burada, zaten açıksa
+    // dinleyicide uygulanır.
+    _applyRequestedPeriod();
+    if (getIt.isRegistered<HomeNavigationRequests>()) {
+      getIt<HomeNavigationRequests>().addListener(_applyRequestedPeriod);
+    }
     _loadData();
     _loadCategoryIcons();
     _categoriesSub = getIt<CategoriesChangedNotifier>()
@@ -163,8 +171,22 @@ class _TransactionsViewState extends State<_TransactionsView> {
     });
   }
 
+  /// Bekleyen dönem isteğini bu sayfanın süzgecine uygular (bkz.
+  /// [HomeNavigationRequests]). Özel bir aralık kart bağlamına geçişte
+  /// korunur (`useStatementCycle` yalnız varsayılan dönemi değiştirir).
+  void _applyRequestedPeriod() {
+    if (!mounted || !getIt.isRegistered<HomeNavigationRequests>()) return;
+    final period = getIt<HomeNavigationRequests>().takePeriod();
+    if (period != null) {
+      context.read<TransactionFilterCubit>().setPeriod(period);
+    }
+  }
+
   @override
   void dispose() {
+    if (getIt.isRegistered<HomeNavigationRequests>()) {
+      getIt<HomeNavigationRequests>().removeListener(_applyRequestedPeriod);
+    }
     _categoriesSub?.cancel();
     _scrollController.dispose();
     super.dispose();

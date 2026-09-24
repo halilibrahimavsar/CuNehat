@@ -21,6 +21,7 @@ class TransactionModel extends TransactionEntity {
     super.linkedRecordId,
     super.adoptedFromTag,
     super.origin,
+    super.importBatchId,
   });
 
   /// ✅ FIXED: Handle date as ISO 8601 String
@@ -51,6 +52,9 @@ class TransactionModel extends TransactionEntity {
       linkedRecordId: json['linkedRecordId'] as String?,
       adoptedFromTag: json['adoptedFromTag'] as String?,
       origin: json['origin'] as String?,
+      // v13 (yedek migrasyonu v12 yedeklerine bu anahtarı açıkça `null`
+      // olarak ekler).
+      importBatchId: json['importBatchId'] as String?,
     );
   }
 
@@ -71,6 +75,7 @@ class TransactionModel extends TransactionEntity {
       'linkedRecordId': linkedRecordId,
       'adoptedFromTag': adoptedFromTag,
       'origin': origin,
+      'importBatchId': importBatchId,
     };
   }
 
@@ -90,6 +95,7 @@ class TransactionModel extends TransactionEntity {
       linkedRecordId: entity.linkedRecordId,
       adoptedFromTag: entity.adoptedFromTag,
       origin: entity.origin,
+      importBatchId: entity.importBatchId,
     );
   }
 
@@ -109,6 +115,7 @@ class TransactionModel extends TransactionEntity {
       linkedRecordId: linkedRecordId,
       adoptedFromTag: adoptedFromTag,
       origin: origin,
+      importBatchId: importBatchId,
     );
   }
 
@@ -134,6 +141,7 @@ class TransactionModel extends TransactionEntity {
     String? linkedRecordId,
     String? adoptedFromTag,
     String? origin,
+    String? importBatchId,
   }) {
     return TransactionModel(
       id: id ?? this.id, // preserve id (önceden id düşüyordu — düzeltildi)
@@ -150,6 +158,7 @@ class TransactionModel extends TransactionEntity {
       linkedRecordId: linkedRecordId ?? this.linkedRecordId,
       adoptedFromTag: adoptedFromTag ?? this.adoptedFromTag,
       origin: origin ?? this.origin,
+      importBatchId: importBatchId ?? this.importBatchId,
     );
   }
 
@@ -198,7 +207,7 @@ class TransactionModel extends TransactionEntity {
   String? get reference => super.reference;
 
   // v11 (şema): üçü de nullable — eski kayıtta alan yoktur, `null` okunur.
-  // Sıradaki serbest alan: 14.
+  // v13: 14 (`importBatchId`) nullable. Sıradaki serbest alan: 15.
 
   @override
   @HiveField(11)
@@ -211,4 +220,8 @@ class TransactionModel extends TransactionEntity {
   @override
   @HiveField(13)
   String? get origin => super.origin;
+
+  @override
+  @HiveField(14)
+  String? get importBatchId => super.importBatchId;
 }

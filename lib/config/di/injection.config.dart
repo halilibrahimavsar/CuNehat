@@ -140,6 +140,8 @@ import 'package:cunehat/features/investments/domain/usecases/update_investment_u
     as _i420;
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart'
     as _i726;
+import 'package:cunehat/features/main_feature/controllers/home_navigation_requests.dart'
+    as _i719;
 import 'package:cunehat/features/recurring_transactions/data/datasources/recurring_transaction_local_datasource.dart'
     as _i648;
 import 'package:cunehat/features/recurring_transactions/data/repositories/recurring_transaction_repository_impl.dart'
@@ -253,6 +255,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i519.Client>(() => appModule.httpClient);
     gh.lazySingleton<_i163.FlutterLocalNotificationsPlugin>(
         () => appModule.flutterLocalNotificationsPlugin);
+    gh.lazySingleton<_i719.HomeNavigationRequests>(
+        () => _i719.HomeNavigationRequests());
     gh.lazySingleton<_i698.LocalAuthRepository>(
         () => appModule.localAuthRepository(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i198.DebtRepository>(() => _i354.DebtRepositoryImpl(
@@ -402,6 +406,19 @@ extension GetItInjectableX on _i174.GetIt {
               gh<_i896.CategoryRepository>(),
               gh<_i247.WalletCategoryService>(),
             ));
+    gh.lazySingleton<_i534.ReminderSyncService>(
+      () => _i534.ReminderSyncService(
+        gh<_i788.RecurringTransactionRepository>(),
+        gh<_i198.DebtRepository>(),
+        gh<_i551.NotificationService>(),
+        gh<_i721.NotificationSettingsService>(),
+        gh<_i931.NotificationLocalizer>(),
+        gh<_i504.WalletRepository>(),
+        gh<_i543.TransactionsRepository>(),
+        gh<_i777.TransactionsChangedNotifier>(),
+      ),
+      dispose: (i) => i.dispose(),
+    );
     gh.factory<_i257.AddTransactionUseCase>(
         () => _i257.AddTransactionUseCase(gh<_i543.TransactionsRepository>()));
     gh.factory<_i257.DeleteTransactionUseCase>(() =>
@@ -415,6 +432,37 @@ extension GetItInjectableX on _i174.GetIt {
         _i257.UpdateTransactionUseCase(gh<_i543.TransactionsRepository>()));
     gh.factory<_i257.GetTransactionByIdUseCase>(() =>
         _i257.GetTransactionByIdUseCase(gh<_i543.TransactionsRepository>()));
+    gh.lazySingleton<_i348.DataSerializationService>(
+        () => _i348.DataSerializationService(
+              gh<_i40.ReceiptStorageService>(),
+              gh<_i551.NotificationService>(),
+              gh<_i534.ReminderSyncService>(),
+            ));
+    gh.factory<_i1021.NotificationSettingsBloc>(
+        () => _i1021.NotificationSettingsBloc(
+              gh<_i721.NotificationSettingsService>(),
+              gh<_i551.NotificationService>(),
+              gh<_i534.ReminderSyncService>(),
+              gh<_i931.NotificationLocalizer>(),
+            ));
+    gh.lazySingleton<_i186.GoogleDriveBackupService>(
+      () => _i186.GoogleDriveBackupService(
+        gh<_i348.DataSerializationService>(),
+        gh<_i187.SystemActivityGuard>(),
+      ),
+      dispose: (i) => i.dispose(),
+    );
+    gh.lazySingleton<_i266.LocalBackupService>(() => _i266.LocalBackupService(
+          gh<_i348.DataSerializationService>(),
+          gh<_i187.SystemActivityGuard>(),
+        ));
+    gh.factory<_i125.BackupPreviewCubit>(() => _i125.BackupPreviewCubit(
+          gh<_i186.GoogleDriveBackupService>(),
+          gh<_i348.DataSerializationService>(),
+          gh<_i266.LocalBackupService>(),
+          gh<_i777.TransactionsChangedNotifier>(),
+          gh<_i520.CategoriesChangedNotifier>(),
+        ));
     gh.factory<_i613.SaveBudgetUsecase>(() => _i613.SaveBudgetUsecase(
           gh<_i94.BudgetRepository>(),
           gh<_i977.BudgetsChangedNotifier>(),
@@ -433,19 +481,17 @@ extension GetItInjectableX on _i174.GetIt {
               gh<_i94.BudgetRepository>(),
               gh<_i977.BudgetsChangedNotifier>(),
             ));
-    gh.lazySingleton<_i534.ReminderSyncService>(
-      () => _i534.ReminderSyncService(
-        gh<_i788.RecurringTransactionRepository>(),
-        gh<_i198.DebtRepository>(),
-        gh<_i551.NotificationService>(),
-        gh<_i721.NotificationSettingsService>(),
-        gh<_i931.NotificationLocalizer>(),
-        gh<_i504.WalletRepository>(),
-        gh<_i543.TransactionsRepository>(),
-        gh<_i777.TransactionsChangedNotifier>(),
-      ),
-      dispose: (i) => i.dispose(),
-    );
+    gh.lazySingleton<_i239.WalletMetricsService>(() =>
+        _i239.WalletMetricsService(
+          walletRepository: gh<_i504.WalletRepository>(),
+          debtRepository: gh<_i198.DebtRepository>(),
+          receivableRepository: gh<_i468.ReceivableRepository>(),
+          investmentRepository: gh<_i589.InvestmentRepository>(),
+          goalRepository: gh<_i851.GoalRepository>(),
+          transactionsRepository: gh<_i543.TransactionsRepository>(),
+          transactionsChangedNotifier: gh<_i777.TransactionsChangedNotifier>(),
+          reminderSync: gh<_i534.ReminderSyncService>(),
+        ));
     gh.factory<_i510.DeleteGoalUseCase>(() => _i510.DeleteGoalUseCase(
           gh<_i851.GoalRepository>(),
           gh<_i589.InvestmentRepository>(),
@@ -485,72 +531,6 @@ extension GetItInjectableX on _i174.GetIt {
               gh<_i788.RecurringTransactionRepository>(),
               gh<_i534.ReminderSyncService>(),
             ));
-    gh.factory<_i854.ApproveRecurringTransactionUsecase>(
-        () => _i854.ApproveRecurringTransactionUsecase(
-              gh<_i543.TransactionsRepository>(),
-              gh<_i424.SaveRecurringTransactionUsecase>(),
-            ));
-    gh.factory<_i570.LanguageBloc>(
-        () => _i570.LanguageBloc(gh<_i534.ReminderSyncService>()));
-    gh.factory<_i645.BudgetsBloc>(() => _i645.BudgetsBloc(
-          gh<_i21.GetBudgetsUsecase>(),
-          gh<_i613.SaveBudgetUsecase>(),
-          gh<_i691.DeleteBudgetUsecase>(),
-          gh<_i777.TransactionsChangedNotifier>(),
-        ));
-    gh.factory<_i111.SkipRecurringTransactionUsecase>(() =>
-        _i111.SkipRecurringTransactionUsecase(
-            gh<_i424.SaveRecurringTransactionUsecase>()));
-    gh.lazySingleton<_i348.DataSerializationService>(
-        () => _i348.DataSerializationService(
-              gh<_i40.ReceiptStorageService>(),
-              gh<_i551.NotificationService>(),
-              gh<_i534.ReminderSyncService>(),
-            ));
-    gh.factory<_i1021.NotificationSettingsBloc>(
-        () => _i1021.NotificationSettingsBloc(
-              gh<_i721.NotificationSettingsService>(),
-              gh<_i551.NotificationService>(),
-              gh<_i534.ReminderSyncService>(),
-              gh<_i931.NotificationLocalizer>(),
-            ));
-    gh.lazySingleton<_i186.GoogleDriveBackupService>(
-      () => _i186.GoogleDriveBackupService(
-        gh<_i348.DataSerializationService>(),
-        gh<_i187.SystemActivityGuard>(),
-      ),
-      dispose: (i) => i.dispose(),
-    );
-    gh.lazySingleton<_i266.LocalBackupService>(() => _i266.LocalBackupService(
-          gh<_i348.DataSerializationService>(),
-          gh<_i187.SystemActivityGuard>(),
-        ));
-    gh.factory<_i125.BackupPreviewCubit>(() => _i125.BackupPreviewCubit(
-          gh<_i186.GoogleDriveBackupService>(),
-          gh<_i348.DataSerializationService>(),
-          gh<_i266.LocalBackupService>(),
-          gh<_i777.TransactionsChangedNotifier>(),
-          gh<_i520.CategoriesChangedNotifier>(),
-        ));
-    gh.lazySingleton<_i239.WalletMetricsService>(() =>
-        _i239.WalletMetricsService(
-          walletRepository: gh<_i504.WalletRepository>(),
-          debtRepository: gh<_i198.DebtRepository>(),
-          receivableRepository: gh<_i468.ReceivableRepository>(),
-          investmentRepository: gh<_i589.InvestmentRepository>(),
-          goalRepository: gh<_i851.GoalRepository>(),
-          transactionsRepository: gh<_i543.TransactionsRepository>(),
-          transactionsChangedNotifier: gh<_i777.TransactionsChangedNotifier>(),
-          reminderSync: gh<_i534.ReminderSyncService>(),
-        ));
-    gh.factory<_i494.PendingRecurringBloc>(() => _i494.PendingRecurringBloc(
-          gh<_i162.GetPendingRecurringTransactionsUsecase>(),
-          gh<_i854.ApproveRecurringTransactionUsecase>(),
-          gh<_i817.DeleteRecurringTransactionUsecase>(),
-          gh<_i111.SkipRecurringTransactionUsecase>(),
-          gh<_i239.WalletMetricsService>(),
-          gh<_i777.TransactionsChangedNotifier>(),
-        ));
     gh.factory<_i230.ReceivableBloc>(() => _i230.ReceivableBloc(
           getReceivablesUseCase: gh<_i866.GetReceivablesUseCase>(),
           addReceivableUseCase: gh<_i866.AddReceivableUseCase>(),
@@ -567,6 +547,11 @@ extension GetItInjectableX on _i174.GetIt {
           walletMetricsService: gh<_i239.WalletMetricsService>(),
           transactionsChangedNotifier: gh<_i777.TransactionsChangedNotifier>(),
         ));
+    gh.factory<_i854.ApproveRecurringTransactionUsecase>(
+        () => _i854.ApproveRecurringTransactionUsecase(
+              gh<_i543.TransactionsRepository>(),
+              gh<_i424.SaveRecurringTransactionUsecase>(),
+            ));
     gh.lazySingleton<_i486.DeletionUndoService>(() => _i486.DeletionUndoService(
           gh<_i257.AddTransactionUseCase>(),
           gh<_i855.AddDebtUseCase>(),
@@ -577,6 +562,14 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i777.TransactionsChangedNotifier>(),
           gh<_i40.ReceiptStorageService>(),
         ));
+    gh.factory<_i570.LanguageBloc>(
+        () => _i570.LanguageBloc(gh<_i534.ReminderSyncService>()));
+    gh.factory<_i645.BudgetsBloc>(() => _i645.BudgetsBloc(
+          gh<_i21.GetBudgetsUsecase>(),
+          gh<_i613.SaveBudgetUsecase>(),
+          gh<_i691.DeleteBudgetUsecase>(),
+          gh<_i777.TransactionsChangedNotifier>(),
+        ));
     gh.lazySingleton<_i530.AutoBackupService>(
       () => _i530.AutoBackupService(
         gh<_i186.GoogleDriveBackupService>(),
@@ -584,6 +577,9 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       dispose: (i) => i.dispose(),
     );
+    gh.factory<_i111.SkipRecurringTransactionUsecase>(() =>
+        _i111.SkipRecurringTransactionUsecase(
+            gh<_i424.SaveRecurringTransactionUsecase>()));
     gh.factory<_i726.InvestmentBloc>(() => _i726.InvestmentBloc(
           getInvestmentsUseCase: gh<_i864.GetInvestmentsUseCase>(),
           addInvestmentUseCase: gh<_i818.AddInvestmentUseCase>(),
@@ -645,6 +641,14 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i239.WalletMetricsService>(),
           gh<_i777.TransactionsChangedNotifier>(),
           gh<_i187.SystemActivityGuard>(),
+        ));
+    gh.factory<_i494.PendingRecurringBloc>(() => _i494.PendingRecurringBloc(
+          gh<_i162.GetPendingRecurringTransactionsUsecase>(),
+          gh<_i854.ApproveRecurringTransactionUsecase>(),
+          gh<_i817.DeleteRecurringTransactionUsecase>(),
+          gh<_i111.SkipRecurringTransactionUsecase>(),
+          gh<_i239.WalletMetricsService>(),
+          gh<_i777.TransactionsChangedNotifier>(),
         ));
     return this;
   }
