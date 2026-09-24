@@ -95,7 +95,7 @@ void main() {
       const e1 = SetActiveWalletEvent(userId: 'u1', walletId: 'w1');
       const e2 = SetActiveWalletEvent(userId: 'u1', walletId: 'w1');
       expect(e1, e2);
-      expect(e1.props, ['u1', 'w1']);
+      expect(e1.props, ['u1', 'w1', true]);
     });
   });
 

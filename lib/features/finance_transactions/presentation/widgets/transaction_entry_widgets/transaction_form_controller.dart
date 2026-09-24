@@ -22,6 +22,12 @@ class TransactionFormController {
   /// listelenir (bkz. `wallet_category_scope.dart`).
   final String walletId;
 
+  /// Kaydın YAZILACAĞI cüzdan: [walletId] ya da formdaki "ödeme yöntemi"
+  /// seçicisinden aynı ailenin bir kredi kartı / sahibi (bkz.
+  /// `card_family.dart`). Kategori kapsamı değişmez — bağlı kart sahibinin
+  /// kümesini kullanır.
+  late final ValueNotifier<String> targetWalletId = ValueNotifier(walletId);
+
   final WalletCategoryService _categoryService = getIt<WalletCategoryService>();
 
   final TextEditingController titleController = TextEditingController();
@@ -117,6 +123,7 @@ class TransactionFormController {
     dateTime.dispose();
     recurringFrequency.dispose();
     installments.dispose();
+    targetWalletId.dispose();
     submitting.dispose();
     error.dispose();
     pickedReceipt.dispose();

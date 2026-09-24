@@ -3,6 +3,7 @@ import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/wallet_category_service.dart';
+import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
 import 'package:dartz/dartz.dart';
@@ -392,6 +393,75 @@ void main() {
 
       expect(added, 0);
       verifyNever(() => wallets.getWalletById(any()));
+    });
+  });
+
+  // Bağlı kredi kartı sahibinin kümesini kullanır: formda "Hesap ↔ Kart"
+  // arasında geçerken kategori listesi değişmemeli (bkz. card_family.dart).
+  group('bağlı kredi kartı sahibin kümesini kullanır', () {
+    WalletEntity w(String id,
+            {List<String>? ids, String? ownerId, bool card = false}) =>
+        WalletEntity(
+          id: id,
+          userId: 'u1',
+          name: id,
+          balance: 0,
+          debt: 0,
+          credit: 0,
+          investment: 0,
+          colorHex: '0xFF000000',
+          iconName: 'wallet',
+          createdAt: DateTime(2026, 1, 1),
+          openingBalance: 0,
+          categoryIds: ids,
+          creditCard: card || ownerId != null
+              ? CreditCardInfo(
+                  closingDay: 15, dueDay: 25, paymentWalletId: ownerId)
+              : null,
+        );
+
+    void seed(List<WalletEntity> list) {
+      when(() => wallets.getWalletById(any())).thenAnswer((inv) async {
+        final id = inv.positionalArguments.first as String;
+        return Right(list.where((x) => x.id == id).firstOrNull);
+      });
+    }
+
+    test('okuma: kartın kendi kümesi değil SAHİBİNİNKİ', () async {
+      seed([
+        w('bank', ids: ['market']),
+        w('card', ids: ['fatura'], ownerId: 'bank'),
+      ]);
+      expect(await service.visibleIds('card'), ['market']);
+    });
+
+    test('yazma: kartta açılan kategori SAHİBİN kümesine yazılır', () async {
+      seed([
+        w('bank', ids: ['market']),
+        w('card', ids: ['market'], ownerId: 'bank'),
+      ]);
+      await service.setVisibility(
+          walletId: 'card', categoryId: 'fatura', visible: true);
+      final written = verify(() => wallets.updateWallet(captureAny()))
+          .captured
+          .single as WalletEntity;
+      expect(written.id, 'bank');
+      expect(written.categoryIds, containsAll(['market', 'fatura']));
+    });
+
+    test('yetim kart (sahibi yok/silinmiş) kendi kümesine düşer', () async {
+      seed([
+        w('card', ids: ['fatura'], ownerId: 'gone')
+      ]);
+      expect(await service.visibleIds('card'), ['fatura']);
+    });
+
+    test('sahibi de bir kartsa kendi kümesine düşer', () async {
+      seed([
+        w('other', ids: ['market'], card: true),
+        w('card', ids: ['fatura'], ownerId: 'other'),
+      ]);
+      expect(await service.visibleIds('card'), ['fatura']);
     });
   });
 }

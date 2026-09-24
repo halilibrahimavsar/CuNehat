@@ -35,8 +35,25 @@ class WalletCategoryService {
   /// eksiksiz kalmasından çok daha kötü — kategori zorunlu bir alan, boş
   /// seçici işlem kaydını tamamen bloklar.
   Future<List<String>?> visibleIds(String walletId) async {
-    final result = await _wallets.getWalletById(walletId);
-    return result.fold((_) => null, (wallet) => wallet?.categoryIds);
+    final wallet = await _scopeOwner(await _wallet(walletId));
+    return wallet?.categoryIds;
+  }
+
+  /// Kümenin SAHİBİ: bağlı bir kredi kartı kendi kümesini değil, bağlı
+  /// olduğu cüzdanınkini kullanır (bkz. `card_family.dart`). Kart, sahibinin
+  /// bir ödeme yöntemidir; formda "Hesap ↔ Kart" arasında geçerken kategori
+  /// listesi değişmemeli ve sahibinde açılan kategori kartta da görünmeli.
+  /// Kartın kendi `categoryIds`'i yazılı kalır (yetim kalırsa ona düşülür)
+  /// ama bağlıyken okunmaz.
+  ///
+  /// Düz cüzdanda EK OKUMA YOK: okunan kayıt aynen döner.
+  Future<WalletEntity?> _scopeOwner(WalletEntity? wallet) async {
+    final ownerId = wallet?.creditCard?.paymentWalletId;
+    if (wallet == null || ownerId == null || ownerId == wallet.id) {
+      return wallet;
+    }
+    final owner = await _wallet(ownerId);
+    return owner == null || owner.isCreditCard ? wallet : owner;
   }
 
   /// Bu cüzdanda görünür, tek türün kategorileri — ağaç sırasında.
@@ -197,8 +214,9 @@ class WalletCategoryService {
       return next;
     }
 
-    final wallet = await _wallet(walletId);
+    final wallet = await _scopeOwner(await _wallet(walletId));
     if (wallet == null) return;
+    walletId = wallet.id!;
     if (plan(wallet) == null) return;
 
     final fresh = await _wallet(walletId);

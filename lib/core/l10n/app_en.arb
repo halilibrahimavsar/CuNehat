@@ -2773,11 +2773,11 @@
   "bankImportLinked": "Linked",
   "kkSekme": "Credit cards",
   "kkKartEkle": "Add card",
-  "kkMevcutCevir": "Turn an existing wallet into a card",
+  "kkMevcutCevir": "Been tracking this card as a separate wallet? Turn that wallet into the card",
   "kkKurulumBaslik": "Add credit card",
   "kkCevirBaslik": "Turn into a credit card",
   "kkAyarlarBaslik": "Card settings",
-  "kkKurulumAciklama": "The card becomes its own wallet: its spending lives there and paying it from your bank counts as a transfer, so nothing is counted twice.",
+  "kkKurulumAciklama": "The card lives inside the wallet it belongs to: its spending adds up on the card's own account and paying the card counts as a transfer, so nothing is counted twice.",
   "kkKartAdi": "Card name",
   "kkKartAdiIpucu": "e.g. Everyday card",
   "kkKartAdiGerekli": "Card name is required.",
@@ -2790,8 +2790,7 @@
   "kkSonOdemeGunu": "Payment due day",
   "kkGuncelBorc": "Current total balance owed",
   "kkGuncelBorcAciklama": "The amount currently owed in your bank app (including instalments). This becomes the card's opening balance.",
-  "kkOdemeCuzdani": "Which wallet do you pay it from?",
-  "kkSecilmedi": "Not set",
+  "kkOdemeCuzdani": "Belongs to wallet",
   "kkSonEkstre": "Latest statement (optional)",
   "kkSonEkstreAciklama": "From the statement closed on {date}: statement balance and minimum payment.",
   "@kkSonEkstreAciklama": {
@@ -2803,8 +2802,6 @@
   },
   "kkDonemBorcu": "Statement balance",
   "kkAsgariOdeme": "Minimum payment",
-  "kkBosBaslik": "No credit cards yet",
-  "kkBosAciklama": "Add your card to track closing and due dates and get payment reminders.",
   "kkKalanDonemBorcu": "Remaining statement balance",
   "kkKalanAsgari": "Remaining minimum",
   "kkSonOdeme": "Due: {date}",
@@ -2845,7 +2842,6 @@
   },
   "kkOde": "Pay",
   "kkEkstreBilgisi": "Statement details",
-  "kkHarcamalar": "Transactions",
   "kkAyarlar": "Settings",
   "kkEkstreGirilmedi": "Enter this period's statement so the balance and minimum match your bank's.",
   "kkDefterGuvenilmez": "The card was added after this closing; enter the statement balance from your statement.",
@@ -2862,14 +2858,6 @@
   "kkSonOdemeTarihi": "Due date",
   "kkEkstreSayfaAciklama": "The figures on your bank's statement. We pre-filled them from your records.",
   "kkKaydedildi": "Card details saved",
-  "kkKartAktifOldu": "{name} is now open: you can add its spending here.",
-  "@kkKartAktifOldu": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "kkSonrakiKesimEtiket": "Next closing",
   "notifCardUpcomingTitle": "Card payment due tomorrow",
   "notifCardUpcomingBody": "{amount} of your {name} statement balance is still unpaid; it's due tomorrow.",
@@ -2917,6 +2905,16 @@
   "bankImportCardPeriod": "Credit card current-period transactions",
   "bankImportCardSign": "Card rule applied: positive amounts are spending, negatives are payments/refunds.",
   "bankImportCardSavesToWallet": "On import, these become the card's latest statement.",
-  "bankImportCardTargetNotCard": "This is a credit card statement but the target wallet isn't a card: spending is still recorded, but closing/due details aren't kept. Add the card under Debts → Credit cards and import into it.",
-  "bankImportDoneCardSaved": "The card's statement details were updated (balance, minimum, due date)."
+  "bankImportCardTargetNotCard": "This is a credit card statement but the target isn't a card: spending is still recorded, but closing/due details aren't kept. Add the card under its wallet in Wallets and import into it.",
+  "bankImportDoneCardSaved": "The card's statement details were updated (balance, minimum, due date).",
+  "kkOdemeYontemi": "Paid with",
+  "kkKartiSil": "Delete card",
+  "kkDesteyiAc": "Show cards",
+  "kkDesteyiKapat": "Stack cards",
+  "kkCevirAciklama": "It becomes a card with its history and balance, moved inside the wallet you picked.",
+  "kkBagliCuzdanGerekli": "Pick the wallet this card belongs to.",
+  "kkBagliCuzdanAciklama": "The card shows up inside this wallet, and \"Pay\" pays from here by default.",
+  "kkCuzdanKartliSilinemez": "{name} has {count} credit card(s). Delete them or move them to another wallet first.",
+  "kkCuzdanaBagla": "Attach to a wallet",
+  "kkKartEklendi": "Credit card added"
 }

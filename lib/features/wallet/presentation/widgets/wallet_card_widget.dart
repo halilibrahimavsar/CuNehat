@@ -17,13 +17,25 @@ class WalletCardWidget extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
+  /// Aktif bağlam bu cüzdan YA DA ona bağlı bir kart mı. Verilmezse
+  /// [WalletEntity.isActive]. Kart bağlamındayken sahibi de "aktif" görünür
+  /// (kart onun içinde) ve silinemez.
+  final bool? contextActive;
+
+  /// Kutunun altına eklenen içerik — cüzdanın kredi kartı destesi.
+  final Widget? footer;
+
   const WalletCardWidget({
     super.key,
     required this.wallet,
     required this.onTap,
     required this.onEdit,
     required this.onDelete,
+    this.contextActive,
+    this.footer,
   });
+
+  bool get _active => contextActive ?? wallet.isActive;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +44,7 @@ class WalletCardWidget extends StatelessWidget {
 
     return AppCard(
       accent: color,
-      selected: wallet.isActive,
+      selected: _active,
       margin: const EdgeInsets.only(bottom: 12),
       onTap: onTap,
       child: Column(
@@ -104,7 +116,7 @@ class WalletCardWidget extends StatelessWidget {
                 ),
               ),
               // Aktif göstergesi
-              if (wallet.isActive)
+              if (_active)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -185,7 +197,7 @@ class WalletCardWidget extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              if (!wallet.isActive)
+              if (!_active)
                 Expanded(
                   child: IboGlassButton(
                     text: context.l10n.sil,
@@ -206,6 +218,10 @@ class WalletCardWidget extends StatelessWidget {
                 ),
             ],
           ),
+          if (footer != null) ...[
+            const SizedBox(height: 12),
+            footer!,
+          ],
         ],
       ),
     );

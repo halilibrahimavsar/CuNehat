@@ -1,0 +1,516 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
+import 'package:cunehat/core/services/transactions_changed_notifier.dart';
+import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
+import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/credit_card/presentation/card_statement_sheet.dart';
+import 'package:cunehat/features/credit_card/presentation/credit_card_setup_sheet.dart';
+import 'package:cunehat/features/credit_card/presentation/mini_credit_card.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
+import 'package:cunehat/features/wallet/domain/card_cycle.dart';
+import 'package:cunehat/features/wallet/domain/card_family.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
+import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
+import 'package:cunehat/features/wallet/presentation/widgets/transfer_sheet.dart';
+
+/// Kartın dönem durumunu defterden CANLI türetir: defter değişince (harcama,
+/// karta ödeme) ve bakiye değişince yeniden okur. [builder] ilk okuma
+/// bitene kadar `null` alır.
+class CardStatusBuilder extends StatefulWidget {
+  final WalletEntity card;
+
+  /// "Bugün" — test edilebilirlik için.
+  final DateTime? today;
+
+  final Widget Function(BuildContext context, CardStatus? status) builder;
+
+  const CardStatusBuilder({
+    super.key,
+    required this.card,
+    required this.builder,
+    this.today,
+  });
+
+  @override
+  State<CardStatusBuilder> createState() => _CardStatusBuilderState();
+}
+
+class _CardStatusBuilderState extends State<CardStatusBuilder> {
+  List<TransactionEntity>? _ledger;
+  StreamSubscription<TransactionsChange>? _changes;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+    if (getIt.isRegistered<TransactionsChangedNotifier>()) {
+      _changes = getIt<TransactionsChangedNotifier>().stream.listen((c) {
+        if (c.walletId == null || c.walletId == widget.card.id) _load();
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant CardStatusBuilder oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Başka kart ya da bakiye değişti (transfer, harcama) → defter de.
+    if (oldWidget.card.id != widget.card.id ||
+        oldWidget.card.balance != widget.card.balance) {
+      _load();
+    }
+  }
+
+  @override
+  void dispose() {
+    _changes?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    if (!getIt.isRegistered<TransactionsRepository>()) return;
+    final id = widget.card.id!;
+    final result = await getIt<TransactionsRepository>().getTransactions(
+      userId: widget.card.userId,
+      walletId: id,
+    );
+    // Okuma sürerken başka karta geçildiyse bayat defteri yazma.
+    if (!mounted || widget.card.id != id) return;
+    setState(() => _ledger = result.getOrElse(() => const []));
+  }
+
+  CardStatus? get _status {
+    final ledger = _ledger;
+    final info = widget.card.creditCard;
+    if (ledger == null || info == null) return null;
+    return computeCardStatus(
+      card: info,
+      openingBalance: widget.card.openingBalance,
+      walletCreatedAt: widget.card.createdAt,
+      ledger: ledger,
+      today: widget.today ?? DateTime.now(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(context, _status);
+}
+
+/// Son ödeme çipi: "5 gün kaldı" / "Son gün bugün" / "3 gün gecikti" /
+/// ödendiyse "Son ödeme: 14.10.2026". Son 3 gün turuncu, gecikme kırmızı.
+class CardDueChip extends StatelessWidget {
+  final CardStatus status;
+
+  const CardDueChip({super.key, required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final s = status;
+    final paid = !s.isOverdue && s.remainingStatementDebt <= 0;
+    final text = paid
+        ? l10n.kkSonOdeme(AppFormatters.dateShort.format(s.dueDate))
+        : s.daysToDue > 0
+            ? l10n.kkGunKaldi(s.daysToDue)
+            : s.daysToDue == 0
+                ? l10n.kkBugunSonGun
+                : l10n.kkGecikti(-s.daysToDue);
+    final color = s.isOverdue
+        ? cs.error
+        : (!paid && s.daysToDue <= 3 ? Colors.orange : cs.primary);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
+/// Kartın ayrıntı kutusu: kalan dönem borcu, dönem borcu, asgari, toplam
+/// borç, limit, taksitler, sonraki kesim + eylemler (Öde, Ekstre bilgisi,
+/// Ayarlar). Kart ayrıntı sayfasının gövdesi.
+class CreditCardTile extends StatelessWidget {
+  final WalletEntity card;
+  final List<WalletEntity> wallets;
+
+  /// "Bugün" — test edilebilirlik için.
+  final DateTime? today;
+
+  const CreditCardTile({
+    super.key,
+    required this.card,
+    required this.wallets,
+    this.today,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CardStatusBuilder(
+      card: card,
+      today: today,
+      builder: (context, status) => _body(context, status),
+    );
+  }
+
+  String _money(double v) => formatMoney(v, currency: card.currency);
+
+  Widget _body(BuildContext context, CardStatus? status) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (status == null)
+          const Padding(
+            padding: EdgeInsets.all(12),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l10n.kkKalanDonemBorcu,
+                        style: theme.textTheme.bodySmall),
+                    // Rakam değişince yumuşak geçiş (karta ödeme sonrası).
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(end: status.remainingStatementDebt),
+                      duration: (MediaQuery.maybeDisableAnimationsOf(context) ??
+                              false)
+                          ? Duration.zero
+                          : const Duration(milliseconds: 500),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, v, _) => Text(
+                        _money(v),
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                          color: status.isOverdue ? cs.error : cs.onSurface,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: CardDueChip(status: status),
+              ),
+            ],
+          ),
+          if (status.availableLimit != null && card.creditCard?.limit != null)
+            _LimitBar(
+              used: card.creditCard!.limit! - status.availableLimit!,
+              limit: card.creditCard!.limit!,
+            ),
+          const SizedBox(height: 8),
+          _row(context, l10n.kkDonemBorcu, _money(status.statementDebt)),
+          if (status.remainingMinimum != null)
+            _row(context, l10n.kkKalanAsgari, _money(status.remainingMinimum!)),
+          _row(context, l10n.kkToplamBorc, _money(status.currentDebt)),
+          if (status.availableLimit != null)
+            _row(context, l10n.kkKullanilabilirLimit,
+                _money(status.availableLimit!)),
+          if (status.futureInstallments > 0)
+            _row(
+                context, l10n.kkKalanTaksit, _money(status.futureInstallments)),
+          _row(
+            context,
+            l10n.kkSonrakiKesimEtiket,
+            AppFormatters.dateShort.format(status.nextClosing),
+          ),
+          ..._notes(context, status),
+        ],
+        const SizedBox(height: 4),
+        Wrap(
+          spacing: 4,
+          children: [
+            TextButton.icon(
+              onPressed: status == null
+                  ? null
+                  : () => payCreditCard(context,
+                      card: card, wallets: wallets, status: status),
+              icon: const Icon(Icons.payments_rounded, size: 18),
+              label: Text(l10n.kkOde),
+            ),
+            TextButton.icon(
+              onPressed: status == null
+                  ? null
+                  : () => CardStatementSheet.show(
+                        context,
+                        card: card,
+                        status: status,
+                      ),
+              icon: const Icon(Icons.receipt_long_rounded, size: 18),
+              label: Text(l10n.kkEkstreBilgisi),
+            ),
+            TextButton.icon(
+              onPressed: () => CreditCardSetupSheet.show(
+                context,
+                userId: card.userId,
+                wallets: wallets,
+                wallet: card,
+                defaultCurrency: card.currency,
+              ),
+              icon: const Icon(Icons.tune_rounded, size: 18),
+              label: Text(l10n.kkAyarlar),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _row(BuildContext context, String label, String value) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4, right: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(label, style: theme.textTheme.bodyMedium),
+          ),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w700)),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _notes(BuildContext context, CardStatus s) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final gap = s.reconciliationGap;
+    final String? note;
+    if (gap != null) {
+      note = l10n.kkFarkUyarisi(_money(gap.abs()));
+    } else if (s.declared == null && !s.derivedReliable) {
+      note = l10n.kkDefterGuvenilmez;
+    } else if (s.declared == null) {
+      note = l10n.kkEkstreGirilmedi;
+    } else {
+      note = null;
+    }
+    if (note == null) return const [];
+    return [
+      Padding(
+        padding: const EdgeInsets.only(top: 6, right: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.info_outline_rounded,
+                size: 16, color: theme.colorScheme.onSurfaceVariant),
+            const SizedBox(width: 6),
+            Expanded(child: Text(note, style: theme.textTheme.bodySmall)),
+          ],
+        ),
+      ),
+    ];
+  }
+}
+
+/// Limit kullanım çubuğu; açılışta 0'dan dolar. %80 üstü turuncu, aşımda
+/// kırmızı.
+class _LimitBar extends StatelessWidget {
+  final double used;
+  final double limit;
+
+  const _LimitBar({required this.used, required this.limit});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final ratio = limit <= 0 ? 0.0 : (used / limit).clamp(0.0, 1.0);
+    final color = used > limit
+        ? cs.error
+        : ratio >= 0.8
+            ? Colors.orange
+            : cs.primary;
+    final reduce = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, right: 8),
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: ratio),
+        duration: reduce ? Duration.zero : const Duration(milliseconds: 700),
+        curve: Curves.easeOutCubic,
+        builder: (context, v, _) => ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: v,
+            minHeight: 6,
+            color: color,
+            backgroundColor: cs.onSurface.withValues(alpha: 0.08),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// "Öde": sahibinden (yoksa ilk düz cüzdandan) karta transfer; kalan dönem
+/// borcu ve kalan asgari tutar önerisi olarak.
+void payCreditCard(
+  BuildContext context, {
+  required WalletEntity card,
+  required List<WalletEntity> wallets,
+  required CardStatus status,
+}) {
+  final l10n = context.l10n;
+  final payers = [
+    for (final w in wallets)
+      if (w.id != null && w.id != card.id && !w.isCreditCard) w,
+  ];
+  if (payers.isEmpty) {
+    AppMessenger.info(l10n.kkOdemeIcinCuzdanYok);
+    return;
+  }
+  final owner = cardOwner(card, wallets);
+  final from = payers.firstWhere(
+    (w) => w.id == owner?.id,
+    orElse: () => payers.first,
+  );
+  TransferSheet.show(
+    context,
+    wallets: [...payers, card],
+    initialFrom: from,
+    initialTo: card,
+    amountSuggestions: [
+      if (status.remainingStatementDebt > 0)
+        TransferAmountSuggestion(
+          label: l10n.kkKalanDonemBorcu,
+          amount: status.remainingStatementDebt,
+        ),
+      if ((status.remainingMinimum ?? 0) > 0)
+        TransferAmountSuggestion(
+          label: l10n.kkKalanAsgari,
+          amount: status.remainingMinimum!,
+        ),
+    ],
+  );
+}
+
+/// Kart ayrıntı sayfası: üstte kartın kendisi, altında [CreditCardTile] ve
+/// "Kartı sil".
+class CardDetailsSheet extends StatelessWidget {
+  final WalletEntity card;
+
+  const CardDetailsSheet({super.key, required this.card});
+
+  static Future<void> show(BuildContext context, {required WalletEntity card}) {
+    final bloc = context.read<WalletBloc>();
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => BlocProvider.value(
+        value: bloc,
+        child: CardDetailsSheet(card: card),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Canlı: ödeme/ayar değişince sayfa açıkken de tazelenir.
+    final state = context.watch<WalletBloc>().state;
+    final wallets =
+        state is WalletLoadedSt ? state.wallets : const <WalletEntity>[];
+    final live = wallets.where((w) => w.id == card.id).firstOrNull;
+    if (live == null || !live.isCreditCard) {
+      // Silindi ya da karttan çıkarıldı.
+      return const SizedBox(height: 120);
+    }
+    return SafeArea(
+      top: false,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            MiniCreditCard(card: live, height: 84),
+            const SizedBox(height: 16),
+            CreditCardTile(card: live, wallets: wallets),
+            const Divider(height: 24),
+            TextButton.icon(
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.error,
+              ),
+              onPressed: () =>
+                  deleteCreditCard(context, card: live, closeSheet: true),
+              icon: const Icon(Icons.delete_outline_rounded),
+              label: Text(context.l10n.kkKartiSil),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Kartı (cüzdanını ve defterini) iki adımlı onayla siler. Kart aktif
+/// bağlamsa önce sahibine geçilir — aktif cüzdan silinemez. [closeSheet]
+/// ise silmeden sonra çağıranın sayfası (kart ayrıntısı) kapatılır.
+Future<void> deleteCreditCard(
+  BuildContext context, {
+  required WalletEntity card,
+  bool closeSheet = false,
+}) async {
+  final l10n = context.l10n;
+  final bloc = context.read<WalletBloc>();
+  final navigator = Navigator.of(context);
+  final step1 = await ConfirmDialog.show(
+    context,
+    title: l10n.kkKartiSil,
+    message: l10n.deleteWalletConfirmMessage(card.name),
+    confirmText: l10n.sil,
+  );
+  if (!step1 || !context.mounted) return;
+  final step2 = await ConfirmDialog.show(
+    context,
+    title: l10n.irreversibleActionTitle,
+    message: l10n.deleteWalletDangerMessage(card.name),
+    confirmText: l10n.sil,
+    danger: true,
+    countdownSeconds: 5,
+  );
+  if (!step2 || !context.mounted) return;
+
+  final state = bloc.state;
+  if (state is WalletLoadedSt && state.activeWallet?.id == card.id) {
+    final owner = cardOwner(card, state.wallets) ??
+        state.wallets
+            .where((w) => w.id != card.id && !w.isCreditCard)
+            .firstOrNull;
+    if (owner == null) return;
+    bloc.add(SetActiveWalletEvent(userId: card.userId, walletId: owner.id!));
+    // Olaylar eşzamanlı işlenir: silme, aktif değişimi yazıldıktan SONRA.
+    await bloc.stream
+        .firstWhere(
+            (s) => s is WalletLoadedSt && s.activeWallet?.id == owner.id)
+        .timeout(const Duration(seconds: 5), onTimeout: () => bloc.state);
+  }
+  bloc.add(DeleteWalletEvent(card.id!));
+  if (closeSheet && navigator.canPop()) navigator.pop();
+}

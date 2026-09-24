@@ -9,6 +9,7 @@ import 'package:cunehat/core/messaging/deletion_undo_message.dart';
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/core/shared/widgets/app_date_range_picker.dart';
 import 'package:cunehat/core/utils/date_range_helper.dart';
+import 'package:cunehat/features/credit_card/presentation/card_context_rail.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
@@ -428,6 +429,8 @@ class _TransactionsViewState extends State<_TransactionsView> {
               backgroundColor: Colors.transparent,
               body: Column(
                 children: [
+                  // Cüzdan ↔ bağlı kartları (yalnız kartı olan cüzdanda).
+                  const CardContextRail(),
                   TransactionTopBar(
                     filter: filterState,
                     categoryLabels: _categoryLabels,

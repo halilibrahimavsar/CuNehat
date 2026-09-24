@@ -1,7 +1,13 @@
 import 'dart:async';
 
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/config/feature_flags.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/features/credit_card/presentation/credit_card_setup_sheet.dart';
+import 'package:cunehat/features/credit_card/presentation/credit_card_tile.dart';
+import 'package:cunehat/features/credit_card/presentation/mini_credit_card.dart';
+import 'package:cunehat/features/credit_card/presentation/wallet_card_stack.dart';
+import 'package:cunehat/features/wallet/domain/card_family.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/onboarding/onboarding_tour.dart';
@@ -346,7 +352,7 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
       WalletLoadingSt() => const Center(
           child: CircularProgressIndicator(),
         ),
-      WalletLoadedSt() => _buildWalletList(state.wallets),
+      WalletLoadedSt() => _buildWalletList(state),
       WalletErrorSt() => Center(
           child: ErrorView(message: state.err),
         ),
@@ -357,33 +363,79 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
   }
 
   /// Wallet list
-  Widget _buildWalletList(List<WalletEntity> wallets) {
+  ///
+  /// Kredi kartları ayrı satır DEĞİLDİR: bağlı oldukları cüzdanın kutusunda
+  /// deste olarak durur (bkz. `card_family.dart`). Yalnız sahibi olmayan
+  /// (yetim) kart üst düzeyde, "bir cüzdana bağla" önerisiyle görünür.
+  Widget _buildWalletList(WalletLoadedSt state) {
+    final wallets = state.wallets;
+    final top = FeatureFlags.creditCards ? topLevelWallets(wallets) : wallets;
+    final active = state.activeWallet;
+    final activeAccountId =
+        active == null ? null : accountOf(active, wallets).id;
     return ListView.builder(
       controller: widget.scrollController,
       padding:
           const EdgeInsets.fromLTRB(16, 16, 16, 100), // Bottom padding for FAB
-      itemCount: wallets.length,
+      itemCount: top.length,
       itemBuilder: (context, index) {
-        final wallet = wallets[index];
+        final wallet = top[index];
+        final Widget item;
+        if (FeatureFlags.creditCards && wallet.isCreditCard) {
+          item = _OrphanCardTile(
+            card: wallet,
+            active: wallet.id == active?.id,
+            onTap: () => _activate(wallet),
+            onAttach: () => CreditCardSetupSheet.show(
+              context,
+              userId: widget.userId,
+              wallets: wallets,
+              wallet: wallet,
+              defaultCurrency: wallet.currency,
+            ),
+          );
+        } else {
+          item = WalletCardWidget(
+            wallet: wallet,
+            contextActive: wallet.id == activeAccountId,
+            onTap: () => _activate(wallet),
+            onEdit: () => _editWallet(context, wallet),
+            onDelete: () => _deleteWallet(context, wallet),
+            footer: FeatureFlags.creditCards
+                ? WalletCardStack(
+                    key: ValueKey('cards-${wallet.id}'),
+                    cards: cardsOf(wallet.id, wallets),
+                    activeId: active?.id,
+                    onCardTap: _activate,
+                    onCardLongPress: (card) =>
+                        CardDetailsSheet.show(context, card: card),
+                    onAdd: () => CreditCardSetupSheet.show(
+                      context,
+                      userId: widget.userId,
+                      wallets: wallets,
+                      defaultCurrency: wallet.currency,
+                      ownerWalletId: wallet.id,
+                    ),
+                  )
+                : null,
+          );
+        }
         return AnimatedScale(
           scale: 1.0,
           duration: Duration(milliseconds: 200 + (index * 50)),
           curve: Curves.easeOutCubic,
-          child: WalletCardWidget(
-            wallet: wallet,
-            onTap: () => context.read<WalletBloc>().add(
-                  SetActiveWalletEvent(
-                    userId: widget.userId,
-                    walletId: wallet.id!,
-                  ),
-                ),
-            onEdit: () => _editWallet(context, wallet),
-            onDelete: () => _deleteWallet(context, wallet),
-          ),
+          child: item,
         );
       },
     );
   }
+
+  void _activate(WalletEntity wallet) => context.read<WalletBloc>().add(
+        SetActiveWalletEvent(
+          userId: widget.userId,
+          walletId: wallet.id!,
+        ),
+      );
 
   /// Floating add button (fixed at bottom)
   Widget _buildFloatingAddButton(BuildContext context) {
@@ -576,6 +628,17 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
   }
 
   void _deleteWallet(BuildContext context, WalletEntity wallet) async {
+    // Kartı olan cüzdan silinmez: kartlar yetim kalıp listede ayrı cüzdan
+    // gibi belirirdi. Önce kartlar silinir (ya da başka cüzdana bağlanır).
+    final state = context.read<WalletBloc>().state;
+    if (state is WalletLoadedSt) {
+      final cards = cardsOf(wallet.id, state.wallets);
+      if (cards.isNotEmpty) {
+        AppMessenger.info(
+            context.l10n.kkCuzdanKartliSilinemez(wallet.name, cards.length));
+        return;
+      }
+    }
     final step1 = await ConfirmDialog.show(
       context,
       title: context.l10n.deleteWalletTitle,
@@ -602,6 +665,8 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
     switch (type) {
       case WalletMessageType.created:
         return context.l10n.cuzdanOlusturuldu;
+      case WalletMessageType.cardCreated:
+        return context.l10n.kkKartEklendi;
       case WalletMessageType.updated:
         return context.l10n.cuzdanGuncellendi;
       case WalletMessageType.deleted:
@@ -619,5 +684,38 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
       case WalletMessageType.activeSetFailed:
         return context.l10n.beklenmeyenDurum; // Fallback
     }
+  }
+}
+
+/// Bir cüzdana bağlı olmayan kart: üst düzeyde, bağlama önerisiyle.
+class _OrphanCardTile extends StatelessWidget {
+  final WalletEntity card;
+  final bool active;
+  final VoidCallback onTap;
+  final VoidCallback onAttach;
+
+  const _OrphanCardTile({
+    required this.card,
+    required this.active,
+    required this.onTap,
+    required this.onAttach,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          MiniCreditCard(card: card, active: active, onTap: onTap),
+          TextButton.icon(
+            onPressed: onAttach,
+            icon: const Icon(Icons.link_rounded, size: 18),
+            label: Text(context.l10n.kkCuzdanaBagla),
+          ),
+        ],
+      ),
+    );
   }
 }

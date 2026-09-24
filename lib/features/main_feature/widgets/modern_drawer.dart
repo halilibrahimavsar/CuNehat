@@ -11,6 +11,7 @@ import 'package:cunehat/features/main_feature/utils/app_constants.dart'
     as constants;
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_state.dart';
+import 'package:cunehat/features/wallet/domain/card_family.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
 import 'package:flutter/material.dart';
@@ -467,7 +468,9 @@ class _ModernDrawerState extends State<ModernDrawer>
           return const SizedBox.shrink();
         }
 
-        final wallet = state.activeWallet!;
+        // Kart bağlamındaysa kartın SAHİBİ: çekmecedeki özet hesabındır
+        // (bakiye/birikim/borç), kartın eksi bakiyesi değil.
+        final wallet = accountOf(state.activeWallet!, state.wallets);
         final walletColor = WalletColors.hexToColor(wallet.colorHex);
 
         return FadeTransition(

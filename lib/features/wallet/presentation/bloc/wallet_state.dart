@@ -12,6 +12,9 @@ enum WalletMessageType {
   deleteFailed,
   selectFailed,
   activeSetFailed,
+
+  /// Kredi kartı eklendi (kart cüzdanı oluşturuldu). Yalnız SONA eklenir.
+  cardCreated,
 }
 
 sealed class WalletState extends Equatable {

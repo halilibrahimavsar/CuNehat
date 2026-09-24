@@ -5205,7 +5205,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kkKartEkle => 'Add card';
 
   @override
-  String get kkMevcutCevir => 'Turn an existing wallet into a card';
+  String get kkMevcutCevir =>
+      'Been tracking this card as a separate wallet? Turn that wallet into the card';
 
   @override
   String get kkKurulumBaslik => 'Add credit card';
@@ -5218,7 +5219,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kkKurulumAciklama =>
-      'The card becomes its own wallet: its spending lives there and paying it from your bank counts as a transfer, so nothing is counted twice.';
+      'The card lives inside the wallet it belongs to: its spending adds up on the card\'s own account and paying the card counts as a transfer, so nothing is counted twice.';
 
   @override
   String get kkKartAdi => 'Card name';
@@ -5259,10 +5260,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'The amount currently owed in your bank app (including instalments). This becomes the card\'s opening balance.';
 
   @override
-  String get kkOdemeCuzdani => 'Which wallet do you pay it from?';
-
-  @override
-  String get kkSecilmedi => 'Not set';
+  String get kkOdemeCuzdani => 'Belongs to wallet';
 
   @override
   String get kkSonEkstre => 'Latest statement (optional)';
@@ -5277,13 +5275,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kkAsgariOdeme => 'Minimum payment';
-
-  @override
-  String get kkBosBaslik => 'No credit cards yet';
-
-  @override
-  String get kkBosAciklama =>
-      'Add your card to track closing and due dates and get payment reminders.';
 
   @override
   String get kkKalanDonemBorcu => 'Remaining statement balance';
@@ -5330,9 +5321,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kkEkstreBilgisi => 'Statement details';
 
   @override
-  String get kkHarcamalar => 'Transactions';
-
-  @override
   String get kkAyarlar => 'Settings';
 
   @override
@@ -5363,11 +5351,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kkKaydedildi => 'Card details saved';
-
-  @override
-  String kkKartAktifOldu(String name) {
-    return '$name is now open: you can add its spending here.';
-  }
 
   @override
   String get kkSonrakiKesimEtiket => 'Next closing';
@@ -5420,9 +5403,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bankImportCardTargetNotCard =>
-      'This is a credit card statement but the target wallet isn\'t a card: spending is still recorded, but closing/due details aren\'t kept. Add the card under Debts → Credit cards and import into it.';
+      'This is a credit card statement but the target isn\'t a card: spending is still recorded, but closing/due details aren\'t kept. Add the card under its wallet in Wallets and import into it.';
 
   @override
   String get bankImportDoneCardSaved =>
       'The card\'s statement details were updated (balance, minimum, due date).';
+
+  @override
+  String get kkOdemeYontemi => 'Paid with';
+
+  @override
+  String get kkKartiSil => 'Delete card';
+
+  @override
+  String get kkDesteyiAc => 'Show cards';
+
+  @override
+  String get kkDesteyiKapat => 'Stack cards';
+
+  @override
+  String get kkCevirAciklama =>
+      'It becomes a card with its history and balance, moved inside the wallet you picked.';
+
+  @override
+  String get kkBagliCuzdanGerekli => 'Pick the wallet this card belongs to.';
+
+  @override
+  String get kkBagliCuzdanAciklama =>
+      'The card shows up inside this wallet, and \"Pay\" pays from here by default.';
+
+  @override
+  String kkCuzdanKartliSilinemez(String name, int count) {
+    return '$name has $count credit card(s). Delete them or move them to another wallet first.';
+  }
+
+  @override
+  String get kkCuzdanaBagla => 'Attach to a wallet';
+
+  @override
+  String get kkKartEklendi => 'Credit card added';
 }

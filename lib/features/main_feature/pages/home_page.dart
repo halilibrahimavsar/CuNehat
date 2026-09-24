@@ -17,6 +17,8 @@ import 'package:cunehat/features/main_feature/widgets/cube_back_handler.dart';
 import 'package:cunehat/features/main_feature/widgets/main_content_swipe.dart';
 import 'package:cunehat/features/main_feature/widgets/modern_drawer.dart';
 import 'package:cunehat/features/main_feature/widgets/slider_button_view.dart';
+import 'package:cunehat/features/wallet/domain/card_family.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/no_wallet_view.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_transaction_entity.dart';
@@ -373,6 +375,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final l = context.l10n;
     return switch (type) {
       WalletMessageType.created => l.cuzdanOlusturuldu,
+      WalletMessageType.cardCreated => l.kkKartEklendi,
       WalletMessageType.updated => l.cuzdanGuncellendi,
       WalletMessageType.deleted => l.cuzdanSilindi,
       WalletMessageType.selected => l.cuzdanSecildi,
@@ -419,20 +422,25 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     // veri çeker (cüzdan verileri karışıyor hatasının kökü buydu).
     // Birim de karşılaştırılır: boş cüzdanın para birimi değiştirilebiliyor,
     // fabrika yenilenmezse alt sayfalar eski sembolle yazmaya devam ederdi.
+    final account = accountOf(activeWallet, walletState.wallets);
     if (_subViewFactory == null ||
         _subViewFactory!.walletId != activeWallet.id ||
-        _subViewFactory!.walletCurrency != activeWallet.currency) {
+        _subViewFactory!.walletCurrency != activeWallet.currency ||
+        _subViewFactory!.accountWalletId != account.id ||
+        _subViewFactory!.accountCurrency != account.currency) {
       _subViewFactory = SubViewFactory(
         userId: userId,
         walletId: activeWallet.id!,
         walletCurrency: activeWallet.currency,
+        accountWalletId: account.id,
+        accountCurrency: account.currency,
       );
     }
 
     return Column(
       children: [
         Expanded(
-          child: _buildAnimatedContent(userId, activeWallet),
+          child: _buildAnimatedContent(userId, activeWallet, account),
         ),
         if (_subViewFactory != null)
           // _navController'a bağlı: closeToMain/navigateToView seçim map'ini
@@ -460,10 +468,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildAnimatedContent(String userId, dynamic activeWallet) {
+  Widget _buildAnimatedContent(
+      String userId, WalletEntity activeWallet, WalletEntity account) {
     // Setup view stack based on current slider state, outside of the AnimatedBuilder
     // to avoid calling notifyListeners() during the build phase.
-    _setupViewStack(userId, activeWallet);
+    _setupViewStack(userId, activeWallet, account);
 
     return MainContentSwipe(
       controller: _navController,
@@ -480,26 +489,34 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  void _setupViewStack(String userId, dynamic activeWallet) {
+  void _setupViewStack(
+      String userId, WalletEntity activeWallet, WalletEntity account) {
     // Create main view
     // Cüzdan-bazlı key'ler: cüzdan değişince Element (ve dolayısıyla
     // sayfaların bloc/state'i) tazelensin.
+    //
+    // Aktif cüzdan bir KARTSA birikim ve borç sayfaları sahibinin verisini
+    // gösterir ([account]; kartın yatırımı/borç kaydı olmaz) ve kart ↔ hesap
+    // geçişinde yeniden kurulmaz.
     final mainView = HorizontalCubeAnimationView(
       controller: _navController.horizontalController,
       firstView: InvestmentMoneyPage(
-        key: ValueKey('investment-${activeWallet.id}'),
-        activeWallet: activeWallet,
+        key: ValueKey('investment-${account.id}'),
+        activeWallet: account,
       ),
+      // Anahtar SAHİBE bağlı: hesap ↔ kart geçişi sayfayı yeniden kurmaz
+      // (bağlam şeridinin animasyonu ve seçili dönem korunur); sayfa yeni
+      // cüzdanın defterini `didUpdateWidget`'ta yükler.
       secondView: TransactionsPage(
-        key: ValueKey('transactions-${activeWallet.id}'),
+        key: ValueKey('transactions-${account.id}'),
         userId: userId,
         wallet: activeWallet,
       ),
       thirdView: DebtAndReceivablePage(
-        key: ValueKey('debt-${activeWallet.id}'),
+        key: ValueKey('debt-${account.id}'),
         userId: userId,
-        walletId: activeWallet.id!,
-        walletCurrency: activeWallet.currency,
+        walletId: account.id!,
+        walletCurrency: account.currency,
       ),
     );
 

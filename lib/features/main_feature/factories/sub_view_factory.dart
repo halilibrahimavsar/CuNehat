@@ -17,11 +17,24 @@ class SubViewFactory {
   /// (borç/alacak geçmişi kaydın kendi cüzdanının biriminde yazar).
   final String walletCurrency;
 
+  /// Birikim ve borç alt görünümlerinin cüzdanı. Aktif cüzdan bir KARTSA
+  /// sahibi (kartın yatırımı/borç kaydı olmaz; bkz. `card_family.dart`);
+  /// verilmezse [walletId].
+  final String? accountWalletId;
+
+  /// [accountWalletId]'nin birimi; verilmezse [walletCurrency].
+  final String? accountCurrency;
+
   const SubViewFactory({
     required this.userId,
     required this.walletId,
     required this.walletCurrency,
+    this.accountWalletId,
+    this.accountCurrency,
   });
+
+  String get _accountId => accountWalletId ?? walletId;
+  String get _accountCurrency => accountCurrency ?? walletCurrency;
 
   /// Create all subviews for a slider state.
   ///
@@ -32,9 +45,9 @@ class SubViewFactory {
     return switch (stateType) {
       'savedMoney' => [
           InvestmentHistoryPage(
-              key: ValueKey('invHistory-$walletId'),
+              key: ValueKey('invHistory-$_accountId'),
               userId: userId,
-              walletId: walletId),
+              walletId: _accountId),
         ],
       'transactions' => [
           TransactionInsightsPage(
@@ -48,10 +61,10 @@ class SubViewFactory {
         ],
       'debt' => [
           DebtHistoryPage(
-              key: ValueKey('debtHistory-$walletId'),
+              key: ValueKey('debtHistory-$_accountId'),
               userId: userId,
-              walletId: walletId,
-              walletCurrency: walletCurrency),
+              walletId: _accountId,
+              walletCurrency: _accountCurrency),
         ],
       _ => [],
     };

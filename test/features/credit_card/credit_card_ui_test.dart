@@ -4,7 +4,9 @@ import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/credit_card/presentation/card_statement_sheet.dart';
 import 'package:cunehat/features/credit_card/presentation/credit_card_setup_sheet.dart';
-import 'package:cunehat/features/credit_card/presentation/credit_cards_tab.dart';
+import 'package:cunehat/features/credit_card/presentation/card_context_rail.dart';
+import 'package:cunehat/features/credit_card/presentation/credit_card_tile.dart';
+import 'package:cunehat/features/credit_card/presentation/wallet_card_stack.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
@@ -20,6 +22,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 class _MockWalletBloc extends MockBloc<WalletEvent, WalletState>
     implements WalletBloc {}
@@ -64,8 +67,13 @@ void main() {
 
   tearDown(() async => getIt.reset());
 
-  Widget app(Widget child) => BlocProvider<WalletBloc>.value(
-        value: bloc,
+  Widget app(Widget child) => MultiBlocProvider(
+        providers: [
+          BlocProvider<WalletBloc>.value(value: bloc),
+          // Kart görselindeki tutar (MoneyText) göz düğmesine uyar.
+          BlocProvider<AmountVisibilityCubit>(
+              create: (_) => AmountVisibilityCubit()),
+        ],
         child: MaterialApp(
           locale: const Locale('tr'),
           localizationsDelegates: const [
@@ -87,8 +95,9 @@ void main() {
 
   group('CreditCardSetupSheet', () {
     testWidgets(
-        'yeni kart: açılış = −borç, aktif cüzdan DEĞİŞMEZ, kategoriler ödeme '
-        'cüzdanından, son ekstre son kesime yazılır', (tester) async {
+        'yeni kart (cüzdanın kutusundan): bağlı cüzdan önceden seçili, '
+        'açılış = −borç, aktif cüzdan DEĞİŞMEZ, kategoriler bağlı cüzdandan, '
+        'son ekstre son kesime yazılır', (tester) async {
       tall(tester);
       final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
       final bank = _wallet('bank', categoryIds: const ['cat-a', 'cat-b']);
@@ -96,6 +105,7 @@ void main() {
         userId: 'u',
         wallets: [bank],
         defaultCurrency: 'TRY',
+        ownerWalletId: 'bank',
         today: DateTime(2026, 9, 20),
       )));
       await tester.pumpAndSettle();
@@ -110,11 +120,8 @@ void main() {
           find.widgetWithText(TextFormField, l10n.kkDonemBorcu), '1.800');
       await tester.enterText(
           find.widgetWithText(TextFormField, l10n.kkAsgariOdeme), '720');
-      // Ödeme cüzdanı: Banka.
-      await tester.tap(find.text(l10n.kkSecilmedi));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Banka').last);
-      await tester.pumpAndSettle();
+      // Bağlı cüzdan kutudan geldi: seçmeye gerek yok.
+      expect(find.text('Banka'), findsOneWidget);
 
       await tester.tap(find.text(l10n.kaydet));
       await tester.pumpAndSettle();
@@ -127,6 +134,7 @@ void main() {
       expect(w.openingBalance, -2500);
       expect(w.balance, -2500);
       expect(w.iconName, 'credit_card');
+      expect(w.colorHex, '0xFF37474F', reason: 'ilk kart: arduvaz');
       expect(w.categoryIds, ['cat-a', 'cat-b']);
       final card = w.creditCard!;
       expect(card.closingDay, 15);
@@ -139,6 +147,82 @@ void main() {
       expect(card.lastStatement!.minimumPayment, 720);
     });
 
+    testWidgets(
+        'aynı cüzdanın ikinci kartı FARKLI renk alır (deste ayırt '
+        'edilsin)', (tester) async {
+      tall(tester);
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      final bank = _wallet('bank');
+      final first = _wallet('c1',
+          card: const CreditCardInfo(
+              closingDay: 15, dueDay: 25, paymentWalletId: 'bank'));
+      await tester.pumpWidget(app(CreditCardSetupSheet(
+        userId: 'u',
+        wallets: [bank, first.copyWith(colorHex: '0xFF37474F')],
+        defaultCurrency: 'TRY',
+        ownerWalletId: 'bank',
+      )));
+      await tester.enterText(
+          find.widgetWithText(TextFormField, l10n.kkKartAdi), 'World');
+      await tester.tap(find.text(l10n.kaydet));
+      await tester.pumpAndSettle();
+      final event = verify(() => bloc.add(captureAny())).captured.single
+          as CreateWalletEvent;
+      expect(event.wallet.colorHex, isNot('0xFF37474F'));
+    });
+
+    testWidgets('bağlı cüzdan seçilmeden kaydedilmez', (tester) async {
+      tall(tester);
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      await tester.pumpWidget(app(CreditCardSetupSheet(
+        userId: 'u',
+        wallets: [_wallet('bank'), _wallet('cash', name: 'Nakit')],
+        defaultCurrency: 'TRY',
+      )));
+      await tester.enterText(
+          find.widgetWithText(TextFormField, l10n.kkKartAdi), 'Bonus');
+      await tester.tap(find.text(l10n.kaydet));
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.kkBagliCuzdanGerekli), findsOneWidget);
+      verifyNever(() => bloc.add(any()));
+    });
+
+    testWidgets(
+        'yeni kart formundan "var olan cüzdanı kart yap": hedef o cüzdan olur, '
+        'bağlı cüzdan korunur, borç sorusu kalkar', (tester) async {
+      tall(tester);
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      final bank = _wallet('bank');
+      final old = _wallet('old', name: 'Eski Kart Cüzdanı', balance: -900);
+      await tester.pumpWidget(app(CreditCardSetupSheet(
+        userId: 'u',
+        wallets: [bank, old],
+        defaultCurrency: 'TRY',
+        ownerWalletId: 'bank',
+      )));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('kk-convert-link')));
+      await tester.pumpAndSettle();
+      // Bağlı cüzdan (Banka) çevrilebilecekler arasında değil.
+      expect(find.widgetWithText(ListTile, 'Banka'), findsNothing);
+      await tester.tap(find.text('Eski Kart Cüzdanı'));
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.kkCevirBaslik), findsOneWidget);
+      expect(
+          find.widgetWithText(TextFormField, l10n.kkGuncelBorc), findsNothing);
+      await tester.tap(find.text(l10n.kaydet));
+      await tester.pumpAndSettle();
+
+      final event = verify(() => bloc.add(captureAny())).captured.single
+          as UpdateWalletEvent;
+      expect(event.wallet.id, 'old');
+      expect(event.wallet.balance, -900);
+      expect(event.wallet.creditCard!.paymentWalletId, 'bank');
+    });
+
     testWidgets('son 4 hane eksikse kaydedilmez', (tester) async {
       tall(tester);
       final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
@@ -146,6 +230,7 @@ void main() {
         userId: 'u',
         wallets: [_wallet('bank')],
         defaultCurrency: 'TRY',
+        ownerWalletId: 'bank',
       )));
       await tester.enterText(
           find.widgetWithText(TextFormField, l10n.kkKartAdi), 'Bonus');
@@ -169,6 +254,7 @@ void main() {
         wallets: [_wallet('bank'), manualCard],
         wallet: manualCard,
         defaultCurrency: 'TRY',
+        ownerWalletId: 'bank',
       )));
       await tester.pumpAndSettle();
 
@@ -327,21 +413,167 @@ void main() {
     });
   });
 
-  group('CreditCardsTab', () {
-    testWidgets('kart yoksa boş durum + "Kart ekle"', (tester) async {
-      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+  WalletEntity bonusCard({String id = 'card', String? owner = 'bank'}) =>
+      _wallet(id,
+          name: id == 'card' ? 'Bonus' : 'World',
+          balance: -500,
+          opening: 0,
+          createdAt: DateTime(2026, 8, 1),
+          card: CreditCardInfo(
+            closingDay: 15,
+            dueDay: 25,
+            last4: id == 'card' ? '5690' : '1234',
+            paymentWalletId: owner,
+          ));
+
+  void emptyLedger() {
+    final repo = _MockTxRepo();
+    getIt.registerSingleton<TransactionsRepository>(repo);
+    when(() => repo.getTransactions(
+          userId: any(named: 'userId'),
+          walletId: any(named: 'walletId'),
+        )).thenAnswer((_) async => const Right(<TransactionEntity>[]));
+  }
+
+  group('CardContextRail', () {
+    testWidgets('kartı olmayan cüzdanda hiç yer kaplamaz', (tester) async {
       when(() => bloc.state)
           .thenReturn(WalletLoadedSt([_wallet('bank')], _wallet('bank')));
-      await tester.pumpWidget(app(const CreditCardsTab(
-        userId: 'u',
-        defaultCurrency: 'TRY',
-      )));
+      await tester.pumpWidget(app(const CardContextRail()));
+      expect(find.byType(GestureDetector), findsNothing);
+    });
+
+    testWidgets(
+        'hesap bağlamında: hesap + kartları; karta dokununca AKTİF kart olur',
+        (tester) async {
+      emptyLedger();
+      final bank = _wallet('bank');
+      final card = bonusCard();
+      final other = _wallet('other', name: 'Nakit');
+      when(() => bloc.state)
+          .thenReturn(WalletLoadedSt([bank, card, other], bank));
+      await tester.pumpWidget(app(const CardContextRail()));
       await tester.pumpAndSettle();
 
-      expect(find.text(l10n.kkBosBaslik), findsOneWidget);
+      expect(find.text('Banka'), findsOneWidget);
+      expect(find.text('Bonus ••5690'), findsOneWidget);
+      expect(find.text('Nakit'), findsNothing, reason: 'başka aile değil');
+      expect(find.byKey(const ValueKey('ctx-card-pay')), findsNothing);
+
+      await tester.tap(find.text('Bonus ••5690'));
+      final event = verify(() => bloc.add(captureAny())).captured.single
+          as SetActiveWalletEvent;
+      expect(event.walletId, 'card');
+      expect(event.announce, isFalse, reason: 'sekme değişimi sessiz');
+    });
+
+    testWidgets(
+        'kart bağlamında: durum şeridi (kalan dönem borcu + Öde) açılır; '
+        'hesaba dönüş sahibini aktif yapar', (tester) async {
+      emptyLedger();
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      final bank = _wallet('bank');
+      final card = bonusCard();
+      when(() => bloc.state).thenReturn(WalletLoadedSt([bank, card], card));
+      await tester.pumpWidget(app(const CardContextRail()));
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.kkKalanDonemBorcu), findsOneWidget);
+      expect(find.byKey(const ValueKey('ctx-card-pay')), findsOneWidget);
+
+      await tester.tap(find.text('Banka'));
+      final event = verify(() => bloc.add(captureAny())).captured.single
+          as SetActiveWalletEvent;
+      expect(event.walletId, 'bank');
+    });
+
+    testWidgets('360dp: uzun adlar ve iki kartla taşma yok', (tester) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      emptyLedger();
+      final bank = _wallet('bank', name: 'Çok uzun adlı maaş hesabı cüzdanı');
+      final card = bonusCard();
+      when(() => bloc.state).thenReturn(
+          WalletLoadedSt([bank, card, bonusCard(id: 'world')], card));
+      await tester.pumpWidget(app(const CardContextRail()));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('WalletCardStack', () {
+    Widget stack({
+      required List<WalletEntity> cards,
+      String? activeId,
+      ValueChanged<WalletEntity>? onTap,
+    }) =>
+        app(Padding(
+          padding: const EdgeInsets.all(16),
+          child: WalletCardStack(
+            cards: cards,
+            activeId: activeId,
+            onCardTap: onTap ?? (_) {},
+            onAdd: () {},
+          ),
+        ));
+
+    testWidgets(
+        'iki kart kapalı deste doğar; ilk dokunuş AÇAR (karta geçmez), '
+        'açıkken dokunuş karta geçer', (tester) async {
+      final tapped = <String>[];
+      await tester.pumpWidget(stack(
+        cards: [bonusCard(), bonusCard(id: 'world')],
+        onTap: (c) => tapped.add(c.id!),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('card-stack-closed')), findsOneWidget);
+      await tester.tap(find.text('Bonus'));
+      await tester.pumpAndSettle();
+      expect(tapped, isEmpty, reason: 'kapalı deste yalnız açılır');
+      expect(find.byKey(const ValueKey('card-stack-closed')), findsNothing);
+
+      await tester.tap(find.text('World'));
+      expect(tapped, ['world']);
+    });
+
+    testWidgets('aktif bağlam destedeki bir kartsa deste AÇIK doğar',
+        (tester) async {
+      await tester.pumpWidget(stack(
+        cards: [bonusCard(), bonusCard(id: 'world')],
+        activeId: 'world',
+      ));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('card-stack-closed')), findsNothing);
+    });
+
+    testWidgets('tek kartta deste yok, kart doğrudan dokunulabilir',
+        (tester) async {
+      final tapped = <String>[];
+      await tester.pumpWidget(
+          stack(cards: [bonusCard()], onTap: (c) => tapped.add(c.id!)));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('card-stack-toggle')), findsNothing);
+      await tester.tap(find.text('Bonus'));
+      expect(tapped, ['card']);
+    });
+
+    testWidgets('kartsız cüzdanda yalnız "Kart ekle"', (tester) async {
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      await tester.pumpWidget(stack(cards: const []));
       expect(find.text(l10n.kkKartEkle), findsOneWidget);
-      // Tek düz cüzdan varsa onu karta çevirme önerilmez.
-      expect(find.text(l10n.kkMevcutCevir), findsNothing);
+    });
+
+    testWidgets('hareket azaltma açıkken açılış anında biter', (tester) async {
+      await tester.pumpWidget(MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: stack(cards: [bonusCard(), bonusCard(id: 'world')]),
+      ));
+      await tester.tap(find.byKey(const ValueKey('card-stack-closed')));
+      await tester.pump();
+      expect(find.byKey(const ValueKey('card-stack-closed')), findsNothing);
+      expect(tester.hasRunningAnimations, isFalse);
     });
   });
 }

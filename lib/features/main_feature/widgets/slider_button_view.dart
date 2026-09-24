@@ -13,6 +13,7 @@ import 'package:cunehat/features/main_feature/factories/sub_view_factory.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/features/main_feature/utils/slider_peek_store.dart';
+import 'package:cunehat/features/wallet/domain/card_family.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -104,14 +105,24 @@ class _SliderButtonViewState extends State<SliderButtonView> {
       BuildContext context) {
     final activeWallet = walletState.activeWallet;
     if (activeWallet == null) return {};
+    // Aktif cüzdan bir kartsa birikim/borç eylemleri SAHİBİNE yazar (kartın
+    // yatırımı/borç kaydı olmaz); gelir/gider kartın kendisine.
+    final account = accountOf(activeWallet, walletState.wallets);
 
     return {
       for (final entry in MenuConfigs.configs.entries)
         entry.key: entry.value.miniButtons
-            .map((config) => _createMiniButton(config, context, activeWallet))
+            .map((config) => _createMiniButton(
+                  config,
+                  context,
+                  _isLedgerAction(config.actionType) ? activeWallet : account,
+                ))
             .toList(),
     };
   }
+
+  static bool _isLedgerAction(String actionType) =>
+      actionType == 'add_income' || actionType == 'add_expense';
 
   MiniButtonData _createMiniButton(
     MiniButtonConfig config,

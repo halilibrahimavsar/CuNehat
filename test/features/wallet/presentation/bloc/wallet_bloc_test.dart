@@ -3,6 +3,7 @@ import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/budgets/domain/usecases/delete_budget_usecase.dart';
 import 'package:cunehat/features/recurring_transactions/domain/usecases/delete_recurring_transaction_usecase.dart';
+import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_usecase.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
@@ -332,6 +333,34 @@ void main() {
 
   group('CreateWalletEvent', () {
     blocTest<WalletBloc, WalletState>(
+      'kredi kartı eklenince bildirim "kart eklendi" (cüzdan oluşturuldu değil)',
+      build: () {
+        final card = testInactiveWallet.copyWith(
+          creditCard: const CreditCardInfo(
+              closingDay: 15, dueDay: 25, paymentWalletId: 'wallet_active'),
+        );
+        when(() => mockCreateUseCase(card))
+            .thenAnswer((_) async => const Right('wallet_inactive'));
+        return walletBloc;
+      },
+      seed: () => WalletLoadedSt([testActiveWallet], testActiveWallet),
+      act: (bloc) => bloc.add(CreateWalletEvent(
+        testInactiveWallet.copyWith(
+          creditCard: const CreditCardInfo(
+              closingDay: 15, dueDay: 25, paymentWalletId: 'wallet_active'),
+        ),
+        activate: false,
+      )),
+      expect: () => [
+        WalletLoadedSt(
+          [testActiveWallet],
+          testActiveWallet,
+          messageType: WalletMessageType.cardCreated,
+        ),
+      ],
+    );
+
+    blocTest<WalletBloc, WalletState>(
       'emits WalletLoadedSt with messageType created when success',
       build: () {
         when(() => mockCreateUseCase(testInactiveWallet))
@@ -609,6 +638,31 @@ void main() {
   });
 
   group('SetActiveWalletEvent', () {
+    // Hesap ↔ kart geçişi aynı cüzdanın içinde sekme değişimidir: bildirim
+    // yok (şerit değişimi zaten gösteriyor).
+    blocTest<WalletBloc, WalletState>(
+      'announce:false → aktif yazılır ama "seçildi" bildirimi YAYILMAZ',
+      build: () {
+        when(() => mockSetActiveUseCase(
+              userId: 'user_123',
+              walletId: 'wallet_inactive',
+            )).thenAnswer((_) async => const Right(null));
+        return walletBloc;
+      },
+      seed: () => WalletLoadedSt(
+          [testActiveWallet, testInactiveWallet], testActiveWallet),
+      act: (bloc) => bloc.add(const SetActiveWalletEvent(
+        userId: 'user_123',
+        walletId: 'wallet_inactive',
+        announce: false,
+      )),
+      expect: () => <WalletState>[],
+      verify: (_) => verify(() => mockSetActiveUseCase(
+            userId: 'user_123',
+            walletId: 'wallet_inactive',
+          )).called(1),
+    );
+
     blocTest<WalletBloc, WalletState>(
       'emits loaded state with selected messageType when success',
       build: () {

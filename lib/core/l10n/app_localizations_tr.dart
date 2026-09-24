@@ -5172,7 +5172,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get kkKartEkle => 'Kart ekle';
 
   @override
-  String get kkMevcutCevir => 'Var olan bir cüzdanı karta çevir';
+  String get kkMevcutCevir =>
+      'Kartını şimdiye kadar ayrı bir cüzdanda mı tuttun? O cüzdanı kart yap';
 
   @override
   String get kkKurulumBaslik => 'Kredi kartı ekle';
@@ -5185,7 +5186,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get kkKurulumAciklama =>
-      'Kart ayrı bir cüzdan olur: harcamaları orada tutulur, bankadan karta ödeme transfer sayılır. Böylece hiçbir tutar iki kez sayılmaz.';
+      'Kart, bağlı olduğu cüzdanın içinde durur: harcamaları kartın kendi hesabında toplanır, karta yaptığın ödeme transfer sayılır. Böylece hiçbir tutar iki kez sayılmaz.';
 
   @override
   String get kkKartAdi => 'Kart adı';
@@ -5226,10 +5227,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kart uygulamasındaki güncel borç (taksitler dahil). Kartın açılış bakiyesi bu olur.';
 
   @override
-  String get kkOdemeCuzdani => 'Kartı hangi cüzdandan ödüyorsun?';
-
-  @override
-  String get kkSecilmedi => 'Seçilmedi';
+  String get kkOdemeCuzdani => 'Bağlı olduğu cüzdan';
 
   @override
   String get kkSonEkstre => 'Son ekstre (isteğe bağlı)';
@@ -5244,13 +5242,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get kkAsgariOdeme => 'Asgari ödeme';
-
-  @override
-  String get kkBosBaslik => 'Henüz kredi kartı yok';
-
-  @override
-  String get kkBosAciklama =>
-      'Kartını ekle; kesim ve son ödeme tarihlerini takip edelim, ödemeyi hatırlatalım.';
 
   @override
   String get kkKalanDonemBorcu => 'Kalan dönem borcu';
@@ -5297,9 +5288,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get kkEkstreBilgisi => 'Ekstre bilgisi';
 
   @override
-  String get kkHarcamalar => 'Harcamalar';
-
-  @override
   String get kkAyarlar => 'Ayarlar';
 
   @override
@@ -5330,11 +5318,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get kkKaydedildi => 'Kart bilgisi kaydedildi';
-
-  @override
-  String kkKartAktifOldu(String name) {
-    return '$name açıldı: harcamalarını buradan ekleyebilirsin.';
-  }
 
   @override
   String get kkSonrakiKesimEtiket => 'Sonraki kesim';
@@ -5387,9 +5370,43 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bankImportCardTargetNotCard =>
-      'Bu bir kredi kartı ekstresi ama hedef cüzdan kart değil: harcamalar yine gider yazılır, ancak kesim/son ödeme bilgisi saklanmaz. Kartı Borçlar → Kredi kartları\'ndan ekleyip ona aktarabilirsin.';
+      'Bu bir kredi kartı ekstresi ama hedef bir kart değil: harcamalar yine gider yazılır, ancak kesim/son ödeme bilgisi saklanmaz. Kartı Cüzdanlar\'da ilgili cüzdanın altına ekleyip ona aktarabilirsin.';
 
   @override
   String get bankImportDoneCardSaved =>
       'Kartın ekstre bilgisi güncellendi (dönem borcu, asgari, son ödeme).';
+
+  @override
+  String get kkOdemeYontemi => 'Nereden ödendi?';
+
+  @override
+  String get kkKartiSil => 'Kartı sil';
+
+  @override
+  String get kkDesteyiAc => 'Kartları göster';
+
+  @override
+  String get kkDesteyiKapat => 'Kartları topla';
+
+  @override
+  String get kkCevirAciklama =>
+      'Geçmişi ve bakiyesiyle birlikte kart olur; seçtiğin cüzdanın içine taşınır.';
+
+  @override
+  String get kkBagliCuzdanGerekli => 'Kartın bağlı olacağı cüzdanı seç.';
+
+  @override
+  String get kkBagliCuzdanAciklama =>
+      'Kart bu cüzdanın içinde görünür; \"Öde\" de varsayılan olarak buradan öder.';
+
+  @override
+  String kkCuzdanKartliSilinemez(String name, int count) {
+    return '$name cüzdanına bağlı $count kredi kartı var. Önce kartları sil ya da başka bir cüzdana bağla.';
+  }
+
+  @override
+  String get kkCuzdanaBagla => 'Bir cüzdana bağla';
+
+  @override
+  String get kkKartEklendi => 'Kredi kartı eklendi';
 }

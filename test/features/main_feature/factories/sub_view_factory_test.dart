@@ -67,5 +67,27 @@ void main() {
       final views = factory.createSubViewsForState('unknown');
       expect(views, isEmpty);
     });
+
+    // Aktif cüzdan bir KARTSA: işlem alt görünümleri kartın defteri, birikim
+    // ve borç alt görünümleri SAHİBİNİN (kartın yatırımı/borç kaydı olmaz).
+    test('kart bağlamında birikim/borç sahibe, içgörü/rapor karta gider', () {
+      const cardFactory = SubViewFactory(
+        userId: userId,
+        walletId: 'card',
+        walletCurrency: 'TRY',
+        accountWalletId: 'bank',
+        accountCurrency: 'EUR',
+      );
+      final inv = cardFactory.createSubViewsForState('savedMoney').single
+          as InvestmentHistoryPage;
+      expect(inv.walletId, 'bank');
+      final debt =
+          cardFactory.createSubViewsForState('debt').single as DebtHistoryPage;
+      expect(debt.walletId, 'bank');
+      expect(debt.walletCurrency, 'EUR');
+      final tx = cardFactory.createSubViewsForState('transactions');
+      expect((tx[0] as TransactionInsightsPage).walletId, 'card');
+      expect((tx[1] as TransactionReportPage).walletId, 'card');
+    });
   });
 }

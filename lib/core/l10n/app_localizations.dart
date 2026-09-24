@@ -9086,7 +9086,7 @@ abstract class AppLocalizations {
   /// No description provided for @kkMevcutCevir.
   ///
   /// In tr, this message translates to:
-  /// **'Var olan bir cüzdanı karta çevir'**
+  /// **'Kartını şimdiye kadar ayrı bir cüzdanda mı tuttun? O cüzdanı kart yap'**
   String get kkMevcutCevir;
 
   /// No description provided for @kkKurulumBaslik.
@@ -9110,7 +9110,7 @@ abstract class AppLocalizations {
   /// No description provided for @kkKurulumAciklama.
   ///
   /// In tr, this message translates to:
-  /// **'Kart ayrı bir cüzdan olur: harcamaları orada tutulur, bankadan karta ödeme transfer sayılır. Böylece hiçbir tutar iki kez sayılmaz.'**
+  /// **'Kart, bağlı olduğu cüzdanın içinde durur: harcamaları kartın kendi hesabında toplanır, karta yaptığın ödeme transfer sayılır. Böylece hiçbir tutar iki kez sayılmaz.'**
   String get kkKurulumAciklama;
 
   /// No description provided for @kkKartAdi.
@@ -9188,14 +9188,8 @@ abstract class AppLocalizations {
   /// No description provided for @kkOdemeCuzdani.
   ///
   /// In tr, this message translates to:
-  /// **'Kartı hangi cüzdandan ödüyorsun?'**
+  /// **'Bağlı olduğu cüzdan'**
   String get kkOdemeCuzdani;
-
-  /// No description provided for @kkSecilmedi.
-  ///
-  /// In tr, this message translates to:
-  /// **'Seçilmedi'**
-  String get kkSecilmedi;
 
   /// No description provided for @kkSonEkstre.
   ///
@@ -9220,18 +9214,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Asgari ödeme'**
   String get kkAsgariOdeme;
-
-  /// No description provided for @kkBosBaslik.
-  ///
-  /// In tr, this message translates to:
-  /// **'Henüz kredi kartı yok'**
-  String get kkBosBaslik;
-
-  /// No description provided for @kkBosAciklama.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kartını ekle; kesim ve son ödeme tarihlerini takip edelim, ödemeyi hatırlatalım.'**
-  String get kkBosAciklama;
 
   /// No description provided for @kkKalanDonemBorcu.
   ///
@@ -9305,12 +9287,6 @@ abstract class AppLocalizations {
   /// **'Ekstre bilgisi'**
   String get kkEkstreBilgisi;
 
-  /// No description provided for @kkHarcamalar.
-  ///
-  /// In tr, this message translates to:
-  /// **'Harcamalar'**
-  String get kkHarcamalar;
-
   /// No description provided for @kkAyarlar.
   ///
   /// In tr, this message translates to:
@@ -9364,12 +9340,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kart bilgisi kaydedildi'**
   String get kkKaydedildi;
-
-  /// No description provided for @kkKartAktifOldu.
-  ///
-  /// In tr, this message translates to:
-  /// **'{name} açıldı: harcamalarını buradan ekleyebilirsin.'**
-  String kkKartAktifOldu(String name);
 
   /// No description provided for @kkSonrakiKesimEtiket.
   ///
@@ -9452,7 +9422,7 @@ abstract class AppLocalizations {
   /// No description provided for @bankImportCardTargetNotCard.
   ///
   /// In tr, this message translates to:
-  /// **'Bu bir kredi kartı ekstresi ama hedef cüzdan kart değil: harcamalar yine gider yazılır, ancak kesim/son ödeme bilgisi saklanmaz. Kartı Borçlar → Kredi kartları\'ndan ekleyip ona aktarabilirsin.'**
+  /// **'Bu bir kredi kartı ekstresi ama hedef bir kart değil: harcamalar yine gider yazılır, ancak kesim/son ödeme bilgisi saklanmaz. Kartı Cüzdanlar\'da ilgili cüzdanın altına ekleyip ona aktarabilirsin.'**
   String get bankImportCardTargetNotCard;
 
   /// No description provided for @bankImportDoneCardSaved.
@@ -9460,6 +9430,66 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kartın ekstre bilgisi güncellendi (dönem borcu, asgari, son ödeme).'**
   String get bankImportDoneCardSaved;
+
+  /// No description provided for @kkOdemeYontemi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nereden ödendi?'**
+  String get kkOdemeYontemi;
+
+  /// No description provided for @kkKartiSil.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartı sil'**
+  String get kkKartiSil;
+
+  /// No description provided for @kkDesteyiAc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartları göster'**
+  String get kkDesteyiAc;
+
+  /// No description provided for @kkDesteyiKapat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartları topla'**
+  String get kkDesteyiKapat;
+
+  /// No description provided for @kkCevirAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçmişi ve bakiyesiyle birlikte kart olur; seçtiğin cüzdanın içine taşınır.'**
+  String get kkCevirAciklama;
+
+  /// No description provided for @kkBagliCuzdanGerekli.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartın bağlı olacağı cüzdanı seç.'**
+  String get kkBagliCuzdanGerekli;
+
+  /// No description provided for @kkBagliCuzdanAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart bu cüzdanın içinde görünür; \"Öde\" de varsayılan olarak buradan öder.'**
+  String get kkBagliCuzdanAciklama;
+
+  /// No description provided for @kkCuzdanKartliSilinemez.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} cüzdanına bağlı {count} kredi kartı var. Önce kartları sil ya da başka bir cüzdana bağla.'**
+  String kkCuzdanKartliSilinemez(String name, int count);
+
+  /// No description provided for @kkCuzdanaBagla.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir cüzdana bağla'**
+  String get kkCuzdanaBagla;
+
+  /// No description provided for @kkKartEklendi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kredi kartı eklendi'**
+  String get kkKartEklendi;
 }
 
 class _AppLocalizationsDelegate

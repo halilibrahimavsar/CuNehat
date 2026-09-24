@@ -11,6 +11,7 @@ import 'package:cunehat/core/utils/tr_case.dart';
 import 'package:cunehat/features/main_feature/utils/app_constants.dart';
 import 'package:cunehat/features/main_feature/widgets/wallet_headline.dart';
 import 'package:showcaseview/showcaseview.dart';
+import 'package:cunehat/features/wallet/domain/card_family.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_managment.dart';
@@ -199,22 +200,31 @@ class _AppBarContentState extends State<AppBarContent> {
       BuildContext context, WalletLoadedSt state, SliderState st) {
     double value = 0.0;
     String valueName = "";
+    final active = state.activeWallet;
+    // Aktif cüzdan bağlı bir KARTSA birikim/borç sahibinin verisidir (bkz.
+    // `card_family.dart`); rozet de kartı sahibinin içinde gösterir.
+    final account = active == null ? null : accountOf(active, state.wallets);
+    final shown = st == SliderState.transactions ? active : account;
 
-    if (state.activeWallet != null) {
+    if (active != null && account != null) {
       switch (st) {
         case SliderState.savedMoney:
-          value = state.activeWallet?.investment ?? 0.0;
+          value = account.investment;
           valueName = upperTr(context.l10n.drawerInvestment);
         case SliderState.transactions:
-          value = state.activeWallet?.balance ?? 0.0;
+          value = active.balance;
           valueName = upperTr(context.l10n.drawerBalance);
         case SliderState.debt:
-          value = state.activeWallet?.debt ?? 0.0;
+          value = account.debt;
           valueName = upperTr(context.l10n.drawerDebt);
       }
     }
 
-    final walletName = upperTr(state.activeWallet?.name ?? context.l10n.wallet);
+    final walletName = shown == null
+        ? upperTr(context.l10n.wallet)
+        : shown.id != account?.id
+            ? '${upperTr(account!.name)} › ${upperTr(shown.name)}'
+            : upperTr(shown.name);
 
     return Showcase(
       key: OnboardingKeys.appBarWalletArea,
@@ -245,7 +255,10 @@ class _AppBarContentState extends State<AppBarContent> {
                 ? walletName
                 : "$walletName • $valueName",
             amount: value,
-            currency: context.activeWalletCurrency,
+            currency: shown?.currency ?? context.activeWalletCurrency,
+            badgeIcon: (shown?.isCreditCard ?? false)
+                ? Icons.credit_card_rounded
+                : Icons.wallet,
             secondaryLine: _tryEquivalentLine(context, state, st, value),
           ),
         ),

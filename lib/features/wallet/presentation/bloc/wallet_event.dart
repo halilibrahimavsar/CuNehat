@@ -79,11 +79,16 @@ final class SetActiveWalletEvent extends WalletEvent {
   final String userId;
   final String walletId;
 
+  /// Başarıda "Cüzdan seçildi" bildirimi gösterilsin mi. Hesap ↔ kart
+  /// geçişi (aynı cüzdanın içinde sekme değiştirmek) sessizdir.
+  final bool announce;
+
   const SetActiveWalletEvent({
     required this.userId,
     required this.walletId,
+    this.announce = true,
   });
 
   @override
-  List<Object> get props => [userId, walletId];
+  List<Object> get props => [userId, walletId, announce];
 }

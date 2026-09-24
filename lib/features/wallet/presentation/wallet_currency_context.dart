@@ -48,6 +48,16 @@ extension ActiveWalletCurrencyX on BuildContext {
     }
   }
 
+  /// Yüklü tüm cüzdanlar (kartlar dahil); WalletBloc yoksa boş.
+  List<WalletEntity> get allWallets {
+    try {
+      final s = read<WalletBloc>().state;
+      return s is WalletLoadedSt ? s.wallets : const [];
+    } on ProviderNotFoundException {
+      return const [];
+    }
+  }
+
   /// id'ye göre cüzdan. Cüzdanlar-arası (global) listelerde — ör. düzenli
   /// işlem şablonları — kaydın ait olduğu cüzdanın adını/birimini göstermek
   /// için. Cüzdan bulunamazsa veya WalletBloc yüklü değilse null.

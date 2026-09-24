@@ -30,7 +30,11 @@ class WalletHeadline extends StatelessWidget {
     required this.currency,
     this.secondaryLine,
     this.maxHeight = AppSizes.appBarHeight,
+    this.badgeIcon = Icons.wallet,
   });
+
+  /// Rozetin ikonu; kredi kartı bağlamında kart ikonu.
+  final IconData badgeIcon;
 
   /// Rozetin yazısı: aktif cüzdanın adı (işlemler dışındaki durumlarda
   /// "AD • DEĞER ADI").
@@ -95,7 +99,7 @@ class WalletHeadline extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.wallet,
+          Icon(badgeIcon,
               size: 14, color: AppColors.white.withValues(alpha: 0.9)),
           const SizedBox(width: 8),
           Flexible(

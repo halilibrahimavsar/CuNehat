@@ -69,7 +69,9 @@ class TransactionSheetHandler {
                 final template = RecurringTransactionEntity(
                   id: UidGenerator.generateV7(),
                   userId: userId,
-                  walletId: walletId,
+                  // İşlemin KENDİ cüzdanı: formdaki ödeme yöntemi seçicisi
+                  // kaydı sahibinden bir karta (ya da tersi) yönlendirebilir.
+                  walletId: transaction.walletId,
                   title: transaction.title,
                   tag: transaction.tag,
                   amount: transaction.amount,

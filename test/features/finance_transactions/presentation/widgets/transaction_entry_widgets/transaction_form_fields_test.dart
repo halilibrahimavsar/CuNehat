@@ -596,4 +596,189 @@ void main() {
       expect(find.text(l10n.tekCekim), findsNothing);
     });
   });
+
+  // Kart cüzdanın İÇİNDE bir ödeme yöntemidir: kullanıcı karta "geçmeden"
+  // gider formunda "Nereden ödendi?" ile kartı seçer, kayıt kartın
+  // defterine gider (bkz. card_family.dart).
+  group('ödeme yöntemi: hesap ↔ bağlı kart', () {
+    WalletEntity w(String id,
+            {String name = 'Banka',
+            String currency = 'TRY',
+            CreditCardInfo? card}) =>
+        WalletEntity(
+          id: id,
+          userId: 'user_123',
+          name: name,
+          balance: 0,
+          debt: 0,
+          credit: 0,
+          investment: 0,
+          colorHex: '0xFF37474F',
+          iconName: card == null ? 'wallet' : 'credit_card',
+          createdAt: DateTime(2026, 1, 1),
+          openingBalance: 0,
+          currency: currency,
+          creditCard: card,
+        );
+
+    final bank = w('bank');
+    final bonus = w('bonus',
+        name: 'Bonus',
+        card: const CreditCardInfo(
+            closingDay: 15,
+            dueDay: 25,
+            last4: '5690',
+            paymentWalletId: 'bank'));
+
+    Future<void> pumpForm(
+      WidgetTester tester, {
+      required List<WalletEntity> wallets,
+      required String walletId,
+      TransactionEntity? initial,
+      void Function(TransactionEntity)? onSave,
+      void Function(List<TransactionEntity>)? onInstallments,
+    }) async {
+      tester.view.physicalSize = const Size(1080, 2600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      when(() => mockCategoryRepository.getCategories(true)).thenAnswer(
+        (_) async => [
+          const CategoryEntity(
+            id: 'Food',
+            name: 'Food',
+            iconName: 'fastfood',
+            isExpense: true,
+          ),
+        ],
+      );
+      final bloc = _MockWalletBloc();
+      when(() => bloc.state).thenReturn(
+          WalletLoadedSt(wallets, wallets.firstWhere((x) => x.id == walletId)));
+      await tester.pumpWidget(BlocProvider<WalletBloc>.value(
+        value: bloc,
+        child: buildTestableWidget(
+          TransactionFormSheet(
+            isExpense: true,
+            walletId: walletId,
+            userId: 'user_123',
+            initialTransaction: initial,
+            onSave: (t, _) => onSave?.call(t),
+            onSaveInstallments: (rows) => onInstallments?.call(rows),
+            onCancel: () {},
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> fillAndPickFood(WidgetTester tester) async {
+      await tester.enterText(
+          find.byWidgetPredicate(
+              (w) => w is TextField && w.keyboardType.decimal == true),
+          '900');
+      await tester.ensureVisible(find.text('Food'));
+      await tester.tap(find.text('Food'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets(
+        'hesaptan açılınca varsayılan hesap; karta dokununca taksit açılır ve '
+        'kayıt KARTIN defterine gider', (tester) async {
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      List<TransactionEntity>? rows;
+      await pumpForm(tester,
+          wallets: [bank, bonus],
+          walletId: 'bank',
+          onInstallments: (r) => rows = r);
+
+      expect(find.text(l10n.kkOdemeYontemi), findsOneWidget);
+      expect(find.text('Banka'), findsOneWidget);
+      expect(find.text('Bonus ••5690'), findsOneWidget);
+      expect(find.text(l10n.tekCekim), findsNothing,
+          reason: 'hesapta taksit yok');
+
+      await tester.tap(find.text('Bonus ••5690'));
+      await tester.pumpAndSettle();
+      await fillAndPickFood(tester);
+      await tester.ensureVisible(find.text(l10n.tekCekim));
+      await tester.tap(find.text(l10n.tekCekim));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(l10n.taksitSecenek(3)).last);
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Kaydet'));
+      await tester.tap(find.text('Kaydet'));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(rows, hasLength(3));
+      expect(rows!.every((t) => t.walletId == 'bonus'), isTrue);
+    });
+
+    testWidgets(
+        'karttan hesaba dönünce seçili taksit SIFIRLANIR; tek kayıt hesaba',
+        (tester) async {
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      TransactionEntity? saved;
+      List<TransactionEntity>? rows;
+      await pumpForm(tester,
+          wallets: [bank, bonus],
+          walletId: 'bonus',
+          onSave: (t) => saved = t,
+          onInstallments: (r) => rows = r);
+
+      await fillAndPickFood(tester);
+      await tester.ensureVisible(find.text(l10n.tekCekim));
+      await tester.tap(find.text(l10n.tekCekim));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(l10n.taksitSecenek(3)).last);
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Banka'));
+      await tester.tap(find.text('Banka'));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.taksitSecenek(3)), findsNothing);
+
+      await tester.ensureVisible(find.text('Kaydet'));
+      await tester.tap(find.text('Kaydet'));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(rows, isNull, reason: 'gizli taksit kayda sızmamalı');
+      expect(saved!.walletId, 'bank');
+      expect(saved!.amount, 900);
+    });
+
+    testWidgets(
+        'farklı birimdeki kart önerilmez; tek seçenek kalınca seçici '
+        'hiç görünmez', (tester) async {
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      final usdCard = w('usd',
+          name: 'Dolar Kart',
+          currency: 'USD',
+          card: const CreditCardInfo(
+              closingDay: 1, dueDay: 11, paymentWalletId: 'bank'));
+      await pumpForm(tester, wallets: [bank, usdCard], walletId: 'bank');
+      expect(find.text(l10n.kkOdemeYontemi), findsNothing);
+    });
+
+    testWidgets('düzenlemede seçici YOK (kayıt cüzdan değiştirmez)',
+        (tester) async {
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      await pumpForm(
+        tester,
+        wallets: [bank, bonus],
+        walletId: 'bank',
+        initial: TransactionEntity(
+          id: 't1',
+          userId: 'user_123',
+          walletId: 'bank',
+          title: 'Market',
+          tag: 'Food',
+          amount: 10,
+          date: DateTime(2026, 9, 1),
+          type: TransactionTypeModel.expense,
+        ),
+      );
+      expect(find.text(l10n.kkOdemeYontemi), findsNothing);
+    });
+  });
 }

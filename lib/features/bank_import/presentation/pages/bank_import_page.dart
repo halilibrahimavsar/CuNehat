@@ -18,6 +18,7 @@ import 'package:cunehat/features/bank_import/domain/statement_format.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state.dart';
 import 'package:cunehat/features/bank_import/presentation/pages/bank_import_mapping_view.dart';
 import 'package:cunehat/features/bank_import/presentation/pages/bank_import_review_view.dart';
+import 'package:cunehat/features/wallet/domain/card_family.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
@@ -227,8 +228,26 @@ class _SetupStepState extends State<_SetupStep> {
                 isExpanded: true,
                 value: _walletId,
                 items: [
-                  for (final w in wallets)
-                    DropdownMenuItem(value: w.id, child: Text(w.name)),
+                  // Kart, sahibinin hemen altında "Hesap › Kart" olarak:
+                  // kart ekstresi karta aktarılır (künye oraya yazılır).
+                  for (final w in walletsInFamilyOrder(wallets))
+                    DropdownMenuItem(
+                      value: w.id,
+                      child: Row(
+                        children: [
+                          if (w.isCreditCard) ...[
+                            const Icon(Icons.credit_card_rounded, size: 18),
+                            const SizedBox(width: 8),
+                          ],
+                          Expanded(
+                            child: Text(
+                              familyLabel(w, wallets),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
                 onChanged: (v) => setState(() => _walletId = v),
               ),

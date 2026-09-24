@@ -5,7 +5,10 @@ import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/config/feature_flags.dart';
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/credit_card/presentation/payment_method_selector.dart';
 import 'package:cunehat/features/finance_transactions/domain/installments.dart';
+import 'package:cunehat/features/wallet/domain/card_family.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
@@ -72,6 +75,7 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
       walletId: widget.walletId,
     );
     if (_isEdit) _c.initialize(widget.initialTransaction!);
+    _c.targetWalletId.addListener(_onTargetChanged);
 
     // Açılış animasyonu bitince işle: ne kategori yüklemesi ne de klavye
     // sheet yukarı kayarken devreye girsin (çakışma = takılma).
@@ -84,6 +88,13 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
         _routeAnimation = anim..addStatusListener(_onAnimStatus);
       }
     });
+  }
+
+  /// Hedef karttan hesaba dönünce seçili taksit gizli kalıp kayda sızmasın.
+  void _onTargetChanged() {
+    if (!_offersInstallments(context, _c.targetWalletId.value)) {
+      _c.installments.value = 1;
+    }
   }
 
   void _onAnimStatus(AnimationStatus status) {
@@ -116,6 +127,7 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
   @override
   void dispose() {
     _routeAnimation?.removeStatusListener(_onAnimStatus);
+    _c.targetWalletId.removeListener(_onTargetChanged);
     _amountFocus.dispose();
     _c.dispose();
     super.dispose();
@@ -175,7 +187,7 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
         : TransactionEntity(
             id: null,
             userId: widget.userId,
-            walletId: widget.walletId,
+            walletId: _c.targetWalletId.value,
             title: title,
             tag: _c.categoryId.value!,
             amount: _c.parsedAmount!,
@@ -196,13 +208,31 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
     widget.onSave(transaction, _c.recurringFrequency.value);
   }
 
-  /// Taksit seçici yalnız YENİ gider + kredi kartı cüzdanı + bayrak açıkken.
-  bool _offersInstallments(BuildContext context) =>
+  /// Taksit seçici yalnız YENİ gider + hedef kredi kartı + bayrak açıkken.
+  bool _offersInstallments(BuildContext context, String targetId) =>
       FeatureFlags.creditCards &&
       !_isEdit &&
       widget.isExpense &&
       widget.onSaveInstallments != null &&
-      (context.walletById(widget.walletId)?.isCreditCard ?? false);
+      (context.walletById(targetId)?.isCreditCard ?? false);
+
+  /// "Ödeme yöntemi" seçeneklerinin ailesi: formun açıldığı cüzdanın sahibi
+  /// + ona bağlı kartlar, AYNI birimde olanlar (tutar tek birimde yazılır).
+  /// Yalnız YENİ giderde ve bayrak açıkken; tek seçenek kalırsa boş.
+  List<WalletEntity> _paymentOptions(BuildContext context) {
+    if (!FeatureFlags.creditCards || _isEdit || !widget.isExpense) {
+      return const [];
+    }
+    final all = context.allWallets;
+    final start = all.where((w) => w.id == widget.walletId).firstOrNull;
+    if (start == null) return const [];
+    final owner = accountOf(start, all);
+    final family = [
+      owner,
+      ...cardsOf(owner.id, all),
+    ].where((w) => w.currency == start.currency).toList();
+    return family.length > 1 ? family : const [];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -253,6 +283,15 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (_paymentOptions(context) case final options
+                          when options.isNotEmpty) ...[
+                        PaymentMethodSelector(
+                          options: options,
+                          selected: _c.targetWalletId,
+                          accent: _accent,
+                        ),
+                        const SizedBox(height: 22),
+                      ],
                       _TitleField(controller: _c, accent: _accent),
                       const SizedBox(height: 22),
                       Showcase(
@@ -290,15 +329,31 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
                                   isEdit: _isEdit),
                         ),
                       ),
-                      if (_offersInstallments(context)) ...[
-                        const SizedBox(height: 12),
-                        _InstallmentRow(
-                          controller: _c,
-                          currency:
-                              context.walletById(widget.walletId)?.currency ??
-                                  context.activeWalletCurrency,
-                        ),
-                      ],
+                      ValueListenableBuilder<String>(
+                        valueListenable: _c.targetWalletId,
+                        builder: (context, targetId, _) {
+                          final offers = _offersInstallments(context, targetId);
+                          return AnimatedSize(
+                            duration: _disableAnimations(context)
+                                ? Duration.zero
+                                : const Duration(milliseconds: 260),
+                            curve: Curves.easeOutCubic,
+                            alignment: Alignment.topCenter,
+                            child: offers
+                                ? Padding(
+                                    padding: const EdgeInsets.only(top: 12),
+                                    child: _InstallmentRow(
+                                      controller: _c,
+                                      currency: context
+                                              .walletById(targetId)
+                                              ?.currency ??
+                                          context.activeWalletCurrency,
+                                    ),
+                                  )
+                                : const SizedBox(width: double.infinity),
+                          );
+                        },
+                      ),
                       const SizedBox(height: 20),
                       _ErrorBanner(controller: _c),
                       _SaveButton(
@@ -319,6 +374,9 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
     );
   }
 }
+
+bool _disableAnimations(BuildContext context) =>
+    MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 
 // ============================================================ Drag handle
 

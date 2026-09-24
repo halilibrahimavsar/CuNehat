@@ -126,8 +126,11 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
         (failure) async =>
             _emitError(emit, 'Cüzdan oluşturulamadı: ${failure.message}'),
         (newWalletId) async {
+          final created = event.wallet.isCreditCard
+              ? WalletMessageType.cardCreated
+              : WalletMessageType.created;
           if (!event.activate) {
-            _emitSuccess(emit, WalletMessageType.created);
+            _emitSuccess(emit, created);
             return;
           }
           final activeResult = await setActiveWalletUseCase.call(
@@ -136,7 +139,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
           );
           activeResult.fold(
             (f) => _emitError(emit, 'Aktif cüzdan ayarlanamadı: ${f.message}'),
-            (_) => _emitSuccess(emit, WalletMessageType.created),
+            (_) => _emitSuccess(emit, created),
           );
         },
       );
@@ -228,7 +231,9 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       result.fold(
         (failure) => _emitError(
             emit, 'Aktif cüzdan değiştirilemedi: ${failure.message}'),
-        (_) => _emitSuccess(emit, WalletMessageType.selected),
+        (_) {
+          if (event.announce) _emitSuccess(emit, WalletMessageType.selected);
+        },
       );
     });
   }

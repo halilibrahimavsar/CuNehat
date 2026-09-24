@@ -2834,11 +2834,11 @@
   "bankImportLinked": "Bağlandı",
   "kkSekme": "Kredi kartları",
   "kkKartEkle": "Kart ekle",
-  "kkMevcutCevir": "Var olan bir cüzdanı karta çevir",
+  "kkMevcutCevir": "Kartını şimdiye kadar ayrı bir cüzdanda mı tuttun? O cüzdanı kart yap",
   "kkKurulumBaslik": "Kredi kartı ekle",
   "kkCevirBaslik": "Kredi kartına çevir",
   "kkAyarlarBaslik": "Kart ayarları",
-  "kkKurulumAciklama": "Kart ayrı bir cüzdan olur: harcamaları orada tutulur, bankadan karta ödeme transfer sayılır. Böylece hiçbir tutar iki kez sayılmaz.",
+  "kkKurulumAciklama": "Kart, bağlı olduğu cüzdanın içinde durur: harcamaları kartın kendi hesabında toplanır, karta yaptığın ödeme transfer sayılır. Böylece hiçbir tutar iki kez sayılmaz.",
   "kkKartAdi": "Kart adı",
   "kkKartAdiIpucu": "ör. Bonus Kart",
   "kkKartAdiGerekli": "Kart adı gerekli.",
@@ -2851,8 +2851,7 @@
   "kkSonOdemeGunu": "Son ödeme günü",
   "kkGuncelBorc": "Şu anki toplam borç",
   "kkGuncelBorcAciklama": "Kart uygulamasındaki güncel borç (taksitler dahil). Kartın açılış bakiyesi bu olur.",
-  "kkOdemeCuzdani": "Kartı hangi cüzdandan ödüyorsun?",
-  "kkSecilmedi": "Seçilmedi",
+  "kkOdemeCuzdani": "Bağlı olduğu cüzdan",
   "kkSonEkstre": "Son ekstre (isteğe bağlı)",
   "kkSonEkstreAciklama": "{date} tarihli kesimin ekstresinden: dönem borcu ve asgari ödeme.",
   "@kkSonEkstreAciklama": {
@@ -2864,8 +2863,6 @@
   },
   "kkDonemBorcu": "Dönem borcu",
   "kkAsgariOdeme": "Asgari ödeme",
-  "kkBosBaslik": "Henüz kredi kartı yok",
-  "kkBosAciklama": "Kartını ekle; kesim ve son ödeme tarihlerini takip edelim, ödemeyi hatırlatalım.",
   "kkKalanDonemBorcu": "Kalan dönem borcu",
   "kkKalanAsgari": "Kalan asgari",
   "kkSonOdeme": "Son ödeme: {date}",
@@ -2906,7 +2903,6 @@
   },
   "kkOde": "Öde",
   "kkEkstreBilgisi": "Ekstre bilgisi",
-  "kkHarcamalar": "Harcamalar",
   "kkAyarlar": "Ayarlar",
   "kkEkstreGirilmedi": "Bu dönemin ekstresini girersen dönem borcu ve asgari bankanınkiyle birebir olur.",
   "kkDefterGuvenilmez": "Kart bu kesimden sonra eklendi; dönem borcunu ekstreden gir.",
@@ -2923,14 +2919,6 @@
   "kkSonOdemeTarihi": "Son ödeme tarihi",
   "kkEkstreSayfaAciklama": "Bankanın gönderdiği ekstredeki rakamlar. Kayıtlardan hesaplananla önceden doldurduk.",
   "kkKaydedildi": "Kart bilgisi kaydedildi",
-  "kkKartAktifOldu": "{name} açıldı: harcamalarını buradan ekleyebilirsin.",
-  "@kkKartAktifOldu": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "kkSonrakiKesimEtiket": "Sonraki kesim",
   "notifCardUpcomingTitle": "Kart son ödemesi yarın",
   "notifCardUpcomingBody": "{name} kartının dönem borcundan {amount} kaldı; son ödeme yarın.",
@@ -2978,6 +2966,26 @@
   "bankImportCardPeriod": "Kredi kartı dönem içi hareketleri",
   "bankImportCardSign": "Kart kuralı uygulandı: artı tutarlar harcama, eksiler ödeme/iade.",
   "bankImportCardSavesToWallet": "Aktarınca bu bilgiler kartın son ekstresi olarak kaydedilir.",
-  "bankImportCardTargetNotCard": "Bu bir kredi kartı ekstresi ama hedef cüzdan kart değil: harcamalar yine gider yazılır, ancak kesim/son ödeme bilgisi saklanmaz. Kartı Borçlar → Kredi kartları'ndan ekleyip ona aktarabilirsin.",
-  "bankImportDoneCardSaved": "Kartın ekstre bilgisi güncellendi (dönem borcu, asgari, son ödeme)."
+  "bankImportCardTargetNotCard": "Bu bir kredi kartı ekstresi ama hedef bir kart değil: harcamalar yine gider yazılır, ancak kesim/son ödeme bilgisi saklanmaz. Kartı Cüzdanlar'da ilgili cüzdanın altına ekleyip ona aktarabilirsin.",
+  "bankImportDoneCardSaved": "Kartın ekstre bilgisi güncellendi (dönem borcu, asgari, son ödeme).",
+  "kkOdemeYontemi": "Nereden ödendi?",
+  "kkKartiSil": "Kartı sil",
+  "kkDesteyiAc": "Kartları göster",
+  "kkDesteyiKapat": "Kartları topla",
+  "kkCevirAciklama": "Geçmişi ve bakiyesiyle birlikte kart olur; seçtiğin cüzdanın içine taşınır.",
+  "kkBagliCuzdanGerekli": "Kartın bağlı olacağı cüzdanı seç.",
+  "kkBagliCuzdanAciklama": "Kart bu cüzdanın içinde görünür; \"Öde\" de varsayılan olarak buradan öder.",
+  "kkCuzdanKartliSilinemez": "{name} cüzdanına bağlı {count} kredi kartı var. Önce kartları sil ya da başka bir cüzdana bağla.",
+  "kkCuzdanaBagla": "Bir cüzdana bağla",
+  "@kkCuzdanKartliSilinemez": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kkKartEklendi": "Kredi kartı eklendi"
 }
