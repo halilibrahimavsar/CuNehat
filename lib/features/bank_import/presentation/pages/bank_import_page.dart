@@ -509,6 +509,14 @@ class _Done extends StatelessWidget {
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleMedium,
             ),
+            if (state.cardStatementSaved) ...[
+              const SizedBox(height: 6),
+              Text(
+                context.l10n.bankImportDoneCardSaved,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
             if (state.corrected > 0) ...[
               const SizedBox(height: 6),
               Text(

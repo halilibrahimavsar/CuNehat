@@ -12,6 +12,8 @@ import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/text_search.dart';
 import 'package:cunehat/features/bank_import/data/balance_reconciler.dart';
 import 'package:cunehat/features/bank_import/data/description_grouper.dart';
+import 'package:cunehat/features/bank_import/data/card_statement_parser.dart';
+import 'package:cunehat/core/config/feature_flags.dart';
 import 'package:cunehat/features/bank_import/data/statement_verification.dart';
 import 'package:cunehat/features/bank_import/domain/import_draft.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit.dart';
@@ -243,6 +245,10 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
             const SizedBox(height: 10),
             _verificationBanner(context),
           ],
+          if (_s.cardFacts case final facts?) ...[
+            const SizedBox(height: 10),
+            _cardFactsBanner(context, facts),
+          ],
           if (_s.approximateSkippedCount > 0) ...[
             const SizedBox(height: 10),
             _approximateBanner(context, _s.approximateSkippedCount),
@@ -310,6 +316,68 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
   /// kayıt sayısı hiçbir satırın kaçmadığını, devreden/kapanış bakiyesi ve
   /// Borç/Alacak toplamları da bütünü doğrular. Kontrollerin dökümü
   /// gösterilir ki kullanıcı neye güvendiğini görebilsin.
+  /// Kart ekstresi künyesi: bankanın beyanı + uygulanan işaret kuralı.
+  Widget _cardFactsBanner(BuildContext context, CardStatementFacts facts) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    String money(double v) => formatMoney(v, currency: _currency);
+    final rows = <(String, String)>[
+      if (facts.closingDate case final d?)
+        (l10n.kkKesimTarihi, AppFormatters.dateShort.format(d)),
+      if (facts.dueDate case final d?)
+        (l10n.kkSonOdemeTarihi, AppFormatters.dateShort.format(d)),
+      if (facts.statementBalance case final v?) (l10n.kkDonemBorcu, money(v)),
+      if (facts.minimumPayment case final v?) (l10n.kkAsgariOdeme, money(v)),
+    ];
+    final title = facts.isClosedStatement
+        ? l10n.bankImportCardStatement
+        : l10n.bankImportCardPeriod;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: cs.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.credit_card_rounded, size: 18, color: cs.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  facts.last4 == null ? title : '$title · •••• ${facts.last4}',
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+          for (final (label, value) in rows)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Row(
+                children: [
+                  Expanded(
+                      child: Text(label, style: theme.textTheme.bodySmall)),
+                  Text(value,
+                      style: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.w700)),
+                ],
+              ),
+            ),
+          const SizedBox(height: 4),
+          Text(l10n.bankImportCardSign, style: theme.textTheme.bodySmall),
+          if (facts.isClosedStatement && _s.targetIsCard)
+            Text(l10n.bankImportCardSavesToWallet,
+                style: theme.textTheme.bodySmall),
+        ],
+      ),
+    );
+  }
+
   Widget _verificationBanner(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final v = _s.verification;
@@ -491,6 +559,9 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
           context.l10n.bankImportReconcileMismatch(rec.mismatchCount),
           cs.error,
         ),
+      if (_s.cardFacts != null && !_s.targetIsCard && FeatureFlags.creditCards)
+        _Warning(Icons.credit_card_off_rounded,
+            context.l10n.bankImportCardTargetNotCard, cs.error),
       if (_s.foreignCurrency case final foreign?)
         _Warning(
           Icons.currency_exchange_rounded,

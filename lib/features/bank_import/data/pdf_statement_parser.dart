@@ -6,6 +6,7 @@ import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:cunehat/features/bank_import/data/balance_reconciler.dart';
 import 'package:cunehat/features/bank_import/data/layout/layout_word.dart';
 import 'package:cunehat/features/bank_import/data/layout/statement_layout_engine.dart';
+import 'package:cunehat/features/bank_import/data/card_statement_parser.dart';
 import 'package:cunehat/features/bank_import/data/pdf_parsers/akbank_pdf_parser.dart';
 import 'package:cunehat/features/bank_import/data/pdf_parsers/default_heuristic_pdf_parser.dart';
 import 'package:cunehat/features/bank_import/data/pdf_parsers/garanti_pdf_parser.dart';
@@ -37,6 +38,10 @@ class PdfParseResult {
   /// satır-sezgisel yol kullanıldı (güvenilirlik daha düşük).
   final bool fromLayout;
 
+  /// Kredi kartı ekstresiyse bankanın künyesi (kesim, son ödeme, dönem
+  /// borcu, asgari, limit, son 4 hane); banka hesabı ekstresinde `null`.
+  final CardStatementFacts? cardFacts;
+
   const PdfParseResult(
     this.drafts,
     this.skippedLines,
@@ -44,6 +49,7 @@ class PdfParseResult {
     this.reconciliation,
     this.verification = StatementVerification.none,
     this.fromLayout = false,
+    this.cardFacts,
   });
 }
 
@@ -80,6 +86,10 @@ class PdfStatementParser {
   /// taranmış bir ekstre de aynı sütun mantığından geçer.
   PdfParseResult parseWords(List<LayoutWord> words) {
     final rawText = layoutTextFromWords(words);
+    // Kart ekstresi ÖNCE: işaret kuralı ters, tutar biçimi farklı ve künyesi
+    // var — genel sütun çözümlemesi üçünde de yanılıyordu.
+    final card = _card(rawText);
+    if (card != null) return card;
     final layout = analyzeStatementLayout(words);
     if (!layout.usable) return parseText(rawText);
     return _fromLayout(layout, rawText);
@@ -89,6 +99,8 @@ class PdfStatementParser {
   /// satır sezgisiyle taslaklara çevirir. Geometri kullanılabilir olmadığında
   /// (atipik düzen, kelime kutusu vermeyen kaynak) devreye girer.
   PdfParseResult parseText(String text) {
+    final card = _card(text);
+    if (card != null) return card;
     PdfParserStrategy? selectedStrategy;
     for (final strategy in _strategies) {
       if (strategy.canParse(text)) {
@@ -207,5 +219,17 @@ class PdfStatementParser {
       }
     }
     return words;
+  }
+
+  PdfParseResult? _card(String rawText) {
+    final card = parseCardStatement(rawText);
+    if (card == null || card.drafts.isEmpty) return null;
+    return PdfParseResult(
+      card.drafts,
+      card.skippedLines,
+      rawText,
+      verification: card.verification,
+      cardFacts: card.facts,
+    );
   }
 }

@@ -3,6 +3,8 @@ import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/system_activity_guard.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/bank_import/data/link_hint.dart';
+import 'package:cunehat/features/bank_import/data/card_statement_parser.dart';
+import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
 import 'package:cunehat/features/bank_import/data/category_guesser.dart';
 import 'package:cunehat/features/bank_import/data/column_mapper.dart';
 import 'package:cunehat/features/bank_import/data/draft_dedup.dart';
@@ -98,6 +100,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue((key: 'x', parentKey: null));
+    registerFallbackValue(_wallet(0));
     registerFallbackValue(
       TransactionEntity(
         id: 'x',
@@ -832,6 +835,94 @@ void main() {
           done.linkSuggestions.every((s) => !s.transaction.isSystem), isTrue);
       expect(
           done.linkSuggestions.every((s) => s.transaction.id != null), isTrue);
+    });
+  });
+
+  group('kart ekstresi künyesi', () {
+    final facts = CardStatementFacts(
+      closingDate: DateTime(2026, 8, 25),
+      dueDate: DateTime(2026, 9, 4),
+      statementBalance: 1750,
+      minimumPayment: 700,
+      limit: 50000,
+      last4: '4321',
+    );
+
+    WalletEntity cardWallet({CardStatement? statement}) => _wallet(0).copyWith(
+          creditCard: CreditCardInfo(
+            closingDay: 25,
+            dueDay: 4,
+            lastStatement: statement,
+          ),
+        );
+
+    test('hedef KART ise künye kartın son ekstresi olur (limit, son 4 dahil)',
+        () async {
+      final cubit = build();
+      when(() => walletRepo.getWalletById(any()))
+          .thenAnswer((_) async => Right(cardWallet()));
+      when(() => walletRepo.updateWallet(any()))
+          .thenAnswer((_) async => const Right(null));
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [_draft(DateTime(2026, 8, 10), 500)],
+        cardFacts: facts,
+      );
+
+      await cubit.commit();
+
+      final written = verify(() => walletRepo.updateWallet(captureAny()))
+          .captured
+          .single as WalletEntity;
+      final card = written.creditCard!;
+      expect(card.lastStatement!.closingDate, DateTime(2026, 8, 25));
+      expect(card.lastStatement!.dueDate, DateTime(2026, 9, 4));
+      expect(card.lastStatement!.statementBalance, 1750);
+      expect(card.lastStatement!.minimumPayment, 700);
+      expect(card.lastStatement!.source, CardStatementSource.bankImport);
+      expect(card.limit, 50000);
+      expect(card.last4, '4321');
+      expect((cubit.state as BankImportDone).cardStatementSaved, isTrue);
+    });
+
+    test('daha YENİ bir beyan varsa eski ekstre onu ezmez', () async {
+      final cubit = build();
+      when(() => walletRepo.getWalletById(any())).thenAnswer((_) async => Right(
+            cardWallet(
+              statement: CardStatement(
+                closingDate: DateTime(2026, 9, 25),
+                dueDate: DateTime(2026, 10, 5),
+                statementBalance: 900,
+                recordedAt: DateTime(2026, 9, 26),
+              ),
+            ),
+          ));
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [_draft(DateTime(2026, 8, 10), 500)],
+        cardFacts: facts,
+      );
+
+      await cubit.commit();
+
+      verifyNever(() => walletRepo.updateWallet(any()));
+      expect((cubit.state as BankImportDone).cardStatementSaved, isFalse);
+    });
+
+    test('hedef kart DEĞİLSE cüzdana dokunulmaz', () async {
+      final cubit = build();
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [_draft(DateTime(2026, 8, 10), 500)],
+        cardFacts: facts,
+      );
+
+      await cubit.commit();
+
+      verifyNever(() => walletRepo.updateWallet(any()));
     });
   });
 

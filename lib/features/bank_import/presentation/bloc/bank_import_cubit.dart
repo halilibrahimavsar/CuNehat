@@ -15,7 +15,10 @@ import 'package:cunehat/core/services/system_activity_guard.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/bank_import/data/balance_reconciler.dart';
+import 'package:cunehat/features/bank_import/data/card_statement_parser.dart';
 import 'package:cunehat/features/bank_import/data/category_guesser.dart';
+import 'package:cunehat/features/wallet/domain/card_cycle.dart';
+import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
 import 'package:cunehat/features/bank_import/data/link_hint.dart';
 import 'package:cunehat/features/bank_import/data/column_mapper.dart';
 import 'package:cunehat/features/bank_import/data/draft_dedup.dart';
@@ -105,6 +108,9 @@ class BankImportCubit extends Cubit<BankImportState>
   /// devreden/kapanış bakiyesi, Borç/Alacak toplamları) yapılan doğrulama.
   /// İnceleme ekranında "doğrulandı"/"doğrulanamadı" olarak gösterilir.
   StatementVerification _verification = StatementVerification.none;
+
+  /// Kart ekstresi künyesi (PDF yolu); banka ekstresinde `null`.
+  CardStatementFacts? _cardFacts;
 
   /// Ekstrede sezilen baskın para birimi (₺/$/€ ya da kod). Cüzdan biriminden
   /// farklıysa inceleme ekranında uyarı gösterilir; sinyal yoksa `null`.
@@ -201,6 +207,7 @@ class BankImportCubit extends Cubit<BankImportState>
     _walletId = walletId;
     _reconciliation = null;
     _verification = StatementVerification.none;
+    _cardFacts = null;
     _statementCurrency = null;
     _fromOcr = false;
     _lastTable = null;
@@ -373,6 +380,7 @@ class BankImportCubit extends Cubit<BankImportState>
   void _applyParseDiagnostics(PdfParseResult result) {
     _reconciliation = result.reconciliation;
     _verification = result.verification;
+    _cardFacts = result.cardFacts;
   }
 
   /// Biçim imzası için dosyanın ilk baytları. 512 bayt hem her imzayı hem de
@@ -398,6 +406,7 @@ class BankImportCubit extends Cubit<BankImportState>
     _lastMapping = null;
     _reconciliation = null;
     _verification = StatementVerification.none;
+    _cardFacts = null;
     _statementCurrency = null;
     unawaited(_discardSharedCopy());
     emit(const BankImportInitial());
@@ -765,6 +774,8 @@ class BankImportCubit extends Cubit<BankImportState>
     // yüzden tutarlar hep ₺ ile gösteriliyordu — USD/EUR cüzdanda yanlış).
     final wRes = await _metrics.walletRepository.getWalletById(_walletId);
     final walletCurrency = wRes.fold((_) => null, (w) => w?.currency);
+    final targetIsCard =
+        wRes.fold((_) => false, (w) => w?.isCreditCard ?? false);
 
     // Ekstre belirgin bir para birimi taşıyor ve bu hedef cüzdanınkinden
     // farklıysa ayrıca uyar (ör. USD ekstresi TRY cüzdana).
@@ -788,6 +799,8 @@ class BankImportCubit extends Cubit<BankImportState>
       fromOcr: _fromOcr,
       canRemap: _lastTable != null && _lastMapping != null,
       leftovers: _leftoversFor(drafts),
+      cardFacts: _cardFacts,
+      targetIsCard: targetIsCard,
     ));
   }
 
@@ -1180,6 +1193,10 @@ class BankImportCubit extends Cubit<BankImportState>
     }
     _lastCorrectedOriginals = originals;
 
+    // Künye bakiye senkronundan ÖNCE yazılır: senkron cüzdanı taze okuyup
+    // yazdığı için kart bilgisini ezmez; defter bildirimi de kart
+    // hatırlatmasını yeni son ödeme tarihiyle kurar.
+    final cardSaved = await _saveCardStatement();
     await _metrics.syncBalance(_walletId);
     _notifier.notify(userId: _userId, walletId: _walletId);
 
@@ -1190,7 +1207,38 @@ class BankImportCubit extends Cubit<BankImportState>
       corrected: originals.length,
       unresolvedLeftovers: s.leftovers.length,
       linkSuggestions: linkable,
+      cardStatementSaved: cardSaved,
     ));
+  }
+
+  /// Kapanmış kart ekstresinin künyesini hedef KART cüzdanının son ekstresi
+  /// olarak yazar (kesim, son ödeme, dönem borcu, asgari; limit ve eksikse son
+  /// 4 hane). Daha YENİ bir beyan zaten varsa eski ekstre onu ezmez.
+  Future<bool> _saveCardStatement() async {
+    final facts = _cardFacts;
+    if (facts == null || !facts.isClosedStatement) return false;
+    final wallet = (await _metrics.walletRepository.getWalletById(_walletId))
+        .fold((_) => null, (w) => w);
+    final card = wallet?.creditCard;
+    if (wallet == null || card == null) return false;
+    final closing = CardCycle.dateOnly(facts.closingDate!);
+    final existing = card.lastStatement;
+    if (existing != null && existing.closingDate.isAfter(closing)) return false;
+    final updated = wallet.copyWith(
+      creditCard: card.copyWith(
+        lastStatement: CardStatement(
+          closingDate: closing,
+          dueDate: facts.dueDate ?? CardCycle(card).dueFor(closing),
+          statementBalance: facts.statementBalance!,
+          minimumPayment: facts.minimumPayment,
+          source: CardStatementSource.bankImport,
+          recordedAt: DateTime.now(),
+        ),
+        limit: facts.limit,
+        last4: card.last4 ?? facts.last4,
+      ),
+    );
+    return (await _metrics.walletRepository.updateWallet(updated)).isRight();
   }
 
   /// Kullanıcının gider tarafındaki "Yatırım" kategorisi ve alt kategorileri
@@ -1283,9 +1331,11 @@ class BankImportCubit extends Cubit<BankImportState>
     List<CategoryEntity> expenseCategories = const [],
     List<CategoryEntity> incomeCategories = const [],
     List<TransactionEntity> ledger = const [],
+    CardStatementFacts? cardFacts,
   }) {
     _userId = userId;
     _walletId = walletId;
+    _cardFacts = cardFacts;
     _expenseCats = expenseCategories;
     _incomeCats = incomeCategories;
     _ledgerById = {
@@ -1312,6 +1362,7 @@ class BankImportCubit extends Cubit<BankImportState>
     int corrected = 0,
     int unresolvedLeftovers = 0,
     List<LinkSuggestion> linkSuggestions = const [],
+    bool cardStatementSaved = false,
   }) async {
     final walletRes = await _metrics.walletRepository.getWalletById(_walletId);
     final balance = walletRes.fold((_) => 0.0, (w) => w?.balance ?? 0.0);
@@ -1333,6 +1384,7 @@ class BankImportCubit extends Cubit<BankImportState>
       hasPastMonthRows: hasOutOfMonthRows,
       unresolvedLeftovers: unresolvedLeftovers,
       linkSuggestions: linkSuggestions,
+      cardStatementSaved: cardStatementSaved,
     );
   }
 }

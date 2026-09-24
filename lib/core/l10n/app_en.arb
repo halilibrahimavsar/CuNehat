@@ -2912,5 +2912,11 @@
         "type": "String"
       }
     }
-  }
+  },
+  "bankImportCardStatement": "Credit card statement",
+  "bankImportCardPeriod": "Credit card current-period transactions",
+  "bankImportCardSign": "Card rule applied: positive amounts are spending, negatives are payments/refunds.",
+  "bankImportCardSavesToWallet": "On import, these become the card's latest statement.",
+  "bankImportCardTargetNotCard": "This is a credit card statement but the target wallet isn't a card: spending is still recorded, but closing/due details aren't kept. Add the card under Debts → Credit cards and import into it.",
+  "bankImportDoneCardSaved": "The card's statement details were updated (balance, minimum, due date)."
 }

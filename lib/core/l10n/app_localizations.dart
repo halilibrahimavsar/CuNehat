@@ -9424,6 +9424,42 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Her ay {amount}; ilk taksit bu tarihte, sonrakiler her ay aynı gün.'**
   String taksitOzeti(String amount);
+
+  /// No description provided for @bankImportCardStatement.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kredi kartı ekstresi'**
+  String get bankImportCardStatement;
+
+  /// No description provided for @bankImportCardPeriod.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kredi kartı dönem içi hareketleri'**
+  String get bankImportCardPeriod;
+
+  /// No description provided for @bankImportCardSign.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart kuralı uygulandı: artı tutarlar harcama, eksiler ödeme/iade.'**
+  String get bankImportCardSign;
+
+  /// No description provided for @bankImportCardSavesToWallet.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aktarınca bu bilgiler kartın son ekstresi olarak kaydedilir.'**
+  String get bankImportCardSavesToWallet;
+
+  /// No description provided for @bankImportCardTargetNotCard.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu bir kredi kartı ekstresi ama hedef cüzdan kart değil: harcamalar yine gider yazılır, ancak kesim/son ödeme bilgisi saklanmaz. Kartı Borçlar → Kredi kartları\'ndan ekleyip ona aktarabilirsin.'**
+  String get bankImportCardTargetNotCard;
+
+  /// No description provided for @bankImportDoneCardSaved.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartın ekstre bilgisi güncellendi (dönem borcu, asgari, son ödeme).'**
+  String get bankImportDoneCardSaved;
 }
 
 class _AppLocalizationsDelegate

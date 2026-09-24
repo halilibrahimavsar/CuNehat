@@ -5403,4 +5403,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String taksitOzeti(String amount) {
     return '$amount a month; the first instalment on this date, the rest on the same day each month.';
   }
+
+  @override
+  String get bankImportCardStatement => 'Credit card statement';
+
+  @override
+  String get bankImportCardPeriod => 'Credit card current-period transactions';
+
+  @override
+  String get bankImportCardSign =>
+      'Card rule applied: positive amounts are spending, negatives are payments/refunds.';
+
+  @override
+  String get bankImportCardSavesToWallet =>
+      'On import, these become the card\'s latest statement.';
+
+  @override
+  String get bankImportCardTargetNotCard =>
+      'This is a credit card statement but the target wallet isn\'t a card: spending is still recorded, but closing/due details aren\'t kept. Add the card under Debts → Credit cards and import into it.';
+
+  @override
+  String get bankImportDoneCardSaved =>
+      'The card\'s statement details were updated (balance, minimum, due date).';
 }

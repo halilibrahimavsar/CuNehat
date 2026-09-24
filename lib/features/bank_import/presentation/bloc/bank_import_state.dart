@@ -1,4 +1,5 @@
 import 'package:cunehat/features/bank_import/data/balance_reconciler.dart';
+import 'package:cunehat/features/bank_import/data/card_statement_parser.dart';
 import 'package:cunehat/features/bank_import/data/category_guesser.dart';
 import 'package:cunehat/features/bank_import/data/column_mapper.dart';
 import 'package:cunehat/features/bank_import/data/link_hint.dart';
@@ -100,6 +101,12 @@ class BankImportReview extends BankImportState {
   /// taslaklardan yeniden hesaplanır.
   final List<LedgerLeftover> leftovers;
 
+  /// Kredi kartı ekstresiyse bankanın künyesi; banka ekstresinde `null`.
+  final CardStatementFacts? cardFacts;
+
+  /// Hedef cüzdan kredi kartı mı (künye aktarımda karta yazılır).
+  final bool targetIsCard;
+
   const BankImportReview({
     required this.drafts,
     required this.expenseCategories,
@@ -114,6 +121,8 @@ class BankImportReview extends BankImportState {
     this.fromOcr = false,
     this.canRemap = false,
     this.leftovers = const [],
+    this.cardFacts,
+    this.targetIsCard = false,
   });
 
   int get selectedCount => drafts.where((d) => d.selected).length;
@@ -190,6 +199,8 @@ class BankImportReview extends BankImportState {
         fromOcr: fromOcr,
         canRemap: canRemap,
         leftovers: leftovers ?? this.leftovers,
+        cardFacts: cardFacts,
+        targetIsCard: targetIsCard,
       );
 }
 
@@ -227,6 +238,9 @@ class BankImportDone extends BankImportState {
   /// bağlanmaya aday görünenler — yalnız öneri (bkz. `linkHintOf`).
   final List<LinkSuggestion> linkSuggestions;
 
+  /// Kart ekstresinin künyesi hedef kartın "son ekstresi" olarak yazıldı mı.
+  final bool cardStatementSaved;
+
   const BankImportDone({
     required this.added,
     this.corrected = 0,
@@ -237,6 +251,7 @@ class BankImportDone extends BankImportState {
     required this.hasPastMonthRows,
     this.unresolvedLeftovers = 0,
     this.linkSuggestions = const [],
+    this.cardStatementSaved = false,
   });
 }
 

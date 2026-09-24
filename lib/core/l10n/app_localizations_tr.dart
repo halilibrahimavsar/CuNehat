@@ -5370,4 +5370,26 @@ class AppLocalizationsTr extends AppLocalizations {
   String taksitOzeti(String amount) {
     return 'Her ay $amount; ilk taksit bu tarihte, sonrakiler her ay aynı gün.';
   }
+
+  @override
+  String get bankImportCardStatement => 'Kredi kartı ekstresi';
+
+  @override
+  String get bankImportCardPeriod => 'Kredi kartı dönem içi hareketleri';
+
+  @override
+  String get bankImportCardSign =>
+      'Kart kuralı uygulandı: artı tutarlar harcama, eksiler ödeme/iade.';
+
+  @override
+  String get bankImportCardSavesToWallet =>
+      'Aktarınca bu bilgiler kartın son ekstresi olarak kaydedilir.';
+
+  @override
+  String get bankImportCardTargetNotCard =>
+      'Bu bir kredi kartı ekstresi ama hedef cüzdan kart değil: harcamalar yine gider yazılır, ancak kesim/son ödeme bilgisi saklanmaz. Kartı Borçlar → Kredi kartları\'ndan ekleyip ona aktarabilirsin.';
+
+  @override
+  String get bankImportDoneCardSaved =>
+      'Kartın ekstre bilgisi güncellendi (dönem borcu, asgari, son ödeme).';
 }
