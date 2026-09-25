@@ -13,7 +13,6 @@ import 'package:cunehat/core/error/error_handling.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/services/csv_service.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
-import 'package:cunehat/core/utils/date_range_helper.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/budgets/domain/repositories/budget_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
@@ -933,25 +932,19 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                                     // dağılımı 1507dp'de, iki ekran aşağıdaydı. Sıra artık
                                     // kullanıcının sorduğu sırayla: ne oldu → nereye gitti →
                                     // bütçeyi aştım mı → eğilim ne → tam olarak nereye.
-                                    // Koşul BÜTÇE VARLIĞINA bakar, durum listesine değil:
-                                    // aralık bir ay olmadığında liste boş döner ama bölüm
-                                    // kaybolmamalı — kullanıcı bütçelerini silinmiş sanır.
-                                    // Kart o durumda sebebini yazar.
-                                    // Ay dışı aralıkta liste boştur ama kart sebebini
-                                    // yazar; ay içinde liste boşsa (tüm limitler 0) kart
-                                    // hiçbir şey çizmez — başlık da yetim kalmamalı.
-                                    if (_budgets.isNotEmpty &&
-                                        (derived.budgetStatuses.isNotEmpty ||
-                                            !DateRangeHelper.isSingleCalendarMonth(
-                                                _range))) ...[
+                                    // Bütçe limitleri aylık; dönem bir ay değilse limit
+                                    // döneme ORANTILANIR ve kart bunu yazar (bkz.
+                                    // [computeBudgetStatuses]). Liste boşsa (tüm limitler
+                                    // 0) başlık da çizilmez.
+                                    if (derived.budgetStatuses.isNotEmpty) ...[
                                       const SizedBox(height: 24),
                                       ReportSectionHeader(
                                           title: context.l10n.reportBudgetSummaryTitle),
                                       const SizedBox(height: 12),
                                       ReportBudgetSummaryCard(
                                         statuses: derived.budgetStatuses,
-                                        monthScoped:
-                                            DateRangeHelper.isSingleCalendarMonth(_range),
+                                        periodDays: _seriesService.dayCount(
+                                            _range.start, _range.end),
                                         onTap: _openBudgetCategory,
                                       ),
                                     ],

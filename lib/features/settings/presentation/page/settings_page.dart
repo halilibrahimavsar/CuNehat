@@ -1,3 +1,4 @@
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/period_settings_card.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
@@ -77,6 +78,13 @@ class SettingsPage extends StatelessWidget {
                     padding: EdgeInsets.symmetric(vertical: 4),
                     child: LanguageSelectorDropdown(),
                   ),
+                  const SizedBox(height: 24),
+                  // Dönem birimi (gün / hafta / 2 hafta / ay + başlangıç):
+                  // haftalık ya da maaş gününe göre ödeme alan kullanıcılar
+                  // için; İşlemler, İçgörü ve Rapor aynı birimi kullanır.
+                  SettingsHeader(title: context.l10n.settingsPeriodHeader),
+                  const SizedBox(height: 8),
+                  const PeriodSettingsCard(),
                   const SizedBox(height: 24),
                   SettingsHeader(title: context.l10n.security),
                   const SizedBox(height: 8),

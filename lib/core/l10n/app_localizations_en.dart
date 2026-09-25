@@ -4355,10 +4355,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportBudgetSummaryTitle => 'Budget status';
 
   @override
-  String get reportBudgetMonthlyOnly =>
-      'Budgets are monthly — pick a period covering a single month to see budget status';
-
-  @override
   String reportBudgetExceededCount(Object count, Object total) {
     return '$total of $count budgets exceeded';
   }
@@ -5883,4 +5879,63 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get txExpandAllDays => 'Expand all';
+
+  @override
+  String get periodSheetTitle => 'Period';
+
+  @override
+  String get periodUnitSection => 'PERIOD UNIT';
+
+  @override
+  String get periodUnitDay => 'Day';
+
+  @override
+  String get periodUnitWeek => 'Week';
+
+  @override
+  String get periodUnitBiweek => '2 Weeks';
+
+  @override
+  String get periodUnitMonth => 'Month';
+
+  @override
+  String get periodWeekStartLabel => 'Which day does the week start?';
+
+  @override
+  String get periodBiweekAnchorLabel => 'Payday';
+
+  @override
+  String get periodBiweekHint => 'Two-week periods are counted from this date.';
+
+  @override
+  String get periodMonthStartLabel => 'Which day does the month start?';
+
+  @override
+  String get periodMonthStartHint =>
+      'If you\'re paid on the 15th, pick 15: the period runs from the 15th to the 14th.';
+
+  @override
+  String periodCurrentPreview(String label) {
+    return 'This period: $label';
+  }
+
+  @override
+  String get periodQuickSection => 'QUICK RANGES';
+
+  @override
+  String get periodChooseDate => 'Choose';
+
+  @override
+  String get settingsPeriodHeader => 'Period';
+
+  @override
+  String reportBudgetProrated(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Monthly limits scaled to this $days-day period.',
+      one: 'Monthly limits scaled to this 1-day period.',
+    );
+    return '$_temp0';
+  }
 }

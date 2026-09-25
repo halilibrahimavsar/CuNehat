@@ -283,12 +283,12 @@ void main() {
       final rail = tester.getSize(find.byType(TransactionDayRail));
       expect(rail.height, lessThan(80), reason: 'eski takvim bloğu 374dp idi');
 
-      // Sekme şeridi kalktı, arama bir ikon oldu, "tümünü daralt" satırı
-      // eklendi (25 Eyl 2026, kullanıcı isteği). Ölçüldü: ilk kartın üst
-      // kenarı 312,7dp (sekmelerle 372,7; ondan önce 316,7). Sessizce
-      // büyümesin.
+      // Sekme şeridi kalktı, arama bir ikon oldu, "tümünü daralt" özet
+      // kartına ikon olarak girdi (25 Eyl 2026, kullanıcı isteği). Ölçüldü:
+      // ilk kartın üst kenarı 272,6dp (kendi satırıyken 312,7; sekmelerle
+      // 372,7). Sessizce büyümesin.
       final firstCard = tester.getRect(find.byType(TransactionCard).first);
-      expect(firstCard.top - page.top, lessThanOrEqualTo(313));
+      expect(firstCard.top - page.top, lessThanOrEqualTo(273));
 
       // En az bir işlem kartı ilk ekranda TAM görünmeli. Eski takvim
       // görünümünde seçili günün kartı y=609'da başlıyor, ikincisi sürgünün

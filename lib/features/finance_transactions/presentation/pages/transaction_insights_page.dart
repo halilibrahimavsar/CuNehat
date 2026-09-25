@@ -117,6 +117,15 @@ class _InsightsViewState extends State<_InsightsView> {
   static const _analytics = TransactionAnalyticsService();
   static const _detector = RecurringPatternDetector();
 
+  /// Seçili dönem kullanıcının biriminde bugünü içeren dönem mi?
+  bool _isCurrentUnitPeriod() {
+    final cubit = context.read<TransactionFilterCubit>();
+    final base = cubit.periodPreferences.periodContaining(DateTime.now());
+    return base.start == dayOf(_range.start) &&
+        isDayInRange(base.end, _range) &&
+        isDayInRange(_range.end, base);
+  }
+
   /// Dönem İşlemler ve Rapor ile ORTAK (bkz. `shared_period.dart`).
   DateTimeRange get _range => context.read<TransactionFilterCubit>().period;
 
@@ -310,7 +319,10 @@ class _InsightsViewState extends State<_InsightsView> {
         spikeMinimumAmount: noiseThresholdFor(currency),
         // Günlük harcama hedefi yalnız bütçe döneminde ("Bu Ay", "Bu Yıl")
         // dönemin son gününde de anlamlı.
-        rangeIsBudgetPeriod: DateRangeHelper.isBudgetPeriod(_range),
+        // Kullanıcının biriminde bugünü içeren dönem (ör. Çarşamba–Salı
+        // haftası, 15–14 ayı) de bir "bütçe dönemi"dir.
+        rangeIsBudgetPeriod: DateRangeHelper.isBudgetPeriod(_range) ||
+            _isCurrentUnitPeriod(),
         rootIndex: _categoryRoots,
         upcomingObligations: RecurringOccurrences.plannedExpenseTotal(
           templates,

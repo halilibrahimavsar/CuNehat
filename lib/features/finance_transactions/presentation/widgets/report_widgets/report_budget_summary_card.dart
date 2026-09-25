@@ -26,19 +26,14 @@ class ReportBudgetSummaryCard extends StatelessWidget {
 
   final void Function(BudgetStatus status) onTap;
 
-  /// Seçili aralık tam bir takvim ayı mı?
-  ///
-  /// Bütçe limitleri aylıktır; aralık bir ay değilken oran üretmek boyutsal
-  /// olarak yanlıştır. `false` iken kart RAKAM göstermez, sebebini söyler —
-  /// bölümü tamamen gizlemek kullanıcıya bütçelerini kaybettirmiş gibi
-  /// görünüyordu.
-  final bool monthScoped;
+  /// Dönemin gün sayısı (orantılama notunda yazılır).
+  final int periodDays;
 
   const ReportBudgetSummaryCard({
     super.key,
     required this.statuses,
     required this.onTap,
-    this.monthScoped = true,
+    this.periodDays = 0,
   });
 
   /// En fazla kaç satır listelenir. Tamamı zaten Bütçeler sayfasında.
@@ -49,8 +44,8 @@ class ReportBudgetSummaryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
-    if (!monthScoped) return _monthlyOnlyNote(context, theme, scheme);
     if (statuses.isEmpty) return const SizedBox.shrink();
+    final prorated = statuses.any((s) => s.prorated);
 
     final money = MoneyWriter.of(context);
 
@@ -92,6 +87,18 @@ class ReportBudgetSummaryCard extends StatelessWidget {
               ),
             ],
           ),
+          // Limitler aylık; dönem bir ay değilse orantılandığı SÖYLENİR.
+          if (prorated) ...[
+            const SizedBox(height: 4),
+            Text(
+              context.l10n.reportBudgetProrated(periodDays),
+              key: const ValueKey('budget-prorated-note'),
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 11,
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ],
           const SizedBox(height: 10),
           // Toplam: bütün bütçelerin tek çubuğu.
           _Bar(
@@ -132,32 +139,6 @@ class ReportBudgetSummaryCard extends StatelessWidget {
       ),
     );
   }
-
-  /// Aralık bir takvim ayı değil: oran yerine SEBEP.
-  Widget _monthlyOnlyNote(
-      BuildContext context, ThemeData theme, ColorScheme scheme) {
-    return AppCard(
-      section: AppSection.transactions,
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.calendar_month_rounded,
-              size: 18, color: scheme.onSurfaceVariant.withValues(alpha: 0.8)),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              context.l10n.reportBudgetMonthlyOnly,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-                height: 1.3,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 /// Aralığın bütçe durumları — harcama SEÇİLİ ARALIĞA göre hesaplanır
@@ -177,11 +158,12 @@ List<BudgetStatus> computeBudgetStatuses({
   required String Function(String tag) labelFor,
 }) {
   if (budgets.isEmpty) return const [];
-  // Limit AYLIK. Aralık bir takvim ayı değilse harcama/limit oranı
-  // boyutsal olarak yanlıştır: "Bu Yıl"da 12 aylık harcama 1 aylık limite
-  // bölünüyor ve rapor "%340 aşıldı" derken Bütçeler sayfası aynı anda
-  // "%28" diyordu. Kıyas yapılamıyorsa RAKAM üretilmez.
-  if (!DateRangeHelper.isSingleCalendarMonth(range)) return const [];
+  // Limit AYLIK. Aralık tam bir ay değilse limit döneme ORANTILANIR (gün
+  // sayısı / 30,44): haftalık ya da iki haftalık bakan kullanıcı bütçesini
+  // görmeye devam eder. Eskiden oran hiç üretilmiyordu ("Bu Yıl"da 12 aylık
+  // harcamayı 1 aylık limite bölmek "%340 aşıldı" diyordu — o hata hâlâ
+  // yok: yıl için limit 12 katına çıkar).
+  final factor = DateRangeHelper.monthlyLimitFactor(range);
 
   final spentByTag = <String, double>{};
   for (final root in expenseFull) {
@@ -199,7 +181,8 @@ List<BudgetStatus> computeBudgetStatuses({
           categoryId: budget.categoryId,
           label: labelFor(budget.categoryId),
           spent: spentByTag[budget.categoryId] ?? 0,
-          limit: budget.limitAmount,
+          limit: budget.limitAmount * factor,
+          prorated: factor != 1,
         ),
   ];
 }
@@ -215,11 +198,15 @@ class BudgetStatus {
   final double spent;
   final double limit;
 
+  /// [limit] aylık limitin döneme orantılanmış hâli mi?
+  final bool prorated;
+
   const BudgetStatus({
     required this.categoryId,
     required this.label,
     required this.spent,
     required this.limit,
+    this.prorated = false,
   });
 
   bool get isExceeded => spent > limit;

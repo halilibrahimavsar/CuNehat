@@ -105,6 +105,28 @@ class DateRangeHelper {
     return _isSameDay(range.end, lastDay);
   }
 
+  /// [range] TAM BİR AY uzunluğunda mı — ayın kaçında başlarsa başlasın
+  /// (15 Eyl → 14 Eki dahil)? Maaş gününe göre ay kullanan kişinin dönemi de
+  /// bir aydır; bütçe limiti orantılanmadan kullanılır.
+  static bool isMonthLength(DateTimeRange range) {
+    final start = range.start;
+    if (start.day > 28) return false;
+    return _isSameDay(
+        range.end, DateTime(start.year, start.month + 1, start.day - 1));
+  }
+
+  /// Aylık bir bütçe limitini [range]'e uyarlayan katsayı: tam bir ayda 1,
+  /// diğer aralıklarda gün sayısı / ortalama ay uzunluğu (30,4375).
+  static double monthlyLimitFactor(DateTimeRange range) {
+    if (isMonthLength(range)) return 1;
+    final days = DateTime.utc(range.end.year, range.end.month, range.end.day)
+            .difference(DateTime.utc(
+                range.start.year, range.start.month, range.start.day))
+            .inDays +
+        1;
+    return days / 30.4375;
+  }
+
   /// Aralık uçları seçiciden saat bilgisiyle gelebilir; karşılaştırma gün
   /// bazındadır.
   static bool _isSameDay(DateTime a, DateTime b) =>

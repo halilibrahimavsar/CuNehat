@@ -132,6 +132,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
   @override
   void initState() {
     super.initState();
+    applyStoredPeriodPreferences(context.read<TransactionFilterCubit>());
     context.read<TransactionFilterCubit>().bindWallet(widget.wallet.id);
     _syncStatementCycle();
     // Dışarıdan istenen dönem (ekstre içe aktarımı "Eklenenleri göster");
@@ -554,15 +555,26 @@ class _TransactionsViewState extends State<_TransactionsView> {
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
           child: PeriodTransition(
             periodStart: period.start,
-            child: TransactionSummaryStrip(
-              transactions: visible.map((e) => e.transaction).toList(),
-              mode: mode,
-              filter: filterState,
-              periodLabel: periodLabel(period, context.l10n),
-              onToday: periodHasToday
-                  ? null
-                  : () => cubit.setPeriod(currentPeriodLike(period)),
-              onModeChanged: cubit.setFinanceMode,
+            child: ListenableBuilder(
+              listenable: _collapse,
+              builder: (context, _) => TransactionSummaryStrip(
+                transactions: visible.map((e) => e.transaction).toList(),
+                mode: mode,
+                filter: filterState,
+                periodLabel: periodLabel(period, context.l10n),
+                onToday: periodHasToday
+                    ? null
+                    : cubit.jumpToToday,
+                onModeChanged: cubit.setFinanceMode,
+                // Tümünü daralt / genişlet: uzun bir dönemde gün başlıklarını
+                // tek tek kapatmak gerekiyordu. Tek günde anlamsız, gizlenir.
+                onToggleCollapseAll: days.length < 2
+                    ? null
+                    : () => _collapse.allCollapsed(days)
+                        ? _collapse.expandAll()
+                        : _collapse.collapseAll(days),
+                allDaysCollapsed: _collapse.allCollapsed(days),
+              ),
             ),
           ),
         ),
@@ -588,43 +600,6 @@ class _TransactionsViewState extends State<_TransactionsView> {
           ),
         ),
       ),
-      // Tümünü daralt / genişlet: uzun bir dönemde (ör. yıl) gün başlıklarını
-      // tek tek kapatmak gerekiyordu. Tek günde anlamsız, gizlenir.
-      if (days.length > 1)
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 8, 0),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: ListenableBuilder(
-                listenable: _collapse,
-                builder: (context, _) {
-                  final allClosed = _collapse.allCollapsed(days);
-                  return TextButton.icon(
-                    key: const ValueKey('tx-collapse-all'),
-                    style: TextButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                      foregroundColor:
-                          Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    onPressed: () => allClosed
-                        ? _collapse.expandAll()
-                        : _collapse.collapseAll(days),
-                    icon: Icon(
-                      allClosed
-                          ? Icons.unfold_more_rounded
-                          : Icons.unfold_less_rounded,
-                      size: 18,
-                    ),
-                    label: Text(allClosed
-                        ? context.l10n.txExpandAllDays
-                        : context.l10n.txCollapseAllDays),
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
       SliverPadding(
         padding: const EdgeInsets.fromLTRB(16, 2, 16, 28),
         sliver: TransactionLedgerSliver(

@@ -1,3 +1,5 @@
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
+import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_budget_summary_card.dart';
 import 'package:flutter/material.dart';
@@ -35,58 +37,82 @@ void main() {
     BudgetStatus(categoryId: 'm', label: 'Market', spent: 1200, limit: 1000),
   ];
 
-  testWidgets('aylık pencerede RAKAM gösterir', (tester) async {
+  testWidgets('tam ayda RAKAM gösterir, orantılama notu YOK', (tester) async {
     await tester.pumpWidget(host(ReportBudgetSummaryCard(
       statuses: statuses,
-      monthScoped: true,
       onTap: (_) {},
     )));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Market'), findsOneWidget);
-    expect(find.textContaining('aylıktır'), findsNothing);
+    expect(find.byKey(const ValueKey('budget-prorated-note')), findsNothing);
   });
 
-  testWidgets('ay olmayan aralıkta oran ÜRETMEZ, sebebini söyler',
+  testWidgets('ay olmayan dönemde limit orantılıdır ve kart bunu SÖYLER',
       (tester) async {
+    // Haftalık bakan kullanıcı bütçesini görmeye devam eder (eskiden kart
+    // yalnız "bütçeler aylıktır" diyordu).
     await tester.pumpWidget(host(ReportBudgetSummaryCard(
-      // Aralık ay değilse çağıran zaten boş liste verir; kart yine de
-      // sebebini söylemeli.
-      statuses: const [],
-      monthScoped: false,
+      statuses: const [
+        BudgetStatus(
+            categoryId: 'm',
+            label: 'Market',
+            spent: 200,
+            limit: 230,
+            prorated: true),
+      ],
+      periodDays: 7,
       onTap: (_) {},
     )));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('aylıktır'), findsOneWidget);
-    // Yanıltıcı bir yüzde ya da tutar KALMAMALI.
-    expect(find.textContaining('%'), findsNothing);
-    expect(find.textContaining('₺'), findsNothing);
+    expect(find.textContaining('Market'), findsOneWidget);
+    expect(find.text('Aylık limitler bu 7 günlük döneme orantılandı.'),
+        findsOneWidget);
   });
 
-  testWidgets('bölüm KAYBOLMAZ — kullanıcı bütçesini silinmiş sanmasın',
-      (tester) async {
-    // Kart, ay olmayan aralıkta `SizedBox.shrink()` döndürseydi rapor
-    // sayfasındaki "Bütçe durumu" başlığı altı bomboş kalırdı.
+  testWidgets('bütçe yokken hiç çizilmez', (tester) async {
     await tester.pumpWidget(host(ReportBudgetSummaryCard(
       statuses: const [],
-      monthScoped: false,
-      onTap: (_) {},
-    )));
-    await tester.pumpAndSettle();
-
-    expect(tester.getSize(find.byType(ReportBudgetSummaryCard)).height,
-        greaterThan(0));
-  });
-
-  testWidgets('bütçe yokken (aylık pencerede) hiç çizilmez', (tester) async {
-    await tester.pumpWidget(host(ReportBudgetSummaryCard(
-      statuses: const [],
-      monthScoped: true,
       onTap: (_) {},
     )));
     await tester.pumpAndSettle();
 
     expect(tester.getSize(find.byType(ReportBudgetSummaryCard)).height, 0);
+  });
+
+  group('computeBudgetStatuses', () {
+    CategoryData cat(String id, double total) =>
+        CategoryData(id, total, const [], const Color(0xFF000000));
+
+    test('tam ay (15–14 dahil) limiti OLDUĞU gibi kullanır', () {
+      for (final range in [
+        DateTimeRange(
+            start: DateTime(2026, 9, 1), end: DateTime(2026, 9, 30, 23, 59)),
+        DateTimeRange(
+            start: DateTime(2026, 9, 15), end: DateTime(2026, 10, 14, 23, 59)),
+      ]) {
+        final s = computeBudgetStatuses(
+          budgets: const [BudgetEntity(categoryId: 'm', limitAmount: 3000)],
+          expenseFull: [cat('m', 500)],
+          range: range,
+          labelFor: (t) => t,
+        ).single;
+        expect(s.limit, 3000);
+        expect(s.prorated, isFalse);
+      }
+    });
+
+    test('haftalık dönemde limit gün sayısıyla orantılanır', () {
+      final s = computeBudgetStatuses(
+        budgets: const [BudgetEntity(categoryId: 'm', limitAmount: 3043.75)],
+        expenseFull: [cat('m', 500)],
+        range: DateTimeRange(
+            start: DateTime(2026, 9, 23), end: DateTime(2026, 9, 29, 23, 59)),
+        labelFor: (t) => t,
+      ).single;
+      expect(s.limit, closeTo(700, 0.001)); // 3043,75 × 7 / 30,4375
+      expect(s.prorated, isTrue);
+    });
   });
 }

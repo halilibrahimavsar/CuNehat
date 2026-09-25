@@ -44,6 +44,14 @@ class TransactionSummaryStrip extends StatelessWidget {
   /// "gelirler"/"giderler" diyor.
   final ValueChanged<FinanceMode>? onModeChanged;
 
+  /// Verilirse işlem sayısının yanında "tümünü daralt / genişlet" ikonu
+  /// çizilir. Eskiden gün şeridinin altında kendi satırıydı (~40dp); ikon
+  /// listenin özetinin yanında ek satır tutmadan durur.
+  final VoidCallback? onToggleCollapseAll;
+
+  /// Listelenen bütün günler kapalı mı (ikonun yönü ve etiketi).
+  final bool allDaysCollapsed;
+
   const TransactionSummaryStrip({
     super.key,
     required this.transactions,
@@ -52,6 +60,8 @@ class TransactionSummaryStrip extends StatelessWidget {
     required this.periodLabel,
     this.onToday,
     this.onModeChanged,
+    this.onToggleCollapseAll,
+    this.allDaysCollapsed = false,
   });
 
   @override
@@ -248,6 +258,26 @@ class TransactionSummaryStrip extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
+        if (onToggleCollapseAll != null)
+          IconButton(
+            key: const ValueKey('tx-collapse-all'),
+            tooltip: allDaysCollapsed
+                ? context.l10n.txExpandAllDays
+                : context.l10n.txCollapseAllDays,
+            onPressed: onToggleCollapseAll,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            // Satır yüksekliğini BÜYÜTMESİN: varsayılan 48dp dokunma hedefi
+            // özet kartını 104dp'ye çıkarıyordu.
+            style: IconButton.styleFrom(
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 28),
+            iconSize: 20,
+            color: muted,
+            icon: Icon(allDaysCollapsed
+                ? Icons.unfold_more_rounded
+                : Icons.unfold_less_rounded),
+          ),
       ],
     );
   }

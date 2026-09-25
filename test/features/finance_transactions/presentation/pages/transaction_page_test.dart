@@ -1,3 +1,6 @@
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
+import 'package:cunehat/features/finance_transactions/domain/transaction_period.dart';
+import 'package:cunehat/features/finance_transactions/domain/period_preferences.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/features/main_feature/controllers/home_navigation_requests.dart';
@@ -869,12 +872,17 @@ void main() {
       await pumpPage(tester);
       expect(find.byType(TransactionCard), findsWidgets);
 
+      // Özet kartındaki ikon (ayrı satır değil).
       final toggle = find.byKey(const ValueKey('tx-collapse-all'));
-      expect(find.text('Tümünü daralt'), findsOneWidget);
+      expect(
+          find.descendant(
+              of: find.byType(TransactionSummaryStrip), matching: toggle),
+          findsOneWidget);
+      expect(find.byTooltip('Tümünü daralt'), findsOneWidget);
       await tester.tap(toggle);
       await tester.pumpAndSettle();
       expect(find.byType(TransactionCard), findsNothing);
-      expect(find.text('Tümünü genişlet'), findsOneWidget);
+      expect(find.byTooltip('Tümünü genişlet'), findsOneWidget);
 
       await tester.tap(toggle);
       await tester.pumpAndSettle();
@@ -885,6 +893,40 @@ void main() {
       seed([txMarket]);
       await pumpPage(tester);
       expect(find.byKey(const ValueKey('tx-collapse-all')), findsNothing);
+    });
+  });
+
+  group('dönem birimi', () {
+    testWidgets(
+        'dönem sayfasından Hafta + Çarşamba seçilince çubuk o haftayı gösterir',
+        (tester) async {
+      seed([txMarket, txFatura]);
+      await pumpPage(tester);
+
+      await tester.tap(find.text(periodLabel(
+          monthRangeOf(DateTime.now()),
+          lookupAppLocalizations(const Locale('tr')))));
+      await tester.pumpAndSettle();
+      expect(find.text('Dönem'), findsOneWidget);
+
+      await tester.tap(find.text('Hafta'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('week-start-3')));
+      await tester.pumpAndSettle();
+
+      const prefs = PeriodPreferences(
+          unit: PeriodUnit.week, weekStart: DateTime.wednesday);
+      final expected = periodLabel(prefs.periodContaining(DateTime.now()),
+          lookupAppLocalizations(const Locale('tr')));
+      // Önizleme ve (sayfa kapanınca) dönem çubuğu aynı haftayı söyler.
+      expect(find.text('Bu dönem: $expected'), findsOneWidget);
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+      expect(
+          find.descendant(
+              of: find.byType(TransactionPeriodBar),
+              matching: find.text(expected)),
+          findsOneWidget);
     });
   });
 }

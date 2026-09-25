@@ -4332,10 +4332,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get reportBudgetSummaryTitle => 'Bütçe durumu';
 
   @override
-  String get reportBudgetMonthlyOnly =>
-      'Bütçeler aylıktır — bütçe durumu için tek bir ayı kapsayan dönem seçin';
-
-  @override
   String reportBudgetExceededCount(Object count, Object total) {
     return '$count bütçeden $total tanesi aşıldı';
   }
@@ -5841,4 +5837,58 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get txExpandAllDays => 'Tümünü genişlet';
+
+  @override
+  String get periodSheetTitle => 'Dönem';
+
+  @override
+  String get periodUnitSection => 'DÖNEM BİRİMİ';
+
+  @override
+  String get periodUnitDay => 'Gün';
+
+  @override
+  String get periodUnitWeek => 'Hafta';
+
+  @override
+  String get periodUnitBiweek => '2 Hafta';
+
+  @override
+  String get periodUnitMonth => 'Ay';
+
+  @override
+  String get periodWeekStartLabel => 'Hafta hangi gün başlasın?';
+
+  @override
+  String get periodBiweekAnchorLabel => 'Ödeme günü';
+
+  @override
+  String get periodBiweekHint =>
+      'İki haftalık dönemler bu tarihten itibaren sayılır.';
+
+  @override
+  String get periodMonthStartLabel => 'Ay, ayın kaçında başlasın?';
+
+  @override
+  String get periodMonthStartHint =>
+      'Maaşın 15\'inde yatıyorsa 15 seç: dönem 15\'i ile ertesi ayın 14\'ü olur.';
+
+  @override
+  String periodCurrentPreview(String label) {
+    return 'Bu dönem: $label';
+  }
+
+  @override
+  String get periodQuickSection => 'HAZIR ARALIKLAR';
+
+  @override
+  String get periodChooseDate => 'Seç';
+
+  @override
+  String get settingsPeriodHeader => 'Dönem';
+
+  @override
+  String reportBudgetProrated(int days) {
+    return 'Aylık limitler bu $days günlük döneme orantılandı.';
+  }
 }

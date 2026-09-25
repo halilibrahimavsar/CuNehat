@@ -1,3 +1,4 @@
+import 'package:cunehat/features/finance_transactions/domain/period_preferences.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/transaction_period.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
@@ -53,6 +54,37 @@ class TransactionFilterCubit extends Cubit<CombinedFilter> {
   /// Seçili dönem etkin kartın bir ekstre dönemi mi?
   bool get isStatementPeriod => _isStatementOf(_cycle, period);
 
+  /// Kullanıcının dönem birimi (gün / hafta / 2 hafta / ay + başlangıç).
+  PeriodPreferences _unitPrefs = PeriodPreferences.calendarMonth;
+
+  PeriodPreferences get periodPreferences => _unitPrefs;
+
+  /// İçinde bulunulan "varsayılan" dönem: kart bağlamında ekstre, değilse
+  /// kullanıcının biriminde bugünü içeren dönem.
+  DateTimeRange basePeriod({DateTime? now}) =>
+      currentStatementPeriod(now: now) ??
+      _unitPrefs.periodContaining(now ?? DateTime.now());
+
+  /// Dönem tercihi değişti (ayar ya da dönem sayfası). Varsayılan dönemdeyken
+  /// yeni birimin içinde bulunulan dönemine geçilir; kullanıcının seçtiği
+  /// özel bir aralığa DOKUNULMAZ.
+  void usePeriodPreferences(PeriodPreferences prefs) {
+    if (prefs == _unitPrefs) return;
+    final wasDefault = isDefaultPeriod;
+    _unitPrefs = prefs;
+    if (wasDefault) setPeriod(basePeriod());
+  }
+
+  /// "Bugüne dön": birim döneminde bugünün birim dönemi, özel aralıkta aynı
+  /// uzunlukta bugünde biten pencere ([currentPeriodLike]).
+  void jumpToToday() {
+    if (isStatementPeriod || _unitPrefs.isUnitPeriod(period)) {
+      setPeriod(basePeriod());
+    } else {
+      setPeriod(currentPeriodLike(period));
+    }
+  }
+
   /// Süzgecin bağlı olduğu cüzdan (bkz. [bindWallet]).
   String? _walletId;
 
@@ -84,7 +116,7 @@ class TransactionFilterCubit extends Cubit<CombinedFilter> {
     final wasDefault = isDefaultPeriod || _isStatementOf(_cycle, period);
     _cycle = next;
     if (!wasDefault) return;
-    setPeriod(currentStatementPeriod() ?? monthRangeOf(DateTime.now()));
+    setPeriod(basePeriod());
   }
 
   /// Varsayılan görünüm: içinde bulunulan ay, karşılaştırma modu, filtresiz.
@@ -109,7 +141,7 @@ class TransactionFilterCubit extends Cubit<CombinedFilter> {
   /// görünürlüğü buna da bakar; yoksa yalnız tarihi değiştiren kullanıcının
   /// geri dönüş yolu kalmıyordu.
   bool get isDefaultPeriod {
-    final base = currentStatementPeriod() ?? monthRangeOf(DateTime.now());
+    final base = basePeriod();
     return isSameDayValue(state.viewFilter.startDate, base.start) &&
         isSameDayValue(state.viewFilter.endDate, base.end);
   }
@@ -155,6 +187,12 @@ class TransactionFilterCubit extends Cubit<CombinedFilter> {
     if (cycle != null && isStatementPeriod) {
       final closing = cycle.shiftClosing(dayOf(period.end), step);
       setPeriod(_toRange(cycle.periodEndingAt(closing)));
+      return;
+    }
+    // Birim dönemindeyse (ör. Çarşamba–Salı haftası, 15–14 ayı) BİRİMLE
+    // kayar; hızlı menüden seçilmiş özel aralıklar eski kurala göre.
+    if (_unitPrefs.isUnitPeriod(period)) {
+      setPeriod(_unitPrefs.step(period, step));
       return;
     }
     setPeriod(shiftPeriod(period, step));
@@ -208,12 +246,12 @@ class TransactionFilterCubit extends Cubit<CombinedFilter> {
   /// "şu an giderlere bakıyorum" bağlamı bir temizleme eylemiyle kaybolmamalı.
   void clearAll() {
     final defaults = createDefaultFilter();
-    final statement = currentStatementPeriod();
+    final base = basePeriod();
     emit(CombinedFilter(
       viewFilter: defaults.viewFilter.copyWith(
         financeMode: state.viewFilter.financeMode,
-        startDate: statement?.start,
-        endDate: statement?.end,
+        startDate: base.start,
+        endDate: base.end,
       ),
       dataFilter: defaults.dataFilter,
     ));

@@ -2362,7 +2362,6 @@
     }
   },
   "reportBudgetSummaryTitle": "Budget status",
-  "reportBudgetMonthlyOnly": "Budgets are monthly — pick a period covering a single month to see budget status",
   "reportBudgetExceededCount": "{total} of {count} budgets exceeded",
   "@reportBudgetExceededCount": {
     "placeholders": {
@@ -3262,5 +3261,35 @@
   "filterReceiptChip": "With receipt",
   "filterImportedChip": "From statement",
   "txCollapseAllDays": "Collapse all",
-  "txExpandAllDays": "Expand all"
+  "txExpandAllDays": "Expand all",
+  "periodSheetTitle": "Period",
+  "periodUnitSection": "PERIOD UNIT",
+  "periodUnitDay": "Day",
+  "periodUnitWeek": "Week",
+  "periodUnitBiweek": "2 Weeks",
+  "periodUnitMonth": "Month",
+  "periodWeekStartLabel": "Which day does the week start?",
+  "periodBiweekAnchorLabel": "Payday",
+  "periodBiweekHint": "Two-week periods are counted from this date.",
+  "periodMonthStartLabel": "Which day does the month start?",
+  "periodMonthStartHint": "If you're paid on the 15th, pick 15: the period runs from the 15th to the 14th.",
+  "periodCurrentPreview": "This period: {label}",
+  "@periodCurrentPreview": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "periodQuickSection": "QUICK RANGES",
+  "periodChooseDate": "Choose",
+  "settingsPeriodHeader": "Period",
+  "reportBudgetProrated": "{days, plural, =1{Monthly limits scaled to this 1-day period.} other{Monthly limits scaled to this {days}-day period.}}",
+  "@reportBudgetProrated": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  }
 }

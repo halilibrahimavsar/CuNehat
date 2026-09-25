@@ -2383,7 +2383,6 @@
     }
   },
   "reportBudgetSummaryTitle": "Bütçe durumu",
-  "reportBudgetMonthlyOnly": "Bütçeler aylıktır — bütçe durumu için tek bir ayı kapsayan dönem seçin",
   "reportBudgetExceededCount": "{count} bütçeden {total} tanesi aşıldı",
   "@reportBudgetExceededCount": {
     "placeholders": {
@@ -3398,5 +3397,35 @@
   "filterReceiptChip": "Fişli",
   "filterImportedChip": "Ekstreden",
   "txCollapseAllDays": "Tümünü daralt",
-  "txExpandAllDays": "Tümünü genişlet"
+  "txExpandAllDays": "Tümünü genişlet",
+  "periodSheetTitle": "Dönem",
+  "periodUnitSection": "DÖNEM BİRİMİ",
+  "periodUnitDay": "Gün",
+  "periodUnitWeek": "Hafta",
+  "periodUnitBiweek": "2 Hafta",
+  "periodUnitMonth": "Ay",
+  "periodWeekStartLabel": "Hafta hangi gün başlasın?",
+  "periodBiweekAnchorLabel": "Ödeme günü",
+  "periodBiweekHint": "İki haftalık dönemler bu tarihten itibaren sayılır.",
+  "periodMonthStartLabel": "Ay, ayın kaçında başlasın?",
+  "periodMonthStartHint": "Maaşın 15'inde yatıyorsa 15 seç: dönem 15'i ile ertesi ayın 14'ü olur.",
+  "periodCurrentPreview": "Bu dönem: {label}",
+  "@periodCurrentPreview": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "periodQuickSection": "HAZIR ARALIKLAR",
+  "periodChooseDate": "Seç",
+  "settingsPeriodHeader": "Dönem",
+  "reportBudgetProrated": "Aylık limitler bu {days} günlük döneme orantılandı.",
+  "@reportBudgetProrated": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  }
 }

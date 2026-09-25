@@ -289,11 +289,10 @@ void main() {
   });
 
   group('budgetProgressFor — aylık limit, aylık pencere', () {
-    // Limit AYLIKTIR. Aralık bir takvim ayı değilken "dönem harcaması /
-    // aylık limit" boyutsal olarak yanlış: "Bu Yıl"da 12 ayın harcaması
-    // 1 aylık limite bölünüyor ve rapor "%340 aşıldı" derken Bütçeler
-    // sayfası aynı anda "%28" diyordu. Kıyas yapılamıyorsa çubuk hiç
-    // çizilmez — yanlış bir çubuk, çubuğun yokluğundan kötüdür.
+    // Limit AYLIKTIR. Aralık tam bir ay değilken limit döneme orantılanır
+    // (gün / 30,4375): "Bu Yıl"da 12 ayın harcaması 1 aylık limite
+    // bölünüp "%340 aşıldı" denen eski hata böylece dönmez, haftalık bakan
+    // kullanıcı da bütçesini görür.
     ReportCategoryDataBuilder builderFor(DateTimeRange range) =>
         ReportCategoryDataBuilder(
           range: range,
@@ -316,23 +315,28 @@ void main() {
       expect(progress.isExceeded, isFalse);
     });
 
-    test('yıl aralığında oran ÜRETİLMEZ (null)', () {
+    test('yıl aralığında limit 12 aya ORANTILANIR (%340 hatası dönmez)', () {
+      // 2026 = 365 gün → 1000 × 365 / 30,4375 ≈ 11.992 ₺. 12.000 ₺ harcama
+      // limitin yaklaşık tamamı; eski hata "1 aylık limitin %1200'ü" derdi.
       final progress = builderFor(DateTimeRange(
         start: DateTime(2026, 1, 1),
         end: DateTime(2026, 12, 31),
-      )).budgetProgressFor('m', 12000);
+      )).budgetProgressFor('m', 11000);
 
-      expect(progress, isNull,
-          reason: '12 aylık harcama 1 aylık limite bölündü');
+      expect(progress, isNotNull);
+      expect(progress!.limit, closeTo(1000 * 365 / 30.4375, 0.01));
+      expect(progress.isExceeded, isFalse);
     });
 
-    test('ay olmayan kısa pencerede de üretilmez', () {
+    test('haftalık pencerede limit 7 güne orantılanır', () {
       final progress = builderFor(DateTimeRange(
         start: DateTime(2026, 9, 1),
         end: DateTime(2026, 9, 7),
       )).budgetProgressFor('m', 300);
 
-      expect(progress, isNull);
+      expect(progress, isNotNull);
+      expect(progress!.limit, closeTo(1000 * 7 / 30.4375, 0.01));
+      expect(progress.isExceeded, isTrue); // 300 > ~230
     });
   });
 }

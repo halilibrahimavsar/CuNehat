@@ -1,10 +1,10 @@
+import 'package:intl/intl.dart';
 import 'package:cunehat/core/shared/motion/app_motion.dart';
 import 'dart:math' as math;
 
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
-import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/money_text.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
@@ -98,6 +98,18 @@ List<LedgerDayGroup> groupLedgerByDay(
         );
       }(),
   ];
+}
+
+/// Gün başlığının metni: gün ADI dahil ("24 Eylül Çarşamba"). Eskiden
+/// yalnız tarih yazıyordu; "hangi gün alışveriş yapmışım" sorusu ikinci bir
+/// hesap gerektiriyordu. Yıl yalnız içinde bulunulan yıldan farklıysa yazılır:
+/// her başlıkta aynı yılı tekrarlamak yer kaplıyordu.
+String dayHeaderLabel(DateTime day, {DateTime? now}) {
+  final locale = Intl.defaultLocale;
+  final thisYear = (now ?? DateTime.now()).year;
+  return day.year == thisYear
+      ? DateFormat.MMMMEEEEd(locale).format(day)
+      : DateFormat.yMMMMEEEEd(locale).format(day);
 }
 
 /// Defterin hangi günlerinin KAPALI olduğu — sayfanın "tümünü daralt /
@@ -392,7 +404,7 @@ class _DayHeaderDelegate extends SliverPersistentHeaderDelegate {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    AppFormatters.dateLong.format(group.day),
+                    dayHeaderLabel(group.day),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(

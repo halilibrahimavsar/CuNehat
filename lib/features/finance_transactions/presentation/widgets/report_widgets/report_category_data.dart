@@ -560,14 +560,17 @@ class ReportCategoryDataBuilder {
     // boyutsal olarak yanlıştır ("Bu Yıl"da 12 ayın harcaması 1 aylık limite
     // bölünüyordu). Kıyas yapılamıyorsa çubuk hiç çizilmez — yanlış bir
     // çubuk, çubuğun yokluğundan kötüdür.
-    if (!DateRangeHelper.isSingleCalendarMonth(range)) return null;
+    // Tam bir ay değilse limit döneme orantılanır (bkz.
+    // [DateRangeHelper.monthlyLimitFactor]; özet kartıyla AYNI hesap).
+    final factor = DateRangeHelper.monthlyLimitFactor(range);
     for (final b in budgets) {
       if (b.categoryId == tag) {
         if (b.limitAmount <= 0) return null;
+        final limit = b.limitAmount * factor;
         return (
-          progress: (spentInRange / b.limitAmount).clamp(0.0, 1.0),
-          isExceeded: spentInRange > b.limitAmount,
-          limit: b.limitAmount,
+          progress: (spentInRange / limit).clamp(0.0, 1.0),
+          isExceeded: spentInRange > limit,
+          limit: limit,
         );
       }
     }

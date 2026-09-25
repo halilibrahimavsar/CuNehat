@@ -7619,12 +7619,6 @@ abstract class AppLocalizations {
   /// **'Bütçe durumu'**
   String get reportBudgetSummaryTitle;
 
-  /// No description provided for @reportBudgetMonthlyOnly.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bütçeler aylıktır — bütçe durumu için tek bir ayı kapsayan dönem seçin'**
-  String get reportBudgetMonthlyOnly;
-
   /// No description provided for @reportBudgetExceededCount.
   ///
   /// In tr, this message translates to:
@@ -10174,6 +10168,102 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Tümünü genişlet'**
   String get txExpandAllDays;
+
+  /// No description provided for @periodSheetTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dönem'**
+  String get periodSheetTitle;
+
+  /// No description provided for @periodUnitSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'DÖNEM BİRİMİ'**
+  String get periodUnitSection;
+
+  /// No description provided for @periodUnitDay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gün'**
+  String get periodUnitDay;
+
+  /// No description provided for @periodUnitWeek.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hafta'**
+  String get periodUnitWeek;
+
+  /// No description provided for @periodUnitBiweek.
+  ///
+  /// In tr, this message translates to:
+  /// **'2 Hafta'**
+  String get periodUnitBiweek;
+
+  /// No description provided for @periodUnitMonth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ay'**
+  String get periodUnitMonth;
+
+  /// No description provided for @periodWeekStartLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hafta hangi gün başlasın?'**
+  String get periodWeekStartLabel;
+
+  /// No description provided for @periodBiweekAnchorLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme günü'**
+  String get periodBiweekAnchorLabel;
+
+  /// No description provided for @periodBiweekHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'İki haftalık dönemler bu tarihten itibaren sayılır.'**
+  String get periodBiweekHint;
+
+  /// No description provided for @periodMonthStartLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ay, ayın kaçında başlasın?'**
+  String get periodMonthStartLabel;
+
+  /// No description provided for @periodMonthStartHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Maaşın 15\'inde yatıyorsa 15 seç: dönem 15\'i ile ertesi ayın 14\'ü olur.'**
+  String get periodMonthStartHint;
+
+  /// No description provided for @periodCurrentPreview.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu dönem: {label}'**
+  String periodCurrentPreview(String label);
+
+  /// No description provided for @periodQuickSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'HAZIR ARALIKLAR'**
+  String get periodQuickSection;
+
+  /// No description provided for @periodChooseDate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seç'**
+  String get periodChooseDate;
+
+  /// No description provided for @settingsPeriodHeader.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dönem'**
+  String get settingsPeriodHeader;
+
+  /// No description provided for @reportBudgetProrated.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aylık limitler bu {days} günlük döneme orantılandı.'**
+  String reportBudgetProrated(int days);
 }
 
 class _AppLocalizationsDelegate

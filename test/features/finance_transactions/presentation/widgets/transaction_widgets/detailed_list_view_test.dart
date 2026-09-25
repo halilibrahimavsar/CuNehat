@@ -127,8 +127,8 @@ void main() {
 
     // Gün başlıkları tam tarihi yazar (eskiden yalnız gün numarası olan
     // yuvarlak düğüm vardı; timeline girintisi kaldırıldı).
-    expect(find.text('13 Haziran 2026'), findsOneWidget);
-    expect(find.text('12 Haziran 2026'), findsOneWidget);
+    expect(find.text(dayHeaderLabel(DateTime(2026, 6, 13))), findsOneWidget);
+    expect(find.text(dayHeaderLabel(DateTime(2026, 6, 12))), findsOneWidget);
 
     // Verify transaction titles
     expect(find.text('Market Expense'), findsOneWidget);
@@ -168,11 +168,11 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('12 Haziran 2026'), findsOneWidget);
+    expect(find.text(dayHeaderLabel(DateTime(2026, 6, 12))), findsOneWidget);
     expect(find.text('Salary Income'), findsOneWidget);
 
     // Date 13 and Market Expense should be filtered out
-    expect(find.text('13 Haziran 2026'), findsNothing);
+    expect(find.text(dayHeaderLabel(DateTime(2026, 6, 13))), findsNothing);
     expect(find.text('Market Expense'), findsNothing);
   });
 
@@ -200,11 +200,11 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('13 Haziran 2026'), findsOneWidget);
+    expect(find.text(dayHeaderLabel(DateTime(2026, 6, 13))), findsOneWidget);
     expect(find.text('Market Expense'), findsOneWidget);
 
     // Date 12 and Salary Income should be filtered out
-    expect(find.text('12 Haziran 2026'), findsNothing);
+    expect(find.text(dayHeaderLabel(DateTime(2026, 6, 12))), findsNothing);
     expect(find.text('Salary Income'), findsNothing);
   });
 
@@ -238,17 +238,27 @@ void main() {
     expect(find.text('Market Expense'), findsOneWidget);
 
     // Tap header to collapse
-    await tester.tap(find.text('13 Haziran 2026'));
+    await tester.tap(find.text(dayHeaderLabel(DateTime(2026, 6, 13))));
     await tester.pumpAndSettle();
 
     // Market Expense should be collapsed/removed from tree
     expect(find.text('Market Expense'), findsNothing);
 
     // Tap header again to expand
-    await tester.tap(find.text('13 Haziran 2026'));
+    await tester.tap(find.text(dayHeaderLabel(DateTime(2026, 6, 13))));
     await tester.pumpAndSettle();
 
     expect(find.text('Market Expense'), findsOneWidget);
+  });
+
+  group('gün başlığı', () {
+    test('gün ADINI yazar; yıl yalnız başka yıllarda', () {
+      final now = DateTime(2026, 9, 25);
+      expect(dayHeaderLabel(DateTime(2026, 9, 24), now: now),
+          '24 Eylül Perşembe');
+      expect(dayHeaderLabel(DateTime(2025, 9, 24), now: now),
+          '24 Eylül 2025 Çarşamba');
+    });
   });
 
   group('groupLedgerByDay (saf)', () {
