@@ -555,7 +555,51 @@ Security and stability
 
 ---
 
-## Ekran görüntüleri — ✅ ÜRETİLDİ (son çekim 16 Eyl 2026)
+## Sürüm notları — 1.0.0 (versionCode 8)
+
+26 Eyl 2026. Kapsam `604e60bd..` (`+7`'den sonrası): ortak dönem + gün/hafta/2 hafta
+birimi, nakit kasaları, ekstre satırını birikime/borca/transfere bağlama, ekstre
+diyalogları ve geri alma. Şema 10→14 (`migrateBackup` zinciri tam). Yerinde
+yükseltme provası `+7`→`+8` emülatörde geçti (demo veri, logcat temiz).
+Kredi kartı bayrak arkasında (release kapalı) — notlara GİRMEZ.
+
+### Türkçe (445 karakter, sınır 500)
+
+```
+Dönem senin seçimin
+• Gün, hafta, 2 hafta veya ay; bütçe seçtiğin döneme göre orantılanır.
+• İşlemler, İçgörü ve Rapor aynı dönemi gösterir; yeni filtreler ve arama.
+
+Nakit kasası
+• Birikimi nakit olarak tut; alım kasadan yapılır, satış kasaya döner.
+
+Banka ekstresi
+• Satırı birikime, borca veya transfere bağla; ödeme iki kez yazılmaz.
+• Elle girdiğin harcama tekrar eklenmez; içe aktarımı sonradan geri alabilirsin.
+
+Ve birçok küçük düzeltme.
+```
+
+### English (443 karakter, sınır 500)
+
+```
+Your period, your choice
+• Day, week, 2 weeks or month; budgets scale to the period you pick.
+• Transactions, Insights and Report share one period; new filters and search.
+
+Cash pots
+• Keep savings as cash; buy from the pot, sell back into it.
+
+Bank statements
+• Link a row to savings, a debt or a transfer; payments aren't recorded twice.
+• Expenses you entered by hand aren't added again; imports can be undone later.
+
+Plus many small fixes.
+```
+
+---
+
+## Ekran görüntüleri — ✅ ÜRETİLDİ (son çekim 26 Eyl 2026)
 
 > **7. tur (16 Eyl 2026) — ad değişikliği denetimi.** İki kare yeniden çekildi,
 > üç çip düzeltildi, kaynak klasör `~/Masaüstü/cuhat screenshots` oldu.

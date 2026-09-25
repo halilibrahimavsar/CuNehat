@@ -156,7 +156,7 @@ SHOTS = [
          "Hedefini kur,\n*varlıklarını* bağla",
          "Altın ve hisseni hedefe bağla, ilerlemeyi tek bakışta gör.",
          slug="birikim-hedefleri",
-         chips=("Altın, hisse, özel varlık", "Canlı fiyat", "Kâr/zarar takibi")),
+         chips=("Altın, hisse, nakit kasası", "Canlı fiyat", "Kâr/zarar takibi")),
 
     Shot(5, "05_butce.png",
          # Kare "1 bütçe aşıldı" rozetini ve kırmızı çubuğu GÖSTERİYOR; şerit
