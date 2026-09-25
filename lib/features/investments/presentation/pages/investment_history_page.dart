@@ -74,7 +74,9 @@ class _InvestmentHistoryView extends StatelessWidget {
             return t.isSystem &&
                 (t.tag == CashMovementTags.investmentBuy ||
                     t.tag == CashMovementTags.investmentSell ||
-                    t.tag == CashMovementTags.investmentCorrection);
+                    t.tag == CashMovementTags.investmentCorrection ||
+                    t.tag == CashMovementTags.savingsDeposit ||
+                    t.tag == CashMovementTags.savingsWithdraw);
           }).toList();
 
           if (investmentTransactions.isEmpty) {

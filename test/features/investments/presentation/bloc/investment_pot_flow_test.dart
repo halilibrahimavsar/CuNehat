@@ -5,6 +5,8 @@ import 'package:cunehat/core/services/cash_source.dart';
 import 'package:cunehat/core/services/deletion_undo_service.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/usecases/add_investment_usecase.dart';
 import 'package:cunehat/features/investments/domain/usecases/delete_investment_usecase.dart';
@@ -301,5 +303,43 @@ void main() {
           date: any(named: 'date'),
           linkedRecordId: 'pot',
         )).called(1);
+  });
+
+  test('defterdeki satır kasaya bağlanınca "Birikime Aktarım" olur, ikinci '
+      'hareket yazılmaz', () async {
+    final line = TransactionEntity(
+      id: 'row',
+      userId: 'u',
+      walletId: 'w',
+      title: 'HAVALE',
+      tag: 'cat-diger',
+      amount: 300,
+      date: DateTime(2026, 9, 20),
+      type: TransactionTypeModel.expense,
+    );
+    when(() => metrics.adoptCashMovement(
+          walletId: any(named: 'walletId'),
+          transactionId: any(named: 'transactionId'),
+          tag: any(named: 'tag'),
+          linkedRecordId: any(named: 'linkedRecordId'),
+          expectIncome: any(named: 'expectIncome'),
+          expectAmount: any(named: 'expectAmount'),
+        )).thenAnswer((_) async => line);
+    await run(CreateInvestmentEvent(
+      investment: pot(balance: 300).copyWith(id: 'yeni'),
+      userId: 'u',
+      walletId: 'w',
+      cashSource: AdoptedCashMovement(line),
+    ));
+    verify(() => metrics.adoptCashMovement(
+          walletId: 'w',
+          transactionId: 'row',
+          tag: CashMovementTags.savingsDeposit,
+          linkedRecordId: 'yeni',
+          expectIncome: false,
+          expectAmount: 300,
+        )).called(1);
+    expect(store['yeni']!.bookedCost, 300);
+    expectLedgerUntouched();
   });
 }

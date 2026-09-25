@@ -8,7 +8,12 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_action_sheet.dart';
+import 'package:bloc_test/bloc_test.dart';
+import 'package:cunehat/core/services/cash_source.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
+import 'package:cunehat/features/investments/domain/repositories/investment_repository.dart';
+import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
@@ -22,6 +27,11 @@ import 'package:mocktail/mocktail.dart';
 class _MockWalletRepo extends Mock implements WalletRepository {}
 
 class _MockTxRepo extends Mock implements TransactionsRepository {}
+
+class _MockInvestmentRepo extends Mock implements InvestmentRepository {}
+
+class _MockInvestmentBloc extends MockBloc<InvestmentEvent, InvestmentState>
+    implements InvestmentBloc {}
 
 TransactionEntity _tx(
   String id, {
@@ -56,6 +66,7 @@ void main() {
       expect(linkTargetsFor(_tx('g')), [
         LinkTarget.newInvestment,
         LinkTarget.investmentContribution,
+        LinkTarget.cashPot,
         LinkTarget.debtPayment,
         LinkTarget.transfer,
       ]);
@@ -404,6 +415,90 @@ void main() {
       expect(find.text(l10n.baglaKarsiSatirBaslik), findsOneWidget);
       verify(() => txRepo.getTransactions(userId: 'u', walletId: 'card'))
           .called(1);
+    });
+  });
+
+  group('kasaya bağlama', () {
+    final pot = InvestmentEntity(
+      id: 'pot',
+      userId: 'u',
+      walletId: 'w',
+      name: 'Acil durum',
+      amount: 1000,
+      currentValue: 1000,
+      type: InvestmentType.cash,
+      color: Colors.teal,
+      dateAdded: DateTime(2026, 9, 1),
+    );
+
+    setUpAll(() => registerFallbackValue(
+        GetInvestmentsEvent(userId: 'u', walletId: 'w')));
+    tearDown(() async => getIt.reset());
+
+    Future<_MockInvestmentBloc> start(
+        WidgetTester tester, List<InvestmentEntity> investments) async {
+      final repo = _MockInvestmentRepo();
+      getIt.registerSingleton<InvestmentRepository>(repo);
+      when(() => repo.getInvestments(
+            userId: any(named: 'userId'),
+            walletId: any(named: 'walletId'),
+          )).thenAnswer((_) async => Right(investments));
+      final bloc = _MockInvestmentBloc();
+      when(() => bloc.state).thenReturn(InvestmentInitial());
+      await tester.pumpWidget(app(BlocProvider<InvestmentBloc>.value(
+        value: bloc,
+        child: Builder(
+          builder: (context) => ElevatedButton(
+            onPressed: () => startLinkTransactionFlow(
+              context,
+              transaction: _tx('g', amount: 250),
+              currency: 'TRY',
+              target: LinkTarget.cashPot,
+            ),
+            child: const Text('Aç'),
+          ),
+        ),
+      )));
+      await tester.tap(find.text('Aç'));
+      await tester.pumpAndSettle();
+      return bloc;
+    }
+
+    testWidgets('var olan kasaya: satır benimsenir, bakiye satır kadar artar',
+        (tester) async {
+      final bloc = await start(tester, [pot]);
+      await tester.tap(find.text('Acil durum'));
+      await tester.pumpAndSettle();
+      verify(() => bloc.add(any(
+            that: isA<UpdateInvestmentEvent>()
+                .having((e) => e.investment.currentValue, 'bakiye', 1250.0)
+                .having((e) => e.newAmount - e.prevAmount, 'fark', 250.0)
+                .having((e) => e.cashSource, 'kaynak',
+                    isA<AdoptedCashMovement>()),
+          ))).called(1);      // Sonuç bekçisinin zaman aşımı sayacı kapanmalı.
+      await tester.pump(const Duration(minutes: 2));
+    });
+
+    testWidgets('kasa yoksa satırın tutarıyla yeni kasa açılır',
+        (tester) async {
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      final bloc = await start(tester, const []);
+      expect(find.text(l10n.yeniKasa), findsOneWidget);
+      expect(find.byKey(const ValueKey('cash-pot-initial')), findsNothing,
+          reason: 'tutar satırdan gelir, sorulmaz');
+      await tester.enterText(
+          find.byKey(const ValueKey('cash-pot-name')), 'Tatil');
+      await tester.tap(find.byKey(const ValueKey('cash-pot-save')));
+      await tester.pumpAndSettle();
+      verify(() => bloc.add(any(
+            that: isA<CreateInvestmentEvent>()
+                .having((e) => e.investment.type, 'tür', InvestmentType.cash)
+                .having((e) => e.investment.amount, 'tutar', 250.0)
+                .having((e) => e.investment.name, 'ad', 'Tatil')
+                .having((e) => e.cashSource, 'kaynak',
+                    isA<AdoptedCashMovement>()),
+          ))).called(1);      // Sonuç bekçisinin zaman aşımı sayacı kapanmalı.
+      await tester.pump(const Duration(minutes: 2));
     });
   });
 }

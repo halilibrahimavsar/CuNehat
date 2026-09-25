@@ -341,12 +341,17 @@ class CashPotFormSheet extends StatefulWidget {
   final InvestmentEntity? potToEdit;
   final String? initialGoalId;
 
+  /// Açılış tutarı sabit (defterdeki bir satır kasaya bağlanıyor): tutar
+  /// alanı gösterilmez, satırın tutarı kullanılır.
+  final double? fixedAmount;
+
   const CashPotFormSheet({
     super.key,
     required this.goals,
     required this.currency,
     this.potToEdit,
     this.initialGoalId,
+    this.fixedAmount,
   });
 
   static Future<CashPotFormResult?> show(
@@ -355,6 +360,7 @@ class CashPotFormSheet extends StatefulWidget {
     required String currency,
     InvestmentEntity? potToEdit,
     String? initialGoalId,
+    double? fixedAmount,
   }) {
     return showModalBottomSheet<CashPotFormResult>(
       context: context,
@@ -365,6 +371,7 @@ class CashPotFormSheet extends StatefulWidget {
         currency: currency,
         potToEdit: potToEdit,
         initialGoalId: initialGoalId,
+        fixedAmount: fixedAmount,
       ),
     );
   }
@@ -401,7 +408,8 @@ class _CashPotFormSheetState extends State<CashPotFormSheet> {
       return;
     }
     final text = _amountController.text.trim();
-    final amount = text.isEmpty ? 0.0 : parseAmountInput(text);
+    final amount = widget.fixedAmount ??
+        (text.isEmpty ? 0.0 : parseAmountInput(text));
     if (amount == null || amount < 0) {
       setState(() => _error = context.l10n.gecerliTutarGirin);
       return;
@@ -435,7 +443,16 @@ class _CashPotFormSheetState extends State<CashPotFormSheet> {
           ),
           onChanged: (_) => setState(() => _error = null),
         ),
-        if (!_isEdit) ...[
+        if (!_isEdit && widget.fixedAmount != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            context.l10n.kasaAcilisSatirdan(
+                MoneyWriter(currency: widget.currency, visible: true)(
+                    widget.fixedAmount!)),
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ],
+        if (!_isEdit && widget.fixedAmount == null) ...[
           const SizedBox(height: 12),
           TextField(
             key: const ValueKey('cash-pot-initial'),

@@ -168,7 +168,10 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
           adopted = await walletMetricsService.adoptCashMovement(
             walletId: event.walletId,
             transactionId: source.transaction.id ?? '',
-            tag: CashMovementTags.investmentBuy,
+            // Kasaya konan para alım değil, aktarımdır.
+            tag: _isPot(investment)
+                ? CashMovementTags.savingsDeposit
+                : CashMovementTags.investmentBuy,
             linkedRecordId: investment.id!,
             expectIncome: false,
             expectAmount: source.transaction.amount,
@@ -251,7 +254,9 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
         adopted = await walletMetricsService.adoptCashMovement(
           walletId: event.walletId,
           transactionId: source.transaction.id ?? '',
-          tag: CashMovementTags.investmentBuy,
+          tag: _isPot(event.investment)
+              ? CashMovementTags.savingsDeposit
+              : CashMovementTags.investmentBuy,
           linkedRecordId: event.investment.id ?? '',
           expectIncome: false,
           expectAmount: source.transaction.amount,

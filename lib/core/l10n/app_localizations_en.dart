@@ -6085,4 +6085,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kasaBaslat => 'Open a cash pot';
+
+  @override
+  String get baglaKasaya => 'Move to a cash pot';
+
+  @override
+  String get baglaKasayaAciklama =>
+      'This money went into a savings pot; not counted as spending.';
+
+  @override
+  String get baglaKasaSec => 'Which pot?';
+
+  @override
+  String get baglaYeniKasa => 'Open a new pot';
+
+  @override
+  String get baglaYeniKasaAciklama => 'Opened with this line\'s amount';
+
+  @override
+  String kasaAcilisSatirdan(String amount) {
+    return 'Starting amount: $amount (from the ledger line)';
+  }
 }

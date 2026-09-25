@@ -3547,5 +3547,18 @@
   "yeniNakitKasasiEkle": "Nakit kasası",
   "yatirimTuruNakit": "Nakit",
   "menuCash": "Kasa",
-  "kasaBaslat": "Nakit kasası aç"
+  "kasaBaslat": "Nakit kasası aç",
+  "baglaKasaya": "Nakit kasasına aktarım",
+  "baglaKasayaAciklama": "Bu para birikim kasana gitti; gider sayılmaz.",
+  "baglaKasaSec": "Hangi kasaya?",
+  "baglaYeniKasa": "Yeni kasa aç",
+  "baglaYeniKasaAciklama": "Satırın tutarıyla açılır",
+  "kasaAcilisSatirdan": "Başlangıç: {amount} (defterdeki satırdan)",
+  "@kasaAcilisSatirdan": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

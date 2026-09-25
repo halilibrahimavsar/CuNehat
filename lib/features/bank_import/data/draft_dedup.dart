@@ -267,6 +267,9 @@ const Set<String> _bankVisibleCouplingTags = {
   CashMovementTags.receivableCollection,
   CashMovementTags.investmentBuy,
   CashMovementTags.investmentSell,
+  // Kasaya aktarım bankada hesaptan çıkan para olarak görünür.
+  CashMovementTags.savingsDeposit,
+  CashMovementTags.savingsWithdraw,
   CashMovementTags.transfer,
 };
 

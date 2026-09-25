@@ -10504,6 +10504,42 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Nakit kasası aç'**
   String get kasaBaslat;
+
+  /// No description provided for @baglaKasaya.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nakit kasasına aktarım'**
+  String get baglaKasaya;
+
+  /// No description provided for @baglaKasayaAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu para birikim kasana gitti; gider sayılmaz.'**
+  String get baglaKasayaAciklama;
+
+  /// No description provided for @baglaKasaSec.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hangi kasaya?'**
+  String get baglaKasaSec;
+
+  /// No description provided for @baglaYeniKasa.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni kasa aç'**
+  String get baglaYeniKasa;
+
+  /// No description provided for @baglaYeniKasaAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satırın tutarıyla açılır'**
+  String get baglaYeniKasaAciklama;
+
+  /// No description provided for @kasaAcilisSatirdan.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlangıç: {amount} (defterdeki satırdan)'**
+  String kasaAcilisSatirdan(String amount);
 }
 
 class _AppLocalizationsDelegate

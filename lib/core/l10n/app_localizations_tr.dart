@@ -6038,4 +6038,25 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get kasaBaslat => 'Nakit kasası aç';
+
+  @override
+  String get baglaKasaya => 'Nakit kasasına aktarım';
+
+  @override
+  String get baglaKasayaAciklama =>
+      'Bu para birikim kasana gitti; gider sayılmaz.';
+
+  @override
+  String get baglaKasaSec => 'Hangi kasaya?';
+
+  @override
+  String get baglaYeniKasa => 'Yeni kasa aç';
+
+  @override
+  String get baglaYeniKasaAciklama => 'Satırın tutarıyla açılır';
+
+  @override
+  String kasaAcilisSatirdan(String amount) {
+    return 'Başlangıç: $amount (defterdeki satırdan)';
+  }
 }

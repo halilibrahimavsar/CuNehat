@@ -46,6 +46,8 @@ import 'package:cunehat/features/investments/presentation/investment_notice_text
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_custom_sheet.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_gold_sheet.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_stock_sheet.dart';
+import 'package:cunehat/features/investments/domain/cash_pot_math.dart';
+import 'package:cunehat/features/investments/presentation/widgets/cash_pots.dart';
 import 'package:cunehat/features/investments/presentation/widgets/contribute_sheet.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
@@ -57,6 +59,9 @@ enum LinkTarget {
   debtPayment,
   debtPrincipal,
   transfer,
+
+  /// Gider satırı bir NAKİT KASASINA konan para olur (aktarım, gider değil).
+  cashPot,
 }
 
 /// Satır bağlanabilir mi: düz (sistem hareketi değil) ve kaydedilmiş. Sistem
@@ -70,6 +75,7 @@ List<LinkTarget> linkTargetsFor(TransactionEntity t) => t.isIncome
     : const [
         LinkTarget.newInvestment,
         LinkTarget.investmentContribution,
+        LinkTarget.cashPot,
         LinkTarget.debtPayment,
         LinkTarget.transfer,
       ];
@@ -144,6 +150,8 @@ Future<void> startLinkTransactionFlow(
       );
     case LinkTarget.investmentContribution:
       await _linkContribution(context, transaction, currency);
+    case LinkTarget.cashPot:
+      await _linkCashPot(context, transaction, currency);
     case LinkTarget.debtPayment:
       await _linkDebtPayment(context, transaction, currency);
     case LinkTarget.debtPrincipal:
@@ -232,7 +240,11 @@ Future<void> _linkContribution(
   String currency,
 ) async {
   final l10n = context.l10n;
-  final investments = await _investmentsOf(tx);
+  // Kasaya para koymak "katkı" değil, kendi hedefi var (LinkTarget.cashPot).
+  final investments = [
+    for (final i in await _investmentsOf(tx))
+      if (i.type != InvestmentType.cash) i,
+  ];
   if (!context.mounted) return;
   final investment = await _choose<InvestmentEntity>(
     context,
@@ -269,6 +281,89 @@ Future<void> _linkContribution(
       ));
     },
   );
+}
+
+/// Gider satırı bir nakit kasasına konan para olur: var olan bir kasa
+/// seçilir ya da satırın tutarıyla yeni kasa açılır. Satır benimsenir
+/// ("Birikime Aktarım" olur), ikinci hareket yazılmaz.
+Future<void> _linkCashPot(
+  BuildContext context,
+  TransactionEntity tx,
+  String currency,
+) async {
+  final l10n = context.l10n;
+  final pots = [
+    for (final i in await _investmentsOf(tx))
+      if (i.type == InvestmentType.cash) i,
+  ];
+  if (!context.mounted) return;
+
+  // Kasa yoksa seçim sorulmaz: doğrudan yeni kasa.
+  InvestmentEntity? pot;
+  if (pots.isNotEmpty) {
+    const newPot = _NewPotChoice();
+    final picked = await _choose<Object>(
+      context,
+      title: l10n.baglaKasaSec,
+      emptyText: '',
+      items: [...pots, newPot],
+      label: (o) => o is InvestmentEntity ? o.name : l10n.baglaYeniKasa,
+      detail: (o) => o is InvestmentEntity
+          ? formatMoney(o.currentValue, currency: currency)
+          : l10n.baglaYeniKasaAciklama,
+    );
+    if (picked == null || !context.mounted) return;
+    pot = picked is InvestmentEntity ? picked : null;
+  }
+
+  final bloc = context.read<InvestmentBloc>();
+  if (pot != null) {
+    final updated = putIntoPot(pot, tx.amount, booked: tx.amount);
+    _reportInvestmentOutcome(bloc, l10n);
+    bloc.add(UpdateInvestmentEvent(
+      investment: updated,
+      userId: tx.userId,
+      walletId: tx.walletId,
+      prevAmount: pot.bookedCost,
+      newAmount: updated.bookedCost,
+      bookingDate: tx.date,
+      cashSource: AdoptedCashMovement(tx),
+    ));
+    return;
+  }
+
+  final goals = await _goalsOf(tx);
+  if (!context.mounted) return;
+  final result = await CashPotFormSheet.show(
+    context,
+    goals: goals,
+    currency: currency,
+    fixedAmount: tx.amount,
+  );
+  if (result == null) return;
+  _reportInvestmentOutcome(bloc, l10n);
+  bloc.add(CreateInvestmentEvent(
+    investment: InvestmentEntity(
+      id: null,
+      userId: tx.userId,
+      walletId: tx.walletId,
+      name: result.name,
+      amount: tx.amount,
+      currentValue: tx.amount,
+      type: InvestmentType.cash,
+      color: kCashPotColor,
+      dateAdded: tx.date,
+      goalId: result.goalId,
+    ),
+    userId: tx.userId,
+    walletId: tx.walletId,
+    cashSource: AdoptedCashMovement(tx),
+  ));
+}
+
+/// Kasa seçicisindeki "Yeni kasa aç" satırı.
+class _NewPotChoice {
+  const _NewPotChoice();
 }
 
 /// Sonucu dinlemeye olay gönderilmeden ÖNCE başlanır: sonuç, olayı gönderen
@@ -794,6 +889,11 @@ class _LinkTargetSheetState extends State<LinkTargetSheet> {
           Icons.add_chart_rounded,
           l10n.baglaBirikimeKatki,
           l10n.baglaBirikimeKatkiAciklama,
+        ),
+      LinkTarget.cashPot => (
+          Icons.savings_outlined,
+          l10n.baglaKasaya,
+          l10n.baglaKasayaAciklama,
         ),
       LinkTarget.debtPayment => (
           Icons.payments_rounded,

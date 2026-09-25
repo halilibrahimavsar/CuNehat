@@ -3411,5 +3411,18 @@
   "yeniNakitKasasiEkle": "Cash pot",
   "yatirimTuruNakit": "Cash",
   "menuCash": "Pot",
-  "kasaBaslat": "Open a cash pot"
+  "kasaBaslat": "Open a cash pot",
+  "baglaKasaya": "Move to a cash pot",
+  "baglaKasayaAciklama": "This money went into a savings pot; not counted as spending.",
+  "baglaKasaSec": "Which pot?",
+  "baglaYeniKasa": "Open a new pot",
+  "baglaYeniKasaAciklama": "Opened with this line's amount",
+  "kasaAcilisSatirdan": "Starting amount: {amount} (from the ledger line)",
+  "@kasaAcilisSatirdan": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }
