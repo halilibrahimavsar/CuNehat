@@ -1,3 +1,4 @@
+import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/core/onboarding/onboarding_tour.dart';
@@ -36,6 +37,9 @@ class AddCustomSheet extends StatefulWidget {
   /// varlığın canlı fiyat kaynağı yoktur, değerler elle girilir.
   final String walletCurrency;
 
+  /// Birikimin nakit kasaları: alım bir kasadan ödenebilir.
+  final List<InvestmentEntity> pots;
+
   /// "Bağla…" akışından açıldıysa ödemesi defterde ZATEN duran satır: sayfa
   /// "Defterdeki işlem" seçili açılır, maliyet ve tarih bu satırdan gelir.
   final TransactionEntity? initialLedgerTransaction;
@@ -46,6 +50,7 @@ class AddCustomSheet extends StatefulWidget {
     required this.userId,
     required this.onSave,
     required this.walletCurrency,
+    this.pots = const [],
     this.goals = const [],
     this.initialGoalId,
     this.investmentToEdit,
@@ -59,6 +64,7 @@ class AddCustomSheet extends StatefulWidget {
     required void Function(InvestmentEntity investment, CashSource cashSource)
         onSave,
     required String walletCurrency,
+    List<InvestmentEntity> pots = const [],
     List<GoalEntity> goals = const [],
     String? initialGoalId,
     InvestmentEntity? investmentToEdit,
@@ -73,6 +79,7 @@ class AddCustomSheet extends StatefulWidget {
         userId: userId,
         onSave: onSave,
         walletCurrency: walletCurrency,
+        pots: pots,
         goals: goals,
         initialGoalId: initialGoalId,
         investmentToEdit: investmentToEdit,
@@ -104,7 +111,9 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
 
   /// Alımın ödemesi nereden: cüzdandan, defterde zaten duran satırdan ya da
   /// hiç ("zaten bende"; bkz. `InvestmentEntity.unbookedCost`).
-  PurchasePayment _payment = const PurchasePayment.wallet();
+  // Açılış: bakiyesi olan kasa varsa o (bkz. PurchasePayment.defaultFor).
+  // Defterden gelinmişse initState satırı seçer; düzenlemede kullanılmaz.
+  late PurchasePayment _payment = PurchasePayment.defaultFor(widget.pots);
 
   Color _selectedColor = Colors.purple;
   String? _goalId;
@@ -166,6 +175,11 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
   String? _validate() {
     // "Ödemesi defterde var" seçildi ama satır seçilmedi: kayıt nakit bacağı
     // olmadan yazılırdı.
+    if (!_isEditing && _payment.exceedsPot(_parsedAmount)) {
+      return context.l10n.kasaYetersizUyari(formatMoney(
+          _payment.pot?.amount ?? 0,
+          currency: widget.walletCurrency));
+    }
     if (!_isEditing && _payment.needsLedgerTransaction) {
       return context.l10n.defterSatiriSecilmedi;
     }
@@ -389,6 +403,7 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
         walletId: widget.walletId,
         walletCurrency: widget.walletCurrency,
         cost: cost,
+        pots: widget.pots,
       ),
     ];
   }

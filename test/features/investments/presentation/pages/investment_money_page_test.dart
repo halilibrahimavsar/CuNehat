@@ -539,6 +539,140 @@ void main() {
         ))).called(1);
   });
 
+  group('nakit kasaları', () {
+    final pot = InvestmentEntity(
+      id: 'pot_1',
+      userId: 'user_123',
+      walletId: 'wallet_123',
+      name: 'Acil durum',
+      amount: 1000.0,
+      currentValue: 1000.0,
+      type: InvestmentType.cash,
+      color: Colors.teal,
+      dateAdded: DateTime(2026, 9, 1),
+    );
+
+    Future<void> pumpPage(WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+      when(() => mockInvestmentBloc.state).thenReturn(
+        InvestmentLoaded([testInvestment1, pot], totalAmount: 2000.0),
+      );
+      await tester.pumpWidget(
+        buildTestableWidget(InvestmentMoneyPage(activeWallet: testWallet)),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('kasa kendi bölümünde, varlık listesinde değil',
+        (tester) async {
+      await pumpPage(tester);
+      expect(find.text('Nakit kasaları'), findsOneWidget);
+      expect(find.byKey(const ValueKey('cash-pot-pot_1')), findsOneWidget);
+      expect(
+          find.descendant(
+              of: find.byType(InvestmentCard),
+              matching: find.text('Acil durum')),
+          findsNothing);
+    });
+
+    testWidgets('satışta bedel varsayılan olarak kasaya, istenirse cüzdana',
+        (tester) async {
+      await pumpPage(tester);
+      final card = find
+          .descendant(
+              of: find.byType(InvestmentCard), matching: find.text('Gram Altın'))
+          .first;
+      await tester.ensureVisible(card);
+      await tester.tap(card);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Sat'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, '0,25');
+      await tester.pumpAndSettle();
+
+      final potChip = find.byKey(const ValueKey('sell-to-pot-pot_1'));
+      expect(tester.widget<ChoiceChip>(potChip).selected, isTrue);
+
+      await tester.tap(find.descendant(
+          of: find.byType(FilledButton), matching: find.text('Sat')));
+      await tester.pumpAndSettle();
+      verify(() => mockInvestmentBloc.add(any(
+            that: isA<PartialSellInvestmentEvent>()
+                .having((e) => e.targetPot?.id, 'hedef kasa', 'pot_1')
+                .having((e) => e.proceeds, 'bedel', 312.5),
+          ))).called(1);
+
+      // İkinci satış: cüzdan seçilir.
+      await tester.ensureVisible(card);
+      await tester.tap(card);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Sat'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, '0,25');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('sell-to-wallet')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.descendant(
+          of: find.byType(FilledButton), matching: find.text('Sat')));
+      await tester.pumpAndSettle();
+      verify(() => mockInvestmentBloc.add(any(
+            that: isA<PartialSellInvestmentEvent>()
+                .having((e) => e.targetPot, 'hedef', isNull),
+          ))).called(1);
+    });
+
+    testWidgets('kasaya para ekleme maliyet artışı olarak cüzdandan düşer',
+        (tester) async {
+      await pumpPage(tester);
+      await tester.tap(find.byKey(const ValueKey('cash-pot-deposit-pot_1')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+          find.byKey(const ValueKey('cash-pot-move-amount')), '250');
+      await tester.tap(find.byKey(const ValueKey('cash-pot-move-save')));
+      await tester.pumpAndSettle();
+      verify(() => mockInvestmentBloc.add(any(
+            that: isA<UpdateInvestmentEvent>()
+                .having((e) => e.prevAmount, 'önce', 1000.0)
+                .having((e) => e.newAmount, 'sonra', 1250.0)
+                .having((e) => e.investment.currentValue, 'bakiye', 1250.0),
+          ))).called(1);
+    });
+
+    testWidgets('kasadan fazlası çekilemez', (tester) async {
+      await pumpPage(tester);
+      await tester.tap(find.byKey(const ValueKey('cash-pot-withdraw-pot_1')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+          find.byKey(const ValueKey('cash-pot-move-amount')), '1500');
+      await tester.tap(find.byKey(const ValueKey('cash-pot-move-save')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Kasada yalnız'), findsOneWidget);
+      verifyNever(() => mockInvestmentBloc
+          .add(any(that: isA<PartialSellInvestmentEvent>())));
+    });
+
+    testWidgets('kasayı kapatmak bakiyeyi cüzdana aktarır', (tester) async {
+      await pumpPage(tester);
+      await tester.tap(find.byKey(const ValueKey('cash-pot-pot_1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('cash-pot-action-close')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Kasayı kapat'));
+      await tester.pumpAndSettle();
+      verify(() => mockInvestmentBloc.add(any(
+            that: isA<DeleteInvestmentEvent>()
+                .having((e) => e.recordSale, 'satış', isTrue)
+                .having((e) => e.currentValue, 'bedel', 1000.0)
+                .having((e) => e.targetPot, 'hedef', isNull),
+          ))).called(1);
+    });
+  });
+
   testWidgets('tapping cancel on sell dialog does not trigger dispatch',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 1920);

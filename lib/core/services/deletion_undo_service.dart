@@ -95,17 +95,24 @@ final class ReceivableDeletionUndo extends DeletionUndo {
 final class InvestmentDeletionUndo extends DeletionUndo {
   final InvestmentEntity investment;
 
+  /// Aynı işlemde değişen DİĞER kayıtların önceki hâlleri (ör. satış bedeli
+  /// bir nakit kasasına girdiyse kasanın eski hâli). Aynı kimlikle geri
+  /// yazılır (üzerine yazar).
+  final List<InvestmentEntity> alsoRestore;
+
   const InvestmentDeletionUndo({
     required this.investment,
     required super.userId,
     required super.walletId,
     required super.reversalTransactionIds,
     super.releasedAdoptions,
+    this.alsoRestore = const [],
   });
 
   @override
   List<Object?> get props => [
         investment,
+        alsoRestore,
         userId,
         walletId,
         reversalTransactionIds,
@@ -214,8 +221,14 @@ class DeletionUndoService {
       DebtDeletionUndo(:final debt) => await _addDebt(debt),
       ReceivableDeletionUndo(:final receivable) =>
         await _addReceivable(receivable),
-      InvestmentDeletionUndo(:final investment) =>
-        await _addInvestment(investment),
+      InvestmentDeletionUndo(:final investment, :final alsoRestore) =>
+        await () async {
+          for (final other in alsoRestore) {
+            final r = await _addInvestment(other);
+            if (r.isLeft()) return r;
+          }
+          return _addInvestment(investment);
+        }(),
     };
 
     return result.fold((failure) {

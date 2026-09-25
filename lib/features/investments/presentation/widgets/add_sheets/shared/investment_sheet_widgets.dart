@@ -1,3 +1,4 @@
+import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
@@ -665,6 +666,10 @@ class InvestmentPurchaseRow extends StatelessWidget {
   /// kısayol yok (özel varlığın canlı fiyat kaynağı yoktur).
   final VoidCallback? onCalculateTodayValue;
 
+  /// Birikimdeki NAKİT KASALARI: ödeme kasadan yapılabilir (cüzdana ve
+  /// deftere dokunmadan). Boşsa seçenek çizilmez.
+  final List<InvestmentEntity> pots;
+
   const InvestmentPurchaseRow({
     super.key,
     required this.accent,
@@ -677,6 +682,7 @@ class InvestmentPurchaseRow extends StatelessWidget {
     required this.walletCurrency,
     required this.cost,
     this.onCalculateTodayValue,
+    this.pots = const [],
   });
 
   Future<void> _pickDate(BuildContext context) async {
@@ -716,6 +722,9 @@ class InvestmentPurchaseRow extends StatelessWidget {
         onPaymentChanged(const PurchasePayment.ledger());
         // Satırsız "defterde var" anlamsız: seçici hemen açılır.
         _pickLedgerRow(context);
+      case PurchasePaymentMode.pot:
+        // Kasa seçimi kendi satırından yapılır (bkz. build).
+        break;
     }
   }
 
@@ -728,6 +737,9 @@ class InvestmentPurchaseRow extends StatelessWidget {
             formatMoney(tx.amount, currency: walletCurrency)),
       PurchasePaymentMode.ledger => l10n.defterSatiriSecilmedi,
       PurchasePaymentMode.alreadyOwned => l10n.alimCuzdandanDusulmeyecek,
+      PurchasePaymentMode.pot => l10n.alimKasadanDusulecek(
+          payment.pot?.name ?? '',
+          formatMoney(payment.pot?.amount ?? 0, currency: walletCurrency)),
       PurchasePaymentMode.wallet when cost == null || cost! <= 0 =>
         l10n.alimCuzdandanDusulmeyecek,
       PurchasePaymentMode.wallet => l10n.alimCuzdandanDusulecek(
@@ -781,6 +793,19 @@ class InvestmentPurchaseRow extends StatelessWidget {
         const SizedBox(height: 12),
         InvestmentSectionLabel(l10n.odemeKaynagiBaslik),
         const SizedBox(height: 6),
+        // Nakit kasaları ÖNCE: kullanıcı birikimindeki parayla yatırım
+        // yapmayı seçtiyse cüzdan ikinci seçenektir.
+        for (final pot in pots)
+          _PaymentOption(
+            key: ValueKey('pay-pot-${pot.id}'),
+            accent: accent,
+            selected: payment.mode == PurchasePaymentMode.pot &&
+                payment.pot?.id == pot.id,
+            title: l10n.odemeKasadanBaslik(pot.name),
+            subtitle: l10n.kasaBakiyesi(
+                formatMoney(pot.amount, currency: walletCurrency)),
+            onTap: () => onPaymentChanged(PurchasePayment.pot(pot)),
+          ),
         _PaymentOption(
           accent: accent,
           selected: payment.mode == PurchasePaymentMode.wallet,
@@ -833,6 +858,11 @@ class InvestmentPurchaseRow extends StatelessWidget {
           onTap: () => _select(context, PurchasePaymentMode.alreadyOwned),
         ),
         InvestmentHintCaption(_caption(context)),
+        if (payment.exceedsPot(cost)) ...[
+          const SizedBox(height: 8),
+          InvestmentWarningBanner(l10n.kasaYetersizUyari(
+              formatMoney(payment.pot?.amount ?? 0, currency: walletCurrency))),
+        ],
         // Geçmiş tarihli alımda kafa karıştıran nokta: "Mevcut Değer" alanı
         // alım GÜNÜNÜN değeri sanılıyor. Kâr/zarar yanlış okunmasın diye
         // açıkça söylenir; altın/hissede bugünkü değeri hesaplama kısayolu
@@ -874,6 +904,7 @@ class _PaymentOption extends StatelessWidget {
   final VoidCallback onTap;
 
   const _PaymentOption({
+    super.key,
     required this.accent,
     required this.selected,
     required this.title,

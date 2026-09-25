@@ -286,6 +286,26 @@ void main() {
       verify(() => metrics.syncInvestment('wallet_1')).called(1);
     });
 
+    test('yatırım: kasaya satışın geri alınması kasayı da eski hâline yazar',
+        () async {
+      when(() => addInvestment(any()))
+          .thenAnswer((_) async => const Right(null));
+      final potBefore = investment.copyWith(
+          id: 'pot', name: 'Acil durum', type: InvestmentType.cash);
+
+      final ok = await service.restore(InvestmentDeletionUndo(
+        investment: investment,
+        userId: 'user_1',
+        walletId: 'wallet_1',
+        reversalTransactionIds: const [],
+        alsoRestore: [potBefore],
+      ));
+
+      expect(ok, isTrue);
+      final written = verify(() => addInvestment(captureAny())).captured;
+      expect(written, [potBefore, investment]);
+    });
+
     test(
         'yatırım: silmede düz satıra BIRAKILAN benimseme geri yazılır '
         '(ekstre satırı yine kaydın nakit bacağı olur)', () async {

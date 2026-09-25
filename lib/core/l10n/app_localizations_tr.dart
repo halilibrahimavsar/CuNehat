@@ -5891,4 +5891,151 @@ class AppLocalizationsTr extends AppLocalizations {
   String reportBudgetProrated(int days) {
     return 'Aylık limitler bu $days günlük döneme orantılandı.';
   }
+
+  @override
+  String get systemTagSavingsDeposit => 'Birikime aktarım';
+
+  @override
+  String get systemTagSavingsWithdraw => 'Birikimden aktarım';
+
+  @override
+  String get potUnavailableMessage =>
+      'Kasanın bakiyesi bu işlem için yetmiyor; hiçbir şey kaydedilmedi.';
+
+  @override
+  String odemeKasadanBaslik(String name) {
+    return 'Kasadan: $name';
+  }
+
+  @override
+  String kasaBakiyesi(String amount) {
+    return 'Bakiye $amount · cüzdana dokunulmaz';
+  }
+
+  @override
+  String alimKasadanDusulecek(String name, String amount) {
+    return 'Tutar “$name” kasasından düşülecek (bakiye $amount); cüzdan ve defter değişmez.';
+  }
+
+  @override
+  String kasaYetersizUyari(String amount) {
+    return 'Kasada yalnız $amount var. Tutarı düşür ya da başka bir kaynak seç.';
+  }
+
+  @override
+  String get satisHedefiBaslik => 'Para nereye?';
+
+  @override
+  String get satisHedefiCuzdan => 'Cüzdana';
+
+  @override
+  String kasaBakiyeSade(String amount) {
+    return 'Bakiye $amount';
+  }
+
+  @override
+  String get kasaTutar => 'Tutar';
+
+  @override
+  String get kasaParaEkle => 'Para ekle';
+
+  @override
+  String get kasaParaCek => 'Para çek';
+
+  @override
+  String get kasaParaEkleAciklama =>
+      'Cüzdandan kasaya aktarılır; gider sayılmaz.';
+
+  @override
+  String get kasaParaCekAciklama =>
+      'Kasadan cüzdana aktarılır; gelir sayılmaz.';
+
+  @override
+  String kasalarArasiAciklama(String name) {
+    return '“$name” kasasına aktarılır; cüzdan değişmez.';
+  }
+
+  @override
+  String get kasaDuzenle => 'Kasayı düzenle';
+
+  @override
+  String get kasayiKapat => 'Kasayı kapat';
+
+  @override
+  String kasayiKapatAciklama(String amount) {
+    return 'Kalan $amount cüzdana döner';
+  }
+
+  @override
+  String kasayiKapatOnayBaslik(String name) {
+    return '“$name” kapatılsın mı?';
+  }
+
+  @override
+  String kasayiKapatOnayMesaj(String amount) {
+    return 'Kasadaki $amount cüzdana aktarılır. Hemen ardından geri alabilirsin.';
+  }
+
+  @override
+  String get yeniKasa => 'Yeni nakit kasası';
+
+  @override
+  String get kasaOlustur => 'Kasayı oluştur';
+
+  @override
+  String get kasaAciklama =>
+      'Birikimini nakit olarak ayrı tut: acil durum fonu, tatil parası… Varlık alırken bu kasadan ödeyebilir, satışta parayı buraya koyabilirsin.';
+
+  @override
+  String get kasaAdi => 'Kasa adı';
+
+  @override
+  String get kasaAdiOrnek => 'ör. Acil durum fonu';
+
+  @override
+  String get kasaAdiGerekli => 'Kasaya bir ad ver';
+
+  @override
+  String get kasaAcilisTutari => 'Başlangıç tutarı (isteğe bağlı)';
+
+  @override
+  String get kasaAcilisTutariYardim => 'Cüzdandan kasaya aktarılır';
+
+  @override
+  String get kasaHedefi => 'Hedef (isteğe bağlı)';
+
+  @override
+  String get kasaHedefYok => 'Hedefe bağlama';
+
+  @override
+  String kasayaParaEkleBaslik(String name) {
+    return '$name · para ekle';
+  }
+
+  @override
+  String kasadanParaCekBaslik(String name) {
+    return '$name · para çek';
+  }
+
+  @override
+  String get nakitKasalari => 'Nakit kasaları';
+
+  @override
+  String get kasaEkleKisa => 'Kasa';
+
+  @override
+  String get kasaYokAciklama =>
+      'Birikimin hepsi varlık olmak zorunda değil. Bir kasa aç, parayı nakit tut; alımları oradan yap.';
+
+  @override
+  String get yeniNakitKasasiEkle => 'Nakit kasası';
+
+  @override
+  String get yatirimTuruNakit => 'Nakit';
+
+  @override
+  String get menuCash => 'Kasa';
+
+  @override
+  String get kasaBaslat => 'Nakit kasası aç';
 }

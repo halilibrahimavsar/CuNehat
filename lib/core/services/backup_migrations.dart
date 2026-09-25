@@ -35,6 +35,7 @@ const Map<int, BackupMigration> backupMigrations = {
   10: _v10ToV11,
   11: _v11ToV12,
   12: _v12ToV13,
+  13: _v13ToV14,
 };
 
 /// [raw]'ı [targetVersion]'a yükseltir.
@@ -152,3 +153,14 @@ Map<String, dynamic> _v12ToV13(Map<String, dynamic> raw) {
     ],
   };
 }
+
+/// v13 → v14: yatırım türüne `cash` (birikim nakit kasası) eklendi.
+///
+/// Veri DÖNÜŞMEZ: v13 yedeğinde bu tür yoktur, var olan kayıtlar aynen
+/// okunur. Sürüm yine artırıldı, çünkü yeni türü taşıyan bir yedek eski
+/// sürümde `InvestmentType` ayrıştırmasında patlardı; artık eski sürüm onu
+/// `BackupVersionMismatch` ile düzgünce reddeder.
+Map<String, dynamic> _v13ToV14(Map<String, dynamic> raw) => {
+      ...raw,
+      'version': 14,
+    };

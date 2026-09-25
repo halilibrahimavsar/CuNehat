@@ -75,6 +75,12 @@ final class AdoptionFailedNotice extends InvestmentNotice {
   const AdoptionFailedNotice();
 }
 
+/// Seçilen nakit kasası bulunamadı ya da bakiyesi yetmiyor (bu arada başka
+/// bir işlemle azalmış olabilir). Hiçbir kayıt YAZILMADI.
+final class PotUnavailableNotice extends InvestmentNotice {
+  const PotUnavailableNotice();
+}
+
 sealed class InvestmentState extends Equatable {
   const InvestmentState();
 

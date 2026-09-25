@@ -167,7 +167,7 @@ class DataSerializationService {
   /// aktarımının kimliği — "Son içe aktarımlar" ve sonradan geri alma buna
   /// dayanır). Elle girilmiş kayıtta `null`; v12 yedekleri `_v12ToV13` ile
   /// açıkça `null` alır.
-  static const int schemaVersion = 13;
+  static const int schemaVersion = 14;
 
   final HiveInterface _hive;
   final ReceiptStorageService _receiptStorage;

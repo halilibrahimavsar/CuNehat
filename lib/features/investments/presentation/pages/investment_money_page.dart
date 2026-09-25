@@ -8,6 +8,7 @@ import 'package:cunehat/features/investments/domain/entities/investment_entity.d
 import 'package:cunehat/features/investments/domain/goal_progress.dart';
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
 import 'package:cunehat/features/investments/presentation/investment_notice_text.dart';
+import 'package:cunehat/features/investments/presentation/widgets/cash_pots.dart';
 import 'package:cunehat/features/investments/presentation/widgets/contribute_sheet.dart';
 import 'package:cunehat/features/investments/presentation/widgets/goal_form_sheet.dart';
 import 'package:cunehat/features/investments/presentation/widgets/goal_group_card.dart';
@@ -108,6 +109,12 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
     return state is InvestmentLoaded ? state.goals : const [];
   }
 
+  /// Nakit kasaları: alımda ödeme kaynağı, satışta bedelin hedefi.
+  List<InvestmentEntity> get _currentPots {
+    final state = context.read<InvestmentBloc>().state;
+    return state is InvestmentLoaded ? cashPotsOf(state.investments) : const [];
+  }
+
   // ======================================================== yatırım eylemleri
 
   /// Sat: nakit gelir işlenir; Kaydı Sil: alım gideri ters kayıtla iade.
@@ -118,6 +125,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
     InvestmentEntity investment, {
     required bool sell,
     double? proceeds,
+    InvestmentEntity? targetPot,
   }) {
     context.read<InvestmentBloc>().add(DeleteInvestmentEvent(
           id: investment.id!,
@@ -128,6 +136,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
           currentValue: proceeds ?? investment.currentValue,
           dateAdded: investment.dateAdded,
           recordSale: sell,
+          targetPot: targetPot,
         ));
   }
 
@@ -137,11 +146,13 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
       context,
       investment: investment,
       walletCurrency: _currency,
+      pots: _currentPots,
     );
     if (request == null || !mounted) return;
 
     if (request.sellAll) {
-      _dispatchDelete(investment, sell: true, proceeds: request.proceeds);
+      _dispatchDelete(investment,
+          sell: true, proceeds: request.proceeds, targetPot: request.targetPot);
       return;
     }
     context.read<InvestmentBloc>().add(PartialSellInvestmentEvent(
@@ -150,6 +161,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
           proceeds: request.proceeds,
           userId: _userId,
           walletId: _walletId,
+          targetPot: request.targetPot,
         ));
   }
 
@@ -165,6 +177,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
       context,
       investment: investment,
       walletCurrency: _currency,
+      pots: _currentPots,
       // Hedef satırı kaydın değil, bağlı olduğu HEDEFİN ilerlemesini gösterir.
       goalProgress: goal == null || state is! InvestmentLoaded
           ? null
@@ -206,6 +219,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
   }) {
     final bloc = context.read<InvestmentBloc>();
     final goals = _currentGoals;
+    final pots = _currentPots;
     void onSave(InvestmentEntity investment, CashSource cashSource) {
       bloc.add(CreateInvestmentEvent(
         investment: investment,
@@ -223,6 +237,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
           walletId: _walletId,
           walletCurrency: _currency,
           goals: goals,
+          pots: pots,
           initialGoalId: goalId,
           initialGoldType: goldType,
           onSave: onSave,
@@ -234,6 +249,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
           walletId: _walletId,
           walletCurrency: _currency,
           goals: goals,
+          pots: pots,
           initialGoalId: goalId,
           onSave: onSave,
         );
@@ -244,15 +260,26 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
           walletId: _walletId,
           walletCurrency: _currency,
           goals: goals,
+          pots: pots,
           initialGoalId: goalId,
           onSave: onSave,
+        );
+      case InvestmentType.cash:
+        showCreateCashPot(
+          context,
+          bloc: bloc,
+          userId: _userId,
+          walletId: _walletId,
+          currency: _currency,
+          goals: goals,
+          initialGoalId: goalId,
         );
     }
   }
 
   /// "Ne eklemek istersin?" — hedeften ya da boş durumdan gelinir.
   Future<void> _chooseTypeAndCreate({String? goalId}) async {
-    final type = await InvestmentTypeChooser.show(context);
+    final type = await InvestmentTypeChooser.show(context, allowCash: true);
     if (type == null || !mounted) return;
     _showCreateSheet(type, goalId: goalId);
   }
@@ -305,11 +332,23 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
           investmentToEdit: item,
           onSave: onSave,
         );
+      case InvestmentType.cash:
+        showEditCashPot(
+          context,
+          bloc: context.read<InvestmentBloc>(),
+          pot: item,
+          currency: _currency,
+          goals: goals,
+        );
     }
   }
 
   /// Karta dokunma: Sat / Sil / Düzenle / Katkı / Fiyat eylemleri.
   Future<void> _showActionSheet(InvestmentEntity investment) async {
+    if (investment.type == InvestmentType.cash) {
+      await _showPotActions(investment);
+      return;
+    }
     final action =
         await InvestmentActionSheet.show(context, investment: investment);
     if (action == null || !mounted) return;
@@ -334,6 +373,67 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
           _dispatchDelete(investment, sell: false);
         }
     }
+  }
+
+  // ============================================================ kasa eylemleri
+
+  void _depositToPot(InvestmentEntity pot) => showDepositToPot(
+        context,
+        bloc: context.read<InvestmentBloc>(),
+        pot: pot,
+        currency: _currency,
+      );
+
+  void _withdrawFromPot(InvestmentEntity pot) => showWithdrawFromPot(
+        context,
+        bloc: context.read<InvestmentBloc>(),
+        pot: pot,
+        currency: _currency,
+        otherPots: _currentPots,
+      );
+
+  void _createPot() => showCreateCashPot(
+        context,
+        bloc: context.read<InvestmentBloc>(),
+        userId: _userId,
+        walletId: _walletId,
+        currency: _currency,
+        goals: _currentGoals,
+      );
+
+  Future<void> _showPotActions(InvestmentEntity pot) async {
+    final action = await CashPotActionSheet.show(context,
+        pot: pot, currency: _currency);
+    if (action == null || !mounted) return;
+    switch (action) {
+      case CashPotAction.deposit:
+        _depositToPot(pot);
+      case CashPotAction.withdraw:
+        _withdrawFromPot(pot);
+      case CashPotAction.edit:
+        _openEditSheet(pot);
+      case CashPotAction.close:
+        await _closePot(pot);
+    }
+  }
+
+  /// Kasayı kapat: kalan bakiye cüzdana döner (aktarım olarak yazılır).
+  /// Boş kasada yalnız kayıt silinir.
+  Future<void> _closePot(InvestmentEntity pot) async {
+    final hasBalance = pot.currentValue > 0;
+    if (hasBalance) {
+      final confirmed = await ConfirmDialog.show(
+        context,
+        title: context.l10n.kasayiKapatOnayBaslik(pot.name),
+        message: context.l10n.kasayiKapatOnayMesaj(
+            formatMoney(pot.currentValue, currency: _currency)),
+        confirmText: context.l10n.kasayiKapat,
+        cancelText: context.l10n.vazgec,
+        danger: true,
+      );
+      if (!confirmed || !mounted) return;
+    }
+    _dispatchDelete(pot, sell: hasBalance, proceeds: pot.currentValue);
   }
 
   // =========================================================== hedef eylemleri
@@ -406,7 +506,15 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
         final investments = loaded?.investments ?? const <InvestmentEntity>[];
         final goals = loaded?.goals ?? const <GoalEntity>[];
         final goalProgress = buildGoalProgress(goals, investments);
-        final unassigned = unassignedInvestments(investments, goals);
+        // Kasalar kendi bölümünde; hedefe bağlı kasa hedefin içinde görünür.
+        final unassigned = unassignedInvestments(investments, goals)
+            .where((i) => i.type != InvestmentType.cash)
+            .toList();
+        final goalIds = {for (final g in goals) g.id};
+        final freePots = [
+          for (final p in cashPotsOf(investments))
+            if (p.goalId == null || !goalIds.contains(p.goalId)) p,
+        ];
 
         return Stack(
           children: [
@@ -424,6 +532,9 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                                 investments: investments,
                                 goalProgress: goalProgress,
                                 unassigned: unassigned,
+                                freePots: freePots,
+                                hasAnyPot: investments.any(
+                                    (i) => i.type == InvestmentType.cash),
                               ),
                       ),
                     ),
@@ -452,6 +563,8 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
     required List<InvestmentEntity> investments,
     required List<GoalProgress> goalProgress,
     required List<InvestmentEntity> unassigned,
+    required List<InvestmentEntity> freePots,
+    required bool hasAnyPot,
   }) {
     final canRefreshAny = investments.any((i) => i.canRefreshPrice);
 
@@ -470,6 +583,41 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
           InvestmentChart(investments: investments),
           const SizedBox(height: 20),
         ],
+        _sectionHeader(
+          context,
+          title: context.l10n.nakitKasalari,
+          trailing: TextButton.icon(
+            key: const ValueKey('add-cash-pot'),
+            onPressed: _createPot,
+            icon: const Icon(Icons.add_rounded, size: 18),
+            label: Text(context.l10n.kasaEkleKisa),
+          ),
+        ),
+        const SizedBox(height: 10),
+        if (!hasAnyPot)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              context.l10n.kasaYokAciklama,
+              style: TextStyle(
+                fontSize: 12.5,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ...freePots.map(
+          (pot) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: CashPotTile(
+              pot: pot,
+              currency: _currency,
+              onTap: () => _showPotActions(pot),
+              onDeposit: () => _depositToPot(pot),
+              onWithdraw: () => _withdrawFromPot(pot),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
         _sectionHeader(
           context,
           title: context.l10n.hedeflerim,
@@ -642,6 +790,19 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
               onPressed: () => _chooseTypeAndCreate(),
               icon: const Icon(Icons.add_rounded, size: 20),
               label: Text(context.l10n.varlikEkle),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              key: const ValueKey('empty-add-cash-pot'),
+              onPressed: _createPot,
+              icon: const Icon(Icons.savings_rounded, size: 20),
+              label: Text(context.l10n.kasaBaslat),
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size.fromHeight(48),
                 shape: RoundedRectangleBorder(

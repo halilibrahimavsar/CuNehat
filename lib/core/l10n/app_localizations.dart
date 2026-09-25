@@ -10264,6 +10264,246 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Aylık limitler bu {days} günlük döneme orantılandı.'**
   String reportBudgetProrated(int days);
+
+  /// No description provided for @systemTagSavingsDeposit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Birikime aktarım'**
+  String get systemTagSavingsDeposit;
+
+  /// No description provided for @systemTagSavingsWithdraw.
+  ///
+  /// In tr, this message translates to:
+  /// **'Birikimden aktarım'**
+  String get systemTagSavingsWithdraw;
+
+  /// No description provided for @potUnavailableMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kasanın bakiyesi bu işlem için yetmiyor; hiçbir şey kaydedilmedi.'**
+  String get potUnavailableMessage;
+
+  /// No description provided for @odemeKasadanBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kasadan: {name}'**
+  String odemeKasadanBaslik(String name);
+
+  /// No description provided for @kasaBakiyesi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye {amount} · cüzdana dokunulmaz'**
+  String kasaBakiyesi(String amount);
+
+  /// No description provided for @alimKasadanDusulecek.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutar “{name}” kasasından düşülecek (bakiye {amount}); cüzdan ve defter değişmez.'**
+  String alimKasadanDusulecek(String name, String amount);
+
+  /// No description provided for @kasaYetersizUyari.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kasada yalnız {amount} var. Tutarı düşür ya da başka bir kaynak seç.'**
+  String kasaYetersizUyari(String amount);
+
+  /// No description provided for @satisHedefiBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Para nereye?'**
+  String get satisHedefiBaslik;
+
+  /// No description provided for @satisHedefiCuzdan.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdana'**
+  String get satisHedefiCuzdan;
+
+  /// No description provided for @kasaBakiyeSade.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye {amount}'**
+  String kasaBakiyeSade(String amount);
+
+  /// No description provided for @kasaTutar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutar'**
+  String get kasaTutar;
+
+  /// No description provided for @kasaParaEkle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Para ekle'**
+  String get kasaParaEkle;
+
+  /// No description provided for @kasaParaCek.
+  ///
+  /// In tr, this message translates to:
+  /// **'Para çek'**
+  String get kasaParaCek;
+
+  /// No description provided for @kasaParaEkleAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdandan kasaya aktarılır; gider sayılmaz.'**
+  String get kasaParaEkleAciklama;
+
+  /// No description provided for @kasaParaCekAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kasadan cüzdana aktarılır; gelir sayılmaz.'**
+  String get kasaParaCekAciklama;
+
+  /// No description provided for @kasalarArasiAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'“{name}” kasasına aktarılır; cüzdan değişmez.'**
+  String kasalarArasiAciklama(String name);
+
+  /// No description provided for @kasaDuzenle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kasayı düzenle'**
+  String get kasaDuzenle;
+
+  /// No description provided for @kasayiKapat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kasayı kapat'**
+  String get kasayiKapat;
+
+  /// No description provided for @kasayiKapatAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalan {amount} cüzdana döner'**
+  String kasayiKapatAciklama(String amount);
+
+  /// No description provided for @kasayiKapatOnayBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'“{name}” kapatılsın mı?'**
+  String kasayiKapatOnayBaslik(String name);
+
+  /// No description provided for @kasayiKapatOnayMesaj.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kasadaki {amount} cüzdana aktarılır. Hemen ardından geri alabilirsin.'**
+  String kasayiKapatOnayMesaj(String amount);
+
+  /// No description provided for @yeniKasa.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni nakit kasası'**
+  String get yeniKasa;
+
+  /// No description provided for @kasaOlustur.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kasayı oluştur'**
+  String get kasaOlustur;
+
+  /// No description provided for @kasaAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Birikimini nakit olarak ayrı tut: acil durum fonu, tatil parası… Varlık alırken bu kasadan ödeyebilir, satışta parayı buraya koyabilirsin.'**
+  String get kasaAciklama;
+
+  /// No description provided for @kasaAdi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kasa adı'**
+  String get kasaAdi;
+
+  /// No description provided for @kasaAdiOrnek.
+  ///
+  /// In tr, this message translates to:
+  /// **'ör. Acil durum fonu'**
+  String get kasaAdiOrnek;
+
+  /// No description provided for @kasaAdiGerekli.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kasaya bir ad ver'**
+  String get kasaAdiGerekli;
+
+  /// No description provided for @kasaAcilisTutari.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlangıç tutarı (isteğe bağlı)'**
+  String get kasaAcilisTutari;
+
+  /// No description provided for @kasaAcilisTutariYardim.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdandan kasaya aktarılır'**
+  String get kasaAcilisTutariYardim;
+
+  /// No description provided for @kasaHedefi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedef (isteğe bağlı)'**
+  String get kasaHedefi;
+
+  /// No description provided for @kasaHedefYok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedefe bağlama'**
+  String get kasaHedefYok;
+
+  /// No description provided for @kasayaParaEkleBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} · para ekle'**
+  String kasayaParaEkleBaslik(String name);
+
+  /// No description provided for @kasadanParaCekBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} · para çek'**
+  String kasadanParaCekBaslik(String name);
+
+  /// No description provided for @nakitKasalari.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nakit kasaları'**
+  String get nakitKasalari;
+
+  /// No description provided for @kasaEkleKisa.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kasa'**
+  String get kasaEkleKisa;
+
+  /// No description provided for @kasaYokAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Birikimin hepsi varlık olmak zorunda değil. Bir kasa aç, parayı nakit tut; alımları oradan yap.'**
+  String get kasaYokAciklama;
+
+  /// No description provided for @yeniNakitKasasiEkle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nakit kasası'**
+  String get yeniNakitKasasiEkle;
+
+  /// No description provided for @yatirimTuruNakit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nakit'**
+  String get yatirimTuruNakit;
+
+  /// No description provided for @menuCash.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kasa'**
+  String get menuCash;
+
+  /// No description provided for @kasaBaslat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nakit kasası aç'**
+  String get kasaBaslat;
 }
 
 class _AppLocalizationsDelegate

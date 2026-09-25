@@ -368,7 +368,7 @@ void main() {
     // `CLAUDE.md`: "enum değerleri yalnız SONA eklenir".
     test('InvestmentType — yatırım TÜRÜ index ile saklanır', () {
       expect(InvestmentType.values.map((e) => e.name).toList(),
-          ['stock', 'gold', 'custom']);
+          ['stock', 'gold', 'custom', 'cash']);
     });
 
     test('TransactionTypeModel — GELİR/GİDER işareti byte ile saklanır', () {

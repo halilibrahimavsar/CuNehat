@@ -1,3 +1,4 @@
+import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/purchase_payment.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/services/cash_source.dart';
@@ -64,6 +65,9 @@ class ContributeSheet extends StatefulWidget {
   /// sayfa o satır seçili açılır, ödenen tutar ondan gelir.
   final TransactionEntity? initialLedgerTransaction;
 
+  /// Birikimin nakit kasaları: katkı bir kasadan ödenebilir.
+  final List<InvestmentEntity> pots;
+
   const ContributeSheet({
     super.key,
     required this.investment,
@@ -72,6 +76,7 @@ class ContributeSheet extends StatefulWidget {
     this.goalProgress,
     this.onCreateForGoldType,
     this.initialLedgerTransaction,
+    this.pots = const [],
   });
 
   static Future<void> show(
@@ -83,6 +88,7 @@ class ContributeSheet extends StatefulWidget {
     GoalProgress? goalProgress,
     void Function(String goldTypeKey)? onCreateForGoldType,
     TransactionEntity? initialLedgerTransaction,
+    List<InvestmentEntity> pots = const [],
   }) {
     return showModalBottomSheet(
       context: context,
@@ -95,6 +101,11 @@ class ContributeSheet extends StatefulWidget {
         goalProgress: goalProgress,
         onCreateForGoldType: onCreateForGoldType,
         initialLedgerTransaction: initialLedgerTransaction,
+        // Kasa kendine katkı yapamaz.
+        pots: [
+          for (final p in pots)
+            if (p.id != investment.id) p,
+        ],
       ),
     );
   }
@@ -125,6 +136,12 @@ class _ContributeSheetState extends State<ContributeSheet> {
   /// "MIDAS MENKUL DEGERLER −5.000"): tutar ondan gelir ve kilitlenir, yeni
   /// gider yazılmaz — eskiden aynı para iki kez düşüyordu.
   TransactionEntity? _ledgerTx;
+
+  /// Ödemenin yapılacağı nakit kasası; `null` → cüzdan (ya da defter satırı).
+  /// Açılış: defterden gelinmediyse bakiyesi olan en büyük kasa.
+  late InvestmentEntity? _pot = widget.initialLedgerTransaction != null
+      ? null
+      : PurchasePayment.defaultFor(widget.pots).pot;
 
   /// Son başarılı sorgunun CÜZDAN birimindeki birim fiyatı; miktar kipinde
   /// currentValue'yu, tutar kipinde miktarı hesaplamak için kullanılır.
@@ -257,6 +274,10 @@ class _ContributeSheetState extends State<ContributeSheet> {
         return context.l10n.katkiFiyatGerekli;
       }
     }
+    final pot = _pot;
+    if (pot != null && (_parsedAmount ?? 0) > pot.amount + 0.005) {
+      return context.l10n.kasaYetersizUyari(_money(pot.amount));
+    }
     return null;
   }
 
@@ -294,11 +315,15 @@ class _ContributeSheetState extends State<ContributeSheet> {
     }
 
     final ledgerTx = _ledgerTx;
+    final pot = _pot;
     widget.onSave(
       updated,
-      ledgerTx == null
-          ? const NewCashMovement()
-          : AdoptedCashMovement(ledgerTx),
+      // Ödenen 0 (hediye) ise kasadan düşülecek bir şey yok.
+      pot != null && (_parsedAmount ?? 0) > 0
+          ? FromSavingsPot(pot.id!)
+          : ledgerTx == null
+              ? const NewCashMovement()
+              : AdoptedCashMovement(ledgerTx),
     );
     Navigator.pop(context);
   }
@@ -320,6 +345,40 @@ class _ContributeSheetState extends State<ContributeSheet> {
       _amountController.text = _fmt(picked.amount);
       _error = null;
     });
+  }
+
+  /// Ödeme kaynağı: cüzdan ya da bir nakit kasası. Kasa yoksa çizilmez.
+  Widget _buildPaymentSource(Color accent) {
+    if (widget.pots.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 4),
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 4,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Text(context.l10n.odemeKaynagiBaslik,
+              style: Theme.of(context).textTheme.labelMedium),
+          ChoiceChip(
+            key: const ValueKey('contrib-pay-wallet'),
+            label: Text(context.l10n.odemeCuzdandanBaslik),
+            selected: _pot == null,
+            onSelected: (_) => setState(() => _pot = null),
+          ),
+          for (final pot in widget.pots)
+            ChoiceChip(
+              key: ValueKey('contrib-pay-pot-${pot.id}'),
+              label: Text('${pot.name} · ${_money(pot.amount)}'),
+              selected: _pot?.id == pot.id,
+              onSelected: (_) => setState(() {
+                _pot = pot;
+                // Kasa ile defter satırı birbirini dışlar.
+                _ledgerTx = null;
+              }),
+            ),
+        ],
+      ),
+    );
   }
 
   /// "Ödemesi defterde zaten var": satırı seçme/gösterme/kaldırma.
@@ -590,7 +649,8 @@ class _ContributeSheetState extends State<ContributeSheet> {
           },
         ),
         const SizedBox(height: 8),
-        _buildLedgerPayment(cs, accent),
+        _buildPaymentSource(accent),
+        if (_pot == null) _buildLedgerPayment(cs, accent),
       ];
     }
 
@@ -663,7 +723,8 @@ class _ContributeSheetState extends State<ContributeSheet> {
           }),
         ),
         const SizedBox(height: 8),
-        _buildLedgerPayment(cs, accent),
+        _buildPaymentSource(accent),
+        if (_pot == null) _buildLedgerPayment(cs, accent),
         // Ödenen boşken alım bedelsiz sayılır: maliyet artmaz, defterde
         // gider oluşmaz, fark kâr olarak görünür. Sessiz kalmaz.
         if (_quantityController.text.trim().isNotEmpty &&
@@ -687,7 +748,8 @@ class _ContributeSheetState extends State<ContributeSheet> {
           onChanged: (_) => setState(() => _error = null),
         ),
         const SizedBox(height: 8),
-        _buildLedgerPayment(cs, accent),
+        _buildPaymentSource(accent),
+        if (_pot == null) _buildLedgerPayment(cs, accent),
         const SizedBox(height: 12),
         _buildFetchButton(accent),
         if (_tracksQuantity) ...[

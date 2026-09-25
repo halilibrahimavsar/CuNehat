@@ -3291,5 +3291,125 @@
         "type": "int"
       }
     }
-  }
+  },
+  "systemTagSavingsDeposit": "To savings",
+  "systemTagSavingsWithdraw": "From savings",
+  "potUnavailableMessage": "The savings pot doesn't have enough balance; nothing was saved.",
+  "odemeKasadanBaslik": "From pot: {name}",
+  "@odemeKasadanBaslik": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kasaBakiyesi": "Balance {amount} · wallet untouched",
+  "@kasaBakiyesi": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "alimKasadanDusulecek": "The amount will come out of “{name}” (balance {amount}); your wallet and ledger don't change.",
+  "@alimKasadanDusulecek": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "kasaYetersizUyari": "The pot only has {amount}. Lower the amount or choose another source.",
+  "@kasaYetersizUyari": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "satisHedefiBaslik": "Where does the money go?",
+  "satisHedefiCuzdan": "To wallet",
+  "kasaBakiyeSade": "Balance {amount}",
+  "@kasaBakiyeSade": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "kasaTutar": "Amount",
+  "kasaParaEkle": "Add money",
+  "kasaParaCek": "Withdraw",
+  "kasaParaEkleAciklama": "Moved from your wallet into the pot; not counted as spending.",
+  "kasaParaCekAciklama": "Moved from the pot to your wallet; not counted as income.",
+  "kasalarArasiAciklama": "Moved into “{name}”; your wallet doesn't change.",
+  "@kasalarArasiAciklama": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kasaDuzenle": "Edit pot",
+  "kasayiKapat": "Close pot",
+  "kasayiKapatAciklama": "The remaining {amount} returns to your wallet",
+  "@kasayiKapatAciklama": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "kasayiKapatOnayBaslik": "Close “{name}”?",
+  "@kasayiKapatOnayBaslik": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kasayiKapatOnayMesaj": "The {amount} in this pot moves back to your wallet. You can undo right after.",
+  "@kasayiKapatOnayMesaj": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "yeniKasa": "New cash pot",
+  "kasaOlustur": "Create pot",
+  "kasaAciklama": "Keep part of your savings as cash: emergency fund, holiday money… You can pay for assets from this pot and put sale proceeds back into it.",
+  "kasaAdi": "Pot name",
+  "kasaAdiOrnek": "e.g. Emergency fund",
+  "kasaAdiGerekli": "Give the pot a name",
+  "kasaAcilisTutari": "Starting amount (optional)",
+  "kasaAcilisTutariYardim": "Moved from your wallet into the pot",
+  "kasaHedefi": "Goal (optional)",
+  "kasaHedefYok": "No goal",
+  "kasayaParaEkleBaslik": "{name} · add money",
+  "@kasayaParaEkleBaslik": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kasadanParaCekBaslik": "{name} · withdraw",
+  "@kasadanParaCekBaslik": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "nakitKasalari": "Cash pots",
+  "kasaEkleKisa": "Pot",
+  "kasaYokAciklama": "Not all savings have to be assets. Open a pot, keep money as cash and buy from it.",
+  "yeniNakitKasasiEkle": "Cash pot",
+  "yatirimTuruNakit": "Cash",
+  "menuCash": "Pot",
+  "kasaBaslat": "Open a cash pot"
 }

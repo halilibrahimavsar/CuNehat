@@ -143,8 +143,11 @@ final class PartialSellInvestmentEvent extends InvestmentEvent {
   /// Satıştan sonra kalan kayıt (miktar/maliyet/değer düşülmüş).
   final InvestmentEntity remaining;
 
-  /// Cüzdana gelir olarak yazılacak tutar.
+  /// Satışın elde ettiği tutar: cüzdana gelir ya da [targetPot]'a girer.
   final double proceeds;
+
+  /// Verilirse bedel bu NAKİT KASASINA girer, cüzdana gelir yazılmaz.
+  final InvestmentEntity? targetPot;
 
   const PartialSellInvestmentEvent({
     required this.previous,
@@ -152,10 +155,18 @@ final class PartialSellInvestmentEvent extends InvestmentEvent {
     required this.proceeds,
     required this.userId,
     required this.walletId,
+    this.targetPot,
   });
 
   @override
-  List<Object> get props => [previous, remaining, proceeds, userId, walletId];
+  List<Object> get props => [
+        previous,
+        remaining,
+        proceeds,
+        userId,
+        walletId,
+        if (targetPot != null) targetPot!,
+      ];
 }
 
 final class DeleteInvestmentEvent extends InvestmentEvent {
@@ -180,6 +191,10 @@ final class DeleteInvestmentEvent extends InvestmentEvent {
   /// (satış ters kayıt değil, bugün gerçekleşen bir olaydır).
   final DateTime dateAdded;
 
+  /// Satışta verilirse bedel bu NAKİT KASASINA girer, cüzdana gelir
+  /// yazılmaz.
+  final InvestmentEntity? targetPot;
+
   const DeleteInvestmentEvent({
     required this.id,
     required this.userId,
@@ -188,7 +203,14 @@ final class DeleteInvestmentEvent extends InvestmentEvent {
     required this.currentValue,
     required this.dateAdded,
     this.recordSale = true,
+    this.targetPot,
   });
   @override
-  List<Object> get props => [id, userId, walletId, recordSale];
+  List<Object> get props => [
+        id,
+        userId,
+        walletId,
+        recordSale,
+        if (targetPot != null) targetPot!,
+      ];
 }

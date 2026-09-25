@@ -1,3 +1,4 @@
+import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/core/services/cash_source.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 
@@ -12,6 +13,10 @@ enum PurchasePaymentMode {
 
   /// Uygulamadan önce alındı ("bu varlık zaten bende"): cüzdana dokunulmaz.
   alreadyOwned,
+
+  /// Birikimdeki bir NAKİT KASASINDAN: kasa düşer, cüzdana ve deftere
+  /// dokunulmaz.
+  pot,
 }
 
 /// Ödeme kaynağı seçimi + (defterden seçildiyse) seçilen satır.
@@ -22,7 +27,34 @@ class PurchasePayment {
   /// `null` (kayıt bu hâlde kaydedilemez).
   final TransactionEntity? ledgerTransaction;
 
-  const PurchasePayment._(this.mode, this.ledgerTransaction);
+  /// [PurchasePaymentMode.pot] iken seçilen kasa.
+  final InvestmentEntity? pot;
+
+  const PurchasePayment._(this.mode, this.ledgerTransaction, [this.pot]);
+
+  const PurchasePayment.pot(InvestmentEntity this.pot)
+      : mode = PurchasePaymentMode.pot,
+        ledgerTransaction = null;
+
+  /// Formun açılış seçimi: bakiyesi olan kasa varsa EN ÇOK parası olan kasa
+  /// (kullanıcı bakiyesinden yatırım yapmayı seçti — varsayılan o), yoksa
+  /// cüzdan.
+  factory PurchasePayment.defaultFor(List<InvestmentEntity> pots) {
+    final funded = [
+      for (final p in pots)
+        if (p.amount > 0) p,
+    ]..sort((a, b) => b.amount.compareTo(a.amount));
+    return funded.isEmpty
+        ? const PurchasePayment.wallet()
+        : PurchasePayment.pot(funded.first);
+  }
+
+  /// Kasadan ödemede [cost] kasanın bakiyesini aşıyor mu? Kayıt bu hâlde
+  /// kaydedilemez.
+  bool exceedsPot(double? cost) =>
+      mode == PurchasePaymentMode.pot &&
+      cost != null &&
+      cost > (pot?.amount ?? 0) + 0.005;
 
   const PurchasePayment.wallet() : this._(PurchasePaymentMode.wallet, null);
 
@@ -49,5 +81,6 @@ class PurchasePayment {
         PurchasePaymentMode.ledger =>
           AdoptedCashMovement(ledgerTransaction!),
         PurchasePaymentMode.alreadyOwned => const OffLedgerCash(),
+        PurchasePaymentMode.pot => FromSavingsPot(pot!.id!),
       };
 }

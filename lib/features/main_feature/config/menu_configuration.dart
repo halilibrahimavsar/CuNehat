@@ -72,6 +72,11 @@ class MenuConfigs {
           icon: Icons.account_balance_wallet,
           actionType: 'add_custom_investment',
         ),
+        MiniButtonConfig(
+          label: 'Kasa',
+          icon: Icons.savings_rounded,
+          actionType: 'add_cash_pot',
+        ),
       ],
       subMenus: [
         SubMenuConfig(

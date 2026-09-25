@@ -38,3 +38,14 @@ final class AdoptedCashMovement extends CashSource {
 final class OffLedgerCash extends CashSource {
   const OffLedgerCash();
 }
+
+/// Ödeme bir birikim NAKİT KASASINDAN yapılır: cüzdana dokunulmaz, defterde
+/// hareket yazılmaz; kasanın bakiyesi düşer (bkz. `cash_pot_math.dart`).
+/// Kasa CÜZDANLA aynı hesabın birikimindedir.
+final class FromSavingsPot extends CashSource {
+  final String potId;
+  const FromSavingsPot(this.potId);
+
+  @override
+  List<Object?> get props => [potId];
+}

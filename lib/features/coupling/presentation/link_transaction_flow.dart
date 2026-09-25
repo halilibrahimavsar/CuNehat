@@ -219,6 +219,10 @@ Future<void> _linkNewInvestment(
         initialLedgerTransaction: tx,
         onSave: onSave,
       );
+    // Bağlama seçiminde nakit kasası sunulmaz (bkz. `LinkChoice` listesi):
+    // ekstre satırını kasaya aktarım olarak benimsemek ayrı bir iş.
+    case InvestmentType.cash:
+      return;
   }
 }
 

@@ -184,6 +184,8 @@ void main() {
         l10n.systemTagInvestmentSell,
         l10n.systemTagInvestmentCorrection,
         l10n.systemTagTransfer,
+        l10n.systemTagSavingsDeposit,
+        l10n.systemTagSavingsWithdraw,
       };
 
       for (final tag in CashMovementTags.all) {

@@ -23,10 +23,14 @@ class InvestmentSaleRequest {
   /// Kısmi satışta kalan kayıt; tam satışta null.
   final InvestmentEntity? remaining;
 
+  /// Bedel bu NAKİT KASASINA girer; `null` → cüzdana gelir.
+  final InvestmentEntity? targetPot;
+
   const InvestmentSaleRequest({
     required this.sellAll,
     required this.proceeds,
     this.remaining,
+    this.targetPot,
   });
 }
 
@@ -39,16 +43,21 @@ class SellInvestmentSheet extends StatefulWidget {
   final InvestmentEntity investment;
   final String walletCurrency;
 
+  /// Bedelin girebileceği nakit kasaları (satılan kaydın kendisi hariç).
+  final List<InvestmentEntity> pots;
+
   const SellInvestmentSheet({
     super.key,
     required this.investment,
     required this.walletCurrency,
+    this.pots = const [],
   });
 
   static Future<InvestmentSaleRequest?> show(
     BuildContext context, {
     required InvestmentEntity investment,
     required String walletCurrency,
+    List<InvestmentEntity> pots = const [],
   }) {
     return showModalBottomSheet<InvestmentSaleRequest>(
       context: context,
@@ -57,6 +66,10 @@ class SellInvestmentSheet extends StatefulWidget {
       builder: (context) => SellInvestmentSheet(
         investment: investment,
         walletCurrency: walletCurrency,
+        pots: [
+          for (final p in pots)
+            if (p.id != investment.id) p,
+        ],
       ),
     );
   }
@@ -68,6 +81,12 @@ class SellInvestmentSheet extends StatefulWidget {
 class _SellInvestmentSheetState extends State<SellInvestmentSheet> {
   final _soldController = TextEditingController();
   final _proceedsController = TextEditingController();
+
+  /// Bedelin gideceği kasa; `null` → cüzdan. Varsayılan: kasa varsa ilki
+  /// (kullanıcı kararı: satış parası birikimde kalır, istenirse sonra
+  /// cüzdana aktarılır).
+  late InvestmentEntity? _targetPot =
+      widget.pots.isEmpty ? null : widget.pots.first;
 
   bool _isLoading = false;
   String? _error;
@@ -228,7 +247,8 @@ class _SellInvestmentSheetState extends State<SellInvestmentSheet> {
     if (_isFullSale) {
       Navigator.pop(
         context,
-        InvestmentSaleRequest(sellAll: true, proceeds: proceeds),
+        InvestmentSaleRequest(
+            sellAll: true, proceeds: proceeds, targetPot: _targetPot),
       );
       return;
     }
@@ -244,6 +264,7 @@ class _SellInvestmentSheetState extends State<SellInvestmentSheet> {
         sellAll: false,
         proceeds: proceeds,
         remaining: remaining,
+        targetPot: _targetPot,
       ),
     );
   }
@@ -405,6 +426,34 @@ class _SellInvestmentSheetState extends State<SellInvestmentSheet> {
                       _error = null;
                     }),
                   ),
+                  if (widget.pots.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    // Bedel NEREYE: kasa (varsayılan) ya da cüzdan.
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(context.l10n.satisHedefiBaslik,
+                            style: Theme.of(context).textTheme.labelMedium),
+                        for (final pot in widget.pots)
+                          ChoiceChip(
+                            key: ValueKey('sell-to-pot-${pot.id}'),
+                            label: Text(pot.name),
+                            selected: _targetPot?.id == pot.id,
+                            onSelected: (_) =>
+                                setState(() => _targetPot = pot),
+                          ),
+                        ChoiceChip(
+                          key: const ValueKey('sell-to-wallet'),
+                          label: Text(context.l10n.satisHedefiCuzdan),
+                          selected: _targetPot == null,
+                          onSelected: (_) =>
+                              setState(() => _targetPot = null),
+                        ),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 10),
                   Text(
                     _summaryText(),

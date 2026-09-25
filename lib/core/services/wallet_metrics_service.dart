@@ -24,6 +24,12 @@ class CashMovementTags {
   static const String investmentCorrection = 'Yatırım Düzeltmesi';
   static const String transfer = 'Transfer';
 
+  /// Cüzdandan bir birikim nakit kasasına aktarım (harcama değil).
+  static const String savingsDeposit = 'Birikime Aktarım';
+
+  /// Nakit kasasından cüzdana aktarım (gelir değil).
+  static const String savingsWithdraw = 'Birikimden Aktarım';
+
   /// Tüm sistem etiketleri. Kategori adları bunlarla çakışamaz: bütçe
   /// harcaması ve rapor kırılımı `tag == categoryId` ile eşleştiğinden,
   /// aynı adlı kullanıcı kategorisi sistem hareketlerini kendine sayardı.
@@ -36,6 +42,8 @@ class CashMovementTags {
     investmentSell,
     investmentCorrection,
     transfer,
+    savingsDeposit,
+    savingsWithdraw,
   ];
 
   /// [name] sistem etiketlerinden biriyle (büyük/küçük harf duyarsız)

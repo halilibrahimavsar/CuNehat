@@ -7,6 +7,8 @@ import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.d
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_gold_sheet.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_stock_sheet.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_custom_sheet.dart';
+import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
+import 'package:cunehat/features/investments/presentation/widgets/cash_pots.dart';
 import 'package:cunehat/features/main_feature/config/menu_configuration.dart';
 import 'package:cunehat/features/main_feature/controllers/home_navigation_controller.dart';
 import 'package:cunehat/features/main_feature/factories/sub_view_factory.dart';
@@ -149,6 +151,8 @@ class _SliderButtonViewState extends State<SliderButtonView> {
         return context.l10n.menuStock;
       case 'add_custom_investment':
         return context.l10n.menuCustom;
+      case 'add_cash_pot':
+        return context.l10n.menuCash;
       case 'add_income':
         return context.l10n.menuIncome;
       case 'add_expense':
@@ -171,6 +175,7 @@ class _SliderButtonViewState extends State<SliderButtonView> {
       'add_gold_investment' => Colors.amber,
       'add_stock_investment' => Colors.blue,
       'add_custom_investment' => Colors.purple,
+      'add_cash_pot' => kCashPotColor,
       _ => Colors.green,
     };
   }
@@ -222,6 +227,16 @@ class _SliderButtonViewState extends State<SliderButtonView> {
       case 'add_custom_investment':
         _showAddCustomSheet(context, activeWallet);
         break;
+      case 'add_cash_pot':
+        showCreateCashPot(
+          context,
+          bloc: context.read<InvestmentBloc>(),
+          userId: activeWallet.userId,
+          walletId: activeWallet.id!,
+          currency: activeWallet.currency,
+          goals: _goalsOf(context),
+        );
+        break;
       case 'add_income':
         _showTransactionSheet(
             context, activeWallet, TransactionTypeModel.income);
@@ -247,6 +262,12 @@ class _SliderButtonViewState extends State<SliderButtonView> {
     return state is InvestmentLoaded ? state.goals : const [];
   }
 
+  /// Alım formlarının "nereden ödendi?" seçicisi için nakit kasaları.
+  List<InvestmentEntity> _potsOf(BuildContext context) {
+    final state = context.read<InvestmentBloc>().state;
+    return state is InvestmentLoaded ? cashPotsOf(state.investments) : const [];
+  }
+
   void _showAddGoldSheet(BuildContext context, dynamic activeWallet) {
     AddGoldSheet.show(
       context,
@@ -254,6 +275,7 @@ class _SliderButtonViewState extends State<SliderButtonView> {
       walletId: activeWallet.id!,
       walletCurrency: activeWallet.currency,
       goals: _goalsOf(context),
+      pots: _potsOf(context),
       onSave: (investment, cashSource) {
         context.read<InvestmentBloc>().add(CreateInvestmentEvent(
               investment: investment,
@@ -272,6 +294,7 @@ class _SliderButtonViewState extends State<SliderButtonView> {
       walletId: activeWallet.id!,
       walletCurrency: activeWallet.currency,
       goals: _goalsOf(context),
+      pots: _potsOf(context),
       onSave: (investment, cashSource) {
         context.read<InvestmentBloc>().add(CreateInvestmentEvent(
               investment: investment,
@@ -290,6 +313,7 @@ class _SliderButtonViewState extends State<SliderButtonView> {
       walletId: activeWallet.id!,
       walletCurrency: activeWallet.currency,
       goals: _goalsOf(context),
+      pots: _potsOf(context),
       onSave: (investment, cashSource) {
         context.read<InvestmentBloc>().add(CreateInvestmentEvent(
               investment: investment,

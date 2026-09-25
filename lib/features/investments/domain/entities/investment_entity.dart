@@ -5,6 +5,16 @@ enum InvestmentType {
   stock,
   gold,
   custom,
+
+  /// NAKİT KASASI ("Acil durum", "Tatil"…): birikimin varlık olmayan, para
+  /// olarak saklanan kısmı. Bakiyesi `amount == currentValue`; fiyatı yoktur.
+  /// Varlıklar kasadan alınabilir, satış kasaya yapılabilir — cüzdana hiç
+  /// uğramadan (bkz. `InvestmentBloc` kasa akışları).
+  ///
+  /// SONA eklendi (CLAUDE.md: enum değerleri yalnız sona eklenir). Hive'da
+  /// indeksle yazılır; eski sürüm bilinmeyen indeksi `custom`a düşürür
+  /// (bkz. `InvestmentTypeAdapter`). Yedekte adla yazıldığı için şema 13→14.
+  cash,
 }
 
 /// Bir yatırım kaydı.

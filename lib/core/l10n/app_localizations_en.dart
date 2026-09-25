@@ -5938,4 +5938,151 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get systemTagSavingsDeposit => 'To savings';
+
+  @override
+  String get systemTagSavingsWithdraw => 'From savings';
+
+  @override
+  String get potUnavailableMessage =>
+      'The savings pot doesn\'t have enough balance; nothing was saved.';
+
+  @override
+  String odemeKasadanBaslik(String name) {
+    return 'From pot: $name';
+  }
+
+  @override
+  String kasaBakiyesi(String amount) {
+    return 'Balance $amount · wallet untouched';
+  }
+
+  @override
+  String alimKasadanDusulecek(String name, String amount) {
+    return 'The amount will come out of “$name” (balance $amount); your wallet and ledger don\'t change.';
+  }
+
+  @override
+  String kasaYetersizUyari(String amount) {
+    return 'The pot only has $amount. Lower the amount or choose another source.';
+  }
+
+  @override
+  String get satisHedefiBaslik => 'Where does the money go?';
+
+  @override
+  String get satisHedefiCuzdan => 'To wallet';
+
+  @override
+  String kasaBakiyeSade(String amount) {
+    return 'Balance $amount';
+  }
+
+  @override
+  String get kasaTutar => 'Amount';
+
+  @override
+  String get kasaParaEkle => 'Add money';
+
+  @override
+  String get kasaParaCek => 'Withdraw';
+
+  @override
+  String get kasaParaEkleAciklama =>
+      'Moved from your wallet into the pot; not counted as spending.';
+
+  @override
+  String get kasaParaCekAciklama =>
+      'Moved from the pot to your wallet; not counted as income.';
+
+  @override
+  String kasalarArasiAciklama(String name) {
+    return 'Moved into “$name”; your wallet doesn\'t change.';
+  }
+
+  @override
+  String get kasaDuzenle => 'Edit pot';
+
+  @override
+  String get kasayiKapat => 'Close pot';
+
+  @override
+  String kasayiKapatAciklama(String amount) {
+    return 'The remaining $amount returns to your wallet';
+  }
+
+  @override
+  String kasayiKapatOnayBaslik(String name) {
+    return 'Close “$name”?';
+  }
+
+  @override
+  String kasayiKapatOnayMesaj(String amount) {
+    return 'The $amount in this pot moves back to your wallet. You can undo right after.';
+  }
+
+  @override
+  String get yeniKasa => 'New cash pot';
+
+  @override
+  String get kasaOlustur => 'Create pot';
+
+  @override
+  String get kasaAciklama =>
+      'Keep part of your savings as cash: emergency fund, holiday money… You can pay for assets from this pot and put sale proceeds back into it.';
+
+  @override
+  String get kasaAdi => 'Pot name';
+
+  @override
+  String get kasaAdiOrnek => 'e.g. Emergency fund';
+
+  @override
+  String get kasaAdiGerekli => 'Give the pot a name';
+
+  @override
+  String get kasaAcilisTutari => 'Starting amount (optional)';
+
+  @override
+  String get kasaAcilisTutariYardim => 'Moved from your wallet into the pot';
+
+  @override
+  String get kasaHedefi => 'Goal (optional)';
+
+  @override
+  String get kasaHedefYok => 'No goal';
+
+  @override
+  String kasayaParaEkleBaslik(String name) {
+    return '$name · add money';
+  }
+
+  @override
+  String kasadanParaCekBaslik(String name) {
+    return '$name · withdraw';
+  }
+
+  @override
+  String get nakitKasalari => 'Cash pots';
+
+  @override
+  String get kasaEkleKisa => 'Pot';
+
+  @override
+  String get kasaYokAciklama =>
+      'Not all savings have to be assets. Open a pot, keep money as cash and buy from it.';
+
+  @override
+  String get yeniNakitKasasiEkle => 'Cash pot';
+
+  @override
+  String get yatirimTuruNakit => 'Cash';
+
+  @override
+  String get menuCash => 'Pot';
+
+  @override
+  String get kasaBaslat => 'Open a cash pot';
 }

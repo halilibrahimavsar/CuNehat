@@ -31,7 +31,8 @@ verisi geçersiz sayılır; çözüm veri silme/yeniden kurulumdur, migrasyon de
 
 ### Yedek şeması — `DataSerializationService.schemaVersion`
 
-- Mevcut sürüm **13** (12→13: işlemlere `importBatchId`). Kapı artık sıkı eşitlik DEĞİL: `migrateBackup`
+- Mevcut sürüm **14** (13→14: yatırım türüne `cash` — veri dönüşmez, eski
+  sürüm yeni yedeği reddetsin diye; 12→13: işlemlere `importBatchId`). Kapı artık sıkı eşitlik DEĞİL: `migrateBackup`
   (`lib/core/services/backup_migrations.dart`) desteklenen aralıktaki eski
   yedeği güncel biçime yükseltir, aralık dışındakini `BackupVersionMismatch`
   ile reddeder. Desteklenen en eski sürüm **9**

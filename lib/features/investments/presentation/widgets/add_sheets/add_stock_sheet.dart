@@ -41,6 +41,9 @@ class AddStockSheet extends StatefulWidget {
   /// gelen fiyat başka bir birimdeyse çapraz kurla buna çevrilir.
   final String walletCurrency;
 
+  /// Birikimin nakit kasaları: alım bir kasadan ödenebilir.
+  final List<InvestmentEntity> pots;
+
   /// "Bağla…" akışından açıldıysa ödemesi defterde ZATEN duran satır: sayfa
   /// "Defterdeki işlem" seçili açılır, maliyet ve tarih bu satırdan gelir.
   final TransactionEntity? initialLedgerTransaction;
@@ -51,6 +54,7 @@ class AddStockSheet extends StatefulWidget {
     required this.userId,
     required this.onSave,
     required this.walletCurrency,
+    this.pots = const [],
     this.goals = const [],
     this.initialGoalId,
     this.investmentToEdit,
@@ -64,6 +68,7 @@ class AddStockSheet extends StatefulWidget {
     required void Function(InvestmentEntity investment, CashSource cashSource)
         onSave,
     required String walletCurrency,
+    List<InvestmentEntity> pots = const [],
     List<GoalEntity> goals = const [],
     String? initialGoalId,
     InvestmentEntity? investmentToEdit,
@@ -78,6 +83,7 @@ class AddStockSheet extends StatefulWidget {
         userId: userId,
         onSave: onSave,
         walletCurrency: walletCurrency,
+        pots: pots,
         goals: goals,
         initialGoalId: initialGoalId,
         investmentToEdit: investmentToEdit,
@@ -120,7 +126,9 @@ class _AddStockSheetState extends State<AddStockSheet> {
 
   /// Alımın ödemesi nereden: cüzdandan, defterde zaten duran satırdan ya da
   /// hiç ("zaten bende"; bkz. `InvestmentEntity.unbookedCost`).
-  PurchasePayment _payment = const PurchasePayment.wallet();
+  // Açılış: bakiyesi olan kasa varsa o (bkz. PurchasePayment.defaultFor).
+  // Defterden gelinmişse initState satırı seçer; düzenlemede kullanılmaz.
+  late PurchasePayment _payment = PurchasePayment.defaultFor(widget.pots);
 
   Color _selectedColor = Colors.blue;
 
@@ -285,6 +293,11 @@ class _AddStockSheetState extends State<AddStockSheet> {
   String? _validate() {
     // "Ödemesi defterde var" seçildi ama satır seçilmedi: kayıt nakit bacağı
     // olmadan yazılırdı.
+    if (!_isEditing && _payment.exceedsPot(_parsedAmount)) {
+      return context.l10n.kasaYetersizUyari(formatMoney(
+          _payment.pot?.amount ?? 0,
+          currency: widget.walletCurrency));
+    }
     if (!_isEditing && _payment.needsLedgerTransaction) {
       return context.l10n.defterSatiriSecilmedi;
     }
@@ -638,6 +651,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
         walletId: widget.walletId,
         walletCurrency: widget.walletCurrency,
         cost: cost,
+        pots: widget.pots,
         // Aynı sorgu "Hesapla" düğmesininki: miktar × güncel fiyat →
         // mevcut değer. Geçmiş tarihli alımda kullanıcı bunu arıyor.
         onCalculateTodayValue: _isLoading ? null : _fetchLivePrice,

@@ -179,6 +179,10 @@ extension LocalizationX on BuildContext {
         return l10n.systemTagInvestmentCorrection;
       case CashMovementTags.transfer:
         return l10n.systemTagTransfer;
+      case CashMovementTags.savingsDeposit:
+        return l10n.systemTagSavingsDeposit;
+      case CashMovementTags.savingsWithdraw:
+        return l10n.systemTagSavingsWithdraw;
       default:
         return tag;
     }

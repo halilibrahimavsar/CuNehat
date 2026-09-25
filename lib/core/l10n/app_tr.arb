@@ -3427,5 +3427,125 @@
         "type": "int"
       }
     }
-  }
+  },
+  "systemTagSavingsDeposit": "Birikime aktarım",
+  "systemTagSavingsWithdraw": "Birikimden aktarım",
+  "potUnavailableMessage": "Kasanın bakiyesi bu işlem için yetmiyor; hiçbir şey kaydedilmedi.",
+  "odemeKasadanBaslik": "Kasadan: {name}",
+  "@odemeKasadanBaslik": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kasaBakiyesi": "Bakiye {amount} · cüzdana dokunulmaz",
+  "@kasaBakiyesi": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "alimKasadanDusulecek": "Tutar “{name}” kasasından düşülecek (bakiye {amount}); cüzdan ve defter değişmez.",
+  "@alimKasadanDusulecek": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "kasaYetersizUyari": "Kasada yalnız {amount} var. Tutarı düşür ya da başka bir kaynak seç.",
+  "@kasaYetersizUyari": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "satisHedefiBaslik": "Para nereye?",
+  "satisHedefiCuzdan": "Cüzdana",
+  "kasaBakiyeSade": "Bakiye {amount}",
+  "@kasaBakiyeSade": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "kasaTutar": "Tutar",
+  "kasaParaEkle": "Para ekle",
+  "kasaParaCek": "Para çek",
+  "kasaParaEkleAciklama": "Cüzdandan kasaya aktarılır; gider sayılmaz.",
+  "kasaParaCekAciklama": "Kasadan cüzdana aktarılır; gelir sayılmaz.",
+  "kasalarArasiAciklama": "“{name}” kasasına aktarılır; cüzdan değişmez.",
+  "@kasalarArasiAciklama": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kasaDuzenle": "Kasayı düzenle",
+  "kasayiKapat": "Kasayı kapat",
+  "kasayiKapatAciklama": "Kalan {amount} cüzdana döner",
+  "@kasayiKapatAciklama": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "kasayiKapatOnayBaslik": "“{name}” kapatılsın mı?",
+  "@kasayiKapatOnayBaslik": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kasayiKapatOnayMesaj": "Kasadaki {amount} cüzdana aktarılır. Hemen ardından geri alabilirsin.",
+  "@kasayiKapatOnayMesaj": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "yeniKasa": "Yeni nakit kasası",
+  "kasaOlustur": "Kasayı oluştur",
+  "kasaAciklama": "Birikimini nakit olarak ayrı tut: acil durum fonu, tatil parası… Varlık alırken bu kasadan ödeyebilir, satışta parayı buraya koyabilirsin.",
+  "kasaAdi": "Kasa adı",
+  "kasaAdiOrnek": "ör. Acil durum fonu",
+  "kasaAdiGerekli": "Kasaya bir ad ver",
+  "kasaAcilisTutari": "Başlangıç tutarı (isteğe bağlı)",
+  "kasaAcilisTutariYardim": "Cüzdandan kasaya aktarılır",
+  "kasaHedefi": "Hedef (isteğe bağlı)",
+  "kasaHedefYok": "Hedefe bağlama",
+  "kasayaParaEkleBaslik": "{name} · para ekle",
+  "@kasayaParaEkleBaslik": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kasadanParaCekBaslik": "{name} · para çek",
+  "@kasadanParaCekBaslik": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "nakitKasalari": "Nakit kasaları",
+  "kasaEkleKisa": "Kasa",
+  "kasaYokAciklama": "Birikimin hepsi varlık olmak zorunda değil. Bir kasa aç, parayı nakit tut; alımları oradan yap.",
+  "yeniNakitKasasiEkle": "Nakit kasası",
+  "yatirimTuruNakit": "Nakit",
+  "menuCash": "Kasa",
+  "kasaBaslat": "Nakit kasası aç"
 }

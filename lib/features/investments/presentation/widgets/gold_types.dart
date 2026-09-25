@@ -41,7 +41,7 @@ String? investmentUnitLabel(BuildContext context, InvestmentEntity inv) {
   return switch (inv.type) {
     InvestmentType.gold => goldTypeLabel(context, symbol),
     InvestmentType.stock => context.l10n.lot,
-    InvestmentType.custom => null,
+    InvestmentType.custom || InvestmentType.cash => null,
   };
 }
 

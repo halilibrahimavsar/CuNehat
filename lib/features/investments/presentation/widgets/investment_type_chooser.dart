@@ -8,13 +8,19 @@ import 'package:flutter/material.dart';
 /// hedefin içinden ("bu hedefe varlık ekle") ve boş durumdan aynı yol
 /// kullanılabiliyor; her yere üç ayrı düğme koymak gerekmiyor.
 class InvestmentTypeChooser extends StatelessWidget {
-  const InvestmentTypeChooser({super.key});
+  /// Nakit kasası seçeneği de sunulsun mu (birikim sayfası ve hedef).
+  final bool allowCash;
 
-  static Future<InvestmentType?> show(BuildContext context) {
+  const InvestmentTypeChooser({super.key, this.allowCash = false});
+
+  static Future<InvestmentType?> show(
+    BuildContext context, {
+    bool allowCash = false,
+  }) {
     return showModalBottomSheet<InvestmentType>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => const InvestmentTypeChooser(),
+      builder: (context) => InvestmentTypeChooser(allowCash: allowCash),
     );
   }
 
@@ -83,6 +89,14 @@ class InvestmentTypeChooser extends StatelessWidget {
               title: context.l10n.yeniOzelYatirimEkle,
               type: InvestmentType.custom,
             ),
+            if (allowCash)
+              _tile(
+                context,
+                icon: Icons.savings_rounded,
+                color: const Color(0xFF26A69A),
+                title: context.l10n.yeniNakitKasasiEkle,
+                type: InvestmentType.cash,
+              ),
             const SizedBox(height: 8),
           ],
         ),

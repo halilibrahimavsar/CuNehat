@@ -302,6 +302,36 @@ void main() {
     });
   });
 
+  group('v13 → v14 (birikimde nakit kasası türü)', () {
+    Map<String, dynamic> v13Backup() => {
+          'version': 13,
+          'timestamp': '2026-09-25T10:00:00.000',
+          'investments': [
+            {'id': 'i1', 'type': 'gold', 'amount': 100.0},
+          ],
+          'transactions': [
+            {'id': 't1', 'importBatchId': null},
+          ],
+          'users': <String, dynamic>{},
+        };
+
+    test('yalnız sürüm damgası değişir (v13 kayıtlarında kasa yok)', () {
+      final source = v13Backup();
+      final result = migrateBackup(source, targetVersion: 14);
+      expect(result['version'], 14);
+      expect(result['investments'], source['investments']);
+      expect(result['transactions'], source['transactions']);
+      expect(source['version'], 13, reason: 'dönüşüm saf olmalı');
+    });
+
+    test('v9 yedeği beş adımda güncele yükselir', () {
+      final result = migrateBackup(v9Backup(), targetVersion: 14);
+      expect(result['version'], 14);
+      final tx = (result['transactions'] as List).first as Map;
+      expect(tx, containsPair('importBatchId', null));
+    });
+  });
+
   group('zincir bütünlüğü', () {
     test('desteklenen en eskiden güncele kadar HER adım tanımlı', () {
       // Zincirde bir boşluk kalırsa (ör. v11 eklenip 10→11 yazılmazsa) o

@@ -29,6 +29,8 @@ class InvestmentCard extends StatelessWidget {
         return Icons.monetization_on;
       case InvestmentType.custom:
         return Icons.account_balance_wallet;
+      case InvestmentType.cash:
+        return Icons.savings_rounded;
     }
   }
 
@@ -40,6 +42,8 @@ class InvestmentCard extends StatelessWidget {
         return context.l10n.yatirimTuruAltin;
       case InvestmentType.custom:
         return context.l10n.yatirimTuruOzel;
+      case InvestmentType.cash:
+        return context.l10n.yatirimTuruNakit;
     }
   }
 

@@ -8,6 +8,7 @@ import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/investments/domain/cash_pot_math.dart';
 import 'package:cunehat/features/investments/domain/entities/goal_entity.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/usecases/add_investment_usecase.dart';
@@ -158,6 +159,11 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
         // kalırdı.
         TransactionEntity? adopted;
         final source = event.cashSource;
+        // Ödeme bir NAKİT KASASINDAN: cüzdana ve deftere dokunulmaz.
+        if (source is FromSavingsPot) {
+          await _createFromPot(event, investment, source.potId, emit);
+          return;
+        }
         if (source is AdoptedCashMovement) {
           adopted = await walletMetricsService.adoptCashMovement(
             walletId: event.walletId,
@@ -207,7 +213,10 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
                 amount: remainder,
                 isIncome: false,
                 title: investment.name,
-                tag: CashMovementTags.investmentBuy,
+                // Nakit kasasına para koymak bir alım değil, aktarımdır.
+                tag: investment.type == InvestmentType.cash
+                    ? CashMovementTags.savingsDeposit
+                    : CashMovementTags.investmentBuy,
                 date: investment.dateAdded,
                 linkedRecordId: investment.id,
               );
@@ -227,6 +236,12 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
     // Yatırım Güncelle
     on<UpdateInvestmentEvent>((event, emit) async {
       emit(InvestmentLoading());
+
+      // Katkı bir NAKİT KASASINDAN: cüzdana ve deftere dokunulmaz.
+      if (event.cashSource case FromSavingsPot(:final potId)) {
+        await _contributeFromPot(event, potId, emit);
+        return;
+      }
 
       // Katkının ödemesi defterde zaten duruyorsa (ekstre satırı) önce o
       // benimsenir; olmazsa kayıt güncellenmez (bkz. CreateInvestmentEvent).
@@ -275,8 +290,14 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
               userId: event.userId,
               amount: costDiff.abs(),
               isIncome: costDiff < 0,
-              title: 'Yatırım güncellendi: ${event.investment.name}',
-              tag: CashMovementTags.investmentBuy,
+              title: event.investment.type == InvestmentType.cash
+                  ? event.investment.name
+                  : 'Yatırım güncellendi: ${event.investment.name}',
+              tag: event.investment.type == InvestmentType.cash
+                  ? (costDiff < 0
+                      ? CashMovementTags.savingsWithdraw
+                      : CashMovementTags.savingsDeposit)
+                  : CashMovementTags.investmentBuy,
               // Tarihi ÇAĞIRAN söyler: katkıda para bugün çıkar, düzenlemede
               // kaydın özgün maliyeti düzeltilir (bkz. `bookingDate`).
               // Alan yokken ikisi de "şimdi"ye düşüyordu ve silme düzeltmesi
@@ -378,6 +399,24 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
       if (!_inFlight.add(key)) return;
       try {
         emit(InvestmentLoading());
+        // Bedel bir NAKİT KASASINA: cüzdana gelir yazılmaz.
+        final targetPot = event.targetPot;
+        if (targetPot != null) {
+          await _sellIntoPot(
+            emit,
+            userId: event.userId,
+            walletId: event.walletId,
+            potId: targetPot.id!,
+            proceeds: event.proceeds,
+            bookedMoved:
+                roundToCents(event.previous.bookedCost - event.remaining.bookedCost),
+            writeAsset: () => updateInvestmentUseCase.call(event.remaining),
+            restoreAsset: () => updateInvestmentUseCase.call(event.previous),
+            previousAsset: event.previous,
+            notice: const InvestmentPartiallySoldNotice(),
+          );
+          return;
+        }
         final result = await updateInvestmentUseCase.call(event.remaining);
 
         await result.fold(
@@ -395,8 +434,13 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
                     userId: event.userId,
                     amount: event.proceeds,
                     isIncome: true,
-                    title: 'Yatırım Satışı',
-                    tag: CashMovementTags.investmentSell,
+                    title: _isPot(event.remaining)
+                        ? event.remaining.name
+                        : 'Yatırım Satışı',
+                    // Kasadan cüzdana çekiş satış değil, aktarımdır.
+                    tag: _isPot(event.remaining)
+                        ? CashMovementTags.savingsWithdraw
+                        : CashMovementTags.investmentSell,
                     linkedRecordId: event.remaining.id,
                   ),
                 ],
@@ -436,6 +480,24 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
         id: event.id,
       );
 
+      // Satış bedeli bir NAKİT KASASINA: cüzdana gelir yazılmaz.
+      final targetPot = event.targetPot;
+      if (event.recordSale && targetPot != null && snapshot != null) {
+        await _sellIntoPot(
+          emit,
+          userId: event.userId,
+          walletId: event.walletId,
+          potId: targetPot.id!,
+          proceeds: event.currentValue,
+          bookedMoved: event.amount,
+          writeAsset: () => deleteInvestmentUseCase.call(event.id),
+          restoreAsset: () => addInvestmentUseCase.call(snapshot),
+          previousAsset: snapshot,
+          notice: const InvestmentSoldNotice(),
+        );
+        return;
+      }
+
       final result = await deleteInvestmentUseCase.call(event.id);
 
       await result.fold(
@@ -457,8 +519,12 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
                   userId: event.userId,
                   amount: event.currentValue,
                   isIncome: true,
-                  title: 'Yatırım Satışı',
-                  tag: CashMovementTags.investmentSell,
+                  title: snapshot != null && _isPot(snapshot)
+                      ? snapshot.name
+                      : 'Yatırım Satışı',
+                  tag: snapshot != null && _isPot(snapshot)
+                      ? CashMovementTags.savingsWithdraw
+                      : CashMovementTags.investmentSell,
                   linkedRecordId: event.id,
                 ),
               ],
@@ -564,6 +630,140 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
 
   Future<void> _safeSyncInvestment(String walletId) => safeSyncMetric(
       () => walletMetricsService.syncInvestment(walletId), 'investment');
+
+  static bool _isPot(InvestmentEntity i) => i.type == InvestmentType.cash;
+
+  /// Kasanın diskteki TAZE hâli (form açıkken başka bir işlemle değişmiş
+  /// olabilir); kasa değilse ya da yoksa `null`.
+  Future<InvestmentEntity?> _freshPot(
+      String userId, String walletId, String potId) async {
+    final pot =
+        await _investmentSnapshot(userId: userId, walletId: walletId, id: potId);
+    return pot != null && _isPot(pot) ? pot : null;
+  }
+
+  /// Yeni varlık bir NAKİT KASASINDAN alınır: kasa düşer, varlık yazılır,
+  /// defter değişmez. Kasa yazılamazsa varlık geri silinir — yarım işlem
+  /// (para iki yerde ya da hiçbir yerde) kalmaz.
+  Future<void> _createFromPot(
+    CreateInvestmentEvent event,
+    InvestmentEntity investment,
+    String potId,
+    Emitter<InvestmentState> emit,
+  ) async {
+    final cost = roundToCents(investment.amount);
+    final pot = await _freshPot(event.userId, event.walletId, potId);
+    if (pot == null || !moneyGte(pot.amount, cost)) {
+      _emitError(emit, const PotUnavailableNotice());
+      return;
+    }
+    final take = takeFromPot(pot, cost);
+    final asset = bookAssetFromPot(investment,
+        cost: cost, movedBooked: take.movedBooked, isNew: true);
+    final added = await addInvestmentUseCase.call(asset);
+    if (added.isLeft()) {
+      _emitError(emit, RawFailureNotice(_failureText(added)));
+      return;
+    }
+    final potSaved = await updateInvestmentUseCase.call(take.pot);
+    if (potSaved.isLeft()) {
+      await deleteInvestmentUseCase.call(asset.id!);
+      _emitError(emit, RawFailureNotice(_failureText(potSaved)));
+      return;
+    }
+    await _safeSyncInvestment(event.walletId);
+    emit(const InvestmentActionSuccess(InvestmentAddedNotice()));
+    add(GetInvestmentsEvent(userId: event.userId, walletId: event.walletId));
+  }
+
+  /// Var olan varlığa KATKI bir nakit kasasından: maliyet artışı
+  /// (`newAmount − prevAmount`) kasadan düşer, defter değişmez.
+  Future<void> _contributeFromPot(
+    UpdateInvestmentEvent event,
+    String potId,
+    Emitter<InvestmentState> emit,
+  ) async {
+    final cost = roundToCents(event.newAmount - event.prevAmount);
+    final previous = await _investmentSnapshot(
+        userId: event.userId,
+        walletId: event.walletId,
+        id: event.investment.id ?? '');
+    final pot = await _freshPot(event.userId, event.walletId, potId);
+    if (previous == null ||
+        pot == null ||
+        cost <= 0 ||
+        !moneyGte(pot.amount, cost)) {
+      _emitError(emit, const PotUnavailableNotice());
+      return;
+    }
+    final take = takeFromPot(pot, cost);
+    final asset = bookAssetFromPot(event.investment,
+        cost: cost, movedBooked: take.movedBooked, isNew: false);
+    final saved = await updateInvestmentUseCase.call(asset);
+    if (saved.isLeft()) {
+      _emitError(emit, RawFailureNotice(_failureText(saved)));
+      return;
+    }
+    final potSaved = await updateInvestmentUseCase.call(take.pot);
+    if (potSaved.isLeft()) {
+      await updateInvestmentUseCase.call(previous);
+      _emitError(emit, RawFailureNotice(_failureText(potSaved)));
+      return;
+    }
+    await _safeSyncInvestment(event.walletId);
+    emit(const InvestmentActionSuccess(InvestmentUpdatedNotice()));
+    add(GetInvestmentsEvent(userId: event.userId, walletId: event.walletId));
+  }
+
+  /// Satış bedeli bir NAKİT KASASINA girer: varlık yazılır (kalan hâli ya da
+  /// silinir), kasa artar, defter değişmez. Satılan kısmın işlenmiş maliyeti
+  /// ([bookedMoved]) kasaya geçer. Geri alma varlığı VE kasayı eski hâline
+  /// döndürür.
+  Future<void> _sellIntoPot(
+    Emitter<InvestmentState> emit, {
+    required String userId,
+    required String walletId,
+    required String potId,
+    required double proceeds,
+    required double bookedMoved,
+    required Future<Either<Failure, dynamic>> Function() writeAsset,
+    required Future<Either<Failure, dynamic>> Function() restoreAsset,
+    required InvestmentEntity previousAsset,
+    required InvestmentNotice notice,
+  }) async {
+    final pot = await _freshPot(userId, walletId, potId);
+    if (pot == null || pot.id == previousAsset.id) {
+      _emitError(emit, const PotUnavailableNotice());
+      return;
+    }
+    final written = await writeAsset();
+    if (written.isLeft()) {
+      _emitError(emit, RawFailureNotice(_failureText(written)));
+      return;
+    }
+    final potSaved = await updateInvestmentUseCase
+        .call(putIntoPot(pot, proceeds, booked: bookedMoved));
+    if (potSaved.isLeft()) {
+      await restoreAsset();
+      _emitError(emit, RawFailureNotice(_failureText(potSaved)));
+      return;
+    }
+    await _safeSyncInvestment(walletId);
+    emit(InvestmentActionSuccess(
+      notice,
+      undo: InvestmentDeletionUndo(
+        investment: previousAsset,
+        userId: userId,
+        walletId: walletId,
+        reversalTransactionIds: const [],
+        alsoRestore: [pot],
+      ),
+    ));
+    add(GetInvestmentsEvent(userId: userId, walletId: walletId));
+  }
+
+  static String _failureText(Either<Failure, dynamic> r) =>
+      r.fold((f) => f.message, (_) => '');
 
   /// Silinecek/satılacak yatırımın defterdeki hali; bulunamazsa `null`
   /// (geri alma sunulmaz, silme yine yapılır).

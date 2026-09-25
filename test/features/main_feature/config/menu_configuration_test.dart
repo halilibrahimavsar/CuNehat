@@ -12,7 +12,7 @@ void main() {
       expect(config!.sliderState, SliderState.savedMoney);
 
       // Verify mini buttons
-      expect(config.miniButtons.length, 3);
+      expect(config.miniButtons.length, 4);
       expect(config.miniButtons[0].label, 'Altın');
       expect(config.miniButtons[0].actionType, 'add_gold_investment');
       expect(config.miniButtons[0].icon, Icons.monetization_on);
@@ -24,6 +24,9 @@ void main() {
       expect(config.miniButtons[2].label, 'Özel');
       expect(config.miniButtons[2].actionType, 'add_custom_investment');
       expect(config.miniButtons[2].icon, Icons.account_balance_wallet);
+
+      expect(config.miniButtons[3].actionType, 'add_cash_pot');
+      expect(config.miniButtons[3].icon, Icons.savings_rounded);
 
       // Verify submenus
       expect(config.subMenus.length, 1);
