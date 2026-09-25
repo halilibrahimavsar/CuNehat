@@ -1,3 +1,4 @@
+import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/shared/widgets/labeled_segment.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/error/error_handling.dart';
@@ -132,6 +133,9 @@ class _FilterViewState extends State<FilterView> {
     );
   }
 
+  void _setData(DataFilter data) =>
+      widget.onFilterChanged(widget.filter.copyWith(dataFilter: data));
+
   void _setPriceRange(PriceRangeFilter? range) {
     widget.onFilterChanged(
       widget.filter.copyWith(
@@ -199,6 +203,41 @@ class _FilterViewState extends State<FilterView> {
                     ],
                   ),
                 ],
+                // Para taşıma (transfer, kart ödemesi, borç, yatırım): defter
+                // bunları hep gösteriyordu, gizlemenin ya da yalnız onlara
+                // bakmanın yolu yoktu.
+                const SizedBox(height: 24),
+                _sectionLabel(context, context.l10n.filterMovedSection, scheme),
+                const SizedBox(height: 10),
+                LabeledSegment<MovedMoneyFilter>(
+                  selected: widget.filter.dataFilter.movedMoney,
+                  onChanged: (v) => _setData(
+                      widget.filter.dataFilter.copyWith(movedMoney: v)),
+                  items: [
+                    SegmentItem(
+                      value: MovedMoneyFilter.show,
+                      label: context.l10n.filterMovedShow,
+                      color: AppGradients.transactions,
+                    ),
+                    SegmentItem(
+                      value: MovedMoneyFilter.hide,
+                      label: context.l10n.filterMovedHide,
+                      color: AppGradients.transactions,
+                    ),
+                    SegmentItem(
+                      value: MovedMoneyFilter.only,
+                      label: context.l10n.filterMovedOnly,
+                      color: AppGradients.transactions,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  context.l10n.filterMovedHint,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
+                      ),
+                ),
                 const SizedBox(height: 24),
                 PriceRangeFilterSection(
                   range: widget.filter.dataFilter.priceRange,
@@ -206,6 +245,27 @@ class _FilterViewState extends State<FilterView> {
                   onChanged: _setPriceRange,
                 ),
                 const SizedBox(height: 24),
+                _sectionLabel(context, context.l10n.filterMoreSection, scheme),
+                SwitchListTile.adaptive(
+                  key: const ValueKey('filter-only-receipt'),
+                  contentPadding: EdgeInsets.zero,
+                  secondary: const Icon(Icons.receipt_long_rounded),
+                  title: Text(context.l10n.filterReceiptToggle),
+                  value: widget.filter.dataFilter.onlyWithReceipt,
+                  onChanged: (v) => _setData(
+                      widget.filter.dataFilter.copyWith(onlyWithReceipt: v)),
+                ),
+                SwitchListTile.adaptive(
+                  key: const ValueKey('filter-only-imported'),
+                  contentPadding: EdgeInsets.zero,
+                  secondary: const Icon(Icons.account_balance_rounded),
+                  title: Text(context.l10n.filterImportedToggle),
+                  subtitle: Text(context.l10n.filterImportedHint),
+                  value: widget.filter.dataFilter.onlyImported,
+                  onChanged: (v) => _setData(
+                      widget.filter.dataFilter.copyWith(onlyImported: v)),
+                ),
+                const SizedBox(height: 16),
                 CategoryFilterTree(
                   incomeCategories: _incomeCategories,
                   expenseCategories: _expenseCategories,

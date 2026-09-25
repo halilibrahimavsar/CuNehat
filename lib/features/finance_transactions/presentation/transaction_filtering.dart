@@ -11,6 +11,7 @@
 /// 2. [filterLedger] — UCUZ kısım (tek `where`). Her filtre değişiminde.
 library;
 
+import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
 import 'package:cunehat/core/utils/text_search.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
@@ -52,6 +53,9 @@ List<TransactionWithBalance> filterLedger({
   final categories = filter.dataFilter.selectedCategories;
   final priceRange = filter.dataFilter.priceRange;
   final query = foldTr(filter.dataFilter.searchQuery ?? '');
+  final moved = filter.dataFilter.movedMoney;
+  final onlyWithReceipt = filter.dataFilter.onlyWithReceipt;
+  final onlyImported = filter.dataFilter.onlyImported;
   final period = DateTimeRange(
     start: filter.viewFilter.startDate,
     end: filter.viewFilter.endDate,
@@ -68,6 +72,17 @@ List<TransactionWithBalance> filterLedger({
     if (categories.isNotEmpty && !categories.contains(t.tag)) return false;
 
     if (priceRange != null && !priceRange.isInRange(t.amount)) return false;
+
+    switch (moved) {
+      case MovedMoneyFilter.show:
+        break;
+      case MovedMoneyFilter.hide:
+        if (!isSpendingMovement(t)) return false;
+      case MovedMoneyFilter.only:
+        if (isSpendingMovement(t)) return false;
+    }
+    if (onlyWithReceipt && (t.receiptFileName?.isEmpty ?? true)) return false;
+    if (onlyImported && !t.isFromBankStatement) return false;
 
     if (query.isNotEmpty && !_matchesQuery(t, query, categoryLabels)) {
       return false;

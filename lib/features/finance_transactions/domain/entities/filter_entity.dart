@@ -76,21 +76,55 @@ class PriceRangeFilter extends Equatable {
 }
 
 /// Veri filtreleri (transaction listesini filtrelemek için)
+/// Para taşıma hareketlerinin (transfer, borç, yatırım, kart ödemesi —
+/// `isSystem`) listede nasıl ele alınacağı.
+///
+/// Defter bunları HER ZAMAN gösteriyordu ve gizlemenin/yalnız onlara bakmanın
+/// bir yolu yoktu: kartla harcayan kullanıcının defteri kart ödemeleriyle,
+/// yatırım yapanınki alım/satımlarla doluyordu.
+enum MovedMoneyFilter {
+  /// Varsayılan: defter olduğu gibi (bakiye zinciri bunlara dayanır).
+  show,
+
+  /// Yalnız gelir–gider satırları.
+  hide,
+
+  /// Yalnız para taşıma hareketleri.
+  only,
+}
+
 base class DataFilter extends BaseFilter {
   final Set<String> selectedCategories;
   final PriceRangeFilter? priceRange;
   final String? searchQuery;
+  final MovedMoneyFilter movedMoney;
+
+  /// Yalnız fiş/fotoğraf eklenmiş işlemler.
+  final bool onlyWithReceipt;
+
+  /// Yalnız banka ekstresinden gelenler. Ölçüt kesin kanıtlardan biri:
+  /// banka referansı, içe aktarım kimliği ya da `origin == import`
+  /// (bkz. [isFromBankStatement]). `origin` alanı eski kayıtlarda boş olduğu
+  /// için "elle girilenler" filtresi BİLEREK yok — o ayrım eski kayıtlarda
+  /// tahmin olurdu.
+  final bool onlyImported;
 
   const DataFilter({
     this.selectedCategories = const {},
     this.priceRange,
     this.searchQuery,
+    this.movedMoney = MovedMoneyFilter.show,
+    this.onlyWithReceipt = false,
+    this.onlyImported = false,
   });
 
   DataFilter copyWith({
     Set<String>? selectedCategories,
     PriceRangeFilter? priceRange,
     String? searchQuery,
+    MovedMoneyFilter? movedMoney,
+    bool? onlyWithReceipt,
+    bool? onlyImported,
     bool clearCategories = false,
     bool clearPriceRange = false,
     bool clearSearchQuery = false,
@@ -101,14 +135,22 @@ base class DataFilter extends BaseFilter {
           : (selectedCategories ?? this.selectedCategories),
       priceRange: clearPriceRange ? null : (priceRange ?? this.priceRange),
       searchQuery: clearSearchQuery ? null : (searchQuery ?? this.searchQuery),
+      movedMoney: movedMoney ?? this.movedMoney,
+      onlyWithReceipt: onlyWithReceipt ?? this.onlyWithReceipt,
+      onlyImported: onlyImported ?? this.onlyImported,
     );
   }
+
+  /// Aramadan ve kategori/tutar süzgecinden bağımsız "ek" filtreler etkin mi?
+  bool get hasExtraFilters =>
+      movedMoney != MovedMoneyFilter.show || onlyWithReceipt || onlyImported;
 
   @override
   bool get hasActiveFilters =>
       selectedCategories.isNotEmpty ||
       (priceRange != null && priceRange!.isNotEmpty) ||
-      (searchQuery?.trim().isNotEmpty ?? false);
+      (searchQuery?.trim().isNotEmpty ?? false) ||
+      hasExtraFilters;
 
   @override
   int get activeFilterCount {
@@ -116,11 +158,21 @@ base class DataFilter extends BaseFilter {
     if (selectedCategories.isNotEmpty) count++;
     if (priceRange != null && priceRange!.isNotEmpty) count++;
     if (searchQuery?.trim().isNotEmpty ?? false) count++;
+    if (movedMoney != MovedMoneyFilter.show) count++;
+    if (onlyWithReceipt) count++;
+    if (onlyImported) count++;
     return count;
   }
 
   @override
-  List<Object?> get props => [selectedCategories, priceRange, searchQuery];
+  List<Object?> get props => [
+        selectedCategories,
+        priceRange,
+        searchQuery,
+        movedMoney,
+        onlyWithReceipt,
+        onlyImported,
+      ];
 }
 
 /// Görünüm filtreleri (UI durumunu yönetmek için)

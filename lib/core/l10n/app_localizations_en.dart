@@ -5771,9 +5771,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Nothing recorded in this range. Try another period.';
 
   @override
-  String get sectionTabTransactions => 'Transactions';
-
-  @override
   String get reportModeExpense => 'Spending';
 
   @override
@@ -5834,4 +5831,56 @@ class AppLocalizationsEn extends AppLocalizations {
   String reportScopeMoved(int count) {
     return 'Moved money · $count';
   }
+
+  @override
+  String get txSearchOpen => 'Search transactions';
+
+  @override
+  String get txSearchClose => 'Close search';
+
+  @override
+  String get filterMovedSection => 'MOVED MONEY';
+
+  @override
+  String get filterMovedHint =>
+      'Transfers, card payments, debt and investment entries. Not counted as spending, but they change the balance.';
+
+  @override
+  String get filterMovedShow => 'Show';
+
+  @override
+  String get filterMovedHide => 'Hide';
+
+  @override
+  String get filterMovedOnly => 'Only these';
+
+  @override
+  String get filterMovedHiddenChip => 'Moved money hidden';
+
+  @override
+  String get filterMovedOnlyChip => 'Moved money only';
+
+  @override
+  String get filterMoreSection => 'MORE';
+
+  @override
+  String get filterReceiptToggle => 'Only with a receipt';
+
+  @override
+  String get filterImportedToggle => 'Only from bank statements';
+
+  @override
+  String get filterImportedHint => 'Entries imported from a bank statement.';
+
+  @override
+  String get filterReceiptChip => 'With receipt';
+
+  @override
+  String get filterImportedChip => 'From statement';
+
+  @override
+  String get txCollapseAllDays => 'Collapse all';
+
+  @override
+  String get txExpandAllDays => 'Expand all';
 }

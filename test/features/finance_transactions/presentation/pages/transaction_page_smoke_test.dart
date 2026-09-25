@@ -1,4 +1,3 @@
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transactions_section_tabs.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/config/di/injection.dart';
@@ -284,14 +283,12 @@ void main() {
       final rail = tester.getSize(find.byType(TransactionDayRail));
       expect(rail.height, lessThan(80), reason: 'eski takvim bloğu 374dp idi');
 
-      // İşlemler · İçgörü · Rapor sekme şeridi (25 Eyl 2026) BİLEREK eklenen
-      // chrome: 48dp. Ölçüldü: ilk kartın üst kenarı 316,7 → 372,7dp
-      // (sekmeler 48 + ↑/↓ tür düğmelerinin dolgusu 8). Bütçe burada
-      // sabitlenir; sessizce büyümesin.
-      expect(tester.getSize(find.byType(TransactionsSectionHeader)).height,
-          lessThanOrEqualTo(48));
+      // Sekme şeridi kalktı, arama bir ikon oldu, "tümünü daralt" satırı
+      // eklendi (25 Eyl 2026, kullanıcı isteği). Ölçüldü: ilk kartın üst
+      // kenarı 312,7dp (sekmelerle 372,7; ondan önce 316,7). Sessizce
+      // büyümesin.
       final firstCard = tester.getRect(find.byType(TransactionCard).first);
-      expect(firstCard.top - page.top, lessThanOrEqualTo(373));
+      expect(firstCard.top - page.top, lessThanOrEqualTo(313));
 
       // En az bir işlem kartı ilk ekranda TAM görünmeli. Eski takvim
       // görünümünde seçili günün kartı y=609'da başlıyor, ikincisi sürgünün

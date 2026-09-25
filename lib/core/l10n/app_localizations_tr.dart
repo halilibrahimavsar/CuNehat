@@ -5730,9 +5730,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu aralıkta kayıt yok. Başka bir döneme geçebilirsin.';
 
   @override
-  String get sectionTabTransactions => 'İşlemler';
-
-  @override
   String get reportModeExpense => 'Gider';
 
   @override
@@ -5792,4 +5789,56 @@ class AppLocalizationsTr extends AppLocalizations {
   String reportScopeMoved(int count) {
     return 'Para taşıma · $count';
   }
+
+  @override
+  String get txSearchOpen => 'İşlem ara';
+
+  @override
+  String get txSearchClose => 'Aramayı kapat';
+
+  @override
+  String get filterMovedSection => 'PARA TAŞIMA HAREKETLERİ';
+
+  @override
+  String get filterMovedHint =>
+      'Transfer, kart ödemesi, borç ve yatırım hareketleri. Harcama sayılmazlar ama bakiyeyi değiştirirler.';
+
+  @override
+  String get filterMovedShow => 'Göster';
+
+  @override
+  String get filterMovedHide => 'Gizle';
+
+  @override
+  String get filterMovedOnly => 'Yalnız bunlar';
+
+  @override
+  String get filterMovedHiddenChip => 'Para taşıma gizli';
+
+  @override
+  String get filterMovedOnlyChip => 'Yalnız para taşıma';
+
+  @override
+  String get filterMoreSection => 'DİĞER';
+
+  @override
+  String get filterReceiptToggle => 'Yalnız fişi olanlar';
+
+  @override
+  String get filterImportedToggle => 'Yalnız ekstreden gelenler';
+
+  @override
+  String get filterImportedHint => 'Banka ekstresinden içe aktarılan kayıtlar.';
+
+  @override
+  String get filterReceiptChip => 'Fişli';
+
+  @override
+  String get filterImportedChip => 'Ekstreden';
+
+  @override
+  String get txCollapseAllDays => 'Tümünü daralt';
+
+  @override
+  String get txExpandAllDays => 'Tümünü genişlet';
 }

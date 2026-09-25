@@ -29,6 +29,15 @@ class ActiveFilterChips extends StatelessWidget {
   final FinanceMode mode;
   final VoidCallback? onClearMode;
 
+  /// Para taşıma / fiş / kaynak çiplerinin × düğmesi filtrenin yeni hâlini
+  /// verir. Verilmezse bu çipler çizilir ama kaldırılamaz — hiçbir çağıran
+  /// bunu vermeden kurmamalı.
+  final ValueChanged<DataFilter>? onChanged;
+
+  /// Arama çipi çizilsin mi? Arama alanı AÇIKKEN sorgu zaten alanda yazılı;
+  /// çip hem tekrar hem de yazarken çip satırını açıp içeriği zıplatıyordu.
+  final bool showSearch;
+
   const ActiveFilterChips({
     super.key,
     required this.dataFilter,
@@ -39,6 +48,8 @@ class ActiveFilterChips extends StatelessWidget {
     required this.onClearAll,
     this.mode = FinanceMode.compare,
     this.onClearMode,
+    this.onChanged,
+    this.showSearch = true,
   });
 
   /// Çubuğun yer ayırması gerekip gerekmediği (yükseklik hesabı için).
@@ -48,13 +59,16 @@ class ActiveFilterChips extends StatelessWidget {
   /// kaydırdığında "neden yalnız üç satır görüyorum" sorusunun yanıtı
   /// ekranda kalmalı ve tek dokunuşla kaldırılabilmeli.
   static bool hasChips(DataFilter filter) =>
+      filter.hasExtraFilters ||
       filter.selectedCategories.isNotEmpty ||
       (filter.priceRange?.isNotEmpty ?? false) ||
       (filter.searchQuery?.trim().isNotEmpty ?? false);
 
   /// [hasChips] + tür süzgeci.
-  static bool hasChipsFor(DataFilter filter, FinanceMode mode) =>
-      mode != FinanceMode.compare || hasChips(filter);
+  static bool hasChipsFor(DataFilter filter, FinanceMode mode,
+          {bool includeSearch = true}) =>
+      mode != FinanceMode.compare ||
+      hasChips(includeSearch ? filter : filter.copyWith(clearSearchQuery: true));
 
   static const double height = 32;
 
@@ -93,11 +107,45 @@ class ActiveFilterChips extends StatelessWidget {
     }
 
     final query = dataFilter.searchQuery?.trim();
-    if (query != null && query.isNotEmpty) {
+    if (showSearch && query != null && query.isNotEmpty) {
       chips.add(_Chip(
         icon: Icons.search_rounded,
         text: l10n.txChipSearch(query),
         onRemove: onClearSearch,
+      ));
+    }
+
+    void change(DataFilter next) => onChanged?.call(next);
+    switch (dataFilter.movedMoney) {
+      case MovedMoneyFilter.show:
+        break;
+      case MovedMoneyFilter.hide:
+        chips.add(_Chip(
+          icon: Icons.swap_horiz_rounded,
+          text: l10n.filterMovedHiddenChip,
+          onRemove: () =>
+              change(dataFilter.copyWith(movedMoney: MovedMoneyFilter.show)),
+        ));
+      case MovedMoneyFilter.only:
+        chips.add(_Chip(
+          icon: Icons.swap_horiz_rounded,
+          text: l10n.filterMovedOnlyChip,
+          onRemove: () =>
+              change(dataFilter.copyWith(movedMoney: MovedMoneyFilter.show)),
+        ));
+    }
+    if (dataFilter.onlyWithReceipt) {
+      chips.add(_Chip(
+        icon: Icons.receipt_long_rounded,
+        text: l10n.filterReceiptChip,
+        onRemove: () => change(dataFilter.copyWith(onlyWithReceipt: false)),
+      ));
+    }
+    if (dataFilter.onlyImported) {
+      chips.add(_Chip(
+        icon: Icons.account_balance_rounded,
+        text: l10n.filterImportedChip,
+        onRemove: () => change(dataFilter.copyWith(onlyImported: false)),
       ));
     }
 

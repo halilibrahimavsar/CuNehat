@@ -2,8 +2,7 @@ import 'package:cunehat/core/shared/motion/app_motion.dart';
 import 'package:cunehat/core/shared/motion/period_transition.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_scope_chips.dart';
 import 'package:cunehat/core/shared/widgets/labeled_segment.dart';
-import 'package:cunehat/features/main_feature/controllers/home_navigation_requests.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transactions_section_tabs.dart';
+import 'package:cunehat/features/credit_card/presentation/card_context_rail.dart';
 import 'dart:async';
 import 'package:cunehat/core/services/budgets_changed_notifier.dart';
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
@@ -713,11 +712,11 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       // olduğu aya SESSİZCE kay" mantığı vardı; ortak dönemi arka planda
       // değiştirmek diğer iki sayfayı da kaydırırdı — yerine boş durum kartı
       // "… dönemine git" eylemini sunar.
-      // Kart şeridi + sekmeler gövdenin DIŞINDA: yükleniyor/boş hâllerinde de
-      // görünmeli (sekmeler gezinmedir).
+      // Kart şeridi gövdenin DIŞINDA: yükleniyor/boş hâllerinde de görünür.
       body: Column(
         children: [
-          const TransactionsSectionHeader(current: TransactionsSection.report),
+          // Kart bağlamı (yalnız haplar; borç şeridi İşlemler'de).
+          const CardContextRail(pillsOnly: true),
           Expanded(
             child: BlocListener<TransactionFilterCubit, CombinedFilter>(
               listenWhen: (prev, curr) =>

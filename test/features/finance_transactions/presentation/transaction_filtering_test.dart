@@ -177,6 +177,87 @@ void main() {
     });
   });
 
+  group('ek filtreler', () {
+    // Ağustos'a bir kart ödemesi (para taşıma), fişli bir market ve
+    // ekstreden gelen bir satır eklenir.
+    final extra = [
+      ...transactions,
+      TransactionEntity(
+        id: 'm',
+        userId: 'u1',
+        walletId: 'w1',
+        title: 'Kart ödemesi',
+        tag: 'Transfer',
+        amount: 2500,
+        date: DateTime(2026, 8, 20),
+        type: TransactionTypeModel.expense,
+        isSystem: true,
+      ),
+      TransactionEntity(
+        id: 'r',
+        userId: 'u1',
+        walletId: 'w1',
+        title: 'Migros',
+        tag: 'cat-market',
+        amount: 90,
+        date: DateTime(2026, 8, 21),
+        type: TransactionTypeModel.expense,
+        receiptFileName: 'r.jpg',
+      ),
+      TransactionEntity(
+        id: 'i',
+        userId: 'u1',
+        walletId: 'w1',
+        title: 'SOK',
+        tag: 'cat-market',
+        amount: 40,
+        date: DateTime(2026, 8, 22),
+        type: TransactionTypeModel.expense,
+        importBatchId: 'batch-1',
+      ),
+    ];
+    List<String> ids(DataFilter data) => applyTransactionFilters(
+          transactions: extra,
+          currentBalance: 1000,
+          filter: _filter().copyWith(dataFilter: data),
+          categoryLabels: labels,
+        ).map((e) => e.transaction.id!).toSet().toList()
+          ..sort();
+
+    test('para taşıma varsayılan GÖRÜNÜR (defter olduğu gibi)', () {
+      expect(ids(const DataFilter()), containsAll(['m', 'r', 'i']));
+    });
+
+    test('gizle: para taşıma düşer, gelir–gider kalır', () {
+      final got = ids(const DataFilter(movedMoney: MovedMoneyFilter.hide));
+      expect(got, isNot(contains('m')));
+      expect(got, containsAll(['a', 'b', 'c']));
+    });
+
+    test('yalnız bunlar: yalnız para taşıma', () {
+      expect(ids(const DataFilter(movedMoney: MovedMoneyFilter.only)), ['m']);
+    });
+
+    test('yalnız fişi olanlar', () {
+      expect(ids(const DataFilter(onlyWithReceipt: true)), ['r']);
+    });
+
+    test('yalnız ekstreden: referans ya da içe aktarım kimliği KANIT', () {
+      // 'd' (referanslı) dönem dışında; 'i' içe aktarım kimliğiyle.
+      expect(ids(const DataFilter(onlyImported: true)), ['i']);
+    });
+
+    test('ek filtreler hasActiveFilters ve sayıda sayılır; temizlenir', () {
+      const f = DataFilter(
+          movedMoney: MovedMoneyFilter.hide,
+          onlyWithReceipt: true,
+          onlyImported: true);
+      expect(f.hasActiveFilters, isTrue);
+      expect(f.activeFilterCount, 3);
+      expect(const DataFilter().hasActiveFilters, isFalse);
+    });
+  });
+
   group('birleşik', () {
     test('mod + kategori + arama birlikte uygulanır', () {
       final result = idsOf(_filter(

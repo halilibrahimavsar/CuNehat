@@ -1,3 +1,4 @@
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_search_field.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/transaction_period.dart';
@@ -16,6 +17,9 @@ CombinedFilter _filter({
   PriceRangeFilter? priceRange,
   String? search,
   FinanceMode mode = FinanceMode.compare,
+  MovedMoneyFilter moved = MovedMoneyFilter.show,
+  bool onlyWithReceipt = false,
+  bool onlyImported = false,
 }) {
   final r = range ?? monthRangeOf(DateTime(2026, 8, 1));
   return CombinedFilter(
@@ -28,6 +32,9 @@ CombinedFilter _filter({
       selectedCategories: categories,
       priceRange: priceRange,
       searchQuery: search,
+      movedMoney: moved,
+      onlyWithReceipt: onlyWithReceipt,
+      onlyImported: onlyImported,
     ),
   );
 }
@@ -60,6 +67,8 @@ void main() {
     VoidCallback? onClearCategories,
     VoidCallback? onClearPriceRange,
     VoidCallback? onClearSearch,
+    ValueChanged<String>? onSearchChanged,
+    ValueChanged<DataFilter>? onDataFilterChanged,
     Map<String, String> labels = const {},
   }) {
     return TransactionTopBar(
@@ -73,6 +82,8 @@ void main() {
       onClearPriceRange: onClearPriceRange ?? () {},
       onClearSearch: onClearSearch ?? () {},
       onClearAllFilters: () {},
+      onSearchChanged: onSearchChanged ?? (_) {},
+      onDataFilterChanged: onDataFilterChanged ?? (_) {},
     );
   }
 
@@ -161,6 +172,8 @@ void main() {
         onClearPriceRange: () {},
         onClearSearch: () {},
         onClearAllFilters: () {},
+        onSearchChanged: (_) {},
+        onDataFilterChanged: (_) {},
       )));
       await tester.pump();
 
@@ -258,6 +271,96 @@ void main() {
       await tester.tap(closeButtons.first);
       expect(clearedCategories, 1);
       expect(clearedPrice, 0);
+    });
+  });
+
+  group('arama ikonu', () {
+    testWidgets(
+        'dönem ile filtre ARASINDA; dokununca alan dönemin yerinde açılır, × kapatır',
+        (tester) async {
+      final typed = <String>[];
+      await tester.pumpWidget(wrap(bar(_filter(), onSearchChanged: typed.add)));
+      await tester.pump();
+
+      final search = find.byKey(const ValueKey('tx-search-open'));
+      final period = tester.getRect(find.byType(TransactionPeriodBar));
+      final filterBtn = tester.getRect(find.byIcon(Icons.tune_rounded));
+      final searchRect = tester.getRect(search);
+      expect(searchRect.left, greaterThan(period.right));
+      expect(searchRect.right, lessThan(filterBtn.left));
+      // İçerikte kalıcı bir arama alanı YOK.
+      expect(find.byType(TransactionSearchField), findsNothing);
+
+      await tester.tap(search);
+      await tester.pumpAndSettle();
+      expect(find.byType(TransactionSearchField), findsOneWidget);
+      expect(find.byType(TransactionPeriodBar), findsNothing);
+
+      await tester.enterText(find.byType(TextField), 'market');
+      expect(typed.last, 'market');
+
+      // Boşken × aramayı kapatır, dönem geri gelir.
+      await tester.enterText(find.byType(TextField), '');
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('tx-search-close')));
+      await tester.pumpAndSettle();
+      expect(find.byType(TransactionSearchField), findsNothing);
+      expect(find.byType(TransactionPeriodBar), findsOneWidget);
+    });
+
+    testWidgets('kapalıyken sorgu etkinse ikon işaretlidir, filtre noktası DEĞİL',
+        (tester) async {
+      await tester.pumpWidget(wrap(bar(_filter(search: 'market'))));
+      await tester.pump();
+      Color border(Finder f) => ((tester
+                  .widget<Container>(find
+                      .descendant(of: f, matching: find.byType(Container))
+                      .first)
+                  .decoration as BoxDecoration)
+              .border as Border)
+          .top
+          .color;
+      final searchBorder =
+          border(find.byKey(const ValueKey('tx-search-open')));
+      final filterBorder = border(find
+          .ancestor(
+              of: find.byIcon(Icons.tune_rounded),
+              matching: find.byType(InkWell))
+          .first);
+      expect(searchBorder, isNot(filterBorder));
+    });
+  });
+
+  group('ek filtre çipleri', () {
+    testWidgets('para taşıma / fişli / ekstreden çipleri görünür ve × kaldırır',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      final changes = <DataFilter>[];
+      await tester.pumpWidget(wrap(bar(
+        _filter(
+          moved: MovedMoneyFilter.hide,
+          onlyWithReceipt: true,
+          onlyImported: true,
+        ),
+        onDataFilterChanged: changes.add,
+      ), width: 800));
+      await tester.pump();
+
+      // Çip satırı yatay kayar; üçü birden ancak geniş ekranda kurulur.
+      expect(find.text('Para taşıma gizli'), findsOneWidget);
+      expect(find.text('Fişli'), findsOneWidget);
+      expect(find.text('Ekstreden'), findsOneWidget);
+
+      await tester.tap(find.descendant(
+        of: find.ancestor(
+            of: find.text('Para taşıma gizli'),
+            matching: find.byType(Container)).first,
+        matching: find.byIcon(Icons.close_rounded),
+      ));
+      expect(changes.single.movedMoney, MovedMoneyFilter.show);
+      expect(changes.single.onlyWithReceipt, isTrue);
     });
   });
 }

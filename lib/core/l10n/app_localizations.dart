@@ -9977,12 +9977,6 @@ abstract class AppLocalizations {
   /// **'Bu aralıkta kayıt yok. Başka bir döneme geçebilirsin.'**
   String get analysisPeriodEmptyBody;
 
-  /// No description provided for @sectionTabTransactions.
-  ///
-  /// In tr, this message translates to:
-  /// **'İşlemler'**
-  String get sectionTabTransactions;
-
   /// No description provided for @reportModeExpense.
   ///
   /// In tr, this message translates to:
@@ -10078,6 +10072,108 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Para taşıma · {count}'**
   String reportScopeMoved(int count);
+
+  /// No description provided for @txSearchOpen.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem ara'**
+  String get txSearchOpen;
+
+  /// No description provided for @txSearchClose.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aramayı kapat'**
+  String get txSearchClose;
+
+  /// No description provided for @filterMovedSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'PARA TAŞIMA HAREKETLERİ'**
+  String get filterMovedSection;
+
+  /// No description provided for @filterMovedHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transfer, kart ödemesi, borç ve yatırım hareketleri. Harcama sayılmazlar ama bakiyeyi değiştirirler.'**
+  String get filterMovedHint;
+
+  /// No description provided for @filterMovedShow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Göster'**
+  String get filterMovedShow;
+
+  /// No description provided for @filterMovedHide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizle'**
+  String get filterMovedHide;
+
+  /// No description provided for @filterMovedOnly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız bunlar'**
+  String get filterMovedOnly;
+
+  /// No description provided for @filterMovedHiddenChip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Para taşıma gizli'**
+  String get filterMovedHiddenChip;
+
+  /// No description provided for @filterMovedOnlyChip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız para taşıma'**
+  String get filterMovedOnlyChip;
+
+  /// No description provided for @filterMoreSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'DİĞER'**
+  String get filterMoreSection;
+
+  /// No description provided for @filterReceiptToggle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız fişi olanlar'**
+  String get filterReceiptToggle;
+
+  /// No description provided for @filterImportedToggle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız ekstreden gelenler'**
+  String get filterImportedToggle;
+
+  /// No description provided for @filterImportedHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Banka ekstresinden içe aktarılan kayıtlar.'**
+  String get filterImportedHint;
+
+  /// No description provided for @filterReceiptChip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fişli'**
+  String get filterReceiptChip;
+
+  /// No description provided for @filterImportedChip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekstreden'**
+  String get filterImportedChip;
+
+  /// No description provided for @txCollapseAllDays.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümünü daralt'**
+  String get txCollapseAllDays;
+
+  /// No description provided for @txExpandAllDays.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümünü genişlet'**
+  String get txExpandAllDays;
 }
 
 class _AppLocalizationsDelegate

@@ -204,6 +204,14 @@ class TransactionEntity extends Equatable {
         importBatchId: importBatchId,
       );
 
+  /// Banka ekstresinden geldiği KESİN mi? Üç kanıttan biri yeter: banka
+  /// referansı (yalnız ekstrede dolu), içe aktarım kimliği ya da `origin`.
+  /// Kanıtsız eski kayıtlar `false` — tahmin edilmez.
+  bool get isFromBankStatement =>
+      origin == TransactionOrigin.bankImport ||
+      importBatchId != null ||
+      (reference?.isNotEmpty ?? false);
+
   bool get isIncome => type == TransactionTypeModel.income;
   bool get isExpense => type == TransactionTypeModel.expense;
 

@@ -100,6 +100,46 @@ List<LedgerDayGroup> groupLedgerByDay(
   ];
 }
 
+/// Defterin hangi günlerinin KAPALI olduğu — sayfanın "tümünü daralt /
+/// genişlet" düğmesiyle sliver arasında paylaşılır.
+///
+/// Varsayılan AÇIK olduğu için yalnız kapananlar tutulur. "Hepsi kapalı mı"
+/// sorusu o an LİSTELENEN günlere göre sorulur ([allCollapsed]): dönem
+/// değişince yeni günler açık gelir ve düğme doğru etiketi gösterir.
+class LedgerCollapseController extends ChangeNotifier {
+  final Set<DateTime> _collapsed = {};
+
+  static DateTime _day(DateTime d) => DateTime(d.year, d.month, d.day);
+
+  bool isCollapsed(DateTime day) => _collapsed.contains(_day(day));
+
+  void toggle(DateTime day) {
+    final d = _day(day);
+    if (!_collapsed.remove(d)) _collapsed.add(d);
+    notifyListeners();
+  }
+
+  bool allCollapsed(Iterable<DateTime> days) {
+    var any = false;
+    for (final d in days) {
+      any = true;
+      if (!_collapsed.contains(_day(d))) return false;
+    }
+    return any;
+  }
+
+  void collapseAll(Iterable<DateTime> days) {
+    _collapsed.addAll(days.map(_day));
+    notifyListeners();
+  }
+
+  void expandAll() {
+    if (_collapsed.isEmpty) return;
+    _collapsed.clear();
+    notifyListeners();
+  }
+}
+
 /// Gün başlıklarına "şu güne git" diyebilmek için sayfayla defter arasında
 /// paylaşılan çapa defteri.
 ///
@@ -146,6 +186,10 @@ class TransactionLedgerSliver extends StatefulWidget {
   /// Verilirse gün başlıklarına çapa takılır ("şu güne git" için).
   final LedgerDayAnchors? anchors;
 
+  /// Verilirse katlama durumu dışarıda tutulur ("tümünü daralt"); yoksa
+  /// sliver kendi durumunu taşır.
+  final LedgerCollapseController? collapse;
+
   const TransactionLedgerSliver({
     super.key,
     required this.transactions,
@@ -154,6 +198,7 @@ class TransactionLedgerSliver extends StatefulWidget {
     this.mode = FinanceMode.compare,
     this.showDayEndBalance = true,
     this.anchors,
+    this.collapse,
   });
 
   @override
@@ -162,9 +207,33 @@ class TransactionLedgerSliver extends StatefulWidget {
 }
 
 class _TransactionLedgerSliverState extends State<TransactionLedgerSliver> {
-  /// Kapatılmış günler. Varsayılan AÇIK olduğu için yalnız kapananlar tutulur;
-  /// böylece liste değişince "hangi günler vardı" defterini taşımak gerekmez.
-  final Set<DateTime> _collapsed = {};
+  LedgerCollapseController? _own;
+  LedgerCollapseController get _collapse =>
+      widget.collapse ?? (_own ??= LedgerCollapseController());
+
+  @override
+  void initState() {
+    super.initState();
+    _collapse.addListener(_onCollapseChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant TransactionLedgerSliver oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.collapse != widget.collapse) {
+      (oldWidget.collapse ?? _own)?.removeListener(_onCollapseChanged);
+      _collapse.addListener(_onCollapseChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    _collapse.removeListener(_onCollapseChanged);
+    _own?.dispose();
+    super.dispose();
+  }
+
+  void _onCollapseChanged() => setState(() {});
 
   @override
   Widget build(BuildContext context) {
@@ -179,17 +248,13 @@ class _TransactionLedgerSliverState extends State<TransactionLedgerSliver> {
                 pinned: true,
                 delegate: _DayHeaderDelegate(
                   group: group,
-                  isExpanded: !_collapsed.contains(group.day),
+                  isExpanded: !_collapse.isCollapsed(group.day),
                   anchorKey: widget.anchors?.keyFor(group.day),
                   extent: _headerExtent(context),
-                  onToggle: () => setState(() {
-                    if (!_collapsed.remove(group.day)) {
-                      _collapsed.add(group.day);
-                    }
-                  }),
+                  onToggle: () => _collapse.toggle(group.day),
                 ),
               ),
-              if (!_collapsed.contains(group.day))
+              if (!_collapse.isCollapsed(group.day))
                 SliverList.builder(
                   itemCount: group.items.length,
                   itemBuilder: (context, index) {

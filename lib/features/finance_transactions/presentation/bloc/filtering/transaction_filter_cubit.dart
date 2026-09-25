@@ -191,16 +191,17 @@ class TransactionFilterCubit extends Cubit<CombinedFilter> {
     ));
   }
 
-  /// Yalnız veri filtreleri (kategori + fiyat + arama). Dönem ve mod kalır.
+  /// Yalnız veri filtreleri (kategori, tutar, arama, para taşıma, fiş,
+  /// kaynak). Dönem ve mod kalır.
   void clearDataFilters() {
     if (!state.dataFilter.hasActiveFilters) return;
-    emit(state.copyWith(
-      dataFilter: state.dataFilter.copyWith(
-        clearCategories: true,
-        clearPriceRange: true,
-        clearSearchQuery: true,
-      ),
-    ));
+    emit(state.copyWith(dataFilter: const DataFilter()));
+  }
+
+  /// Veri filtresinin yeni hâli (filtre sayfası ve çipler).
+  void setDataFilter(DataFilter filter) {
+    if (filter == state.dataFilter) return;
+    emit(state.copyWith(dataFilter: filter));
   }
 
   /// Veri filtreleri + dönem varsayılana döner. Mod korunur: kullanıcının

@@ -205,6 +205,16 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// Arama artık üst çubukta bir İKON: alan dokununca açılır.
+  Future<Finder> openSearch(WidgetTester tester) async {
+    final field = find.byType(TransactionSearchField);
+    if (field.evaluate().isEmpty) {
+      await tester.tap(find.byKey(const ValueKey('tx-search-open')));
+      await tester.pumpAndSettle();
+    }
+    return field;
+  }
+
   testWidgets('tek akış: özet + gün şeridi + defter aynı ekranda',
       (tester) async {
     // Liste/Takvim ikiliği kaldırıldı; ekran tek kaydırma oldu.
@@ -227,7 +237,7 @@ void main() {
       expect(find.text('ŞOK 4712'), findsOneWidget);
       expect(find.text('Elektrik faturası'), findsOneWidget);
 
-      await tester.enterText(find.byType(TransactionSearchField), 'elektrik');
+      await tester.enterText(await openSearch(tester), 'elektrik');
       await tester.pumpAndSettle();
 
       expect(find.text('ŞOK 4712'), findsNothing);
@@ -239,7 +249,7 @@ void main() {
       seed([txMarket, txFatura]);
       await pumpPage(tester);
 
-      await tester.enterText(find.byType(TransactionSearchField), 'market');
+      await tester.enterText(await openSearch(tester), 'market');
       await tester.pumpAndSettle();
 
       expect(find.text('ŞOK 4712'), findsOneWidget);
@@ -250,6 +260,7 @@ void main() {
         (tester) async {
       seed([txMarket, txFatura]);
       await pumpPage(tester);
+      await openSearch(tester);
 
       final field = find.descendant(
         of: find.byType(TransactionSearchField),
@@ -268,7 +279,7 @@ void main() {
       seed([txMarket, txFatura]);
       await pumpPage(tester);
 
-      await tester.enterText(find.byType(TransactionSearchField), 'zzzz');
+      await tester.enterText(await openSearch(tester), 'zzzz');
       await tester.pumpAndSettle();
 
       expect(find.textContaining('zzzz'), findsWidgets);
@@ -280,6 +291,8 @@ void main() {
       // çizmek boş ekranı gürültüyle doldurur.
       seed([txMarket]);
       await pumpPage(tester);
+
+      await openSearch(tester);
 
       await tester.enterText(
           find.descendant(
@@ -299,7 +312,7 @@ void main() {
       seed([txMarket, txFatura]);
       await pumpPage(tester);
 
-      await tester.enterText(find.byType(TransactionSearchField), 'zzzz');
+      await tester.enterText(await openSearch(tester), 'zzzz');
       await tester.pumpAndSettle();
       await tester.tap(find.text('Filtreleri temizle'));
       await tester.pumpAndSettle();
@@ -323,7 +336,7 @@ void main() {
       seed([txMarket]);
       await pumpPage(tester);
 
-      await tester.enterText(find.byType(TransactionSearchField), 'zzzz');
+      await tester.enterText(await openSearch(tester), 'zzzz');
       await tester.pumpAndSettle();
 
       expect(find.text('Henüz işlem yok'), findsNothing);
@@ -421,6 +434,20 @@ void main() {
           matching: find.text(text),
         );
 
+    /// Panel listesi tembel: yeni bölümler (tür, para taşıma, diğer) kategori
+    /// ağacını ilk ekranın altına itti; öğe kurulana dek kaydırılır.
+    Future<void> revealInPanel(WidgetTester tester, String text) async {
+      await tester.scrollUntilVisible(
+        inPanel(text),
+        200,
+        scrollable: find
+            .descendant(
+                of: find.byType(FilterView), matching: find.byType(Scrollable))
+            .first,
+      );
+      await tester.pumpAndSettle();
+    }
+
     testWidgets('düğme kaç işlemin kalacağını ÖNCEDEN söyler', (tester) async {
       seed([txMarket, txFatura]);
       await pumpPage(tester);
@@ -448,6 +475,35 @@ void main() {
       expect(button.bottom, lessThanOrEqualTo(screenHeight - keyboard));
     });
 
+    testWidgets('para taşıma "Gizle" transferi listeden düşürür, çip çıkar',
+        (tester) async {
+      final transfer = TransactionEntity(
+        id: 'tx-transfer',
+        userId: 'u',
+        walletId: txMarket.walletId,
+        title: 'Kart ödemesi',
+        tag: 'Transfer',
+        amount: 2500,
+        date: txMarket.date,
+        type: TransactionTypeModel.expense,
+        isSystem: true,
+      );
+      seed([txMarket, txFatura, transfer]);
+      await pumpPage(tester);
+      expect(find.text('Kart ödemesi'), findsOneWidget);
+
+      await openFilters(tester);
+      await revealInPanel(tester, 'Gizle');
+      await tester.tap(inPanel('Gizle'));
+      await tester.pumpAndSettle();
+      expect(inPanel('2 işlemi göster'), findsOneWidget);
+
+      await tester.tap(inPanel('2 işlemi göster'));
+      await tester.pumpAndSettle();
+      expect(find.text('Kart ödemesi'), findsNothing);
+      expect(find.text('Para taşıma gizli'), findsOneWidget);
+    });
+
     testWidgets('kategori seçimi anında uygulanır ve sayı güncellenir',
         (tester) async {
       seed([txMarket, txFatura]);
@@ -455,8 +511,7 @@ void main() {
       await openFilters(tester);
 
       // Kategori ağacındaki "Market" satırı (liste sonunda; görünür kıl).
-      await tester.ensureVisible(inPanel('Market'));
-      await tester.pumpAndSettle();
+      await revealInPanel(tester, 'Market');
       await tester.tap(inPanel('Market'));
       await tester.pumpAndSettle();
 
@@ -469,8 +524,7 @@ void main() {
       await pumpPage(tester);
       await openFilters(tester);
 
-      await tester.ensureVisible(inPanel('Market'));
-      await tester.pumpAndSettle();
+      await revealInPanel(tester, 'Market');
       await tester.tap(inPanel('Market'));
       await tester.pumpAndSettle();
       await tester.tap(inPanel('1 işlemi göster'));
@@ -496,6 +550,7 @@ void main() {
         (tester) async {
       seed([txMarket]);
       await pumpPage(tester);
+      await openSearch(tester);
       await tester.enterText(
           find.descendant(
             of: find.byType(TransactionSearchField),
@@ -558,6 +613,8 @@ void main() {
       seed([txFatura, txOldMarket]);
       await pumpPage(tester);
 
+      await openSearch(tester);
+
       await tester.enterText(
           find.descendant(
             of: find.byType(TransactionSearchField),
@@ -574,6 +631,8 @@ void main() {
     testWidgets('"Tüm geçmişte ara" dönemi veriye genişletir', (tester) async {
       seed([txFatura, txOldMarket]);
       await pumpPage(tester);
+
+      await openSearch(tester);
 
       await tester.enterText(
           find.descendant(
@@ -592,6 +651,8 @@ void main() {
         (tester) async {
       seed([txMarket, txOldMarket]);
       await pumpPage(tester);
+
+      await openSearch(tester);
 
       await tester.enterText(
           find.descendant(
@@ -764,11 +825,13 @@ void main() {
   });
 
   group('arama çipi', () {
-    testWidgets('sorgu etkinken arama alanı kaysa da çip sabit çubukta kalır',
+    testWidgets('arama kapanınca sorgu KORUNUR; çip sabit çubukta kalır',
         (tester) async {
       // Sayfa gerçekten kaydırılabilmeli.
       seed(bulk(14, 5));
       await pumpPage(tester);
+
+      await openSearch(tester);
 
       await tester.enterText(
           find.descendant(
@@ -778,11 +841,17 @@ void main() {
           'a');
       await tester.pumpAndSettle();
 
+      // Klavyedeki "Ara": alan kapanır, sorgu korunur.
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await tester.pumpAndSettle();
+      expect(find.byType(TransactionSearchField), findsNothing);
+
       await tester.drag(
           find.byType(CustomScrollView).first, const Offset(0, -400));
       await tester.pumpAndSettle();
 
-      // Çip metni l10n'deki `txChipSearch` kalıbı: “sorgu”
+      // Çip metni l10n'deki `txChipSearch` kalıbı: “sorgu” — kaydırınca da
+      // sabit çubukta kalır.
       expect(
         find.descendant(
           of: find.byType(ActiveFilterChips),
@@ -790,8 +859,32 @@ void main() {
         ),
         findsOneWidget,
       );
-      // Arama ALANI gerçekten kaymış olmalı; çip onun yerine geçiyor.
-      expect(find.byType(TransactionSearchField), findsNothing);
+    });
+  });
+
+  group('tümünü daralt / genişlet', () {
+    testWidgets('tek dokunuşla bütün günler kapanır, ikincisiyle açılır',
+        (tester) async {
+      seed([txMarket, txFatura]);
+      await pumpPage(tester);
+      expect(find.byType(TransactionCard), findsWidgets);
+
+      final toggle = find.byKey(const ValueKey('tx-collapse-all'));
+      expect(find.text('Tümünü daralt'), findsOneWidget);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      expect(find.byType(TransactionCard), findsNothing);
+      expect(find.text('Tümünü genişlet'), findsOneWidget);
+
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      expect(find.byType(TransactionCard), findsWidgets);
+    });
+
+    testWidgets('tek günlük listede düğme YOK', (tester) async {
+      seed([txMarket]);
+      await pumpPage(tester);
+      expect(find.byKey(const ValueKey('tx-collapse-all')), findsNothing);
     });
   });
 }

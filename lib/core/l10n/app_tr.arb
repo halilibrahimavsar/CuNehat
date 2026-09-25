@@ -3318,7 +3318,6 @@
     }
   },
   "analysisPeriodEmptyBody": "Bu aralıkta kayıt yok. Başka bir döneme geçebilirsin.",
-  "sectionTabTransactions": "İşlemler",
   "reportModeExpense": "Gider",
   "reportModeIncome": "Gelir",
   "reportModeBoth": "İkisi",
@@ -3382,5 +3381,22 @@
         "type": "int"
       }
     }
-  }
+  },
+  "txSearchOpen": "İşlem ara",
+  "txSearchClose": "Aramayı kapat",
+  "filterMovedSection": "PARA TAŞIMA HAREKETLERİ",
+  "filterMovedHint": "Transfer, kart ödemesi, borç ve yatırım hareketleri. Harcama sayılmazlar ama bakiyeyi değiştirirler.",
+  "filterMovedShow": "Göster",
+  "filterMovedHide": "Gizle",
+  "filterMovedOnly": "Yalnız bunlar",
+  "filterMovedHiddenChip": "Para taşıma gizli",
+  "filterMovedOnlyChip": "Yalnız para taşıma",
+  "filterMoreSection": "DİĞER",
+  "filterReceiptToggle": "Yalnız fişi olanlar",
+  "filterImportedToggle": "Yalnız ekstreden gelenler",
+  "filterImportedHint": "Banka ekstresinden içe aktarılan kayıtlar.",
+  "filterReceiptChip": "Fişli",
+  "filterImportedChip": "Ekstreden",
+  "txCollapseAllDays": "Tümünü daralt",
+  "txExpandAllDays": "Tümünü genişlet"
 }

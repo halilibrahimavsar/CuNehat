@@ -1,3 +1,4 @@
+import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:flutter/material.dart';
 
@@ -13,10 +14,23 @@ class TransactionSearchField extends StatefulWidget {
   final String? value;
   final ValueChanged<String> onChanged;
 
+  /// Alanın odak düğümü (sahibi çağıran). Verilmezse alan kendi düğümünü
+  /// kurar. Temizle/kapat bu düğümü bırakır — `FocusScope.unfocus()` odak
+  /// geçmişini silmiyor, menü kapanınca klavye yeniden açılıyordu.
+  final FocusNode? focusNode;
+  final bool autofocus;
+
+  /// Verilirse alan KAPATILABİLİR: metin boşken sağdaki × aramayı kapatır
+  /// (doluyken önce temizler).
+  final VoidCallback? onClose;
+
   const TransactionSearchField({
     super.key,
     required this.value,
     required this.onChanged,
+    this.focusNode,
+    this.autofocus = false,
+    this.onClose,
   });
 
   @override
@@ -26,6 +40,8 @@ class TransactionSearchField extends StatefulWidget {
 class _TransactionSearchFieldState extends State<TransactionSearchField> {
   late final TextEditingController _controller =
       TextEditingController(text: widget.value ?? '');
+  FocusNode? _ownFocus;
+  FocusNode get _focus => widget.focusNode ?? (_ownFocus ??= FocusNode());
 
   @override
   void didUpdateWidget(covariant TransactionSearchField oldWidget) {
@@ -45,6 +61,7 @@ class _TransactionSearchFieldState extends State<TransactionSearchField> {
 
   @override
   void dispose() {
+    _ownFocus?.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -55,15 +72,21 @@ class _TransactionSearchFieldState extends State<TransactionSearchField> {
     final l10n = context.l10n;
     final hasText = _controller.text.isNotEmpty;
 
+    final onClose = widget.onClose;
     return SizedBox(
-      height: 42,
+      height: 44,
       child: TextField(
         controller: _controller,
+        focusNode: _focus,
+        autofocus: widget.autofocus,
         onChanged: (value) {
           widget.onChanged(value);
           setState(() {}); // temizle düğmesinin görünürlüğü
         },
         textInputAction: TextInputAction.search,
+        // Klavyedeki "Ara": kapatılabilir alan kapanır, sorgu KORUNUR (çip
+        // satırında görünür, ikon işaretli kalır).
+        onSubmitted: widget.onClose == null ? null : (_) => widget.onClose!(),
         style: TextStyle(fontSize: 14, color: scheme.onSurface),
         decoration: InputDecoration(
           isDense: true,
@@ -78,7 +101,7 @@ class _TransactionSearchFieldState extends State<TransactionSearchField> {
             color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
           ),
           prefixIconConstraints:
-              const BoxConstraints(minWidth: 38, minHeight: 42),
+              const BoxConstraints(minWidth: 38, minHeight: 44),
           suffixIcon: hasText
               ? IconButton(
                   tooltip: l10n.txSearchClear,
@@ -87,11 +110,21 @@ class _TransactionSearchFieldState extends State<TransactionSearchField> {
                   onPressed: () {
                     _controller.clear();
                     widget.onChanged('');
-                    FocusScope.of(context).unfocus();
+                    // Kapatılabilir alanda temizlemek odağı KORUR: kullanıcı
+                    // büyük ihtimalle yeni bir şey yazacak.
+                    if (onClose == null) _focus.unfocus();
                     setState(() {});
                   },
                 )
-              : null,
+              : onClose == null
+                  ? null
+                  : IconButton(
+                      key: const ValueKey('tx-search-close'),
+                      tooltip: l10n.txSearchClose,
+                      icon: const Icon(Icons.close_rounded, size: 18),
+                      visualDensity: VisualDensity.compact,
+                      onPressed: onClose,
+                    ),
           filled: true,
           fillColor: scheme.onSurface.withValues(alpha: 0.05),
           contentPadding: const EdgeInsets.symmetric(vertical: 10),
@@ -109,7 +142,8 @@ class _TransactionSearchFieldState extends State<TransactionSearchField> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: scheme.primary, width: 1.4),
+            borderSide:
+                const BorderSide(color: AppGradients.transactions, width: 1.4),
           ),
         ),
       ),

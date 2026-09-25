@@ -1,6 +1,5 @@
 import 'package:cunehat/core/shared/motion/app_motion.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 
 /// Bir [LabeledSegment] hücresi.
 @immutable
@@ -18,10 +17,8 @@ class SegmentItem<T> {
 ///
 /// İkon-yalnız eski mod segmentinin (↗ ⇄ ↘) anlamı yalnız ipucu metnindeydi;
 /// kullanıcı hangi ikonun neyi süzdüğünü denemeden bilemiyordu. Bu bileşen
-/// etiketi hücrenin kendisine yazar. İki kullanım:
-///  • İşlemler · İçgörü · Rapor sekme şeridi ([asTabs] = true: ekran okuyucu
-///    "sekme, 3'ün 2'si, seçili" okur),
-///  • Rapor'un kategori modu (Gider · Gelir · İkisi).
+/// etiketi hücrenin kendisine yazar: Rapor'un kategori modu (Gider · Gelir ·
+/// İkisi) ve filtre sayfasının "Tür" bölümü.
 ///
 /// Hücre yüksekliği [height] (en az 40); dokunma alanı hücrenin tamamıdır.
 /// Etiket sığmazsa KÜÇÜLÜR (`scaleDown`), satır atlamaz ve kırpılmaz.
@@ -30,7 +27,6 @@ class LabeledSegment<T> extends StatelessWidget {
   final T selected;
   final ValueChanged<T> onChanged;
   final double height;
-  final bool asTabs;
 
   const LabeledSegment({
     super.key,
@@ -38,7 +34,6 @@ class LabeledSegment<T> extends StatelessWidget {
     required this.selected,
     required this.onChanged,
     this.height = 40,
-    this.asTabs = false,
   }) : assert(height >= 40, 'dokunma hedefi 40dp altına inmemeli');
 
   @override
@@ -88,7 +83,6 @@ class LabeledSegment<T> extends StatelessWidget {
                         label: items[i].label,
                         selected: i == index,
                         onTap: () => onChanged(items[i].value),
-                        asTab: asTabs,
                         motion: motion,
                       ),
                     ),
@@ -100,9 +94,7 @@ class LabeledSegment<T> extends StatelessWidget {
       ),
     );
 
-    return asTabs
-        ? Semantics(role: SemanticsRole.tabBar, container: true, child: segment)
-        : segment;
+    return segment;
   }
 }
 
@@ -110,14 +102,12 @@ class _Cell extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
-  final bool asTab;
   final AppMotion motion;
 
   const _Cell({
     required this.label,
     required this.selected,
     required this.onTap,
-    required this.asTab,
     required this.motion,
   });
 
@@ -126,18 +116,15 @@ class _Cell extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return Semantics(
-      role: asTab ? SemanticsRole.tab : null,
-      button: !asTab,
+      button: true,
       selected: selected,
       label: label,
       // Eylem burada: `excludeSemantics` alt ağacı (InkWell'in eylemi dahil)
-      // dışarıda bırakır. Sekme rolü bir dokunma eylemi İSTER.
+      // dışarıda bırakır. Seçili hücre de dokunulabilir (etkisiz) kalır; aksi
+      // hâlde ekran okuyucu onu "devre dışı" gibi okur.
       onTap: selected ? () {} : onTap,
       excludeSemantics: true,
       child: InkWell(
-        // Seçili hücre de DOKUNULABİLİR kalır (etkisiz): ekran okuyucuda
-        // sekme rolü bir dokunma eylemi ister, yoksa seçili sekme "devre
-        // dışı" gibi okunur (Flutter bunu assert ile yakalar).
         onTap: selected ? () {} : onTap,
         borderRadius: BorderRadius.circular(11),
         child: Center(

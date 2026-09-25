@@ -3182,7 +3182,6 @@
     }
   },
   "analysisPeriodEmptyBody": "Nothing recorded in this range. Try another period.",
-  "sectionTabTransactions": "Transactions",
   "reportModeExpense": "Spending",
   "reportModeIncome": "Income",
   "reportModeBoth": "Both",
@@ -3246,5 +3245,22 @@
         "type": "int"
       }
     }
-  }
+  },
+  "txSearchOpen": "Search transactions",
+  "txSearchClose": "Close search",
+  "filterMovedSection": "MOVED MONEY",
+  "filterMovedHint": "Transfers, card payments, debt and investment entries. Not counted as spending, but they change the balance.",
+  "filterMovedShow": "Show",
+  "filterMovedHide": "Hide",
+  "filterMovedOnly": "Only these",
+  "filterMovedHiddenChip": "Moved money hidden",
+  "filterMovedOnlyChip": "Moved money only",
+  "filterMoreSection": "MORE",
+  "filterReceiptToggle": "Only with a receipt",
+  "filterImportedToggle": "Only from bank statements",
+  "filterImportedHint": "Entries imported from a bank statement.",
+  "filterReceiptChip": "With receipt",
+  "filterImportedChip": "From statement",
+  "txCollapseAllDays": "Collapse all",
+  "txExpandAllDays": "Expand all"
 }

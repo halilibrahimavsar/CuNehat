@@ -30,9 +30,8 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_day_rail.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_list_skeleton.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/shared_period.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transactions_section_tabs.dart';
+import 'package:cunehat/features/credit_card/presentation/card_context_rail.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_search_field.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_summary_strip.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_top_bar.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
@@ -107,6 +106,10 @@ class _TransactionsViewState extends State<_TransactionsView> {
 
   /// Gün şeridinden listeye giden köprü: başlıkların GlobalKey defteri.
   final LedgerDayAnchors _anchors = LedgerDayAnchors();
+
+  /// Hangi günlerin kapalı olduğu — "tümünü daralt / genişlet" düğmesi ile
+  /// defter arasında paylaşılır.
+  final LedgerCollapseController _collapse = LedgerCollapseController();
 
   /// Şeritte vurgulanan gün. Yalnız gezinme durumu — filtreye yazılmaz,
   /// çünkü bir güne bakmak dönemi daraltmak DEĞİLDİR (eski takvimde bir
@@ -190,6 +193,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
       getIt<HomeNavigationRequests>().removeListener(_applyRequestedPeriod);
     }
     _categoriesSub?.cancel();
+    _collapse.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -459,9 +463,8 @@ class _TransactionsViewState extends State<_TransactionsView> {
               backgroundColor: Colors.transparent,
               body: Column(
                 children: [
-                  // Cüzdan ↔ bağlı kartları + İşlemler · İçgörü · Rapor.
-                  const TransactionsSectionHeader(
-                      current: TransactionsSection.ledger),
+                  // Cüzdan ↔ bağlı kartları (yalnız kartı olan cüzdanda).
+                  const CardContextRail(),
                   TransactionTopBar(
                     filter: filterState,
                     periodLabel: statementPeriodLabel(cubit, context.l10n),
@@ -470,6 +473,8 @@ class _TransactionsViewState extends State<_TransactionsView> {
                     onPeriodStep: cubit.stepPeriod,
                     onPeriodPick: () => pickSharedPeriod(context),
                     onFilterTap: () => _showFilterSheet(context),
+                    onSearchChanged: cubit.setSearchQuery,
+                    onDataFilterChanged: cubit.setDataFilter,
                     onClearCategories: () => cubit.setCategories(const {}),
                     onClearPriceRange: () => cubit.setPriceRange(null),
                     onClearSearch: () => cubit.setSearchQuery(null),
@@ -517,19 +522,10 @@ class _TransactionsViewState extends State<_TransactionsView> {
     required bool periodHasToday,
     required bool walletIsEmpty,
   }) {
-    final searchSliver = SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-        child: TransactionSearchField(
-          value: filterState.dataFilter.searchQuery,
-          onChanged: cubit.setSearchQuery,
-        ),
-      ),
-    );
-
+    // Arama artık içeriğin ilk satırı DEĞİL: üst çubukta bir ikon (bkz.
+    // [TransactionTopBar]). İçerik doğrudan özetle başlar.
     if (visible.isEmpty) {
       return [
-        searchSliver,
         SliverFillRemaining(
           hasScrollBody: false,
           child: _EmptyState(
@@ -550,8 +546,9 @@ class _TransactionsViewState extends State<_TransactionsView> {
       ];
     }
 
+    final days = {for (final e in visible) dayOf(e.transaction.date)};
+
     return [
-      searchSliver,
       SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
@@ -591,6 +588,43 @@ class _TransactionsViewState extends State<_TransactionsView> {
           ),
         ),
       ),
+      // Tümünü daralt / genişlet: uzun bir dönemde (ör. yıl) gün başlıklarını
+      // tek tek kapatmak gerekiyordu. Tek günde anlamsız, gizlenir.
+      if (days.length > 1)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 8, 0),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: ListenableBuilder(
+                listenable: _collapse,
+                builder: (context, _) {
+                  final allClosed = _collapse.allCollapsed(days);
+                  return TextButton.icon(
+                    key: const ValueKey('tx-collapse-all'),
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      foregroundColor:
+                          Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    onPressed: () => allClosed
+                        ? _collapse.expandAll()
+                        : _collapse.collapseAll(days),
+                    icon: Icon(
+                      allClosed
+                          ? Icons.unfold_more_rounded
+                          : Icons.unfold_less_rounded,
+                      size: 18,
+                    ),
+                    label: Text(allClosed
+                        ? context.l10n.txExpandAllDays
+                        : context.l10n.txCollapseAllDays),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
       SliverPadding(
         padding: const EdgeInsets.fromLTRB(16, 2, 16, 28),
         sliver: TransactionLedgerSliver(
@@ -599,6 +633,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
           categoryIcons: _categoryIcons,
           categoryLabels: _categoryLabels,
           anchors: _anchors,
+          collapse: _collapse,
         ),
       ),
     ];

@@ -1,3 +1,5 @@
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_search_field.dart';
+import 'package:cunehat/core/shared/motion/app_motion.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
@@ -23,13 +25,11 @@ import 'package:flutter/material.dart';
 /// anlatıyordu (liste 191dp'lik özet kartı, takvim 9,5px'lik satır) ve seçim
 /// hiçbir yerde saklanmadığı için her açılışta takvime dönüyordu.
 ///
-/// **Arama da buradan çıktı.** Çubuk 360×800'de 110dp sabit yer kaplıyordu —
-/// sayfaya kalan 630dp'nin %17,5'i — ve bunun 50dp'si nadir kullanılan bir
-/// kontroldü. Arama alanı artık içeriğin ilk satırı: dururken görünür (ikon
-/// ardına saklanmış bir arama keşfedilmiyor, bu kural duruyor), okurken yol
-/// verir, yukarı çekince geri gelir. Sorgu etkinken de kaybolmaz: çip şeridi
-/// onu burada, sabit kısımda gösterir.
-class TransactionTopBar extends StatelessWidget {
+/// **Arama bir ikon (25 Eyl 2026).** Önce 110dp'lik sabit çubuktaydı, sonra
+/// içeriğin ilk satırına (42dp + boşluk) indi. Kullanıcı isteğiyle dönem ile
+/// filtre arasında 44dp'lik bir ikon oldu; dokununca dönem çubuğunun yerinde
+/// animasyonla açılır. Sorgu etkinken ikon noktalı, çip satırı sorguyu yazar.
+class TransactionTopBar extends StatefulWidget {
   final CombinedFilter filter;
   final Map<String, String> categoryLabels;
 
@@ -41,6 +41,13 @@ class TransactionTopBar extends StatelessWidget {
   final VoidCallback onClearPriceRange;
   final VoidCallback onClearSearch;
   final VoidCallback onClearAllFilters;
+
+  /// Arama metni değişti (canlı süzme).
+  final ValueChanged<String> onSearchChanged;
+
+  /// Kalan veri filtrelerinin (para taşıma, fiş, kaynak) çiplerinden gelen
+  /// değişiklik: çip, filtrenin yeni hâlini verir.
+  final ValueChanged<DataFilter> onDataFilterChanged;
 
   /// Dönem etiketinin yerine geçer (kart bağlamında ekstre dönemi).
   final String? periodLabel;
@@ -57,16 +64,51 @@ class TransactionTopBar extends StatelessWidget {
     required this.onClearPriceRange,
     required this.onClearSearch,
     required this.onClearAllFilters,
+    required this.onSearchChanged,
+    required this.onDataFilterChanged,
     this.periodLabel,
   });
 
+  @override
+  State<TransactionTopBar> createState() => _TransactionTopBarState();
+}
+
+class _TransactionTopBarState extends State<TransactionTopBar> {
   static const double _controlRow = 44;
   static const double _gap = 8;
   static const double _verticalPadding = 8;
 
+  /// Arama alanı açık mı. Arama eskiden içeriğin ilk satırında 42dp'lik
+  /// kalıcı bir alandı; artık dönemle filtre arasında bir ikon ve dokununca
+  /// dönem çubuğunun YERİNDE açılıyor. Kapalıyken sorgu etkinse ikonda nokta
+  /// ve çip satırında sorgu çipi durur — "neden az satır görüyorum" sorusunun
+  /// yanıtı kaybolmaz.
+  bool _searchOpen = false;
+
+  /// Alanın KENDİ düğümü: `FocusScope.unfocus()` odak geçmişini silmiyor,
+  /// menü/diyalog kapanınca klavye yeniden açılıyordu.
+  final FocusNode _searchFocus = FocusNode();
+
+  @override
+  void dispose() {
+    _searchFocus.dispose();
+    super.dispose();
+  }
+
+  void _openSearch() => setState(() => _searchOpen = true);
+
+  void _closeSearch() {
+    _searchFocus.unfocus();
+    setState(() => _searchOpen = false);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final filter = widget.filter;
     final dataFilter = filter.dataFilter;
+    final motion = AppMotion.of(context);
+    final l10n = context.l10n;
+    final hasQuery = dataFilter.searchQuery?.trim().isNotEmpty ?? false;
 
     return Material(
       // Material (renkli Container değil): dönem okları ve filtre düğmesi
@@ -84,36 +126,94 @@ class TransactionTopBar extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(
-                    child: TransactionPeriodBar(
-                      range: DateTimeRange(
-                        start: filter.viewFilter.startDate,
-                        end: filter.viewFilter.endDate,
-                      ),
-                      onStep: onPeriodStep,
-                      onPick: onPeriodPick,
-                      label: periodLabel,
+                    child: AnimatedSwitcher(
+                      duration: motion.d(AppMotion.medium),
+                      switchInCurve: AppMotion.enter,
+                      switchOutCurve: AppMotion.exit,
+                      // Arama ikonun olduğu yerden (sağdan) gelir, dönem
+                      // soldan geri döner.
+                      transitionBuilder: (child, animation) {
+                        final isSearch =
+                            child.key == const ValueKey('tx-search-field');
+                        return FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(
+                            position: Tween(
+                              begin: Offset(isSearch ? 0.12 : -0.12, 0),
+                              end: Offset.zero,
+                            ).animate(animation),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: _searchOpen
+                          ? TransactionSearchField(
+                              key: const ValueKey('tx-search-field'),
+                              value: dataFilter.searchQuery,
+                              onChanged: widget.onSearchChanged,
+                              focusNode: _searchFocus,
+                              autofocus: true,
+                              onClose: _closeSearch,
+                            )
+                          : TransactionPeriodBar(
+                              key: const ValueKey('tx-period-bar'),
+                              range: DateTimeRange(
+                                start: filter.viewFilter.startDate,
+                                end: filter.viewFilter.endDate,
+                              ),
+                              onStep: widget.onPeriodStep,
+                              onPick: widget.onPeriodPick,
+                              label: widget.periodLabel,
+                            ),
                     ),
                   ),
+                  // Arama açıkken ikon çekilir; alanın kendi × düğmesi kapatır.
+                  AnimatedSize(
+                    duration: motion.d(AppMotion.medium),
+                    curve: AppMotion.standard,
+                    child: _searchOpen
+                        ? const SizedBox(height: _controlRow)
+                        : Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: _BarIconButton(
+                              key: const ValueKey('tx-search-open'),
+                              icon: Icons.search_rounded,
+                              label: l10n.txSearchOpen,
+                              active: hasQuery,
+                              onTap: _openSearch,
+                            ),
+                          ),
+                  ),
                   const SizedBox(width: 8),
-                  _FilterButton(
-                    hasActiveFilters: dataFilter.hasActiveFilters,
-                    onTap: onFilterTap,
+                  _BarIconButton(
+                    icon: Icons.tune_rounded,
+                    label: l10n.txOpenFilters,
+                    tooltip: l10n.filtreler,
+                    // Arama kendi ikonunda gösterilir; filtre noktası yalnız
+                    // panelin kendi filtrelerine bakar.
+                    active: dataFilter
+                        .copyWith(clearSearchQuery: true)
+                        .hasActiveFilters,
+                    onTap: widget.onFilterTap,
                   ),
                 ],
               ),
             ),
             if (ActiveFilterChips.hasChipsFor(
-                dataFilter, filter.viewFilter.financeMode)) ...[
+                dataFilter, filter.viewFilter.financeMode,
+                includeSearch: !_searchOpen)) ...[
               const SizedBox(height: _gap),
               ActiveFilterChips(
                 dataFilter: dataFilter,
                 mode: filter.viewFilter.financeMode,
-                onClearMode: () => onModeChanged(FinanceMode.compare),
-                categoryLabels: categoryLabels,
-                onClearCategories: onClearCategories,
-                onClearPriceRange: onClearPriceRange,
-                onClearSearch: onClearSearch,
-                onClearAll: onClearAllFilters,
+                onClearMode: () => widget.onModeChanged(FinanceMode.compare),
+                categoryLabels: widget.categoryLabels,
+                onClearCategories: widget.onClearCategories,
+                onClearPriceRange: widget.onClearPriceRange,
+                onClearSearch: widget.onClearSearch,
+                onClearAll: widget.onClearAllFilters,
+                onChanged: widget.onDataFilterChanged,
+                showSearch: !_searchOpen,
               ),
             ],
           ],
@@ -123,20 +223,32 @@ class TransactionTopBar extends StatelessWidget {
   }
 }
 
-class _FilterButton extends StatelessWidget {
-  final bool hasActiveFilters;
+/// Üst çubuğun 44×44 ikon düğmesi (arama, filtre). [active] iken kenar
+/// vurgulanır ve köşede nokta çıkar.
+class _BarIconButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String? tooltip;
+  final bool active;
   final VoidCallback onTap;
 
-  const _FilterButton({required this.hasActiveFilters, required this.onTap});
+  const _BarIconButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.active,
+    required this.onTap,
+    this.tooltip,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Semantics(
       button: true,
-      label: context.l10n.txOpenFilters,
+      label: label,
       child: Tooltip(
-        message: context.l10n.filtreler,
+        message: tooltip ?? label,
         excludeFromSemantics: true,
         child: InkWell(
           onTap: onTap,
@@ -148,7 +260,7 @@ class _FilterButton extends StatelessWidget {
               color: scheme.onSurface.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: hasActiveFilters
+                color: active
                     ? AppGradients.transactions.withValues(alpha: 0.6)
                     : scheme.onSurface.withValues(alpha: 0.1),
               ),
@@ -157,8 +269,8 @@ class _FilterButton extends StatelessWidget {
               alignment: Alignment.center,
               clipBehavior: Clip.none,
               children: [
-                Icon(Icons.tune_rounded, color: scheme.onSurface, size: 20),
-                if (hasActiveFilters)
+                Icon(icon, color: scheme.onSurface, size: 20),
+                if (active)
                   Positioned(
                     right: 8,
                     top: 8,

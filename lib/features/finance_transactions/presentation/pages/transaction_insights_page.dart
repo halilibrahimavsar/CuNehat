@@ -1,5 +1,5 @@
 import 'package:cunehat/core/shared/motion/period_transition.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transactions_section_tabs.dart';
+import 'package:cunehat/features/credit_card/presentation/card_context_rail.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:cunehat/features/main_feature/controllers/home_navigation_requests.dart';
@@ -463,11 +463,11 @@ class _InsightsViewState extends State<_InsightsView> {
       // Eskiden burada "dönem boşsa verinin olduğu aya SESSİZCE kay"
       // mantığı vardı; ortak dönemi arka planda değiştirmek diğer iki sayfayı
       // da kaydırırdı. Yerine boş durum kartı "… dönemine git" eylemini sunar.
-      // Kart şeridi + sekmeler gövdenin DIŞINDA: yükleniyor/boş hâllerinde de
-      // görünmeli (sekmeler gezinmedir).
+      // Kart şeridi gövdenin DIŞINDA: yükleniyor/boş hâllerinde de görünür.
       body: Column(
         children: [
-          const TransactionsSectionHeader(current: TransactionsSection.insights),
+          // Kart bağlamı (yalnız haplar; borç şeridi İşlemler'de).
+          const CardContextRail(pillsOnly: true),
           Expanded(
             child: BlocBuilder<TransactionBloc, TransactionState>(
               builder: (context, state) {
