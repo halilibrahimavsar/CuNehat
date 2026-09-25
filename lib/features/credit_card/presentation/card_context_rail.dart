@@ -29,7 +29,16 @@ import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 ///
 /// Aile tek üyeliyse (kartı olmayan cüzdan) hiç yer kaplamaz.
 class CardContextRail extends StatelessWidget {
-  const CardContextRail({super.key});
+  /// Yalnız hap satırı: durum şeridi/bantlar ve tanıtım turu YOK.
+  ///
+  /// İçgörü ve Rapor'da kullanılır. Oradaki iş bağlamı göstermek ve kart
+  /// değiştirmek; borç/ödeme şeridi yapışkan bölgeyi ekranın ~%45'ine
+  /// çıkarıyordu (cihazda ölçüldü). Tanıtım turunun anahtarı bir GlobalKey:
+  /// dikey geçişte İşlemler'deki şeritle alt sayfadaki aynı anda ağaçta
+  /// olur, iki kopya aynı anahtarı taşıyamaz.
+  final bool pillsOnly;
+
+  const CardContextRail({super.key, this.pillsOnly = false});
 
   @override
   Widget build(BuildContext context) {
@@ -53,19 +62,7 @@ class CardContextRail extends StatelessWidget {
     final activeCard =
         active.isCreditCard && active.id != owner.id ? active : null;
 
-    return OnboardingTour(
-      flow: OnboardingFlow.cardRail,
-      keys: [OnboardingKeys.cardRail],
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Showcase(
-              key: OnboardingKeys.cardRail,
-              title: context.l10n.onboardingCardRailTitle,
-              description: context.l10n.onboardingCardRailDesc,
-              child: SingleChildScrollView(
+    Widget pills() => SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
@@ -94,7 +91,28 @@ class CardContextRail extends StatelessWidget {
                     ],
                   ],
                 ),
-              ),
+              );
+
+    if (pillsOnly) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+        child: pills(),
+      );
+    }
+
+    return OnboardingTour(
+      flow: OnboardingFlow.cardRail,
+      keys: [OnboardingKeys.cardRail],
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Showcase(
+              key: OnboardingKeys.cardRail,
+              title: context.l10n.onboardingCardRailTitle,
+              description: context.l10n.onboardingCardRailDesc,
+              child: pills(),
             ),
             AnimatedSize(
               duration:

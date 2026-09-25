@@ -5772,4 +5772,69 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get analysisPeriodEmptyBody =>
       'Nothing recorded in this range. Try another period.';
+
+  @override
+  String get sectionTabTransactions => 'Transactions';
+
+  @override
+  String get reportModeExpense => 'Spending';
+
+  @override
+  String get reportModeIncome => 'Income';
+
+  @override
+  String get reportModeBoth => 'Both';
+
+  @override
+  String get filterTypeSection => 'TYPE';
+
+  @override
+  String get filterTypeAll => 'All';
+
+  @override
+  String insightPeriodLinkTitle(String period) {
+    return '$period summary';
+  }
+
+  @override
+  String insightPeriodLinkValue(String expense, String net) {
+    return 'Spent $expense · Net $net';
+  }
+
+  @override
+  String get insightPeriodLinkHint =>
+      'Categories, charts and places are in Report';
+
+  @override
+  String get insightBudgetAlertTitle => 'Budget alert';
+
+  @override
+  String insightBudgetExceeded(String label) {
+    return '$label over';
+  }
+
+  @override
+  String insightBudgetNear(String label, String percent) {
+    return '$label $percent';
+  }
+
+  @override
+  String get insightBudgetAlertHint => 'All budgets are in Report';
+
+  @override
+  String get insightRecurringIndependent =>
+      'Not tied to the period: found across your whole history.';
+
+  @override
+  String get reportScopeLead => 'Include:';
+
+  @override
+  String reportScopeCards(int count) {
+    return 'Card spending · $count';
+  }
+
+  @override
+  String reportScopeMoved(int count) {
+    return 'Moved money · $count';
+  }
 }

@@ -1,3 +1,4 @@
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transactions_section_tabs.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/config/di/injection.dart';
@@ -283,6 +284,15 @@ void main() {
       final rail = tester.getSize(find.byType(TransactionDayRail));
       expect(rail.height, lessThan(80), reason: 'eski takvim bloğu 374dp idi');
 
+      // İşlemler · İçgörü · Rapor sekme şeridi (25 Eyl 2026) BİLEREK eklenen
+      // chrome: 48dp. Ölçüldü: ilk kartın üst kenarı 316,7 → 372,7dp
+      // (sekmeler 48 + ↑/↓ tür düğmelerinin dolgusu 8). Bütçe burada
+      // sabitlenir; sessizce büyümesin.
+      expect(tester.getSize(find.byType(TransactionsSectionHeader)).height,
+          lessThanOrEqualTo(48));
+      final firstCard = tester.getRect(find.byType(TransactionCard).first);
+      expect(firstCard.top - page.top, lessThanOrEqualTo(373));
+
       // En az bir işlem kartı ilk ekranda TAM görünmeli. Eski takvim
       // görünümünde seçili günün kartı y=609'da başlıyor, ikincisi sürgünün
       // altında kalıyordu.
@@ -317,8 +327,9 @@ void main() {
       );
       expect(headerTexts, findsWidgets);
 
-      final viewportTop =
-          page.top + tester.getSize(find.byType(TransactionTopBar)).height;
+      // Kaydırma gövdesinin tepesi = sabit üst çubuğun ALT kenarı (üstünde
+      // kart şeridi + sekme şeridi de var; yüksekliği toplamak kırılgandı).
+      final viewportTop = tester.getRect(find.byType(TransactionTopBar)).bottom;
       final headerBoxes = headerTexts.evaluate().map((e) => tester.getRect(find
           .ancestor(of: find.byWidget(e.widget), matching: find.byType(InkWell))
           .first));

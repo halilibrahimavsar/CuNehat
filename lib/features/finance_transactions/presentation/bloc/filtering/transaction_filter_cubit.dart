@@ -23,6 +23,9 @@ class TransactionFilterCubit extends Cubit<CombinedFilter> {
   /// "özel aralık" olarak kendi uzunluğu kadar kaymak yanlış olurdu).
   CardCycle? _cycle;
 
+  /// [_cycle]'ın kurulduğu kart; aynı kartla tekrar çağrıyı ayırt eder.
+  CreditCardInfo? _cycleCard;
+
   /// Etkin ekstre döngüsü (kart bağlamı).
   CardCycle? get statementCycle => _cycle;
 
@@ -72,6 +75,11 @@ class TransactionFilterCubit extends Cubit<CombinedFilter> {
   /// önceki kartın bir ekstresi) yeni bağlamın varsayılanına geçilir;
   /// kullanıcının seçtiği özel bir aralığa DOKUNULMAZ.
   void useStatementCycle(CreditCardInfo? card) {
+    // Aynı kartla yeniden çağrı (İçgörü/Rapor her kuruluşta bağlamı eşitler)
+    // HİÇBİR ŞEY yapmaz: yoksa kullanıcının oklarla gittiği geçmiş ekstre
+    // "ekstre dönemi = varsayılan" sayılıp cari ekstreye geri alınırdı.
+    if (_cycleCard == card) return;
+    _cycleCard = card;
     final next = card == null ? null : CardCycle(card);
     final wasDefault = isDefaultPeriod || _isStatementOf(_cycle, period);
     _cycle = next;

@@ -3182,5 +3182,70 @@
       }
     }
   },
-  "analysisPeriodEmptyBody": "Nothing recorded in this range. Try another period."
+  "analysisPeriodEmptyBody": "Nothing recorded in this range. Try another period.",
+  "sectionTabTransactions": "Transactions",
+  "reportModeExpense": "Spending",
+  "reportModeIncome": "Income",
+  "reportModeBoth": "Both",
+  "filterTypeSection": "TYPE",
+  "filterTypeAll": "All",
+  "insightPeriodLinkTitle": "{period} summary",
+  "@insightPeriodLinkTitle": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "insightPeriodLinkValue": "Spent {expense} · Net {net}",
+  "@insightPeriodLinkValue": {
+    "placeholders": {
+      "expense": {
+        "type": "String"
+      },
+      "net": {
+        "type": "String"
+      }
+    }
+  },
+  "insightPeriodLinkHint": "Categories, charts and places are in Report",
+  "insightBudgetAlertTitle": "Budget alert",
+  "insightBudgetExceeded": "{label} over",
+  "@insightBudgetExceeded": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "insightBudgetNear": "{label} {percent}",
+  "@insightBudgetNear": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "insightBudgetAlertHint": "All budgets are in Report",
+  "insightRecurringIndependent": "Not tied to the period: found across your whole history.",
+  "reportScopeLead": "Include:",
+  "reportScopeCards": "Card spending · {count}",
+  "@reportScopeCards": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportScopeMoved": "Moved money · {count}",
+  "@reportScopeMoved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

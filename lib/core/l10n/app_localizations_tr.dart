@@ -5731,4 +5731,68 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get analysisPeriodEmptyBody =>
       'Bu aralıkta kayıt yok. Başka bir döneme geçebilirsin.';
+
+  @override
+  String get sectionTabTransactions => 'İşlemler';
+
+  @override
+  String get reportModeExpense => 'Gider';
+
+  @override
+  String get reportModeIncome => 'Gelir';
+
+  @override
+  String get reportModeBoth => 'İkisi';
+
+  @override
+  String get filterTypeSection => 'TÜR';
+
+  @override
+  String get filterTypeAll => 'Tümü';
+
+  @override
+  String insightPeriodLinkTitle(String period) {
+    return '$period özeti';
+  }
+
+  @override
+  String insightPeriodLinkValue(String expense, String net) {
+    return 'Gider $expense · Net $net';
+  }
+
+  @override
+  String get insightPeriodLinkHint => 'Kategoriler, grafik ve yerler Rapor\'da';
+
+  @override
+  String get insightBudgetAlertTitle => 'Bütçe uyarısı';
+
+  @override
+  String insightBudgetExceeded(String label) {
+    return '$label aşıldı';
+  }
+
+  @override
+  String insightBudgetNear(String label, String percent) {
+    return '$label $percent';
+  }
+
+  @override
+  String get insightBudgetAlertHint => 'Bütçelerin tamamı Rapor\'da';
+
+  @override
+  String get insightRecurringIndependent =>
+      'Dönemden bağımsız: tüm geçmişine bakılarak bulundu.';
+
+  @override
+  String get reportScopeLead => 'Dahil:';
+
+  @override
+  String reportScopeCards(int count) {
+    return 'Kart harcamaları · $count';
+  }
+
+  @override
+  String reportScopeMoved(int count) {
+    return 'Para taşıma · $count';
+  }
 }

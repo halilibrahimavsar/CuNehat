@@ -1,3 +1,4 @@
+import 'package:cunehat/core/shared/widgets/labeled_segment.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/error/error_handling.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -43,6 +44,10 @@ class FilterView extends StatefulWidget {
   /// Dönem etiketinin yerine geçer (kart bağlamında ekstre dönemi).
   final String? periodLabel;
 
+  /// Tür (Tümü / Gelirler / Giderler). Verilirse etiketli bir bölüm çizilir;
+  /// üst çubuktaki ikon-yalnız segment kalktı.
+  final ValueChanged<FinanceMode>? onModeChanged;
+
   /// Kategori çiplerinin kapsamı: yalnız bu cüzdanda görünür kalemler
   /// listelenir — defterin kendisi zaten cüzdana ait.
   final String walletId;
@@ -58,6 +63,7 @@ class FilterView extends StatefulWidget {
     required this.onClearAll,
     required this.onClose,
     this.periodLabel,
+    this.onModeChanged,
   });
 
   @override
@@ -166,6 +172,33 @@ class _FilterViewState extends State<FilterView> {
                   onPick: widget.onDateTap,
                   label: widget.periodLabel,
                 ),
+                if (widget.onModeChanged != null) ...[
+                  const SizedBox(height: 24),
+                  _sectionLabel(
+                      context, context.l10n.filterTypeSection, scheme),
+                  const SizedBox(height: 10),
+                  LabeledSegment<FinanceMode>(
+                    selected: widget.filter.viewFilter.financeMode,
+                    onChanged: widget.onModeChanged!,
+                    items: [
+                      SegmentItem(
+                        value: FinanceMode.compare,
+                        label: context.l10n.filterTypeAll,
+                        color: FinanceMode.compare.primaryColor,
+                      ),
+                      SegmentItem(
+                        value: FinanceMode.income,
+                        label: FinanceMode.income.label(context.l10n),
+                        color: FinanceMode.income.primaryColor,
+                      ),
+                      SegmentItem(
+                        value: FinanceMode.expense,
+                        label: FinanceMode.expense.label(context.l10n),
+                        color: FinanceMode.expense.primaryColor,
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 24),
                 PriceRangeFilterSection(
                   range: widget.filter.dataFilter.priceRange,

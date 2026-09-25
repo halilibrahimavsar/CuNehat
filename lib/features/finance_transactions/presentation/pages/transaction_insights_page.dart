@@ -1,3 +1,12 @@
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transactions_section_tabs.dart';
+import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/config/theme/money_colors.dart';
+import 'package:cunehat/features/main_feature/controllers/home_navigation_requests.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_budget_summary_card.dart';
+import 'package:cunehat/features/budgets/domain/repositories/budget_repository.dart';
+import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
+import 'package:cunehat/core/services/budgets_changed_notifier.dart';
 import 'dart:async';
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/config/di/injection.dart';
@@ -22,7 +31,6 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/insig
 import 'package:cunehat/features/finance_transactions/presentation/widgets/insight_widgets/recurring_suggestion_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/analysis_empty_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_section_header.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_summary_cards.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_transaction_list_sheet.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/shared_period.dart';
@@ -86,6 +94,7 @@ class TransactionInsightsPage extends StatelessWidget {
 typedef _InsightsDerived = ({
   TransactionInsights insights,
   List<RecurringSuggestion> suggestions,
+  List<BudgetStatus> budgetStatuses,
 });
 
 class _InsightsView extends StatefulWidget {
@@ -128,6 +137,13 @@ class _InsightsViewState extends State<_InsightsView> {
 
   StreamSubscription<void>? _categoriesSub;
 
+  /// Cüzdanın bütçe limitleri — "Durum" bölümündeki bütçe uyarısı için.
+  /// Hesap Rapor ile ORTAK ([computeBudgetStatuses]); iki sayfa "bütçemi
+  /// aştım mı" sorusuna farklı cevap vermesin. Eskiden bütçe yalnız Rapor'da
+  /// vardı, bu sayfanın "iyi miyim" cevabı yalnız nete bakıyordu.
+  List<BudgetEntity> _budgets = const [];
+  StreamSubscription<void>? _budgetsSub;
+
   /// Türetilmiş verinin önbelleği.
   ///
   /// **Neden gerekli:** `analyze` ve `detect` her `build`'de baştan
@@ -141,6 +157,7 @@ class _InsightsViewState extends State<_InsightsView> {
     DateTimeRange range,
     Map<String, String> roots,
     List<RecurringTransactionEntity> templates,
+    List<BudgetEntity> budgets,
     String currency,
     DateTime today,
   })? _derivedKey;
@@ -149,6 +166,9 @@ class _InsightsViewState extends State<_InsightsView> {
   @override
   void initState() {
     super.initState();
+    // Sayfa cüzdan başına yeniden kurulur (bkz. SubViewFactory): ortak
+    // dönemi bu cüzdanın bağlamına (kartsa ekstre döngüsü) eşitle.
+    bindSharedPeriodTo(context, context.walletById(widget.walletId));
     _loadTemplates();
     _loadCategoryLabels();
     _dismissed = RecurringSuggestionDismissStore(getIt<SharedPreferences>())
@@ -157,6 +177,11 @@ class _InsightsViewState extends State<_InsightsView> {
     _categoriesSub = getIt<CategoriesChangedNotifier>()
         .stream
         .listen((_) => _loadCategoryLabels());
+    _loadBudgets();
+    if (getIt.isRegistered<BudgetsChangedNotifier>()) {
+      _budgetsSub =
+          getIt<BudgetsChangedNotifier>().stream.listen((_) => _loadBudgets());
+    }
 
   }
 
@@ -192,7 +217,15 @@ class _InsightsViewState extends State<_InsightsView> {
   @override
   void dispose() {
     _categoriesSub?.cancel();
+    _budgetsSub?.cancel();
     super.dispose();
+  }
+
+  Future<void> _loadBudgets() async {
+    if (!getIt.isRegistered<BudgetRepository>()) return;
+    final result = await getIt<BudgetRepository>().getBudgets(widget.walletId);
+    if (!mounted) return;
+    result.fold((_) {}, (budgets) => setState(() => _budgets = budgets));
   }
 
   /// Düzenli şablonlar — YALNIZ bu cüzdanınkiler.
@@ -247,6 +280,7 @@ class _InsightsViewState extends State<_InsightsView> {
       range: _range,
       roots: _categoryRoots,
       templates: templates,
+      budgets: _budgets,
       currency: currency,
       // BUGÜN de bir girdi: yaşanmış gün sayısı, kalan gün sayısı ve kıyas
       // penceresi `DateTime.now()`tan türüyor. Anahtarda olmayınca gece
@@ -284,6 +318,26 @@ class _InsightsViewState extends State<_InsightsView> {
         ),
       ),
       suggestions: _detector.detect(all, existingTemplates: templates),
+      budgetStatuses: _budgets.isEmpty
+          ? const <BudgetStatus>[]
+          : () {
+              final builder = ReportCategoryDataBuilder(
+                range: _range,
+                budgets: _budgets,
+                otherCategoryLabel: context.l10n.categoryDiger,
+                rootIndex: _categoryRoots,
+                // Durum sorusu "ne harcadım": para taşıma harcama değildir.
+                includeSystemMovements: false,
+              );
+              return computeBudgetStatuses(
+                budgets: _budgets,
+                expenseFull:
+                    builder.buildFull(builder.universeIn(all), isExpense: true),
+                range: _range,
+                labelFor: (tag) =>
+                    context.categoryLabelForTag(tag, labels: _categoryLabels),
+              );
+            }(),
     );
 
     _derivedKey = key;
@@ -408,68 +462,78 @@ class _InsightsViewState extends State<_InsightsView> {
       // Eskiden burada "dönem boşsa verinin olduğu aya SESSİZCE kay"
       // mantığı vardı; ortak dönemi arka planda değiştirmek diğer iki sayfayı
       // da kaydırırdı. Yerine boş durum kartı "… dönemine git" eylemini sunar.
-      body: BlocBuilder<TransactionBloc, TransactionState>(
-        builder: (context, state) {
-          context.select((TransactionFilterCubit c) => c.period);
-          final all = _forWallet(state.currentTransactions);
+      // Kart şeridi + sekmeler gövdenin DIŞINDA: yükleniyor/boş hâllerinde de
+      // görünmeli (sekmeler gezinmedir).
+      body: Column(
+        children: [
+          const TransactionsSectionHeader(current: TransactionsSection.insights),
+          Expanded(
+            child: BlocBuilder<TransactionBloc, TransactionState>(
+              builder: (context, state) {
+                context.select((TransactionFilterCubit c) => c.period);
+                final all = _forWallet(state.currentTransactions);
 
-          if (state is TransactionLoading && all.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (all.isEmpty) {
-            return _buildEmptyState(context);
-          }
+                if (state is TransactionLoading && all.isEmpty) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (all.isEmpty) {
+                  return _buildEmptyState(context);
+                }
 
-          final money = MoneyWriter.of(context);
-          final derived = _derive(context, all);
-          final insights = derived.insights;
-          final suggestions = derived.suggestions
-              .where((s) => !_dismissed.contains(_suggestionKey(s)))
-              .toList();
+                final money = MoneyWriter.of(context);
+                final derived = _derive(context, all);
+                final insights = derived.insights;
+                final suggestions = derived.suggestions
+                    .where((s) => !_dismissed.contains(_suggestionKey(s)))
+                    .toList();
 
-          // Dönem kontrolü YAPIŞKAN — rapor sayfasındaki ders: kullanıcı
-          // aşağı indiğinde hangi dönemin sayılarına baktığını göremiyor ve
-          // dönemi değiştirmek için en başa dönmesi gerekiyordu.
-          return Column(
-            children: [
-              // Dönem kontrolü rapor sayfasıyla AYNI: tek satırlık ay
-              // çubuğu. İki kardeş sayfanın dönemi iki farklı kontrolle
-              // seçmesi için sebep yok ve eski blok (başlık + aralık metni +
-              // yatay kayan çip satırı) 411dp telefonda ekranın dörtte birini
-              // yiyordu. Hızlı seçenekler etikete dokununca açılır.
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: const SharedPeriodBar(),
-              ),
-              Divider(
-                height: 12,
-                thickness: 1,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.06),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (insights.isEmpty)
-                        _buildPeriodEmptyNote(context, all, insights)
-                      else ...[
-                        ..._buildStatusSection(context, insights, money, all),
-                        ..._buildPeriodSection(context, insights),
-                        ..._buildHabitSection(context, insights, money, all),
-                      ],
-                      ..._buildRecurringSection(context, suggestions, money),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
+                // Dönem kontrolü YAPIŞKAN — rapor sayfasındaki ders: kullanıcı
+                // aşağı indiğinde hangi dönemin sayılarına baktığını göremiyor ve
+                // dönemi değiştirmek için en başa dönmesi gerekiyordu.
+                return Column(
+                  children: [
+                    // Dönem kontrolü rapor sayfasıyla AYNI: tek satırlık ay
+                    // çubuğu. İki kardeş sayfanın dönemi iki farklı kontrolle
+                    // seçmesi için sebep yok ve eski blok (başlık + aralık metni +
+                    // yatay kayan çip satırı) 411dp telefonda ekranın dörtte birini
+                    // yiyordu. Hızlı seçenekler etikete dokununca açılır.
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                      child: const SharedPeriodBar(),
+                    ),
+                    Divider(
+                      height: 12,
+                      thickness: 1,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.06),
+                    ),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (insights.isEmpty)
+                              _buildPeriodEmptyNote(context, all, insights)
+                            else ...[
+                              ..._buildPeriodSection(context, insights, money),
+                              ..._buildStatusSection(
+                                  context, insights, money, all, derived),
+                              ..._buildHabitSection(context, insights, money, all),
+                            ],
+                            ..._buildRecurringSection(context, suggestions, money),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -480,7 +544,9 @@ class _InsightsViewState extends State<_InsightsView> {
     TransactionInsights insights,
     MoneyWriter money,
     List<TransactionEntity> all,
+    _InsightsDerived derived,
   ) {
+    final budgetAlert = _budgetAlertCard(context, derived.budgetStatuses);
     final cards = <Widget>[
       if (insights.dailySafeToSpend != null)
         DailySafeToSpendCard(
@@ -504,44 +570,73 @@ class _InsightsViewState extends State<_InsightsView> {
           onTap: () => _openCategoryTransactions(
               context, insights.categorySpike!.categoryName, all),
         ),
+      if (budgetAlert != null) budgetAlert,
     ];
     if (cards.isEmpty) return const [];
 
     return [
+      const SizedBox(height: 24),
       ReportSectionHeader(title: context.l10n.insightSectionStatus),
       const SizedBox(height: 12),
       ...cards,
     ];
   }
 
-  /// ② Dönemin üç sayısı — rapor sayfasının kartlarıyla AYNI widget.
+  /// Dönemin tek satırlık özeti; dokunmak Rapor'u açar.
   ///
-  /// Sayfanın kendi üç sütunlu satırı vardı ve ölçüldü (gerçek Roboto,
-  /// 360dp): tutar için 78,7dp yer kalıyor, `44.620,00 ₺` 82,6dp istiyordu →
-  /// rakam kesiliyordu. Birikim oranı da gelir 0 iken "%0" yazıyordu. Rapor
-  /// kartları iki sorunu da çözmüş durumda; ikinci bir kopya tutmak yerine
-  /// aynı widget kullanılır.
+  /// Eskiden burada Rapor'un özet kartları BİREBİR tekrarlanıyordu
+  /// (`ReportSummaryCards`, ~130dp): iki yan sayfa aynı üç sayıyı aynı
+  /// kartlarla söylüyordu. Bu sayfanın işi "durumum ne, ne yapmalıyım";
+  /// sayıların ayrıntısı Rapor'da. Özet bağlam olarak sayfanın başında kalır.
   List<Widget> _buildPeriodSection(
     BuildContext context,
     TransactionInsights insights,
+    MoneyWriter money,
   ) {
+    final l10n = context.l10n;
     return [
-      const SizedBox(height: 24),
-      ReportSectionHeader(title: context.l10n.insightSectionPeriod),
-      const SizedBox(height: 12),
-      ReportSummaryCards(
-        totals: ReportTotals(
-          totalIncome: insights.totalIncome,
-          totalExpense: insights.totalExpense,
-          net: insights.net,
-        ),
-        previousTotals: insights.previousTotals ?? const ReportTotals(),
+      InsightStatCard(
+        icon: Icons.insights_rounded,
+        label: l10n.insightPeriodLinkTitle(periodLabel(_range, l10n)),
+        value: l10n.insightPeriodLinkValue(
+            money(insights.totalExpense), money.withSign(insights.net)),
+        hint: l10n.insightPeriodLinkHint,
+        onTap: () => _openReport(),
       ),
-      if (insights.systemMovementCount > 0) ...[
-        const SizedBox(height: 8),
+      if (insights.systemMovementCount > 0)
         _buildSystemMovementsNote(context, insights.systemMovementCount),
-      ],
     ];
+  }
+
+  void _openReport() {
+    if (getIt.isRegistered<HomeNavigationRequests>()) {
+      getIt<HomeNavigationRequests>().openSection(TransactionsSection.report);
+    }
+  }
+
+  /// Aşılmış ya da %80'i geçmiş bütçeler; hiçbiri yoksa `null` (kart yok —
+  /// "her şey yolunda" kartı gürültü olurdu, Rapor'da tam liste var).
+  Widget? _budgetAlertCard(BuildContext context, List<BudgetStatus> statuses) {
+    final alerts = [
+      for (final s in statuses)
+        if (s.ratio >= 0.8) s,
+    ]..sort((a, b) => b.ratio.compareTo(a.ratio));
+    if (alerts.isEmpty) return null;
+    final l10n = context.l10n;
+    final anyExceeded = alerts.first.isExceeded;
+    return InsightStatCard(
+      icon: Icons.pie_chart_outline_rounded,
+      label: l10n.insightBudgetAlertTitle,
+      value: [
+        for (final a in alerts.take(2))
+          a.isExceeded
+              ? l10n.insightBudgetExceeded(a.label)
+              : l10n.insightBudgetNear(a.label, formatPercent(a.ratio * 100)),
+      ].join(' · '),
+      hint: l10n.insightBudgetAlertHint,
+      accent: anyExceeded ? MoneyColors.bad : AppGradients.neutral,
+      onTap: _openReport,
+    );
   }
 
   /// ③ Alışkanlık — hepsi bir ORTALAMA, bu yüzden hepsinin böleni yazar.
@@ -553,7 +648,6 @@ class _InsightsViewState extends State<_InsightsView> {
   ) {
     if (!insights.hasExpense) return const [];
 
-    final topCategory = insights.topExpenseCategory;
     final largest = insights.largestExpense;
 
     return [
@@ -575,16 +669,9 @@ class _InsightsViewState extends State<_InsightsView> {
           hint: context.l10n
               .insightWeekdayHint(insights.topExpenseWeekdayOccurrences),
         ),
-      if (topCategory != null)
-        InsightStatCard(
-          icon: Icons.category_rounded,
-          label: context.l10n.enCokHarcananKategori,
-          value:
-              '${topCategory.trim().isEmpty ? context.l10n.kategorisiz : context.categoryLabelForTag(topCategory, labels: _categoryLabels)} · '
-              '${money(insights.topExpenseCategoryAmount)}',
-          hint: context.l10n.insightTapForTransactions,
-          onTap: () => _openCategoryTransactions(context, topCategory, all),
-        ),
+      // "En çok harcanan kategori" kartı kalktı: bu bilgi Rapor'un kategori
+      // dağılımının İLK dilimi ve cihazda aynı 18.500 ₺'lik kira ödemesi
+      // "en büyük harcama" ile yan yana iki kez yazıyordu.
       if (largest != null)
         InsightStatCard(
           icon: Icons.north_east_rounded,
@@ -613,7 +700,8 @@ class _InsightsViewState extends State<_InsightsView> {
       ReportSectionHeader(title: context.l10n.tekrarlayanOdemeler),
       const SizedBox(height: 4),
       Text(
-        context.l10n.tekrarlayanTespitOzeti(suggestions.length),
+        '${context.l10n.tekrarlayanTespitOzeti(suggestions.length)} · '
+        '${context.l10n.insightRecurringIndependent}',
         style: theme.textTheme.bodySmall
             ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
       ),

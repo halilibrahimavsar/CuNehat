@@ -249,7 +249,7 @@ class ReportCategoryDataBuilder {
   final Map<String, String> rootIndex;
 
   /// Kuplaj hareketleri (transfer/borç/yatırım) kırılıma dahil mi —
-  /// rapor sayfasındaki `ReportSystemMovementsToggle`'ın karşılığı.
+  /// rapor sayfasındaki para taşıma çipinin (`ReportScopeChips`) karşılığı.
   ///
   /// **Varsayılanı YOK, bilerek:** düzeltilen hata tam olarak buydu. Kırılımı
   /// yeniden hesaplayan iki yer vardı — sayfa (`_universeOf` ile kuplajı

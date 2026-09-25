@@ -223,6 +223,18 @@ void main() {
       expect(dayOf(cubit.period.start), DateTime(2026, 5, 1));
     });
 
+    test(
+        'REGRESYON: aynı kartla yeniden eşitleme (Rapor/İçgörü kuruluşu) '
+        'kullanıcının gittiği geçmiş ekstreyi KORUR', () {
+      final cubit = TransactionFilterCubit()..useStatementCycle(card);
+      cubit.stepPeriod(-2);
+      final chosen = cubit.period;
+      expect(cubit.isStatementPeriod, isTrue);
+
+      cubit.useStatementCycle(card);
+      expect(cubit.period, chosen);
+    });
+
     test('"temizle" kart bağlamında içinde bulunulan ekstreye döner', () {
       final cubit = TransactionFilterCubit()..useStatementCycle(card);
       cubit.stepPeriod(-3);

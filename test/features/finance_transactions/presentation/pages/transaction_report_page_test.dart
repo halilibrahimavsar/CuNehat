@@ -1,3 +1,4 @@
+import 'package:cunehat/core/shared/widgets/labeled_segment.dart';
 import 'package:cunehat/features/finance_transactions/domain/transaction_period.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
@@ -29,7 +30,6 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/repor
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_daily_net_flow_chart.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_period_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_system_movements_toggle.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
@@ -132,6 +132,18 @@ void main() {
   tearDown(() {
     getIt.reset();
   });
+
+  /// Kategori modunu "İkisi"ne (karşılaştırma) alır. Varsayılan artık GİDER.
+  Future<void> showBoth(WidgetTester tester) async {
+    final both = find.descendant(
+      of: find.byType(LabeledSegment<FinanceMode>),
+      matching: find.text('İkisi'),
+    );
+    await tester.ensureVisible(both);
+    await tester.pumpAndSettle();
+    await tester.tap(both);
+    await tester.pumpAndSettle();
+  }
 
   Widget buildTestableWidget(Widget child) {
     return BlocProvider<TransactionFilterCubit>(create: (_) => TransactionFilterCubit(), child: BlocProvider<AmountVisibilityCubit>(
@@ -239,12 +251,13 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Varsayılan mod Karşılaştırma: kategori dağılımı TEK kart çizer.
-    // 'Gelir'/'Gider' özet kartında, karşılaştırma kartının çubuk etiketinde,
-    // efsane başlığında ve dönem kartının akış açıklamasında geçer.
-    expect(find.text('Gelir'), findsNWidgets(4));
-    expect(find.text('Gider'), findsNWidgets(4));
-    expect(find.text('Net'), findsNWidgets(2));
+    // Varsayılan mod GİDER: hiyerarşik çember ilk ekranda (eski varsayılan
+    // "karşılaştırma" özetin sayılarını tekrarlayıp çemberi saklıyordu).
+    expect(find.byType(ReportSummaryCards), findsOneWidget);
+    expect(find.byType(ReportCategoryChartCard), findsOneWidget);
+    expect(find.byType(ReportCompareChartCard), findsNothing);
+
+    await showBoth(tester);
 
     expect(find.byType(ReportCompareChartCard), findsOneWidget);
     // Karşılaştırma modunda tek taraflı pasta kartları GÖSTERİLMEZ — eskiden
@@ -310,7 +323,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final expenseModeIcon = find.byIcon(FinanceMode.expense.icon);
+    final expenseModeIcon = find.descendant(of: find.byType(LabeledSegment<FinanceMode>), matching: find.text('Gider'));
     await tester.ensureVisible(expenseModeIcon);
     await tester.pumpAndSettle();
     await tester.tap(expenseModeIcon);
@@ -471,6 +484,7 @@ void main() {
     );
 
     await tester.pumpAndSettle();
+    await showBoth(tester);
 
     expect(find.text('Diğer'), findsNothing);
     expect(find.text('Tiny'), findsOneWidget);
@@ -692,8 +706,8 @@ void main() {
       expect(find.text('21.500,00 ₺'), findsNothing,
           reason: 'transfer gidere eklenmemeli');
       // Anahtar kartı görünür ve kaç hareketin dışarıda kaldığını söyler.
-      expect(find.byType(ReportSystemMovementsToggle), findsOneWidget);
-      expect(find.text('1 hareket gelir–giderin dışında'), findsOneWidget);
+      expect(find.byKey(const ValueKey('report-moved-toggle')), findsOneWidget);
+      expect(find.text('Para taşıma · 1'), findsOneWidget);
     });
 
     testWidgets('anahtar açılınca kuplaj hareketleri gidere katılır',
@@ -708,14 +722,19 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      final toggle = find.byType(Switch).first;
+      final toggle = find.byKey(const ValueKey('report-moved-toggle'));
       await tester.ensureVisible(toggle);
       await tester.pumpAndSettle();
       await tester.tap(toggle);
       await tester.pumpAndSettle();
 
       expect(find.text('21.500,00 ₺'), findsWidgets);
-      expect(find.text('1 hareket gelir–gidere dahil'), findsOneWidget);
+      expect(
+          tester
+              .widget<FilterChip>(
+                  find.byKey(const ValueKey('report-moved-toggle')))
+              .selected,
+          isTrue);
     });
 
     /// 20.000 TL transfer + DÖRT gerçek harcama.
@@ -815,7 +834,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.byType(ReportSystemMovementsToggle), findsNothing);
+      expect(find.byKey(const ValueKey('report-moved-toggle')), findsNothing);
     });
   });
 
@@ -875,7 +894,7 @@ void main() {
     }
 
     testWidgets(
-        'REGRESYON: bütçe ilerlemesi VARSAYILAN (karşılaştırma) modda görünür',
+        'REGRESYON: bütçe ilerlemesi açılış modunda da karşılaştırmada da görünür',
         (tester) async {
       when(() => mockBudgetRepository.getBudgets(any())).thenAnswer(
         (_) async => const Right<Failure, List<BudgetEntity>>([
@@ -892,8 +911,18 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      // Karşılaştırma kartı açılış modu; bütçe çubuğu eskiden yalnız tek
-      // taraflı pasta kartına geçiriliyordu.
+      // Açılış modu (Gider) kartında bütçe çubuğu var.
+      expect(
+        find.descendant(
+          of: find.byType(ReportCategoryChartCard),
+          matching: find.byType(LinearProgressIndicator),
+        ),
+        findsWidgets,
+      );
+
+      // Bütçe çubuğu eskiden yalnız tek taraflı pasta kartına geçiriliyordu;
+      // karşılaştırma modunda da görünmeli.
+      await showBoth(tester);
       expect(find.byType(ReportCompareChartCard), findsOneWidget);
       expect(
         find.descendant(
@@ -966,6 +995,7 @@ void main() {
         const TransactionReportPage(userId: 'user_123', walletId: 'wallet_123'),
       ));
       await tester.pumpAndSettle();
+      await showBoth(tester);
 
       double progressOf() => tester
           .widget<LinearProgressIndicator>(find.descendant(

@@ -78,6 +78,31 @@ void main() {
         periodLabel: 'Eylül 2026',
       );
 
+  testWidgets('↑gelir / ↓gider rakamları TÜR seçer; seçiliyken tümüne döner',
+      (tester) async {
+    // Üst çubuktaki ikon-yalnız segment (↗ ⇄ ↘) kalktı; tür buradan seçilir.
+    final picked = <FinanceMode>[];
+    Widget build(FinanceMode mode) => wrap(TransactionSummaryStrip(
+          transactions: [
+            tx(150, TransactionTypeModel.expense),
+            tx(900, TransactionTypeModel.income),
+          ],
+          mode: mode,
+          filter: filter(mode: mode),
+          periodLabel: 'Eylül 2026',
+          onModeChanged: picked.add,
+        ));
+
+    await tester.pumpWidget(build(FinanceMode.compare));
+    await tester.tap(find.bySemanticsLabel(RegExp('^Giderler')));
+    await tester.tap(find.bySemanticsLabel(RegExp('^Gelirler')));
+    expect(picked, [FinanceMode.expense, FinanceMode.income]);
+
+    await tester.pumpWidget(build(FinanceMode.expense));
+    await tester.tap(find.bySemanticsLabel(RegExp('^Giderler')));
+    expect(picked.last, FinanceMode.compare);
+  });
+
   testWidgets('transfer GİDERE sayılmaz — rapor sayfasıyla aynı evren',
       (tester) async {
     final txs = [

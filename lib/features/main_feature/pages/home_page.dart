@@ -82,6 +82,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late final HomeNavigationController _navController;
   String? _currentWalletId;
+
+  /// Aktif cüzdanın SAHİBİ (kartsa bağlı hesabı). Hesap ↔ kart geçişi aynı
+  /// aile içinde kalır; bkz. [_buildLoadedContent].
+  String? _currentAccountId;
   SubViewFactory? _subViewFactory;
   SliderState? _lastSliderState;
   bool _isPendingDialogShowing = false;
@@ -107,7 +111,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _lastSliderState = _navController.currentSliderState;
     _navController.horizontalController.addListener(_onSliderStateMaybeChanged);
     if (getIt.isRegistered<HomeNavigationRequests>()) {
-      getIt<HomeNavigationRequests>().addListener(_onShowTransactions);
+      getIt<HomeNavigationRequests>()
+        ..addListener(_onShowTransactions)
+        ..sectionHandler = _onSectionRequested;
     }
     _loadWallets();
     // Bekleyen işlemleri yükle. Uygulamaya dönüş ve bildirim dokunuşu
@@ -237,6 +243,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     context.read<WalletBloc>().add(WatchWalletsEvent(userId));
   }
 
+  /// Defter · İçgörü · Rapor sekme şeridinden gelen istek.
+  void _onSectionRequested(TransactionsSection section) {
+    if (!mounted) return;
+    if (section == TransactionsSection.ledger) {
+      unawaited(_navController.closeToMain());
+      return;
+    }
+    // Enum sırası alt görünüm indeksidir (0 = ana görünüm; bkz.
+    // `MenuConfigs` → İçgörü 1, Rapor 2).
+    unawaited(_navController.navigateToView(section.index,
+        sliderState: SliderState.transactions));
+  }
+
   /// Dışarıdan "İşlemler'i göster" isteği (bkz. [HomeNavigationRequests]).
   void _onShowTransactions() {
     if (!mounted) return;
@@ -251,7 +270,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         .removeListener(_onSliderStateMaybeChanged);
     _navController.viewStack.removeListener(_pumpOnboarding);
     if (getIt.isRegistered<HomeNavigationRequests>()) {
-      getIt<HomeNavigationRequests>().removeListener(_onShowTransactions);
+      final requests = getIt<HomeNavigationRequests>()
+        ..removeListener(_onShowTransactions);
+      if (requests.sectionHandler == _onSectionRequested) {
+        requests.sectionHandler = null;
+      }
     }
     getIt<OnboardingCoordinator>().shellStatusProvider = null;
     _navController.dispose();
@@ -416,11 +439,24 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final activeWallet = walletState.activeWallet;
 
     if (_currentWalletId != activeWallet?.id) {
+      final nextAccountId = activeWallet == null
+          ? null
+          : accountOf(activeWallet, walletState.wallets).id;
+      // Hesap ↔ kart geçişi (aynı aile) alt görünümü KORUR: kart şeridi
+      // artık İçgörü ve Rapor'da da duruyor ve oradan kart seçen kullanıcı
+      // defterine atılmamalı. Alt görünümler cüzdana bağlı anahtarla yeniden
+      // kurulur (bkz. [SubViewFactory]), yığın indeksi korunur — bayat veri
+      // kalmaz. Aile dışı geçişte eskisi gibi ana görünüme dönülür.
+      final sameFamily =
+          _currentAccountId != null && _currentAccountId == nextAccountId;
       _currentWalletId = activeWallet?.id;
-      // navigateTo → notifyListeners build sırasında patlamasın diye ertele.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _navController.onWalletChanged();
-      });
+      _currentAccountId = nextAccountId;
+      if (!sameFamily) {
+        // navigateTo → notifyListeners build sırasında patlamasın diye ertele.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _navController.onWalletChanged();
+        });
+      }
     }
 
     if (activeWallet == null) {

@@ -2,7 +2,6 @@ import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode_segment.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/active_filter_chips.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
 import 'package:flutter/material.dart';
@@ -10,8 +9,14 @@ import 'package:flutter/material.dart';
 /// İşlemler ekranının sabit (pinned) kontrol çubuğu.
 ///
 /// İki şerit:
-/// 1. Dönem (‹ Eylül 2026 ›) + Gelir/Tümü/Gider + filtre düğmesi
-/// 2. (yalnız gerekirse) etkin filtre çipleri — her biri kendi × ile
+/// 1. Dönem (‹ Eylül 2026 ›) + filtre düğmesi
+/// 2. (yalnız gerekirse) etkin filtre çipleri — tür dahil, her biri kendi ×
+///    ile
+///
+/// **Mod seçicisi (↗ ⇄ ↘) buradan kalktı.** Yalnız ikondu, anlamı ipucu
+/// metnindeydi. Tür artık özet şeridindeki ↑gelir / ↓gider rakamlarına
+/// dokunarak ya da filtre sayfasındaki etiketli "Tür" bölümünden seçilir;
+/// etkinken çip satırında adıyla görünür. Dönem çubuğu tam genişliği alır.
 ///
 /// **Liste/Takvim geçişi kaldırıldı.** Ekran tek akışa indi: arama → özet →
 /// gün şeridi → gruplanmış defter. İki görünüm aynı veriyi iki ayrı dille
@@ -59,15 +64,6 @@ class TransactionTopBar extends StatelessWidget {
   static const double _gap = 8;
   static const double _verticalPadding = 8;
 
-  /// Çubuğun kapladığı yükseklik; çip şeridi yalnız etkin filtre varken yer
-  /// kaplar.
-  static double heightFor(DataFilter dataFilter) {
-    final base = _verticalPadding * 2 + _controlRow;
-    return ActiveFilterChips.hasChips(dataFilter)
-        ? base + _gap + ActiveFilterChips.height
-        : base;
-  }
-
   @override
   Widget build(BuildContext context) {
     final dataFilter = filter.dataFilter;
@@ -99,12 +95,6 @@ class TransactionTopBar extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  FinanceModeSegment(
-                    currentMode: filter.viewFilter.financeMode,
-                    onModeChanged: onModeChanged,
-                    cellWidth: 44,
-                  ),
-                  const SizedBox(width: 8),
                   _FilterButton(
                     hasActiveFilters: dataFilter.hasActiveFilters,
                     onTap: onFilterTap,
@@ -112,10 +102,13 @@ class TransactionTopBar extends StatelessWidget {
                 ],
               ),
             ),
-            if (ActiveFilterChips.hasChips(dataFilter)) ...[
+            if (ActiveFilterChips.hasChipsFor(
+                dataFilter, filter.viewFilter.financeMode)) ...[
               const SizedBox(height: _gap),
               ActiveFilterChips(
                 dataFilter: dataFilter,
+                mode: filter.viewFilter.financeMode,
+                onClearMode: () => onModeChanged(FinanceMode.compare),
                 categoryLabels: categoryLabels,
                 onClearCategories: onClearCategories,
                 onClearPriceRange: onClearPriceRange,

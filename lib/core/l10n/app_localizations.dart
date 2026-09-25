@@ -9982,6 +9982,108 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bu aralıkta kayıt yok. Başka bir döneme geçebilirsin.'**
   String get analysisPeriodEmptyBody;
+
+  /// No description provided for @sectionTabTransactions.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlemler'**
+  String get sectionTabTransactions;
+
+  /// No description provided for @reportModeExpense.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gider'**
+  String get reportModeExpense;
+
+  /// No description provided for @reportModeIncome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelir'**
+  String get reportModeIncome;
+
+  /// No description provided for @reportModeBoth.
+  ///
+  /// In tr, this message translates to:
+  /// **'İkisi'**
+  String get reportModeBoth;
+
+  /// No description provided for @filterTypeSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'TÜR'**
+  String get filterTypeSection;
+
+  /// No description provided for @filterTypeAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümü'**
+  String get filterTypeAll;
+
+  /// No description provided for @insightPeriodLinkTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'{period} özeti'**
+  String insightPeriodLinkTitle(String period);
+
+  /// No description provided for @insightPeriodLinkValue.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gider {expense} · Net {net}'**
+  String insightPeriodLinkValue(String expense, String net);
+
+  /// No description provided for @insightPeriodLinkHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategoriler, grafik ve yerler Rapor\'da'**
+  String get insightPeriodLinkHint;
+
+  /// No description provided for @insightBudgetAlertTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçe uyarısı'**
+  String get insightBudgetAlertTitle;
+
+  /// No description provided for @insightBudgetExceeded.
+  ///
+  /// In tr, this message translates to:
+  /// **'{label} aşıldı'**
+  String insightBudgetExceeded(String label);
+
+  /// No description provided for @insightBudgetNear.
+  ///
+  /// In tr, this message translates to:
+  /// **'{label} {percent}'**
+  String insightBudgetNear(String label, String percent);
+
+  /// No description provided for @insightBudgetAlertHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçelerin tamamı Rapor\'da'**
+  String get insightBudgetAlertHint;
+
+  /// No description provided for @insightRecurringIndependent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dönemden bağımsız: tüm geçmişine bakılarak bulundu.'**
+  String get insightRecurringIndependent;
+
+  /// No description provided for @reportScopeLead.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dahil:'**
+  String get reportScopeLead;
+
+  /// No description provided for @reportScopeCards.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart harcamaları · {count}'**
+  String reportScopeCards(int count);
+
+  /// No description provided for @reportScopeMoved.
+  ///
+  /// In tr, this message translates to:
+  /// **'Para taşıma · {count}'**
+  String reportScopeMoved(int count);
 }
 
 class _AppLocalizationsDelegate

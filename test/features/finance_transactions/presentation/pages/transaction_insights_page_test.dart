@@ -1,3 +1,7 @@
+import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
+import 'package:cunehat/features/budgets/domain/repositories/budget_repository.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_summary_cards.dart';
+import 'package:cunehat/features/main_feature/controllers/home_navigation_requests.dart';
 import 'package:cunehat/features/finance_transactions/domain/transaction_period.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
@@ -18,7 +22,6 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_insights_page.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/insight_widgets/insight_budget_cards.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/insight_widgets/recurring_suggestion_card.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_transaction_list_sheet.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_transaction_entity.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_frequency_enum.dart';
 import 'package:cunehat/features/recurring_transactions/domain/services/recurring_suggestion_dismiss_store.dart';
@@ -46,6 +49,8 @@ class MockGetAllRecurringTemplatesUsecase extends Mock
 class MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
 
 class MockCategoryRepository extends Mock implements CategoryRepository {}
+
+class _MockBudgetRepository extends Mock implements BudgetRepository {}
 
 void main() {
   late MockTransactionBloc bloc;
@@ -236,7 +241,8 @@ void main() {
       tx(id: 'e2', date: dayThisMonth(2), amount: 8155.75, tag: 'Fatura'),
     ]);
     await pumpPage(tester);
-    expect(find.textContaining('44.620'), findsWidgets);
+    // Dönem özeti satırı gideri yazar (20.155,75 ₺).
+    expect(find.textContaining('20.155'), findsWidgets);
 
     visibility.emit(false);
     await tester.pumpAndSettle();
@@ -297,7 +303,7 @@ void main() {
     await tester.tap(find.text('$previous dönemine git'));
     await tester.pumpAndSettle();
     expect(find.text(previous), findsOneWidget);
-    expect(find.text(formatMoney(300)), findsWidgets);
+    expect(find.textContaining(formatMoney(300)), findsWidgets);
   });
 
   testWidgets('günlük ortalama YAŞANAN güne bölünür', (tester) async {
@@ -326,7 +332,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text(DateFormat.yMMMM('tr').format(lastMonth)), findsOneWidget);
-    expect(find.text(formatMoney(432)), findsWidgets);
+    expect(find.textContaining(formatMoney(432)), findsWidgets);
   });
 
   testWidgets(
@@ -349,26 +355,55 @@ void main() {
     await tester.tap(find.text('$movedMonth dönemine git'));
     await tester.pumpAndSettle();
     expect(find.text(movedMonth), findsOneWidget);
-    expect(find.text(formatMoney(750)), findsWidgets);
+    expect(find.textContaining(formatMoney(750)), findsWidgets);
   });
 
-  testWidgets('en çok harcanan kategoriye dokunmak işlemleri açar',
+  testWidgets(
+      'Rapor\'u tekrar etmez: kategori kartı YOK, dönem özeti Rapor\'a götürür',
       (tester) async {
+    final requests = HomeNavigationRequests();
+    getIt.registerSingleton<HomeNavigationRequests>(requests);
+    TransactionsSection? opened;
+    requests.sectionHandler = (s) => opened = s;
+
     seed([
       tx(id: 'e1', date: dayThisMonth(1), amount: 1200),
       tx(id: 'e2', date: dayThisMonth(2), amount: 300, tag: 'Fatura'),
     ]);
     await pumpPage(tester);
 
-    final row = find.textContaining('Market ·');
-    expect(row, findsOneWidget);
-    await tester.ensureVisible(row);
-    await tester.pumpAndSettle();
-    await tester.tap(row);
-    await tester.pumpAndSettle();
+    // "En çok harcanan kategori" Rapor'un kategori dağılımının ilk dilimi;
+    // cihazda aynı kira ödemesi "en büyük harcama" ile iki kez yazıyordu.
+    expect(find.textContaining('Market ·'), findsNothing);
+    // Özet kartları (Rapor'la birebir aynıydı) yerine tek satır.
+    expect(find.byType(ReportSummaryCards), findsNothing);
 
-    expect(find.byType(ReportTransactionListSheet), findsOneWidget);
-    expect(find.text(formatMoney(1200)), findsWidgets);
+    final link = find.textContaining('özeti');
+    expect(link, findsOneWidget);
+    await tester.tap(link);
+    await tester.pumpAndSettle();
+    expect(opened, TransactionsSection.report);
+  });
+
+  testWidgets('bütçe %80\'i geçince "Durum"da uyarı çıkar (Rapor ile aynı hesap)',
+      (tester) async {
+    final budgets = _MockBudgetRepository();
+    getIt.registerSingleton<BudgetRepository>(budgets);
+    when(() => budgets.getBudgets(any())).thenAnswer((_) async =>
+        const Right<Failure, List<BudgetEntity>>([
+          BudgetEntity(categoryId: 'Market', limitAmount: 1000),
+          BudgetEntity(categoryId: 'Fatura', limitAmount: 5000),
+        ]));
+    seed([
+      tx(id: 'e1', date: dayThisMonth(1), amount: 950),
+      tx(id: 'e2', date: dayThisMonth(1), amount: 100, tag: 'Fatura'),
+    ]);
+    await pumpPage(tester);
+
+    // Market %95 → uyarı; Fatura %2 → uyarıda YOK.
+    expect(find.text('Bütçe uyarısı'), findsOneWidget);
+    expect(find.textContaining('%95'), findsOneWidget);
+    expect(find.textContaining('Fatura %'), findsNothing);
   });
 
   group('düzenli ödeme önerileri', () {

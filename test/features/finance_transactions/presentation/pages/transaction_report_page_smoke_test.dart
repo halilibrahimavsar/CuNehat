@@ -1,3 +1,5 @@
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_chart_card.dart';
+import 'package:cunehat/core/shared/widgets/labeled_segment.dart';
 import 'package:cunehat/features/finance_transactions/domain/transaction_period.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
@@ -23,13 +25,11 @@ import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_budget_summary_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_change_badge.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_compare_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_cumulative_balance_chart.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_daily_net_flow_chart.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_period_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_summary_cards.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_system_movements_toggle.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_top_payees_card.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:dartz/dartz.dart';
@@ -258,7 +258,7 @@ void main() {
 
       for (final mode in [FinanceMode.expense, FinanceMode.income]) {
         final modeErrors = await layoutErrors(tester, () async {
-          final icon = find.byIcon(mode.icon);
+          final icon = find.descendant(of: find.byType(LabeledSegment<FinanceMode>), matching: find.text(mode == FinanceMode.expense ? 'Gider' : 'Gelir'));
           await tester.ensureVisible(icon);
           await tester.pumpAndSettle();
           await tester.tap(icon);
@@ -288,7 +288,7 @@ void main() {
     await pumpPage(tester);
 
     final errors = await layoutErrors(tester, () async {
-      final toggle = find.byType(Switch).first;
+      final toggle = find.byKey(const ValueKey('report-moved-toggle'));
       await tester.ensureVisible(toggle);
       await tester.pumpAndSettle();
       await tester.tap(toggle);
@@ -394,13 +394,14 @@ void main() {
     // Dönem kontrolü + dört bölüm.
     expect(find.byType(TransactionPeriodBar), findsOneWidget);
     expect(find.byType(ReportSummaryCards), findsOneWidget);
-    expect(find.byType(ReportSystemMovementsToggle), findsOneWidget);
+    expect(find.byKey(const ValueKey('report-moved-toggle')), findsOneWidget);
     // Akış ve bakiye TEK kartta, mercek seçimi OLMADAN: ikisi birlikte
     // okunur (bkz. ReportPeriodChartCard).
     expect(find.byType(ReportPeriodChartCard), findsOneWidget);
     expect(find.byType(ReportDailyNetFlowChart), findsOneWidget);
     expect(find.byType(ReportCumulativeBalanceChart), findsOneWidget);
-    expect(find.byType(ReportCompareChartCard), findsOneWidget);
+    // Açılış modu GİDER: hiyerarşik çemberli tek taraflı kart.
+    expect(find.byType(ReportCategoryChartCard), findsOneWidget);
     expect(find.byType(ReportBudgetSummaryCard), findsOneWidget);
     expect(find.byType(ReportTopPayeesCard), findsOneWidget);
   });
@@ -452,7 +453,7 @@ void main() {
       const base = 24000 + marketTotal + 8 * 180 + 2120 + 2350 + 640 + 1890;
       expect(find.text(formatMoney(base.toDouble())), findsWidgets);
 
-      final toggle = find.byType(Switch).first;
+      final toggle = find.byKey(const ValueKey('report-moved-toggle'));
       await tester.ensureVisible(toggle);
       await tester.pumpAndSettle();
       await tester.tap(toggle);
@@ -493,7 +494,7 @@ void main() {
     await pumpPage(tester);
 
     // Gider moduna geç, sonra çubuk görünümüne.
-    final expenseIcon = find.byIcon(FinanceMode.expense.icon);
+    final expenseIcon = find.descendant(of: find.byType(LabeledSegment<FinanceMode>), matching: find.text('Gider'));
     await tester.ensureVisible(expenseIcon);
     await tester.pumpAndSettle();
     await tester.tap(expenseIcon);
@@ -616,9 +617,10 @@ void main() {
     await tester.pumpAndSettle();
 
     // Kira 12.000 → 24.000 = %100 artış; gider tarafında artış KÖTÜ.
-    expect(find.byType(ReportCompareChartCard), findsOneWidget);
+    // Açılış modu artık GİDER (çemberli kart); rozet onun efsanesinde.
+    expect(find.byType(ReportCategoryChartCard), findsOneWidget);
     final badges = find.descendant(
-      of: find.byType(ReportCompareChartCard),
+      of: find.byType(ReportCategoryChartCard),
       matching: find.byType(ReportChangeBadge),
     );
     expect(badges, findsWidgets);

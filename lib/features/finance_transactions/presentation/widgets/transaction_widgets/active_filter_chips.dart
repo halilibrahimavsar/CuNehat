@@ -1,6 +1,7 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 
@@ -22,6 +23,12 @@ class ActiveFilterChips extends StatelessWidget {
   final VoidCallback onClearSearch;
   final VoidCallback onClearAll;
 
+  /// Tür süzgeci (yalnız gelir / yalnız gider). Mod seçicisi üst çubuktan
+  /// kalktı (ikon-yalnız ↗ ⇄ ↘ anlamını söylemiyordu); tek türe daralmış
+  /// liste artık burada, adıyla ve × ile görünür.
+  final FinanceMode mode;
+  final VoidCallback? onClearMode;
+
   const ActiveFilterChips({
     super.key,
     required this.dataFilter,
@@ -30,6 +37,8 @@ class ActiveFilterChips extends StatelessWidget {
     required this.onClearPriceRange,
     required this.onClearSearch,
     required this.onClearAll,
+    this.mode = FinanceMode.compare,
+    this.onClearMode,
   });
 
   /// Çubuğun yer ayırması gerekip gerekmediği (yükseklik hesabı için).
@@ -43,12 +52,24 @@ class ActiveFilterChips extends StatelessWidget {
       (filter.priceRange?.isNotEmpty ?? false) ||
       (filter.searchQuery?.trim().isNotEmpty ?? false);
 
+  /// [hasChips] + tür süzgeci.
+  static bool hasChipsFor(DataFilter filter, FinanceMode mode) =>
+      mode != FinanceMode.compare || hasChips(filter);
+
   static const double height = 32;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final chips = <Widget>[];
+
+    if (mode != FinanceMode.compare && onClearMode != null) {
+      chips.add(_Chip(
+        icon: mode.icon,
+        text: mode.label(l10n),
+        onRemove: onClearMode!,
+      ));
+    }
 
     final categories = dataFilter.selectedCategories;
     if (categories.isNotEmpty) {

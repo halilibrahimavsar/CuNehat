@@ -38,6 +38,12 @@ class TransactionSummaryStrip extends StatelessWidget {
   /// Dönem bugünü KAPSAMIYORSA verilir; "Bugüne dön" düğmesi çıkar.
   final VoidCallback? onToday;
 
+  /// Verilirse ↑gelir / ↓gider rakamları TÜR SEÇİCİ olur: dokunmak listeyi o
+  /// türe daraltır, seçiliyken tekrar dokunmak tümüne döner. Üst çubuktaki
+  /// ikon-yalnız segmentin (↗ ⇄ ↘) yerini aldı — rakamın kendisi zaten
+  /// "gelirler"/"giderler" diyor.
+  final ValueChanged<FinanceMode>? onModeChanged;
+
   const TransactionSummaryStrip({
     super.key,
     required this.transactions,
@@ -45,6 +51,7 @@ class TransactionSummaryStrip extends StatelessWidget {
     required this.filter,
     required this.periodLabel,
     this.onToday,
+    this.onModeChanged,
   });
 
   @override
@@ -219,7 +226,7 @@ class TransactionSummaryStrip extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 _flow(context, true, income, currency, footerStyle),
-                const SizedBox(width: 14),
+                SizedBox(width: onModeChanged == null ? 14 : 8),
                 _flow(context, false, expense, currency, footerStyle),
               ],
             ),
@@ -253,7 +260,7 @@ class TransactionSummaryStrip extends StatelessWidget {
     TextStyle style,
   ) {
     final color = isIncome ? AppGradients.savings : AppGradients.debt;
-    return Row(
+    final content = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
@@ -268,6 +275,37 @@ class TransactionSummaryStrip extends StatelessWidget {
           style: style.copyWith(color: color),
         ),
       ],
+    );
+    final onModeChanged = this.onModeChanged;
+    if (onModeChanged == null) return content;
+
+    final target = isIncome ? FinanceMode.income : FinanceMode.expense;
+    final selected = mode == target;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: target.label(context.l10n),
+      child: Material(
+        color: selected ? color.withValues(alpha: 0.14) : Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(
+            color: color.withValues(alpha: selected ? 0.45 : 0.18),
+          ),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () =>
+              onModeChanged(selected ? FinanceMode.compare : target),
+          child: Padding(
+            // Dikey dolgu bilerek dar: şerit ekranın ilk yarısında ve her dp
+            // bir defter satırından çalınıyor (6dp'de ilk kart 12dp aşağı
+            // iniyordu). Alternatif tam boy yol filtre sayfasındaki "Tür".
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: content,
+          ),
+        ),
+      ),
     );
   }
 }

@@ -77,7 +77,7 @@ void main() {
   }
 
   group('yerleşim', () {
-    // Çubuk üç kontrolü (dönem + mod segmenti + filtre) tek satırda taşıyor;
+    // Çubuk iki kontrolü (dönem + filtre) tek satırda taşıyor;
     // en dar yaygın Android genişliğinde (320dp) taşmamalı.
     for (final width in [320.0, 360.0, 411.0]) {
       testWidgets('${width.toInt()}dp genişlikte taşma yok', (tester) async {
@@ -98,7 +98,7 @@ void main() {
       });
     }
 
-    testWidgets('320dp: dönem çubuğu + segment + filtre satıra sığar',
+    testWidgets('320dp: dönem çubuğu + filtre satıra sığar',
         (tester) async {
       tester.view.physicalSize = const Size(320, 800);
       tester.view.devicePixelRatio = 1.0;
@@ -115,27 +115,64 @@ void main() {
     });
   });
 
-  group('yükseklik', () {
+  group('çip şeridi görünürlüğü', () {
     test('çip yokken çip şeridi yer kaplamaz', () {
-      const empty = DataFilter();
-      const withChips = DataFilter(selectedCategories: {'a'});
       expect(
-        TransactionTopBar.heightFor(withChips) -
-            TransactionTopBar.heightFor(empty),
-        ActiveFilterChips.height + 8,
-      );
+          ActiveFilterChips.hasChipsFor(
+              const DataFilter(), FinanceMode.compare),
+          isFalse);
+      expect(
+          ActiveFilterChips.hasChipsFor(
+              const DataFilter(selectedCategories: {'a'}), FinanceMode.compare),
+          isTrue);
     });
 
     test('arama da çip şeridi açar', () {
       // Arama alanı artık sabit çubukta değil, içerikle kayıp gidiyor.
       // Kullanıcı listeyi aşağı kaydırdığında "neden yalnız üç satır
       // görüyorum" sorusunun yanıtı çubukta kalmalı.
-      const searchOnly = DataFilter(searchQuery: 'market');
       expect(
-        TransactionTopBar.heightFor(searchOnly) -
-            TransactionTopBar.heightFor(const DataFilter()),
-        ActiveFilterChips.height + 8,
-      );
+          ActiveFilterChips.hasChipsFor(
+              const DataFilter(searchQuery: 'market'), FinanceMode.compare),
+          isTrue);
+    });
+
+    test('tek türe daralmak (yalnız gider) çip şeridi açar', () {
+      expect(
+          ActiveFilterChips.hasChipsFor(
+              const DataFilter(), FinanceMode.expense),
+          isTrue);
+    });
+  });
+
+  group('tür çipi', () {
+    testWidgets(
+        'mod seçicisi YOK; tek tür etkinken adıyla çip görünür, × tümüne döner',
+        (tester) async {
+      FinanceMode? changed;
+      await tester.pumpWidget(wrap(TransactionTopBar(
+        filter: _filter(mode: FinanceMode.expense),
+        categoryLabels: const {},
+        onModeChanged: (m) => changed = m,
+        onPeriodStep: (_) {},
+        onPeriodPick: () {},
+        onFilterTap: () {},
+        onClearCategories: () {},
+        onClearPriceRange: () {},
+        onClearSearch: () {},
+        onClearAllFilters: () {},
+      )));
+      await tester.pump();
+
+      // İkon-yalnız segment kalktı.
+      expect(find.byIcon(Icons.compare_arrows_rounded), findsNothing);
+      expect(find.text('Giderler'), findsOneWidget);
+
+      await tester.tap(find.descendant(
+        of: find.byType(ActiveFilterChips),
+        matching: find.byIcon(Icons.close_rounded),
+      ));
+      expect(changed, FinanceMode.compare);
     });
   });
 

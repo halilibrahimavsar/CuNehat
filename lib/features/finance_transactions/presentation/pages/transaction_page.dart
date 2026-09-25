@@ -10,7 +10,6 @@ import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'package:cunehat/core/messaging/deletion_undo_message.dart';
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/core/shared/widgets/app_date_range_picker.dart';
-import 'package:cunehat/features/credit_card/presentation/card_context_rail.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
@@ -29,6 +28,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_day_rail.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_list_skeleton.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/shared_period.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transactions_section_tabs.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_search_field.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_summary_strip.dart';
@@ -324,6 +324,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
                       onClearAll: cubit.clearAll,
                       onClose: () => Navigator.pop(builderContext),
                       periodLabel: statementPeriodLabel(cubit, context.l10n),
+                      onModeChanged: cubit.setFinanceMode,
                     ),
                   ),
                 ),
@@ -456,8 +457,9 @@ class _TransactionsViewState extends State<_TransactionsView> {
               backgroundColor: Colors.transparent,
               body: Column(
                 children: [
-                  // Cüzdan ↔ bağlı kartları (yalnız kartı olan cüzdanda).
-                  const CardContextRail(),
+                  // Cüzdan ↔ bağlı kartları + İşlemler · İçgörü · Rapor.
+                  const TransactionsSectionHeader(
+                      current: TransactionsSection.ledger),
                   TransactionTopBar(
                     filter: filterState,
                     periodLabel: statementPeriodLabel(cubit, context.l10n),
@@ -469,7 +471,11 @@ class _TransactionsViewState extends State<_TransactionsView> {
                     onClearCategories: () => cubit.setCategories(const {}),
                     onClearPriceRange: () => cubit.setPriceRange(null),
                     onClearSearch: () => cubit.setSearchQuery(null),
-                    onClearAllFilters: cubit.clearDataFilters,
+                    // Çip satırındaki "Temizle" görünen TÜM çipleri kaldırır,
+                    // tür çipi dahil; dönem korunur.
+                    onClearAllFilters: () => cubit
+                      ..clearDataFilters()
+                      ..setFinanceMode(FinanceMode.compare),
                   ),
                   Expanded(
                     child: isLoading && walletIsEmpty
@@ -555,6 +561,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
             onToday: periodHasToday
                 ? null
                 : () => cubit.setPeriod(currentPeriodLike(period)),
+            onModeChanged: cubit.setFinanceMode,
           ),
         ),
       ),

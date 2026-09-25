@@ -182,6 +182,22 @@ void main() {
       expect(find.byType(CardPaySheet), findsOneWidget);
     });
 
+    testWidgets('pillsOnly (İçgörü/Rapor): hap satırı var, bant ve şerit YOK',
+        (tester) async {
+      final bank = _bank();
+      final card = _card();
+      when(() => bloc.state).thenReturn(WalletLoadedSt([bank, card], bank));
+      await tester.pumpWidget(app(const CardContextRail(pillsOnly: true)));
+      await tester.pumpAndSettle();
+      expect(find.byKey(ValueKey('ctx-${card.id}')), findsOneWidget);
+      expect(find.byKey(const ValueKey('ctx-due-card')), findsNothing);
+
+      when(() => bloc.state).thenReturn(WalletLoadedSt([bank, card], card));
+      await tester.pumpWidget(app(const CardContextRail(pillsOnly: true)));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('ctx-card-pay')), findsNothing);
+    });
+
     testWidgets('son ödeme uzaksa bant YOK', (tester) async {
       final bank = _bank();
       when(() => bloc.state)

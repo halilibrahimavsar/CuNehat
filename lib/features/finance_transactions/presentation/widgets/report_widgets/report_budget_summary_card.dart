@@ -1,3 +1,6 @@
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
+import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
+import 'package:cunehat/core/utils/date_range_helper.dart';
 import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -155,6 +158,50 @@ class ReportBudgetSummaryCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Aralığın bütçe durumları — harcama SEÇİLİ ARALIĞA göre hesaplanır
+/// (BudgetRepository yalnız limitleri döner, "bu ay" varsayımı taşımaz).
+///
+/// Rapor ve İçgörü AYNI hesabı kullanır: "bütçemi aştım mı" sorusuna iki
+/// sayfa farklı cevap vermemeli. [expenseFull], kök + alt kırılımlı gider
+/// listesidir (`ReportCategoryDataBuilder.buildFull`).
+///
+/// Alt kategori bütçesi de listeye girer: bütçe iki seviyeye de konabiliyor
+/// ama dilimler kök seviyede toplandığı için alt kategori bütçesi kök
+/// satırında hiç görünmüyordu.
+List<BudgetStatus> computeBudgetStatuses({
+  required List<BudgetEntity> budgets,
+  required List<CategoryData> expenseFull,
+  required DateTimeRange range,
+  required String Function(String tag) labelFor,
+}) {
+  if (budgets.isEmpty) return const [];
+  // Limit AYLIK. Aralık bir takvim ayı değilse harcama/limit oranı
+  // boyutsal olarak yanlıştır: "Bu Yıl"da 12 aylık harcama 1 aylık limite
+  // bölünüyor ve rapor "%340 aşıldı" derken Bütçeler sayfası aynı anda
+  // "%28" diyordu. Kıyas yapılamıyorsa RAKAM üretilmez.
+  if (!DateRangeHelper.isSingleCalendarMonth(range)) return const [];
+
+  final spentByTag = <String, double>{};
+  for (final root in expenseFull) {
+    spentByTag[root.name] = root.totalAmount;
+    for (final child in root.children) {
+      if (child.isDirect) continue;
+      spentByTag[child.name] = child.totalAmount;
+    }
+  }
+
+  return [
+    for (final budget in budgets)
+      if (budget.limitAmount > 0)
+        BudgetStatus(
+          categoryId: budget.categoryId,
+          label: labelFor(budget.categoryId),
+          spent: spentByTag[budget.categoryId] ?? 0,
+          limit: budget.limitAmount,
+        ),
+  ];
 }
 
 /// Bir kategorinin dönem içindeki bütçe durumu.

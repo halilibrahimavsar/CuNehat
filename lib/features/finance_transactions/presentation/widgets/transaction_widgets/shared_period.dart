@@ -1,3 +1,5 @@
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
+import 'package:cunehat/core/config/feature_flags.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/core/shared/widgets/app_date_range_picker.dart';
@@ -24,6 +26,19 @@ String? statementPeriodLabel(
     TransactionFilterCubit cubit, AppLocalizations l10n) {
   if (!cubit.isStatementPeriod) return null;
   return l10n.kkEkstreDonemEtiketi(periodLabel(cubit.period, l10n));
+}
+
+/// Ortak süzgeci sayfanın cüzdanına bağlar: arama/kategori cüzdana özeldir
+/// ([TransactionFilterCubit.bindWallet]), kart bağlamında dönem EKSTRE
+/// döngüsünü izler ([TransactionFilterCubit.useStatementCycle]).
+///
+/// Üç sayfa da kurulurken çağırır. Eskiden yalnız İşlemler çağırıyordu; o
+/// sayfa alt görünüm açıkken güncellenmediği için Rapor'dan karta geçen
+/// kullanıcı takvim ayına bakmaya devam ediyordu (cihazda görüldü).
+void bindSharedPeriodTo(BuildContext context, WalletEntity? wallet) {
+  context.read<TransactionFilterCubit>()
+    ..bindWallet(wallet?.id)
+    ..useStatementCycle(FeatureFlags.creditCards ? wallet?.creditCard : null);
 }
 
 /// Ortak dönem seçicisi. Kart bağlamında ekstre seçenekleri başta gelir.

@@ -3318,5 +3318,70 @@
       }
     }
   },
-  "analysisPeriodEmptyBody": "Bu aralıkta kayıt yok. Başka bir döneme geçebilirsin."
+  "analysisPeriodEmptyBody": "Bu aralıkta kayıt yok. Başka bir döneme geçebilirsin.",
+  "sectionTabTransactions": "İşlemler",
+  "reportModeExpense": "Gider",
+  "reportModeIncome": "Gelir",
+  "reportModeBoth": "İkisi",
+  "filterTypeSection": "TÜR",
+  "filterTypeAll": "Tümü",
+  "insightPeriodLinkTitle": "{period} özeti",
+  "@insightPeriodLinkTitle": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "insightPeriodLinkValue": "Gider {expense} · Net {net}",
+  "@insightPeriodLinkValue": {
+    "placeholders": {
+      "expense": {
+        "type": "String"
+      },
+      "net": {
+        "type": "String"
+      }
+    }
+  },
+  "insightPeriodLinkHint": "Kategoriler, grafik ve yerler Rapor'da",
+  "insightBudgetAlertTitle": "Bütçe uyarısı",
+  "insightBudgetExceeded": "{label} aşıldı",
+  "@insightBudgetExceeded": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "insightBudgetNear": "{label} {percent}",
+  "@insightBudgetNear": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "insightBudgetAlertHint": "Bütçelerin tamamı Rapor'da",
+  "insightRecurringIndependent": "Dönemden bağımsız: tüm geçmişine bakılarak bulundu.",
+  "reportScopeLead": "Dahil:",
+  "reportScopeCards": "Kart harcamaları · {count}",
+  "@reportScopeCards": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportScopeMoved": "Para taşıma · {count}",
+  "@reportScopeMoved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }
