@@ -4984,7 +4984,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get baglaEylemiAciklama =>
-      'Birikim alımı, borç ödemesi ya da transfer olarak işaretle';
+      'Birikim alımı, kasaya aktarım, borç ödemesi ya da transfer olarak işaretle';
 
   @override
   String get baglaBaslik => 'Bu satırı bağla';

@@ -2685,7 +2685,7 @@
   "borcOdemesiDefterdenKarsilanacak": "This payment is the selected row; no new expense is written. Amount and date come from that row.",
   "odemeDefterSatirinaBagli": "Linked to a statement row: amount and date come from that row. If it's the wrong row, delete the payment and add it again.",
   "baglaEylemi": "Link…",
-  "baglaEylemiAciklama": "Mark it as an investment purchase, debt payment or transfer",
+  "baglaEylemiAciklama": "Mark it as an investment purchase, a move to a cash pot, a debt payment or a transfer",
   "baglaBaslik": "Link this entry",
   "baglaAciklama": "The entry isn't written twice: it becomes the payment of the record you choose and leaves the spending/income reports. Deleting that record returns the entry to how it was.",
   "baglaYeniBirikim": "New investment purchase",

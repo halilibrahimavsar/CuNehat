@@ -5014,7 +5014,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get baglaEylemiAciklama =>
-      'Mark it as an investment purchase, debt payment or transfer';
+      'Mark it as an investment purchase, a move to a cash pot, a debt payment or a transfer';
 
   @override
   String get baglaBaslik => 'Link this entry';

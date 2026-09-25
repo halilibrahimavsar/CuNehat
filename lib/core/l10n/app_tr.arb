@@ -2746,7 +2746,7 @@
   "borcOdemesiDefterdenKarsilanacak": "Bu ödeme seçilen satırdır; yeni gider yazılmaz. Tutar ve tarih o satırdan gelir.",
   "odemeDefterSatirinaBagli": "Ekstre satırına bağlı: tutar ve tarih o satırdan gelir. Yanlış satırsa ödemeyi silip yeniden ekle.",
   "baglaEylemi": "Bağla…",
-  "baglaEylemiAciklama": "Birikim alımı, borç ödemesi ya da transfer olarak işaretle",
+  "baglaEylemiAciklama": "Birikim alımı, kasaya aktarım, borç ödemesi ya da transfer olarak işaretle",
   "baglaBaslik": "Bu satırı bağla",
   "baglaAciklama": "Satır ikinci kez yazılmaz: seçtiğin kaydın ödemesi olur ve harcama/gelir raporlarından çıkar. Kaydı silersen satır eski hâline döner.",
   "baglaYeniBirikim": "Yeni birikim alımı",

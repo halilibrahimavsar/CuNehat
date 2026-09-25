@@ -8762,7 +8762,7 @@ abstract class AppLocalizations {
   /// No description provided for @baglaEylemiAciklama.
   ///
   /// In tr, this message translates to:
-  /// **'Birikim alımı, borç ödemesi ya da transfer olarak işaretle'**
+  /// **'Birikim alımı, kasaya aktarım, borç ödemesi ya da transfer olarak işaretle'**
   String get baglaEylemiAciklama;
 
   /// No description provided for @baglaBaslik.
