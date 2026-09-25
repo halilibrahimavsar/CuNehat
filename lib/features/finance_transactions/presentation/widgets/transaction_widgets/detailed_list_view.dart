@@ -1,3 +1,4 @@
+import 'package:cunehat/core/shared/motion/app_motion.dart';
 import 'dart:math' as math;
 
 import 'package:cunehat/config/theme/app_gradients.dart';
@@ -316,7 +317,7 @@ class _DayHeaderDelegate extends SliverPersistentHeaderDelegate {
               children: [
                 AnimatedRotation(
                   turns: isExpanded ? 0 : -0.25,
-                  duration: const Duration(milliseconds: 180),
+                  duration: AppMotion.of(context).d(AppMotion.short),
                   child: Icon(
                     Icons.keyboard_arrow_down_rounded,
                     size: 20,
@@ -366,6 +367,10 @@ class _NetBadge extends StatelessWidget {
 
   const _NetBadge({required this.net, this.moved = false});
 
+  // Kutu YOK: cihazda rozet başlığın tüm yüksekliğini kaplayan iri pembe bir
+  // kutu olarak çiziliyordu (44dp'lik başlıkta ~42dp) ve günün asıl bilgisi
+  // olan tarihten daha baskın duruyordu. Yalın, işaretli metin + küçük renk
+  // işareti; para taşıma gününde nokta yerine ⇄.
   @override
   Widget build(BuildContext context) {
     final color = moved
@@ -373,32 +378,30 @@ class _NetBadge extends StatelessWidget {
         : net >= 0
             ? MoneyColors.income
             : MoneyColors.expense;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(7),
-        border: Border.all(color: color.withValues(alpha: 0.22), width: 0.5),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (moved) ...[
-            Icon(Icons.swap_horiz_rounded, size: 12, color: color),
-            const SizedBox(width: 3),
-          ],
-          SignedMoneyText(
-            amount: net,
-            isExpense: net < 0,
-            currency: context.activeWalletCurrency,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-              color: color,
-            ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (moved)
+          Icon(Icons.swap_horiz_rounded, size: 14, color: color)
+        else
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
-        ],
-      ),
+        const SizedBox(width: 5),
+        SignedMoneyText(
+          amount: net,
+          isExpense: net < 0,
+          currency: context.activeWalletCurrency,
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w800,
+            color: color,
+            height: 1.2,
+          ),
+        ),
+      ],
     );
   }
 }

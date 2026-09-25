@@ -42,9 +42,30 @@ double? flowAxisCap(List<ReportBucket> buckets) {
 
   final top = values.first;
   final next = values[1];
-  if (next <= 0 || top < next * _kClipRatio) return null;
-  return next * _kClipHeadroom;
+  if (next > 0 && top >= next * _kClipRatio) return next * _kClipHeadroom;
+
+  // İKİ seyrek dev çubuk (maaş + kira) da günlük harcamayı ezer. Cihazda
+  // ölçüldü (Ağustos): 52,4K maaş ve 18,5K kira yanında günlük giderler nokta
+  // kadar kalıyordu; oran 2,8 olduğu için tek-çubuk kuralı devreye
+  // girmiyordu. İkisi, geri kalanların en büyüğünün [_kPairClipRatio] katını
+  // aşıyorsa ve geriye okunacak yeterince çubuk kalıyorsa ([_kPairMinRest])
+  // eksen geri kalanlara göre kurulur. Tek kural gibi tutucu: dengeli seride
+  // hiçbir şey kırpılmaz.
+  if (values.length >= _kPairMinRest + 2) {
+    final third = values[2];
+    if (third > 0 && next >= third * _kPairClipRatio) {
+      return third * _kClipHeadroom;
+    }
+  }
+  return null;
 }
+
+/// İki dev çubuk kuralının kat sayısı (bkz. [flowAxisCap]).
+const double _kPairClipRatio = 3.0;
+
+/// İki çubuk kırpılınca geriye en az bu kadar çubuk kalmalı; yoksa kırpmak
+/// kimseyi kurtarmaz.
+const int _kPairMinRest = 3;
 
 /// Dönem boyunca gelir/gider çubukları — dönem kartının ÜST paneli.
 ///

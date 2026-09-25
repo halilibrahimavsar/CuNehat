@@ -43,82 +43,86 @@ class CategorySpikeCard extends StatelessWidget {
         accent: AppGradients.debt,
         padding: const EdgeInsets.all(14),
         onTap: onTap,
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppGradients.debt.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
+        // Kart tek cümle okunur (ekran okuyucu); eskiden etiket, tutar ve
+        // ipucu ayrı ayrı durak oluyordu.
+        child: MergeSemantics(
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppGradients.debt.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.trending_up_rounded,
+                  color: AppGradients.debt,
+                  size: 22,
+                ),
               ),
-              child: const Icon(
-                Icons.trending_up_rounded,
-                color: AppGradients.debt,
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        context.l10n.insightSpikeTitle,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppGradients.debt,
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppGradients.debt.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          formatPercent(spike.percentIncrease, signed: true),
-                          style: theme.textTheme.labelSmall?.copyWith(
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          context.l10n.insightSpikeTitle,
+                          style: theme.textTheme.bodySmall?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: AppGradients.debt,
                           ),
                         ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppGradients.debt.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            formatPercent(spike.percentIncrease, signed: true),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppGradients.debt,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$categoryName: ${money(spike.currentAmount)}',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: scheme.onSurface,
+                        fontSize: 15,
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '$categoryName: ${money(spike.currentAmount)}',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: scheme.onSurface,
-                      fontSize: 15,
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    context.l10n.insightSpikeDesc(
-                      spike.windowDays,
-                      money(spike.previousAmount),
+                    const SizedBox(height: 2),
+                    Text(
+                      context.l10n.insightSpikeDesc(
+                        spike.windowDays,
+                        money(spike.previousAmount),
+                      ),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
+                        fontSize: 11,
+                      ),
                     ),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            if (onTap != null)
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 20,
-                color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
-              ),
-          ],
+              if (onTap != null)
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+                ),
+            ],
+          ),
         ),
       ),
     );

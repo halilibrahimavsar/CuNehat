@@ -1,3 +1,4 @@
+import 'package:cunehat/core/shared/motion/period_transition.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transactions_section_tabs.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/config/theme/money_colors.dart';
@@ -510,21 +511,25 @@ class _InsightsViewState extends State<_InsightsView> {
                           .withValues(alpha: 0.06),
                     ),
                     Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (insights.isEmpty)
-                              _buildPeriodEmptyNote(context, all, insights)
-                            else ...[
-                              ..._buildPeriodSection(context, insights, money),
-                              ..._buildStatusSection(
-                                  context, insights, money, all, derived),
-                              ..._buildHabitSection(context, insights, money, all),
+                      child: PeriodTransition(
+                        fill: true,
+                        periodStart: _range.start,
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (insights.isEmpty)
+                                _buildPeriodEmptyNote(context, all, insights)
+                              else ...[
+                                ..._buildPeriodSection(context, insights, money),
+                                ..._buildStatusSection(
+                                    context, insights, money, all, derived),
+                                ..._buildHabitSection(context, insights, money, all),
+                              ],
+                              ..._buildRecurringSection(context, suggestions, money),
                             ],
-                            ..._buildRecurringSection(context, suggestions, money),
-                          ],
+                          ),
                         ),
                       ),
                     ),

@@ -1,3 +1,4 @@
+import 'package:cunehat/core/shared/motion/app_motion.dart';
 import 'package:flutter/material.dart';
 
 /// İşlem listesi için premium yükleme iskeleti (shimmer/nabız).
@@ -19,7 +20,21 @@ class _TransactionListSkeletonState extends State<TransactionListSkeleton>
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1100),
-  )..repeat(reverse: true);
+    value: 0.5,
+  );
+
+  /// Azaltılmış harekette nabız DURUR (sabit yarı opaklık); sonsuz döngüdeki
+  /// bir animasyon, sistem ayarını açan kullanıcıyı en çok rahatsız eden tür.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (AppMotion.of(context).reduced) {
+      _controller.stop();
+      _controller.value = 0.5;
+    } else if (!_controller.isAnimating) {
+      _controller.repeat(reverse: true);
+    }
+  }
 
   @override
   void dispose() {

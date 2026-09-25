@@ -3254,9 +3254,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get reportCompareScaleHint => 'Both bars share one scale';
-
-  @override
   String get debtHistoryEmptyTitle => 'No Closed Debts Yet';
 
   @override
@@ -4256,7 +4253,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String reportUnitTooDense(Object count) {
-    return '$count columns won\'t fit';
+    return '$count columns here — too dense to read';
   }
 
   @override
@@ -4330,7 +4327,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportHierarchyHint =>
-      'Tap the inner ring to focus · outer ring: breakdown';
+      'Inner ring: main categories · outer ring: sub-categories · tap for details';
 
   @override
   String reportBreakdownToggle(Object ad) {
@@ -4342,7 +4339,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportTopPayeesHint =>
-      'Grouped by transaction title; branch and code suffixes merged';
+      'Similar titles merged (e.g. branches of the same store)';
 
   @override
   String reportTopPayeesCoverage(Object yuzde) {
@@ -4384,7 +4381,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String reportFlowClippedBar(Object tutar) {
-    return 'Scaled to the smaller items; the tallest bar ($tutar) is clipped';
+    return 'Large bars shortened (tallest: $tutar) so the rest stay readable';
   }
 
   @override

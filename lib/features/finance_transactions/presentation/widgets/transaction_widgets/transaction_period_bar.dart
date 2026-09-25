@@ -112,10 +112,11 @@ class _StepButton extends StatelessWidget {
       child: InkResponse(
         onTap: onPressed,
         radius: 22,
-        // 44×44: Material'in dokunma hedefi alt sınırı. Eski ok düğmeleri
-        // 32px'ti ve hareket hâlindeyken ıskalanıyordu.
+        // 48×44. Eski ok düğmeleri 32px'ti ve hareket hâlindeyken
+        // ıskalanıyordu; sonra 34 genişliğe çıkmıştı ama yorum 44 diyordu —
+        // Material'in önerdiği 48'in altında kalıyordu.
         child: SizedBox(
-          width: 34,
+          width: 48,
           height: 44,
           child: Icon(icon, size: 22, color: scheme.onSurfaceVariant),
         ),

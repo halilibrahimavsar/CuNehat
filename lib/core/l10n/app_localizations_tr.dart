@@ -3245,9 +3245,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get reportCompareScaleHint => 'İki çubuk aynı ölçekte';
-
-  @override
   String get debtHistoryEmptyTitle => 'Henüz Kapanan Borç Yok';
 
   @override
@@ -4245,7 +4242,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String reportUnitTooDense(Object count) {
-    return '$count sütun sığmaz';
+    return 'Bu aralıkta $count sütun olur, okunmaz';
   }
 
   @override
@@ -4307,7 +4304,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get reportHierarchyHint =>
-      'İç halkaya dokun: odakla · dış halka: alt kırılım';
+      'İç halka ana, dış halka alt kategoriler · dokun: ayrıntı';
 
   @override
   String reportBreakdownToggle(Object ad) {
@@ -4319,7 +4316,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get reportTopPayeesHint =>
-      'İşlem başlıklarına göre gruplandı; şube/kod ekleri birleştirildi';
+      'Benzer başlıklar birleştirildi (ör. aynı mağazanın şubeleri)';
 
   @override
   String reportTopPayeesCoverage(Object yuzde) {
@@ -4361,7 +4358,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String reportFlowClippedBar(Object tutar) {
-    return 'Ölçek küçük kalemlere göre; en yüksek çubuk ($tutar) kırpıldı';
+    return 'Büyük çubuklar kısaltıldı (en yüksek: $tutar); diğerleri okunabilsin';
   }
 
   @override

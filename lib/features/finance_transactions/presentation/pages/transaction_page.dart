@@ -1,3 +1,5 @@
+import 'package:cunehat/core/shared/motion/app_motion.dart';
+import 'package:cunehat/core/shared/motion/period_transition.dart';
 import 'dart:async';
 import 'package:cunehat/features/main_feature/controllers/home_navigation_requests.dart';
 import 'dart:math' as math;
@@ -361,7 +363,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
         await Scrollable.ensureVisible(
           ctx,
           alignment: 0,
-          duration: const Duration(milliseconds: 240),
+          duration: AppMotion.of(context).d(AppMotion.medium),
           curve: Curves.easeOutCubic,
         );
         return;
@@ -553,33 +555,39 @@ class _TransactionsViewState extends State<_TransactionsView> {
       SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-          child: TransactionSummaryStrip(
-            transactions: visible.map((e) => e.transaction).toList(),
-            mode: mode,
-            filter: filterState,
-            periodLabel: periodLabel(period, context.l10n),
-            onToday: periodHasToday
-                ? null
-                : () => cubit.setPeriod(currentPeriodLike(period)),
-            onModeChanged: cubit.setFinanceMode,
+          child: PeriodTransition(
+            periodStart: period.start,
+            child: TransactionSummaryStrip(
+              transactions: visible.map((e) => e.transaction).toList(),
+              mode: mode,
+              filter: filterState,
+              periodLabel: periodLabel(period, context.l10n),
+              onToday: periodHasToday
+                  ? null
+                  : () => cubit.setPeriod(currentPeriodLike(period)),
+              onModeChanged: cubit.setFinanceMode,
+            ),
           ),
         ),
       ),
       SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.only(top: 4),
-          child: TransactionDayRail(
-            range: period,
-            summaries: _summariesFor(visible),
-            // Dönem dışına düşen seçim BAYATTIR: kullanıcı bir gün seçip
-            // sonra ayı değiştirdiğinde o vurgu artık hiçbir şeyi
-            // göstermiyor, üstelik şeridin kendini ortalamasını da
-            // engelliyordu.
-            selectedDay:
-                _selectedDay != null && isDayInRange(_selectedDay!, period)
-                    ? _selectedDay
-                    : null,
-            onDaySelected: (day) => _scrollToDay(day, visible, mode),
+          child: PeriodTransition(
+            periodStart: period.start,
+            child: TransactionDayRail(
+              range: period,
+              summaries: _summariesFor(visible),
+              // Dönem dışına düşen seçim BAYATTIR: kullanıcı bir gün seçip
+              // sonra ayı değiştirdiğinde o vurgu artık hiçbir şeyi
+              // göstermiyor, üstelik şeridin kendini ortalamasını da
+              // engelliyordu.
+              selectedDay:
+                  _selectedDay != null && isDayInRange(_selectedDay!, period)
+                      ? _selectedDay
+                      : null,
+              onDaySelected: (day) => _scrollToDay(day, visible, mode),
+            ),
           ),
         ),
       ),

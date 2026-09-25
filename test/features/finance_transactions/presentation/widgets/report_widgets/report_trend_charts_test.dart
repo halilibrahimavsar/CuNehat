@@ -241,6 +241,44 @@ void main() {
         expect(cap, closeTo(440 * 1.4, 0.01));
       });
 
+      test(
+          'İKİ seyrek dev çubuk (maaş + kira) da ezerse tavan geri kalanlara '
+          'göre kurulur', () {
+        // Cihazda ölçüldü (Ağustos): 52.400 maaş + 18.500 kira; oran 2,8 →
+        // tek-çubuk kuralı devreye girmiyor, günlük giderler nokta kalıyordu.
+        final series = seriesOf(
+          [
+            tx(date: DateTime(2026, 8, 1), amount: 52400, isIncome: true),
+            tx(date: DateTime(2026, 8, 2), amount: 18500, isIncome: false),
+            for (var i = 0; i < 6; i++)
+              tx(
+                  date: DateTime(2026, 8, 3 + i),
+                  amount: 300 + i * 100,
+                  isIncome: false),
+          ],
+          start: DateTime(2026, 8, 1),
+          end: DateTime(2026, 8, 10),
+        );
+        expect(flowAxisCap(series.buckets), closeTo(800 * 1.4, 0.01));
+      });
+
+      test('iki büyük çubuk geri kalanın 3 katına varmıyorsa tavan YOK', () {
+        final series = seriesOf(
+          [
+            tx(date: DateTime(2026, 8, 1), amount: 5000, isIncome: true),
+            tx(date: DateTime(2026, 8, 2), amount: 3000, isIncome: false),
+            for (var i = 0; i < 6; i++)
+              tx(
+                  date: DateTime(2026, 8, 3 + i),
+                  amount: 1500 + i * 10,
+                  isIncome: false),
+          ],
+          start: DateTime(2026, 8, 1),
+          end: DateTime(2026, 8, 10),
+        );
+        expect(flowAxisCap(series.buckets), isNull);
+      });
+
       testWidgets('kırpılan çubuk tavanda durur ama TOOLTIP gerçeği yazar',
           (tester) async {
         await tester
@@ -267,7 +305,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.textContaining('83.000,00 ₺'), findsOneWidget);
-        expect(find.textContaining('kırpıldı'), findsOneWidget);
+        expect(find.textContaining('kısaltıldı'), findsOneWidget);
       });
 
       testWidgets('kırpma yokken not YAZILMAZ', (tester) async {
@@ -275,7 +313,7 @@ void main() {
             host(ReportDailyNetFlowChart(series: seriesOf(seriesFixture(5)))));
         await tester.pumpAndSettle();
 
-        expect(find.textContaining('kırpıldı'), findsNothing);
+        expect(find.textContaining('kısaltıldı'), findsNothing);
       });
     });
 

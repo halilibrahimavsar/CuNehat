@@ -36,6 +36,25 @@ class HomeNavigationController extends ChangeNotifier {
   // State
   final Map<SliderState, int> _selectedSubIndices = {};
   bool _isDisposed = false;
+  bool _reduceMotion = false;
+
+  /// Sistemde "animasyonları kaldır" açıksa küp geçişleri ANINDA olur.
+  ///
+  /// Eskiden 600/500 ms'lik küp dönüşleri bu ayarı hiç dinlemiyordu (bkz.
+  /// `AppMotion`). Denetleyici `BuildContext` görmediği için değeri ana sayfa
+  /// `MediaQuery`'den besler. Parmakla sürükleme etkilenmez: o, hareketi
+  /// kullanıcının kendisinin ürettiği bir jest.
+  set reduceMotion(bool value) {
+    if (_reduceMotion == value) return;
+    _reduceMotion = value;
+    _viewStack.controller.duration =
+        value ? Duration.zero : kSubViewTransitionDuration;
+    _horizontalController.duration =
+        value ? Duration.zero : kMainSettleDuration;
+  }
+
+  Duration get _settleDuration =>
+      _reduceMotion ? Duration.zero : kMainSettleDuration;
 
   HomeNavigationController(TickerProvider vsync) {
     _horizontalController = AnimationController(
@@ -155,7 +174,7 @@ class HomeNavigationController extends ChangeNotifier {
         SliderState.values[target],
         SliderState.values.length,
       ),
-      duration: kMainSettleDuration,
+      duration: _settleDuration,
       curve: kMainSettleCurve,
     );
   }
@@ -168,7 +187,7 @@ class HomeNavigationController extends ChangeNotifier {
     if (_isDisposed) return;
     await _horizontalController.animateTo(
       SliderStateHelper.getTargetValue(state, SliderState.values.length),
-      duration: kMainSettleDuration,
+      duration: _settleDuration,
       curve: kMainSettleCurve,
     );
   }

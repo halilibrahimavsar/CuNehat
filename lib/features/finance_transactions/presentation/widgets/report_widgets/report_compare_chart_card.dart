@@ -127,16 +127,9 @@ class ReportCompareChartCard extends StatelessWidget {
             isExpense: true,
           ),
           const SizedBox(height: 12),
+          // Ortak ölçeği tek eksen söyler; altındaki "İki çubuk aynı ölçekte"
+          // cümlesi kaldırıldı — kullanıcıya grafik tekniği anlatıyordu.
           _buildAxis(theme, money, axisMax),
-          const SizedBox(height: 8),
-          // Kartın tüm iddiası bu: uzunluklar kıyaslanabilir. Bir kez yazılır.
-          Text(
-            context.l10n.reportCompareScaleHint,
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontSize: 10,
-              color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
-            ),
-          ),
           const SizedBox(height: 14),
           _buildNetLine(context, theme, money, incomeTotal, expenseTotal),
           const SizedBox(height: 4),

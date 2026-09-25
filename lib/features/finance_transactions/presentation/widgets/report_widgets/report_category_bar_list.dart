@@ -1,3 +1,4 @@
+import 'package:cunehat/core/shared/motion/app_motion.dart';
 import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
@@ -119,16 +120,24 @@ class _ReportCategoryBarListState extends State<ReportCategoryBarList> {
                     }),
             onTap: () => widget.onCategoryTap(item),
           ),
-          if (_expanded.contains(item.name))
-            _ChildRows(
-              parent: item,
-              money: money,
-              scheme: scheme,
-              theme: theme,
-              categoryLabels: widget.categoryLabels,
-              budgetProgressFor: widget.budgetProgressFor,
-              onCategoryTap: widget.onCategoryTap,
-            ),
+          // Alt kırılım yumuşakça açılır/kapanır; eskiden tek karede
+          // beliriyordu ve altındaki satırlar zıplıyordu.
+          AnimatedSize(
+            duration: AppMotion.of(context).d(AppMotion.medium),
+            curve: AppMotion.standard,
+            alignment: Alignment.topCenter,
+            child: _expanded.contains(item.name)
+                ? _ChildRows(
+                    parent: item,
+                    money: money,
+                    scheme: scheme,
+                    theme: theme,
+                    categoryLabels: widget.categoryLabels,
+                    budgetProgressFor: widget.budgetProgressFor,
+                    onCategoryTap: widget.onCategoryTap,
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
         ],
       ],
     );
@@ -423,7 +432,8 @@ class _Row extends StatelessWidget {
                           padding: const EdgeInsets.only(left: 4),
                           child: AnimatedRotation(
                             turns: expanded ? 0.5 : 0,
-                            duration: const Duration(milliseconds: 180),
+                            duration:
+                                AppMotion.of(context).d(AppMotion.short),
                             child: Icon(
                               Icons.expand_more_rounded,
                               size: 20,

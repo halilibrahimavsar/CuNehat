@@ -5807,12 +5807,6 @@ abstract class AppLocalizations {
   /// **'Gelirin %{oran} üzerinde'**
   String reportCompareOverspend(String oran);
 
-  /// No description provided for @reportCompareScaleHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'İki çubuk aynı ölçekte'**
-  String get reportCompareScaleHint;
-
   /// No description provided for @debtHistoryEmptyTitle.
   ///
   /// In tr, this message translates to:
@@ -7496,7 +7490,7 @@ abstract class AppLocalizations {
   /// No description provided for @reportUnitTooDense.
   ///
   /// In tr, this message translates to:
-  /// **'{count} sütun sığmaz'**
+  /// **'Bu aralıkta {count} sütun olur, okunmaz'**
   String reportUnitTooDense(Object count);
 
   /// No description provided for @reportFlowChartSemantics.
@@ -7586,7 +7580,7 @@ abstract class AppLocalizations {
   /// No description provided for @reportHierarchyHint.
   ///
   /// In tr, this message translates to:
-  /// **'İç halkaya dokun: odakla · dış halka: alt kırılım'**
+  /// **'İç halka ana, dış halka alt kategoriler · dokun: ayrıntı'**
   String get reportHierarchyHint;
 
   /// No description provided for @reportBreakdownToggle.
@@ -7604,7 +7598,7 @@ abstract class AppLocalizations {
   /// No description provided for @reportTopPayeesHint.
   ///
   /// In tr, this message translates to:
-  /// **'İşlem başlıklarına göre gruplandı; şube/kod ekleri birleştirildi'**
+  /// **'Benzer başlıklar birleştirildi (ör. aynı mağazanın şubeleri)'**
   String get reportTopPayeesHint;
 
   /// No description provided for @reportTopPayeesCoverage.
@@ -7664,7 +7658,7 @@ abstract class AppLocalizations {
   /// No description provided for @reportFlowClippedBar.
   ///
   /// In tr, this message translates to:
-  /// **'Ölçek küçük kalemlere göre; en yüksek çubuk ({tutar}) kırpıldı'**
+  /// **'Büyük çubuklar kısaltıldı (en yüksek: {tutar}); diğerleri okunabilsin'**
   String reportFlowClippedBar(Object tutar);
 
   /// No description provided for @reportOtherSmallItems.

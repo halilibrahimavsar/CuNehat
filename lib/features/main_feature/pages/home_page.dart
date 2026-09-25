@@ -243,6 +243,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     context.read<WalletBloc>().add(WatchWalletsEvent(userId));
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _navController.reduceMotion =
+        MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+  }
+
   /// Defter · İçgörü · Rapor sekme şeridinden gelen istek.
   void _onSectionRequested(TransactionsSection section) {
     if (!mounted) return;

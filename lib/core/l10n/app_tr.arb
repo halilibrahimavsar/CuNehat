@@ -1698,7 +1698,6 @@
       }
     }
   },
-  "reportCompareScaleHint": "İki çubuk aynı ölçekte",
   "debtHistoryEmptyTitle": "Henüz Kapanan Borç Yok",
   "receivableHistoryEmptyTitle": "Henüz Tahsil Edilen Alacak Yok",
   "badgeOdendi": "Ödendi",
@@ -2294,7 +2293,7 @@
   "reportUnitWeek": "Hafta",
   "reportUnitMonth": "Ay",
   "reportUnitSelectorLabel": "Çözünürlük",
-  "reportUnitTooDense": "{count} sütun sığmaz",
+  "reportUnitTooDense": "Bu aralıkta {count} sütun olur, okunmaz",
   "@reportUnitTooDense": {
     "placeholders": {
       "count": {}
@@ -2362,7 +2361,7 @@
       "total": {}
     }
   },
-  "reportHierarchyHint": "İç halkaya dokun: odakla · dış halka: alt kırılım",
+  "reportHierarchyHint": "İç halka ana, dış halka alt kategoriler · dokun: ayrıntı",
   "reportBreakdownToggle": "{ad} alt kırılımı",
   "@reportBreakdownToggle": {
     "placeholders": {
@@ -2370,7 +2369,7 @@
     }
   },
   "reportTopPayeesTitle": "En çok harcanan yerler",
-  "reportTopPayeesHint": "İşlem başlıklarına göre gruplandı; şube/kod ekleri birleştirildi",
+  "reportTopPayeesHint": "Benzer başlıklar birleştirildi (ör. aynı mağazanın şubeleri)",
   "reportTopPayeesCoverage": "Bu liste dönem giderinin %{yuzde}'ini kapsar",
   "@reportTopPayeesCoverage": {
     "placeholders": {
@@ -2406,7 +2405,7 @@
   },
   "reportCategoryChange": "önceki döneme göre",
   "reportLensBalance": "Bakiye",
-  "reportFlowClippedBar": "Ölçek küçük kalemlere göre; en yüksek çubuk ({tutar}) kırpıldı",
+  "reportFlowClippedBar": "Büyük çubuklar kısaltıldı (en yüksek: {tutar}); diğerleri okunabilsin",
   "@reportFlowClippedBar": {
     "placeholders": {
       "tutar": {}
