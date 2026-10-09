@@ -211,17 +211,18 @@ class TransactionCard extends StatelessWidget {
                   // açmak için düşer — kırpılmış bir "1…" kimseye bir şey
                   // söylemez.
                   //
-                  // Kart harcamasında saatin yanına ÖDEME günü yazılır: liste
+                  // Kart harcamasında saatin yerine ÖDEME günü yazılır: liste
                   // harcama gününde durur, Rapor/İçgörü ise onu ödendiği aya
-                  // sayar ("ödeme 5 Kas"). Dar sütunda saat düşer, not kalır.
+                  // sayar ("ödeme 5 Kas").
                   LayoutBuilder(
                     builder: (context, inner) {
                       final payment = _paymentNote(context, t);
                       final wide = inner.maxWidth >= _timeMinWidth;
-                      final meta = [
-                        if (wide) AppFormatters.time.format(t.date),
-                        if (payment != null) payment,
-                      ].join(' · ');
+                      // Kartta saat yerine ödeme günü: ikisi birlikte cihazda
+                      // "12:34 · ödeme…" diye kesiliyordu ve değerli olan
+                      // kısım (ödeme günü) kayboluyordu.
+                      final meta = payment ??
+                          (wide ? AppFormatters.time.format(t.date) : '');
                       return Row(
                       children: [
                         if (t.tag.isNotEmpty)

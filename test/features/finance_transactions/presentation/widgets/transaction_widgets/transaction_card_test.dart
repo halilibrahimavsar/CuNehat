@@ -193,7 +193,7 @@ void main() {
   });
 
   testWidgets(
-      'kart harcamasında saatin yanına ÖDEME günü yazılır (kesim 25 / son '
+      'kart harcamasında saatin YERİNE ödeme günü yazılır (kesim 25 / son '
       'ödeme 5: 6 Eki → 5 Kas); kart dışında yazılmaz', (tester) async {
     tester.view.physicalSize = const Size(1200, 800);
     tester.view.devicePixelRatio = 1.0;
@@ -243,7 +243,8 @@ void main() {
 
     await pump(onCard);
     await tester.pumpAndSettle();
-    expect(find.textContaining('ödeme 5 Kas'), findsOneWidget);
+    expect(find.text('ödeme 5 Kas'), findsOneWidget);
+    expect(find.textContaining('14:30'), findsNothing);
 
     await pump(createTx(isSystem: false, id: 'plain'));
     await tester.pumpAndSettle();
