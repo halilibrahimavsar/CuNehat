@@ -66,6 +66,10 @@ void main() {
       expect(model.importBatchId, isNull);
       expect(model.origin, 'import');
       expect(model.reference, 'DK-1');
+      // v15 alanları (15–17, taksit grubu) da yok → null.
+      expect(model.installmentGroupId, isNull);
+      expect(model.installmentNo, isNull);
+      expect(model.installmentCount, isNull);
     });
 
     test('InvestmentModel — alan 15 (unbookedCost, v8) yok', () {
@@ -203,6 +207,7 @@ void main() {
       reg(SafePaymentModelAdapter());
       reg(SafeReceivableModelAdapter());
       reg(SafeRecurringTransactionModelAdapter());
+      reg(TransactionModelAdapter());
     });
 
     tearDownAll(() async {
@@ -331,6 +336,28 @@ void main() {
       expect(back.dueDate, DateTime(2026, 6, 20));
       expect(back.amount, 500.0);
       expect(back.debtorName, 'Ali');
+    });
+
+    test('TransactionModel taksit grubu (v15, alan 15–17) diskten geri gelir',
+        () async {
+      final model = TransactionModel(
+        id: 't-g',
+        userId: 'u',
+        walletId: 'card',
+        title: 'Laptop (3/6)',
+        tag: 'cat',
+        amount: 5000,
+        date: created,
+        type: TransactionTypeModel.expense,
+        installmentGroupId: 'g-1',
+        installmentNo: 3,
+        installmentCount: 6,
+      );
+      final back = await roundTrip('tx_g', model);
+      expect(back.installmentGroupId, 'g-1');
+      expect(back.installmentNo, 3);
+      expect(back.installmentCount, 6);
+      expect(back, model);
     });
 
     test('RecurringTransactionModel tüm alanlarıyla geri gelir', () async {

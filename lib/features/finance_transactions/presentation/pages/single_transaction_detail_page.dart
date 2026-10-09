@@ -24,6 +24,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_action_sheet.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
+import 'package:cunehat/features/finance_transactions/domain/installments.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -314,6 +315,18 @@ class _SingleTransactionDetailPageState
                   ),
                 ),
 
+                // Taksit grubu: alışverişin bütün aylık satırları birlikte;
+                // grup tek seferde silinir (geri alınabilir).
+                if (t.installmentGroupId case final groupId?) ...[
+                  const SizedBox(height: 24),
+                  _InstallmentGroupCard(
+                    current: t,
+                    group: installmentGroup(tList, groupId),
+                    accent: accent,
+                    onDeleteAll: (group) => _deleteGroup(context, group),
+                  ),
+                ],
+
                 if (t.receiptFileName != null) ...[
                   const SizedBox(height: 24),
                   _ReceiptCard(fileName: t.receiptFileName!, accent: accent),
@@ -415,6 +428,20 @@ class _SingleTransactionDetailPageState
     if (t.id != null) {
       context.read<TransactionBloc>().add(DeleteTransactionEvent(t.id!));
     }
+  }
+
+  /// Taksit grubunun TÜMÜNÜ siler (tek "Geri al" hepsini getirir). Sayfa,
+  /// kendi satırı defterden gidince kapanır (dinleyici).
+  void _deleteGroup(BuildContext context, List<TransactionEntity> group) {
+    final ids = [
+      for (final g in group)
+        if (g.id != null && !g.isSystem) g.id!,
+    ];
+    if (ids.isEmpty) return;
+    context.read<TransactionBloc>().add(DeleteTransactionsEvent(
+          ids,
+          label: installmentBaseTitle(group.first.title),
+        ));
   }
 
   Widget _systemBadge(BuildContext context, ColorScheme scheme) {
@@ -615,6 +642,115 @@ class _ReceiptCard extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Bir taksit grubunun satırları: sıra, tarih, tutar; bu sayfanın satırı
+/// vurgulu, geçmiş taksitler soluk. Altta "Tüm taksitleri sil".
+class _InstallmentGroupCard extends StatelessWidget {
+  final TransactionEntity current;
+  final List<TransactionEntity> group;
+  final Color accent;
+  final void Function(List<TransactionEntity> group) onDeleteAll;
+
+  const _InstallmentGroupCard({
+    required this.current,
+    required this.group,
+    required this.accent,
+    required this.onDeleteAll,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final count = current.installmentCount ?? group.length;
+    final today = DateTime.now();
+    final todayEnd = DateTime(today.year, today.month, today.day + 1);
+    final missing = count - group.length;
+
+    return AppCard(
+      key: const ValueKey('installment-group'),
+      accent: accent,
+      padding: const EdgeInsets.fromLTRB(18, 14, 18, 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l10n.installmentSectionTitle(
+                '${current.installmentNo ?? '?'}', '$count'),
+            style: theme.textTheme.titleSmall
+                ?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 8),
+          for (final g in group)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Opacity(
+                opacity: g.date.isBefore(todayEnd) && g.id != current.id
+                    ? 0.55
+                    : 1,
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 44,
+                      child: Text(
+                        '${g.installmentNo ?? '?'}/$count',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: g.id == current.id ? accent : null,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        g.id == current.id
+                            ? '${AppFormatters.dateShort.format(g.date)} · '
+                                '${l10n.installmentThisOne}'
+                            : AppFormatters.dateShort.format(g.date),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    MoneyText(
+                      amount: g.amount,
+                      currency: context.activeWalletCurrency,
+                      style: TextStyle(
+                        fontWeight: g.id == current.id
+                            ? FontWeight.w800
+                            : FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          if (missing > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                l10n.installmentMissingHint('$missing'),
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+            ),
+          if (group.length > 1)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                key: const ValueKey('installment-delete-all'),
+                onPressed: () => onDeleteAll(group),
+                icon: const Icon(Icons.delete_sweep_rounded),
+                label: Text(l10n.installmentDeleteAll(group.length)),
+                style: TextButton.styleFrom(
+                    foregroundColor: AppGradients.debt),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

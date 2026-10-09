@@ -3604,5 +3604,33 @@
     }
   },
   "debtCardInstallmentWarn": "Kartla taksitli bir alışveriş mi? Onu kartın harcaması olarak gir: borç olarak da girilirse aynı para iki kez sayılır.",
-  "debtCardInstallmentAction": "Kart harcaması olarak gir"
+  "debtCardInstallmentAction": "Kart harcaması olarak gir",
+  "installmentSectionTitle": "Taksitler · {no}/{count}",
+  "@installmentSectionTitle": {
+    "placeholders": {
+      "no": {},
+      "count": {}
+    }
+  },
+  "installmentDeleteAll": "Tüm taksitleri sil ({count})",
+  "@installmentDeleteAll": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "installmentThisOne": "bu taksit",
+  "installmentMissingHint": "Bu alışverişin {missing} taksiti silinmiş.",
+  "@installmentMissingHint": {
+    "placeholders": {
+      "missing": {}
+    }
+  },
+  "kkTaksitliAlisverisler": "Süren taksitli alışverişler",
+  "kkTaksitPlanSatiri": "{left} taksit kaldı · {amount}",
+  "@kkTaksitPlanSatiri": {
+    "placeholders": {
+      "left": {},
+      "amount": {}
+    }
+  }
 }

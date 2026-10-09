@@ -22,6 +22,9 @@ class TransactionModel extends TransactionEntity {
     super.adoptedFromTag,
     super.origin,
     super.importBatchId,
+    super.installmentGroupId,
+    super.installmentNo,
+    super.installmentCount,
   });
 
   /// ✅ FIXED: Handle date as ISO 8601 String
@@ -55,6 +58,11 @@ class TransactionModel extends TransactionEntity {
       // v13 (yedek migrasyonu v12 yedeklerine bu anahtarı açıkça `null`
       // olarak ekler).
       importBatchId: json['importBatchId'] as String?,
+      // v15 (yedek migrasyonu v14 yedeklerine bu anahtarları açıkça `null`
+      // olarak ekler).
+      installmentGroupId: json['installmentGroupId'] as String?,
+      installmentNo: json['installmentNo'] as int?,
+      installmentCount: json['installmentCount'] as int?,
     );
   }
 
@@ -76,6 +84,9 @@ class TransactionModel extends TransactionEntity {
       'adoptedFromTag': adoptedFromTag,
       'origin': origin,
       'importBatchId': importBatchId,
+      'installmentGroupId': installmentGroupId,
+      'installmentNo': installmentNo,
+      'installmentCount': installmentCount,
     };
   }
 
@@ -96,6 +107,9 @@ class TransactionModel extends TransactionEntity {
       adoptedFromTag: entity.adoptedFromTag,
       origin: entity.origin,
       importBatchId: entity.importBatchId,
+      installmentGroupId: entity.installmentGroupId,
+      installmentNo: entity.installmentNo,
+      installmentCount: entity.installmentCount,
     );
   }
 
@@ -116,6 +130,9 @@ class TransactionModel extends TransactionEntity {
       adoptedFromTag: adoptedFromTag,
       origin: origin,
       importBatchId: importBatchId,
+      installmentGroupId: installmentGroupId,
+      installmentNo: installmentNo,
+      installmentCount: installmentCount,
     );
   }
 
@@ -142,6 +159,9 @@ class TransactionModel extends TransactionEntity {
     String? adoptedFromTag,
     String? origin,
     String? importBatchId,
+    String? installmentGroupId,
+    int? installmentNo,
+    int? installmentCount,
   }) {
     return TransactionModel(
       id: id ?? this.id, // preserve id (önceden id düşüyordu — düzeltildi)
@@ -159,6 +179,9 @@ class TransactionModel extends TransactionEntity {
       adoptedFromTag: adoptedFromTag ?? this.adoptedFromTag,
       origin: origin ?? this.origin,
       importBatchId: importBatchId ?? this.importBatchId,
+      installmentGroupId: installmentGroupId ?? this.installmentGroupId,
+      installmentNo: installmentNo ?? this.installmentNo,
+      installmentCount: installmentCount ?? this.installmentCount,
     );
   }
 
@@ -207,7 +230,8 @@ class TransactionModel extends TransactionEntity {
   String? get reference => super.reference;
 
   // v11 (şema): üçü de nullable — eski kayıtta alan yoktur, `null` okunur.
-  // v13: 14 (`importBatchId`) nullable. Sıradaki serbest alan: 15.
+  // v13: 14 (`importBatchId`) nullable.
+  // v15: 15-17 (taksit grubu) nullable. Sıradaki serbest alan: 18.
 
   @override
   @HiveField(11)
@@ -224,4 +248,16 @@ class TransactionModel extends TransactionEntity {
   @override
   @HiveField(14)
   String? get importBatchId => super.importBatchId;
+
+  @override
+  @HiveField(15)
+  String? get installmentGroupId => super.installmentGroupId;
+
+  @override
+  @HiveField(16)
+  int? get installmentNo => super.installmentNo;
+
+  @override
+  @HiveField(17)
+  int? get installmentCount => super.installmentCount;
 }

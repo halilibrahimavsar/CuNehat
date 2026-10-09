@@ -167,7 +167,12 @@ class DataSerializationService {
   /// aktarımının kimliği — "Son içe aktarımlar" ve sonradan geri alma buna
   /// dayanır). Elle girilmiş kayıtta `null`; v12 yedekleri `_v12ToV13` ile
   /// açıkça `null` alır.
-  static const int schemaVersion = 14;
+  ///
+  /// v15 (2026-10-09): işlemlere taksit grubu (`installmentGroupId`,
+  /// `installmentNo`, `installmentCount`) — kartla taksitli alışverişin
+  /// aylık satırları birbirine bağlı. Taksitsiz kayıtta üçü de `null`; v14
+  /// yedekleri `_v14ToV15` ile açıkça `null` alır.
+  static const int schemaVersion = 15;
 
   final HiveInterface _hive;
   final ReceiptStorageService _receiptStorage;

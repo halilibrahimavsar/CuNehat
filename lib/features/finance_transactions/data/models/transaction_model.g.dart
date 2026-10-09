@@ -32,13 +32,16 @@ class TransactionModelAdapter extends TypeAdapter<TransactionModel> {
       adoptedFromTag: fields[12] as String?,
       origin: fields[13] as String?,
       importBatchId: fields[14] as String?,
+      installmentGroupId: fields[15] as String?,
+      installmentNo: fields[16] as int?,
+      installmentCount: fields[17] as int?,
     );
   }
 
   @override
   void write(BinaryWriter writer, TransactionModel obj) {
     writer
-      ..writeByte(15)
+      ..writeByte(18)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -68,7 +71,13 @@ class TransactionModelAdapter extends TypeAdapter<TransactionModel> {
       ..writeByte(13)
       ..write(obj.origin)
       ..writeByte(14)
-      ..write(obj.importBatchId);
+      ..write(obj.importBatchId)
+      ..writeByte(15)
+      ..write(obj.installmentGroupId)
+      ..writeByte(16)
+      ..write(obj.installmentNo)
+      ..writeByte(17)
+      ..write(obj.installmentCount);
   }
 
   @override

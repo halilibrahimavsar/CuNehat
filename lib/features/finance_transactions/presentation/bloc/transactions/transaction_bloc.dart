@@ -40,6 +40,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     on<AddTransactionsEvent>(_onAddTransactions);
     on<UpdateTransactionEvent>(_onUpdateTransaction);
     on<DeleteTransactionEvent>(_onDeleteTransaction);
+    on<DeleteTransactionsEvent>(_onDeleteTransactions);
 
     // Defter başka bir yerden değişirse (diğer bloc örneği, recurring onayı,
     // import) açık listeyi/grafiği aynı sorguyla tazele.
@@ -270,6 +271,52 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
           },
         );
       },
+    );
+  }
+
+  Future<void> _onDeleteTransactions(
+    DeleteTransactionsEvent event,
+    Emitter<TransactionState> emit,
+  ) async {
+    if (event.transactionIds.isEmpty) return;
+    final currentData = state.currentTransactions;
+    final deleted = <TransactionEntity>[];
+    String? failure;
+    for (final id in event.transactionIds) {
+      final read = await getTransactionByIdUseCase(id);
+      final t = read.fold((_) => null, (t) => t);
+      // Sistem işlemi kayıttan yönetilir; okunamayan satır zaten yok.
+      if (t == null || t.isSystem) continue;
+      final result =
+          await deleteTransactionUseCase(id, keepReceiptFile: true);
+      result.fold((f) => failure ??= f.message, (_) => deleted.add(t));
+    }
+    if (deleted.isEmpty) {
+      emit(TransactionError(
+        'İşlemler silinemedi${failure == null ? '' : ': $failure'}',
+        transactions: currentData,
+      ));
+      return;
+    }
+    final first = deleted.first;
+    final synced = await _safeSyncBalance(first.walletId);
+    final ids = {for (final t in deleted) t.id};
+    emit(TransactionActionSuccess(
+      '${event.label ?? first.title}: ${deleted.length} işlem silindi',
+      transactions: currentData.where((t) => !ids.contains(t.id)).toList(),
+      warning: failure != null
+          ? 'Bazı işlemler silinemedi: $failure'
+          : (synced ? null : _syncWarning),
+      undo: TransactionDeletionUndo(
+        transaction: first,
+        alsoRestore: deleted.skip(1).toList(),
+        userId: first.userId,
+        walletId: first.walletId,
+      ),
+    ));
+    transactionsChangedNotifier.notify(
+      userId: first.userId,
+      walletId: first.walletId,
     );
   }
 

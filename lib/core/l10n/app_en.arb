@@ -3397,5 +3397,11 @@
   "kkBuDonemHarcanan": "Spent this cycle",
   "kkKalanDonemSatiri": "Statement due {amount}",
   "debtCardInstallmentWarn": "Is this a card purchase in installments? Enter it as a card expense: recording it as a debt as well counts the same money twice.",
-  "debtCardInstallmentAction": "Enter as card expense"
+  "debtCardInstallmentAction": "Enter as card expense",
+  "installmentSectionTitle": "Installments · {no}/{count}",
+  "installmentDeleteAll": "Delete all installments ({count})",
+  "installmentThisOne": "this one",
+  "installmentMissingHint": "{missing} installments of this purchase were deleted.",
+  "kkTaksitliAlisverisler": "Ongoing installment purchases",
+  "kkTaksitPlanSatiri": "{left} left · {amount}"
 }

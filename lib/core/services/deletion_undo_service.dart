@@ -51,14 +51,20 @@ sealed class DeletionUndo extends Equatable {
 final class TransactionDeletionUndo extends DeletionUndo {
   final TransactionEntity transaction;
 
+  /// Aynı eylemde silinen DİĞER işlemler (taksit grubunun kalan satırları).
+  /// Geri alma hepsini aynı kimlikleriyle geri yazar; pencere kapanınca
+  /// hepsinin fişi temizlenir.
+  final List<TransactionEntity> alsoRestore;
+
   const TransactionDeletionUndo({
     required this.transaction,
     required super.userId,
     required super.walletId,
+    this.alsoRestore = const <TransactionEntity>[],
   });
 
   @override
-  List<Object?> get props => [transaction, userId, walletId];
+  List<Object?> get props => [transaction, userId, walletId, alsoRestore];
 }
 
 final class DebtDeletionUndo extends DeletionUndo {
@@ -203,21 +209,29 @@ class DeletionUndoService {
   /// unlink tek yönlüdür, geri alınan bir işlem eki kopmuş halde geri dönerdi.
   Future<void> commit(DeletionUndo undo) async {
     if (undo is! TransactionDeletionUndo) return;
-    final receipt = undo.transaction.receiptFileName;
-    if (receipt == null) return;
-    try {
-      await _receiptStorage.delete(receipt);
-    } catch (e) {
-      // Yörünge temizliği asıl silmeyi etkilemez; öksüz dosya kalması
-      // kullanıcıya görünmez ve tam geri yüklemede budanır.
-      debugPrint('Geri alma penceresi kapandı, fiş silinemedi: $e');
+    for (final t in [undo.transaction, ...undo.alsoRestore]) {
+      final receipt = t.receiptFileName;
+      if (receipt == null) continue;
+      try {
+        await _receiptStorage.delete(receipt);
+      } catch (e) {
+        // Yörünge temizliği asıl silmeyi etkilemez; öksüz dosya kalması
+        // kullanıcıya görünmez ve tam geri yüklemede budanır.
+        debugPrint('Geri alma penceresi kapandı, fiş silinemedi: $e');
+      }
     }
   }
 
   Future<bool> _restoreEntity(DeletionUndo undo) async {
     final result = switch (undo) {
-      TransactionDeletionUndo(:final transaction) =>
-        await _addTransaction(transaction),
+      TransactionDeletionUndo(:final transaction, :final alsoRestore) =>
+        await () async {
+          for (final other in alsoRestore) {
+            final r = await _addTransaction(other);
+            if (r.isLeft()) return r;
+          }
+          return _addTransaction(transaction);
+        }(),
       DebtDeletionUndo(:final debt) => await _addDebt(debt),
       ReceivableDeletionUndo(:final receivable) =>
         await _addReceivable(receivable),

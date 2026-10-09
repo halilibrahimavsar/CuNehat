@@ -156,6 +156,27 @@ void main() {
       verify(() => metrics.syncBalance('wallet_1')).called(1);
     });
 
+    test('grup silmede (taksitler) HEPSİ aynı kimlikle geri yazılır', () async {
+      when(() => addTransaction(any()))
+          .thenAnswer((_) async => const Right('x'));
+      final other = transaction.copyWith(id: 'tx_2');
+
+      final ok = await service.restore(TransactionDeletionUndo(
+        transaction: transaction,
+        alsoRestore: [other],
+        userId: 'user_1',
+        walletId: 'wallet_1',
+      ));
+
+      expect(ok, isTrue);
+      final ids = verify(() => addTransaction(captureAny()))
+          .captured
+          .map((t) => (t as TransactionEntity).id)
+          .toSet();
+      expect(ids, {'tx_1', 'tx_2'});
+      verify(() => metrics.syncBalance('wallet_1')).called(1);
+    });
+
     test('geri yazım başarısızsa false döner', () async {
       when(() => addTransaction(any()))
           .thenAnswer((_) async => const Left(CacheFailure('yazılamadı')));

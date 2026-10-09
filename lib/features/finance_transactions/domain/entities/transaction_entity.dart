@@ -89,6 +89,21 @@ class TransactionEntity extends Equatable {
   /// Elle girilen kayıtlarda ve bu alandan önce içe aktarılanlarda `null`.
   final String? importBatchId;
 
+  /// Kartla TAKSİTLİ alışverişin taksitlerini birbirine bağlayan kimlik:
+  /// aynı alışverişin bütün aylık satırları aynı kimliği taşır. Taksitsiz
+  /// kayıtlarda ve bu alandan önce (şema 15) bölünmüş taksitlerde `null` —
+  /// eski taksitler başlıktaki "(k/N)"den TAHMİNLE bağlanmaz.
+  ///
+  /// **Neden:** 6 taksitlik bir alışveriş 6 bağımsız satırdı; "2/6" yalnız
+  /// başlıkta yazıyordu, grup birlikte görülemiyor, silinemiyordu.
+  final String? installmentGroupId;
+
+  /// Bu satırın taksit sırası (1'den başlar) ve alışverişin toplam taksit
+  /// sayısı. AÇIKÇA saklanır: grubun tek bir satırı silinince kalanlar
+  /// "2/5"e kaymasın, alışveriş 6 taksitti.
+  final int? installmentNo;
+  final int? installmentCount;
+
   const TransactionEntity({
     required this.id,
     required this.userId,
@@ -105,7 +120,13 @@ class TransactionEntity extends Equatable {
     this.adoptedFromTag,
     this.origin,
     this.importBatchId,
+    this.installmentGroupId,
+    this.installmentNo,
+    this.installmentCount,
   });
+
+  /// Bir taksit grubunun üyesi mi (bkz. [installmentGroupId])?
+  bool get isInstallment => installmentGroupId != null;
 
   /// Kullanıcının düz satırı bir alan kaydına benimsenmiş mi (bkz.
   /// [adoptedFromTag]).
@@ -127,6 +148,9 @@ class TransactionEntity extends Equatable {
     String? adoptedFromTag,
     String? origin,
     String? importBatchId,
+    String? installmentGroupId,
+    int? installmentNo,
+    int? installmentCount,
   }) {
     return TransactionEntity(
       id: id ?? this.id,
@@ -144,6 +168,9 @@ class TransactionEntity extends Equatable {
       adoptedFromTag: adoptedFromTag ?? this.adoptedFromTag,
       origin: origin ?? this.origin,
       importBatchId: importBatchId ?? this.importBatchId,
+      installmentGroupId: installmentGroupId ?? this.installmentGroupId,
+      installmentNo: installmentNo ?? this.installmentNo,
+      installmentCount: installmentCount ?? this.installmentCount,
     );
   }
 
@@ -165,6 +192,9 @@ class TransactionEntity extends Equatable {
         reference: reference,
         origin: origin,
         importBatchId: importBatchId,
+        installmentGroupId: installmentGroupId,
+        installmentNo: installmentNo,
+        installmentCount: installmentCount,
       );
 
   /// Düzenleme formunun ürettiği kayıt: formun gösterdiği alanlar yeni
@@ -202,6 +232,9 @@ class TransactionEntity extends Equatable {
         adoptedFromTag: adoptedFromTag,
         origin: origin,
         importBatchId: importBatchId,
+        installmentGroupId: installmentGroupId,
+        installmentNo: installmentNo,
+        installmentCount: installmentCount,
       );
 
   /// Banka ekstresinden geldiği KESİN mi? Üç kanıttan biri yeter: banka
@@ -232,6 +265,9 @@ class TransactionEntity extends Equatable {
       'adoptedFromTag': adoptedFromTag,
       'origin': origin,
       'importBatchId': importBatchId,
+      'installmentGroupId': installmentGroupId,
+      'installmentNo': installmentNo,
+      'installmentCount': installmentCount,
     };
   }
 
@@ -252,5 +288,8 @@ class TransactionEntity extends Equatable {
         adoptedFromTag,
         origin,
         importBatchId,
+        installmentGroupId,
+        installmentNo,
+        installmentCount,
       ];
 }

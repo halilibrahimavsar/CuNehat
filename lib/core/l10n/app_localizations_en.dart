@@ -6173,4 +6173,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get debtCardInstallmentAction => 'Enter as card expense';
+
+  @override
+  String installmentSectionTitle(Object no, Object count) {
+    return 'Installments · $no/$count';
+  }
+
+  @override
+  String installmentDeleteAll(Object count) {
+    return 'Delete all installments ($count)';
+  }
+
+  @override
+  String get installmentThisOne => 'this one';
+
+  @override
+  String installmentMissingHint(Object missing) {
+    return '$missing installments of this purchase were deleted.';
+  }
+
+  @override
+  String get kkTaksitliAlisverisler => 'Ongoing installment purchases';
+
+  @override
+  String kkTaksitPlanSatiri(Object left, Object amount) {
+    return '$left left · $amount';
+  }
 }

@@ -497,6 +497,51 @@ void main() {
     );
   });
 
+  group('DeleteTransactionsEvent (taksit grubu)', () {
+    final i1 = testTransaction.copyWith(
+        id: 'i1', title: 'Laptop (1/2)', installmentGroupId: 'g');
+    final i2 = testTransaction.copyWith(
+        id: 'i2', title: 'Laptop (2/2)', installmentGroupId: 'g');
+
+    blocTest<TransactionBloc, TransactionState>(
+      'grubu TEK senkron ve TEK "Geri al" ile siler; sistem satırı atlanır',
+      build: () {
+        when(() => mockGetByIdUseCase('i1')).thenAnswer((_) async => Right(i1));
+        when(() => mockGetByIdUseCase('i2')).thenAnswer((_) async => Right(i2));
+        when(() => mockGetByIdUseCase('tx_sys'))
+            .thenAnswer((_) async => Right(testSystemTransaction));
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockDeleteUseCase(any(),
+                keepReceiptFile: any(named: 'keepReceiptFile')))
+            .thenAnswer((_) async => const Right(null));
+        return transactionBloc;
+      },
+      act: (bloc) => bloc.add(const DeleteTransactionsEvent(
+          ['i1', 'i2', 'tx_sys'],
+          label: 'Laptop')),
+      expect: () => [
+        TransactionActionSuccess(
+          'Laptop: 2 işlem silindi',
+          transactions: const [],
+          undo: TransactionDeletionUndo(
+            transaction: i1,
+            alsoRestore: [i2],
+            userId: 'user_123',
+            walletId: 'wallet_123',
+          ),
+        ),
+      ],
+      verify: (_) {
+        verify(() => mockMetricsService.syncBalance('wallet_123')).called(1);
+        verify(() => mockDeleteUseCase('i1', keepReceiptFile: true)).called(1);
+        verify(() => mockDeleteUseCase('i2', keepReceiptFile: true)).called(1);
+        verifyNever(() => mockDeleteUseCase('tx_sys',
+            keepReceiptFile: any(named: 'keepReceiptFile')));
+      },
+    );
+  });
+
   group('Notifier reactive flow', () {
     test(
         'subscribes to changedNotifier and triggers query reload when notifier fires',

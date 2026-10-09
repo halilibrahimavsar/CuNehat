@@ -6126,4 +6126,30 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get debtCardInstallmentAction => 'Kart harcaması olarak gir';
+
+  @override
+  String installmentSectionTitle(Object no, Object count) {
+    return 'Taksitler · $no/$count';
+  }
+
+  @override
+  String installmentDeleteAll(Object count) {
+    return 'Tüm taksitleri sil ($count)';
+  }
+
+  @override
+  String get installmentThisOne => 'bu taksit';
+
+  @override
+  String installmentMissingHint(Object missing) {
+    return 'Bu alışverişin $missing taksiti silinmiş.';
+  }
+
+  @override
+  String get kkTaksitliAlisverisler => 'Süren taksitli alışverişler';
+
+  @override
+  String kkTaksitPlanSatiri(Object left, Object amount) {
+    return '$left taksit kaldı · $amount';
+  }
 }

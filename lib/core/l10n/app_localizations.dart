@@ -10636,6 +10636,42 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kart harcaması olarak gir'**
   String get debtCardInstallmentAction;
+
+  /// No description provided for @installmentSectionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taksitler · {no}/{count}'**
+  String installmentSectionTitle(Object no, Object count);
+
+  /// No description provided for @installmentDeleteAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm taksitleri sil ({count})'**
+  String installmentDeleteAll(Object count);
+
+  /// No description provided for @installmentThisOne.
+  ///
+  /// In tr, this message translates to:
+  /// **'bu taksit'**
+  String get installmentThisOne;
+
+  /// No description provided for @installmentMissingHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu alışverişin {missing} taksiti silinmiş.'**
+  String installmentMissingHint(Object missing);
+
+  /// No description provided for @kkTaksitliAlisverisler.
+  ///
+  /// In tr, this message translates to:
+  /// **'Süren taksitli alışverişler'**
+  String get kkTaksitliAlisverisler;
+
+  /// No description provided for @kkTaksitPlanSatiri.
+  ///
+  /// In tr, this message translates to:
+  /// **'{left} taksit kaldı · {amount}'**
+  String kkTaksitPlanSatiri(Object left, Object amount);
 }
 
 class _AppLocalizationsDelegate

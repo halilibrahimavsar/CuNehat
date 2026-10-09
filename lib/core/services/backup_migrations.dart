@@ -36,6 +36,7 @@ const Map<int, BackupMigration> backupMigrations = {
   11: _v11ToV12,
   12: _v12ToV13,
   13: _v13ToV14,
+  14: _v14ToV15,
 };
 
 /// [raw]'ı [targetVersion]'a yükseltir.
@@ -164,3 +165,30 @@ Map<String, dynamic> _v13ToV14(Map<String, dynamic> raw) => {
       ...raw,
       'version': 14,
     };
+
+/// v14 → v15: işlemlere taksit grubu (`installmentGroupId`, `installmentNo`,
+/// `installmentCount`).
+///
+/// v14'te kartla taksitli alışverişin aylık satırları birbirine bağlı
+/// değildi ("(2/6)" yalnız başlıkta). `null` tam olarak bunu söyler: eski
+/// taksitler bağsız kalır, başlıktan TAHMİN edilip bağlanmaz (kullanıcının
+/// başlığı düzenlemiş olabileceği satırı yanlış gruba bağlamak, bağsız
+/// bırakmaktan kötüdür).
+///
+/// Alanlar AÇIKÇA yazılıyor (bkz. `_v12ToV13`).
+Map<String, dynamic> _v14ToV15(Map<String, dynamic> raw) {
+  final transactions = (raw['transactions'] as List?) ?? const [];
+  return {
+    ...raw,
+    'version': 15,
+    'transactions': [
+      for (final t in transactions)
+        {
+          ...Map<String, dynamic>.from(t as Map),
+          'installmentGroupId': null,
+          'installmentNo': null,
+          'installmentCount': null,
+        },
+    ],
+  };
+}

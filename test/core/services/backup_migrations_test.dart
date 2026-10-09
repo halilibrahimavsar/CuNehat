@@ -332,6 +332,59 @@ void main() {
     });
   });
 
+  group('v14 → v15 (taksit grubu)', () {
+    Map<String, dynamic> v14Backup() => {
+          'version': 14,
+          'timestamp': '2026-10-01T10:00:00.000',
+          'transactions': [
+            {'id': 't1', 'title': 'Laptop (1/6)', 'importBatchId': null},
+            {'id': 't2', 'title': 'Market', 'importBatchId': 'b1'},
+          ],
+          'wallets': [
+            {'id': 'w1'},
+          ],
+          'users': <String, dynamic>{},
+        };
+
+    test('her işleme üç alan AÇIKÇA null yazılır; başlıktan tahmin YOK', () {
+      final result = migrateBackup(v14Backup(), targetVersion: 15);
+      expect(result['version'], 15);
+      final txs =
+          (result['transactions'] as List).cast<Map<String, dynamic>>();
+      for (final t in txs) {
+        expect(t, containsPair('installmentGroupId', null));
+        expect(t, containsPair('installmentNo', null));
+        expect(t, containsPair('installmentCount', null));
+      }
+      expect(txs.map((t) => t['importBatchId']), [null, 'b1']);
+    });
+
+    test('dönüşüm SAFTIR; işlem dışına dokunulmaz', () {
+      final source = v14Backup();
+      final result = migrateBackup(source, targetVersion: 15);
+      expect(result['wallets'], source['wallets']);
+      expect(source['version'], 14);
+      expect((source['transactions'] as List).first,
+          isNot(contains('installmentGroupId')));
+    });
+
+    test('işlem listesi yoksa çökmez', () {
+      final result = migrateBackup(
+        {'version': 14, 'users': <String, dynamic>{}},
+        targetVersion: 15,
+      );
+      expect(result['transactions'], isEmpty);
+    });
+
+    test('v9 yedeği altı adımda güncele yükselir', () {
+      final result = migrateBackup(v9Backup(), targetVersion: 15);
+      expect(result['version'], 15);
+      final tx = (result['transactions'] as List).first as Map;
+      expect(tx, containsPair('importBatchId', null));
+      expect(tx, containsPair('installmentGroupId', null));
+    });
+  });
+
   group('zincir bütünlüğü', () {
     test('desteklenen en eskiden güncele kadar HER adım tanımlı', () {
       // Zincirde bir boşluk kalırsa (ör. v11 eklenip 10→11 yazılmazsa) o

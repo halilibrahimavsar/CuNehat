@@ -72,3 +72,18 @@ class DeleteTransactionEvent extends TransactionEvent {
   @override
   List<Object> get props => [transactionId];
 }
+
+/// Birden çok işlemi TEK eylemde siler (taksit grubu): tek bakiye senkronu,
+/// tek bildirim, tek "Geri al" (hepsini geri getirir). Sistem işlemleri
+/// atlanır.
+class DeleteTransactionsEvent extends TransactionEvent {
+  final List<String> transactionIds;
+
+  /// Mesajda görünen ad ("Laptop"); verilmezse ilk satırın başlığı.
+  final String? label;
+
+  const DeleteTransactionsEvent(this.transactionIds, {this.label});
+
+  @override
+  List<Object?> get props => [transactionIds, label];
+}

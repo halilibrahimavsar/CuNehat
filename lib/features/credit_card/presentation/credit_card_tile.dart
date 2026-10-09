@@ -8,6 +8,7 @@ import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/credit_card/presentation/card_pay_sheet.dart';
+import 'package:cunehat/features/finance_transactions/domain/installments.dart';
 import 'package:cunehat/features/credit_card/presentation/card_statement_sheet.dart';
 import 'package:cunehat/features/credit_card/presentation/card_status.dart';
 import 'package:cunehat/features/credit_card/presentation/credit_card_setup_sheet.dart';
@@ -156,6 +157,23 @@ class CreditCardTile extends StatelessWidget {
           if (status.futureInstallments > 0)
             _row(
                 context, l10n.kkKalanTaksit, _money(status.futureInstallments)),
+          // Kalan taksitlerin hangi alışverişlerden geldiği: eskiden yalnız
+          // tek bir toplam vardı ("Kalan taksitler 4.000 ₺ — neyin?").
+          if (status.installmentPlans.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(l10n.kkTaksitliAlisverisler,
+                style: theme.textTheme.labelMedium
+                    ?.copyWith(fontWeight: FontWeight.w700)),
+            for (final plan in status.installmentPlans)
+              _row(
+                context,
+                installmentBaseTitle(plan.items.first.title),
+                l10n.kkTaksitPlanSatiri(
+                  plan.left,
+                  _money(plan.remaining),
+                ),
+              ),
+          ],
           _row(
             context,
             l10n.kkSonrakiKesimEtiket,

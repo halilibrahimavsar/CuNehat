@@ -501,6 +501,88 @@ void main() {
         .called(1);
   });
 
+  testWidgets(
+      'taksit satırında grup listelenir; "Tüm taksitleri sil" grubu TEK '
+      'olayla siler', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 3000);
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(tester.view.reset);
+    final rows = [
+      for (var k = 1; k <= 3; k++)
+        TransactionEntity(
+          id: 'i$k',
+          userId: 'user_123',
+          walletId: 'wallet_123',
+          title: 'Laptop ($k/3)',
+          tag: 'Food',
+          amount: 1000,
+          date: DateTime(2026, 5 + k, 10),
+          type: TransactionTypeModel.expense,
+          installmentGroupId: 'g1',
+          installmentNo: k,
+          installmentCount: 3,
+        ),
+    ];
+    final unrelated = TransactionEntity(
+      id: 'x',
+      userId: 'user_123',
+      walletId: 'wallet_123',
+      title: 'Market',
+      tag: 'Food',
+      amount: 50,
+      date: DateTime(2026, 6, 1),
+      type: TransactionTypeModel.expense,
+    );
+    when(() => mockTransactionBloc.state).thenReturn(TransactionLoaded(
+      groupedTransactions: const {},
+      allTransactions: [...rows, unrelated],
+    ));
+
+    await tester.pumpWidget(buildTestableWidget(SingleTransactionDetailPage(
+      item: TransactionWithBalance(transaction: rows[1], balanceAfter: 0),
+      heroTag: 'hero_i2',
+    )));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('installment-group')), findsOneWidget);
+    expect(find.text('Taksitler · 2/3'), findsOneWidget);
+    expect(find.text('1/3'), findsOneWidget);
+    expect(find.text('3/3'), findsOneWidget);
+
+    final deleteAll = find.byKey(const ValueKey('installment-delete-all'));
+    await tester.ensureVisible(deleteAll);
+    await tester.tap(deleteAll);
+    await tester.pumpAndSettle();
+
+    verify(() => mockTransactionBloc.add(const DeleteTransactionsEvent(
+          ['i1', 'i2', 'i3'],
+          label: 'Laptop',
+        ))).called(1);
+  });
+
+  testWidgets('taksitsiz işlemde grup kartı YOK', (WidgetTester tester) async {
+    final tx = TransactionEntity(
+      id: 'tx_1',
+      userId: 'user_123',
+      walletId: 'wallet_123',
+      title: 'Market',
+      tag: 'Food',
+      amount: 50,
+      date: DateTime(2026, 6, 1),
+      type: TransactionTypeModel.expense,
+    );
+    when(() => mockTransactionBloc.state).thenReturn(TransactionLoaded(
+      groupedTransactions: const {},
+      allTransactions: [tx],
+    ));
+    await tester.pumpWidget(buildTestableWidget(SingleTransactionDetailPage(
+      item: TransactionWithBalance(transaction: tx, balanceAfter: 0),
+      heroTag: 'hero_tx_1',
+    )));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('installment-group')), findsNothing);
+  });
+
   group('canlı defter senkronizasyonu (regresyon)', () {
     final now = DateTime(2026, 6, 13, 14, 30);
     final tx = TransactionEntity(

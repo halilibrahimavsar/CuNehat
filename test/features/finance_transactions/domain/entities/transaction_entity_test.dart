@@ -100,6 +100,9 @@ void main() {
         'adoptedFromTag': null,
         'origin': null,
         'importBatchId': null,
+        'installmentGroupId': null,
+        'installmentNo': null,
+        'installmentCount': null,
       });
     });
 

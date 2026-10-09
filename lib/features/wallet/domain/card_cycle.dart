@@ -1,5 +1,6 @@
 import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/installments.dart';
 import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
 
 /// Kredi kartı dönem hesabı — SAF fonksiyonlar (tarih kuralları + defterden
@@ -131,6 +132,11 @@ class CardStatus {
   /// Bugünden SONRA tarihlenmiş giderler (kalan taksitler).
   final double futureInstallments;
 
+  /// [futureInstallments]'ın kaynağı: süren taksitli alışverişler (grubu
+  /// bilinenler; şema 15'ten önce bölünmüş taksitler bağsız olduğu için
+  /// burada görünmez ama toplamda sayılır).
+  final List<InstallmentPlan> installmentPlans;
+
   /// Son ödemeye kalan gün (negatif = gecikti).
   final int daysToDue;
 
@@ -147,6 +153,7 @@ class CardStatus {
     required this.availableLimit,
     required this.futureInstallments,
     required this.daysToDue,
+    this.installmentPlans = const [],
   });
 
   /// Bu kesimin dönem borcu: bankanın beyanı varsa o (bankanın sayısı
@@ -241,5 +248,6 @@ CardStatus computeCardStatus({
     availableLimit: limit == null ? null : roundToCents(limit - currentDebt),
     futureInstallments: roundToCents(future),
     daysToDue: CardCycle.daysBetween(day, due),
+    installmentPlans: activeInstallmentPlans(ledger, today: day),
   );
 }

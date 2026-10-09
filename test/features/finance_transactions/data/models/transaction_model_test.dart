@@ -78,6 +78,10 @@ void main() {
         'origin': null,
         // v13
         'importBatchId': null,
+        // v15
+        'installmentGroupId': null,
+        'installmentNo': null,
+        'installmentCount': null,
       });
     });
 
@@ -157,6 +161,39 @@ void main() {
               .importBatchId,
           model.importBatchId);
       expect(model.released().importBatchId, model.importBatchId);
+    });
+
+    test('v15 taksit grubu JSON/varlık gidiş-dönüşünde ve düzenlemede korunur',
+        () {
+      final model = TransactionModel(
+        id: 'tx_11',
+        userId: 'user_1',
+        walletId: 'card',
+        title: 'Laptop (2/6)',
+        tag: 'cat-tech',
+        amount: 5000,
+        date: date,
+        type: TransactionTypeModel.expense,
+        installmentGroupId: 'g-1',
+        installmentNo: 2,
+        installmentCount: 6,
+      );
+      final back = TransactionModel.fromJson('tx_11', model.toJson());
+      expect(back, model);
+      expect(TransactionModel.fromEntity(model.toEntity()), model);
+      // Düzenleme formu grubu DÜŞÜRMEZ (yalnız bu taksitin tutarı değişse
+      // de satır gruptan kopmamalı).
+      final edited = model.edited(
+        title: 'Laptop (2/6)',
+        tag: 'cat-tech',
+        amount: 4999,
+        date: date,
+        type: TransactionTypeModel.expense,
+        receiptFileName: null,
+      );
+      expect(edited.installmentGroupId, 'g-1');
+      expect(edited.installmentNo, 2);
+      expect(edited.installmentCount, 6);
     });
 
     test('v12 JSON\'u (anahtar yok) partisiz okunur', () {
