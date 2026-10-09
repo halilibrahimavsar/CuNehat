@@ -19,6 +19,7 @@ import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_managment.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unified_flutter_features/features/amount_visibility/ibo_amount_display.dart';
@@ -222,7 +223,10 @@ class _AppBarContentState extends State<AppBarContent> {
               : active.balance;
           valueName = upperTr(context.l10n.drawerBalance);
         case SliderState.debt:
-          value = account.debt;
+          // Kredi/kişisel borç + bağlı kartların borcu (bkz. [debtOverview]).
+          // Eskiden yalnız modül sayılıyordu: kart borcu olan kullanıcı
+          // Borç sekmesinde "0,00 ₺" görüyordu.
+          value = debtOverview(account, state.wallets).total;
           valueName = upperTr(context.l10n.drawerDebt);
       }
     }
@@ -299,6 +303,17 @@ class _AppBarContentState extends State<AppBarContent> {
           secondaryLine: line,
         );
     final fxLine = _tryEquivalentLine(context, state, st, value);
+    // Borç sekmesinde toplamın kaynağı: "krediler X · kartlar Y". Yalnız
+    // kart borcu varken; yoksa toplam zaten tek kaynaktır.
+    if (st == SliderState.debt && account != null) {
+      final o = debtOverview(account, state.wallets);
+      if (moneyIsPositive(o.cards)) {
+        return build(context.l10n.debtBreakdownLine(
+          formatMoney(o.loans, currency: account.currency),
+          formatMoney(o.cards, currency: account.currency),
+        ));
+      }
+    }
     if (!FeatureFlags.creditCards ||
         st != SliderState.transactions ||
         shown == null) {

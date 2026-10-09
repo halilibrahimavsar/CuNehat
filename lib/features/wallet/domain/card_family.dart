@@ -17,6 +17,7 @@
 /// cüzdana bağlamayı önerir. Veri kaybı yok, yalnız gösterim farkı.
 library;
 
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 
 /// Kartın sahibi olan (kart olmayan) cüzdan; yetim kartta ve düz cüzdanda
@@ -74,17 +75,65 @@ String familyLabel(WalletEntity wallet, Iterable<WalletEntity> all) {
   return owner == null ? wallet.name : '${owner.name} › ${wallet.name}';
 }
 
-/// Kartı olan kullanıcıda TL cinsinden net kırılım: hesaplar (kart olmayan
-/// cüzdanlar) − kart borçları. Genel toplam eskiden kart cüzdanlarının eksi
-/// bakiyesini SESSİZCE düşüyordu. Kart yoksa ya da bir kur eksikse `null`
-/// (yanıltıcı eksik toplam göstermeyiz). TL için kur sorulmaz.
-({double net, double accounts, double cardDebt})? netBreakdown(
+/// Bir hesabın BÜTÜN borcu, kaynağına göre: borç modülündeki kayıtlar
+/// ([WalletEntity.debt] — kredi, kişisel borç) + bağlı kartların bugünkü
+/// borcu (kart cüzdanının eksi bakiyesi; gelecek tarihli taksitler dahil,
+/// bankanın "güncel borç"u gibi).
+///
+/// **Neden:** borç iki yerde tutuluyor ve birbirinden habersizdi. Bonus
+/// kartında 1.200 ₺ borcu olan kullanıcı Borç sekmesinde, çekmecede ve
+/// cüzdan kartında "Borç 0,00 ₺" görüyordu; üçü de yalnız modülü sayıyordu.
+///
+/// [wallet] bağlı bir kartsa sahibinin ailesi hesaplanır (Borç sekmesi
+/// kartın değil sahibinin verisidir). Yetim kart kendi borcunu taşır.
+/// Sahibinden farklı birimdeki kartlar toplanmaz: tutar tek birimde yazılır.
+({double loans, double cards, double total}) debtOverview(
+  WalletEntity wallet,
+  Iterable<WalletEntity> all,
+) {
+  final account = accountOf(wallet, all);
+  final family = account.isCreditCard ? [account] : cardsOf(account.id, all);
+  var cards = 0.0;
+  for (final c in family) {
+    if (c.currency == account.currency && c.balance < 0) cards -= c.balance;
+  }
+  final loans = account.isCreditCard ? 0.0 : account.debt;
+  final roundedCards = roundToCents(cards);
+  return (
+    loans: loans,
+    cards: roundedCards,
+    total: roundToCents(loans + roundedCards),
+  );
+}
+
+/// TL cinsinden NET değer kırılımı: hesaplar − kart borçları − kalan
+/// kredi/kişisel borçlar + alacaklar. Birikim (yatırım) ayrı tutulur.
+///
+/// **Neden borç modülü de düşülüyor:** kredinin ana parası hesaba GELİR
+/// olarak girer; net yalnız kart borcunu düşerken kredisi olan kullanıcının
+/// neti, çektiği kredi kadar şişik görünüyordu.
+///
+/// Düşülecek ya da eklenecek hiçbir şey yoksa (kart, borç, alacak yok)
+/// `null`: kırılım hesap toplamını tekrar etmekten ibaret olurdu. Bir kur
+/// eksikse de `null` — yanıltıcı eksik toplam göstermeyiz. TL için kur
+/// sorulmaz.
+({
+  double net,
+  double accounts,
+  double cardDebt,
+  double loans,
+  double receivables,
+})? netBreakdown(
   Iterable<WalletEntity> wallets, {
   required double? Function(String currency) rateToTry,
 }) {
-  if (!wallets.any((w) => w.isCreditCard)) return null;
+  final relevant = wallets.any((w) =>
+      w.isCreditCard || moneyIsPositive(w.debt) || moneyIsPositive(w.credit));
+  if (!relevant) return null;
   var accounts = 0.0;
   var cardDebt = 0.0;
+  var loans = 0.0;
+  var receivables = 0.0;
   for (final w in wallets) {
     final rate = w.currency == 'TRY' ? 1.0 : rateToTry(w.currency);
     if (rate == null) return null;
@@ -93,6 +142,14 @@ String familyLabel(WalletEntity wallet, Iterable<WalletEntity> all) {
     } else {
       accounts += w.balance * rate;
     }
+    loans += w.debt * rate;
+    receivables += w.credit * rate;
   }
-  return (net: accounts - cardDebt, accounts: accounts, cardDebt: cardDebt);
+  return (
+    net: roundToCents(accounts - cardDebt - loans + receivables),
+    accounts: roundToCents(accounts),
+    cardDebt: roundToCents(cardDebt),
+    loans: roundToCents(loans),
+    receivables: roundToCents(receivables),
+  );
 }

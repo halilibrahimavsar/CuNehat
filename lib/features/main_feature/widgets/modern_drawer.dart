@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
@@ -648,7 +649,8 @@ class _ModernDrawerState extends State<ModernDrawer>
                     Expanded(
                       child: _buildMetricChip(
                         label: context.l10n.drawerDebt,
-                        amount: wallet.debt,
+                        // Krediler + bağlı kartların borcu (bkz. debtOverview).
+                        amount: debtOverview(wallet, context.allWallets).total,
                         currencyCode: wallet.currency,
                         icon: Icons.credit_card_off_rounded,
                         accentColor: const Color(0xFFE63946),

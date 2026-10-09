@@ -20,6 +20,7 @@ import 'package:cunehat/core/shared/widgets/error_view.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
@@ -100,20 +101,28 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
     return total;
   }
 
-  /// Kart borcu olan kullanıcıda TL cinsinden net kırılım: hesaplar (kart
-  /// olmayan cüzdanlar) − kart borçları. Genel toplam eskiden kart
-  /// cüzdanlarının eksi bakiyesini SESSİZCE düşüyordu. Kart yoksa ya da bir
-  /// kur eksikse `null` (yanıltıcı eksik toplam göstermeyiz).
-  ({double net, double accounts, double cardDebt})? _netBreakdownFor(
-          WalletState state) =>
-      FeatureFlags.creditCards && state is WalletLoadedSt
-          ? _netBreakdown(state.wallets)
-          : null;
-
-  ({double net, double accounts, double cardDebt})? _netBreakdown(
-          List<WalletEntity> wallets) =>
-      netBreakdown(wallets,
-          rateToTry: getIt<ExchangeRateService>().cachedRateToTry);
+  /// NET değer kırılımı (TL): hesaplar − kart borcu − kredi/kişisel borç +
+  /// alacak (bkz. [netBreakdown]). Düşülecek bir şey yoksa ya da bir kur
+  /// eksikse `null` (yanıltıcı eksik toplam göstermeyiz).
+  ///
+  /// Bayrağa bağlı DEĞİL: kredi ve alacak her sürümde var; kart kalemi
+  /// yalnız kart varken yazılır.
+  String? _netLine(BuildContext context, WalletState state) {
+    if (state is! WalletLoadedSt) return null;
+    final b = netBreakdown(state.wallets,
+        rateToTry: getIt<ExchangeRateService>().cachedRateToTry);
+    if (b == null) return null;
+    final l10n = context.l10n;
+    return [
+      l10n.netWorthHead(formatMoney(b.net)),
+      l10n.netPartAccounts(formatMoney(b.accounts)),
+      if (moneyIsPositive(b.cardDebt))
+        l10n.netPartCards(formatMoney(b.cardDebt)),
+      if (moneyIsPositive(b.loans)) l10n.netPartLoans(formatMoney(b.loans)),
+      if (moneyIsPositive(b.receivables))
+        l10n.netPartReceivables(formatMoney(b.receivables)),
+    ].join(' · ');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -256,18 +265,14 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      // Kartı olan kullanıcıda NET kırılım (hesaplar − kart
-                      // borçları); döviz cüzdanı varsa ve tüm kurlar
+                      // NET kırılım (hesaplar − kart borcu − krediler +
+                      // alacaklar); döviz cüzdanı varsa ve tüm kurlar
                       // biliniyorsa TL toplamı; aksi halde standart alt başlık.
-                      if (_netBreakdownFor(state) case final b?)
+                      if (_netLine(context, state) case final line?)
                         Text(
-                          context.l10n.kkNetKirilim(
-                            formatMoney(b.net),
-                            formatMoney(b.accounts),
-                            formatMoney(b.cardDebt),
-                          ),
+                          line,
                           key: const ValueKey('wallet-net-breakdown'),
-                          maxLines: 2,
+                          maxLines: 3,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,

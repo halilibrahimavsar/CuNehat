@@ -5167,11 +5167,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get kkKalanAsgari => 'Kalan asgari';
 
   @override
-  String kkSonOdeme(String date) {
-    return 'Son ödeme: $date';
-  }
-
-  @override
   String kkGunKaldi(int days) {
     return '$days gün kaldı';
   }
@@ -5372,11 +5367,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get kkOncekiEkstre => 'Önceki ekstre';
-
-  @override
-  String kkNetKirilim(String net, String accounts, String cards) {
-    return 'Net $net · hesaplar $accounts · kart borcu $cards';
-  }
 
   @override
   String get kkDahaFazlaAyrinti =>
@@ -6075,4 +6065,65 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get reportTrendThisPeriod => 'Bu dönem';
+
+  @override
+  String netWorthHead(Object amount) {
+    return 'Net $amount';
+  }
+
+  @override
+  String netPartAccounts(Object amount) {
+    return 'hesaplar $amount';
+  }
+
+  @override
+  String netPartCards(Object amount) {
+    return 'kart borcu $amount';
+  }
+
+  @override
+  String netPartLoans(Object amount) {
+    return 'krediler $amount';
+  }
+
+  @override
+  String netPartReceivables(Object amount) {
+    return 'alacaklar $amount';
+  }
+
+  @override
+  String debtBreakdownLine(Object loans, Object cards) {
+    return 'krediler $loans · kartlar $cards';
+  }
+
+  @override
+  String get debtCardsSectionHint =>
+      'Kart borcu kartın kendi kayıtlarından gelir. Harcamalar ve ayarlar kartın içinde.';
+
+  @override
+  String get debtLoansSectionTitle => 'Krediler ve kişisel borçlar';
+
+  @override
+  String get debtLoansEmptyCompact => 'Kayıtlı kredi ya da kişisel borç yok.';
+
+  @override
+  String get kkGuncelBorcKisa => 'Güncel borç';
+
+  @override
+  String get kkEkstreOdendi => 'Ekstre ödendi';
+
+  @override
+  String get kkBuDonemHarcanan => 'Bu dönem harcanan';
+
+  @override
+  String kkKalanDonemSatiri(Object amount) {
+    return 'Kalan dönem borcu $amount';
+  }
+
+  @override
+  String get debtCardInstallmentWarn =>
+      'Kartla taksitli bir alışveriş mi? Onu kartın harcaması olarak gir: borç olarak da girilirse aynı para iki kez sayılır.';
+
+  @override
+  String get debtCardInstallmentAction => 'Kart harcaması olarak gir';
 }

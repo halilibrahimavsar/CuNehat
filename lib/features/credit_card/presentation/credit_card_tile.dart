@@ -18,7 +18,12 @@ import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 
 /// Son ödeme çipi: "5 gün kaldı" / "Son gün bugün" / "3 gün gecikti" /
-/// ödendiyse "Son ödeme: 14.10.2026". Son 3 gün turuncu, gecikme kırmızı.
+/// ödenecek bir şey kalmadıysa "Sonraki kesim: 15.10.2026". Son 3 gün
+/// turuncu, gecikme kırmızı.
+///
+/// Ödenmiş dönemde eskiden "Son ödeme: 25.09" yazıyordu: 9 Ekim'de geçmiş
+/// bir tarih, kullanıcıya bir şey kaçırmış gibi okunuyordu. Ödeme bittiyse
+/// sıradaki olay bir sonraki kesimdir.
 class CardDueChip extends StatelessWidget {
   final CardStatus status;
 
@@ -31,7 +36,7 @@ class CardDueChip extends StatelessWidget {
     final s = status;
     final paid = !s.isOverdue && s.remainingStatementDebt <= 0;
     final text = paid
-        ? l10n.kkSonOdeme(AppFormatters.dateShort.format(s.dueDate))
+        ? l10n.kkSonrakiKesim(AppFormatters.dateShort.format(s.nextClosing))
         : s.daysToDue > 0
             ? l10n.kkGunKaldi(s.daysToDue)
             : s.daysToDue == 0

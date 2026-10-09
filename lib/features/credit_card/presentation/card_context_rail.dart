@@ -10,6 +10,7 @@ import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/credit_card/presentation/card_pay_sheet.dart';
 import 'package:cunehat/features/credit_card/presentation/card_statement_sheet.dart';
 import 'package:cunehat/features/credit_card/presentation/card_status.dart';
@@ -263,6 +264,19 @@ class _CardStrip extends StatelessWidget {
                 final guessed = status != null &&
                     status.declared == null &&
                     !status.derivedReliable;
+                // Ekstre ödendiyse (ve tahmin değilse) "Kalan dönem borcu
+                // 0,00" yerine bir sonraki ekstreye girecek harcama yazılır.
+                // Başlıktaki "BORÇ 1.200" ile şeritteki "0,00" yan yana iki
+                // açıklamasız borç sayısıydı; şimdi biri toplam, öbürü bu
+                // dönemin harcaması.
+                final cycleView = status != null &&
+                    !guessed &&
+                    !moneyIsPositive(status.remainingStatementDebt);
+                final shownAmount = status == null
+                    ? null
+                    : cycleView
+                        ? status.spentSinceClosing
+                        : status.remainingStatementDebt;
                 return Row(
                   children: [
                     Expanded(
@@ -271,7 +285,9 @@ class _CardStrip extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            l10n.kkKalanDonemBorcu,
+                            cycleView
+                                ? l10n.kkBuDonemHarcanan
+                                : l10n.kkKalanDonemBorcu,
                             style: TextStyle(
                               fontSize: 11,
                               color: cs.onSurfaceVariant,
@@ -285,9 +301,9 @@ class _CardStrip extends StatelessWidget {
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               Text(
-                                status == null
+                                shownAmount == null
                                     ? '…'
-                                    : '${guessed ? '≈ ' : ''}${MoneyWriter(currency: card.currency, visible: context.amountsVisible)(status.remainingStatementDebt)}',
+                                    : '${guessed ? '≈ ' : ''}${MoneyWriter(currency: card.currency, visible: context.amountsVisible)(shownAmount)}',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(

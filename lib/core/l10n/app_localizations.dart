@@ -9101,12 +9101,6 @@ abstract class AppLocalizations {
   /// **'Kalan asgari'**
   String get kkKalanAsgari;
 
-  /// No description provided for @kkSonOdeme.
-  ///
-  /// In tr, this message translates to:
-  /// **'Son ödeme: {date}'**
-  String kkSonOdeme(String date);
-
   /// No description provided for @kkGunKaldi.
   ///
   /// In tr, this message translates to:
@@ -9436,12 +9430,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Önceki ekstre'**
   String get kkOncekiEkstre;
-
-  /// No description provided for @kkNetKirilim.
-  ///
-  /// In tr, this message translates to:
-  /// **'Net {net} · hesaplar {accounts} · kart borcu {cards}'**
-  String kkNetKirilim(String net, String accounts, String cards);
 
   /// No description provided for @kkDahaFazlaAyrinti.
   ///
@@ -10558,6 +10546,96 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bu dönem'**
   String get reportTrendThisPeriod;
+
+  /// No description provided for @netWorthHead.
+  ///
+  /// In tr, this message translates to:
+  /// **'Net {amount}'**
+  String netWorthHead(Object amount);
+
+  /// No description provided for @netPartAccounts.
+  ///
+  /// In tr, this message translates to:
+  /// **'hesaplar {amount}'**
+  String netPartAccounts(Object amount);
+
+  /// No description provided for @netPartCards.
+  ///
+  /// In tr, this message translates to:
+  /// **'kart borcu {amount}'**
+  String netPartCards(Object amount);
+
+  /// No description provided for @netPartLoans.
+  ///
+  /// In tr, this message translates to:
+  /// **'krediler {amount}'**
+  String netPartLoans(Object amount);
+
+  /// No description provided for @netPartReceivables.
+  ///
+  /// In tr, this message translates to:
+  /// **'alacaklar {amount}'**
+  String netPartReceivables(Object amount);
+
+  /// No description provided for @debtBreakdownLine.
+  ///
+  /// In tr, this message translates to:
+  /// **'krediler {loans} · kartlar {cards}'**
+  String debtBreakdownLine(Object loans, Object cards);
+
+  /// No description provided for @debtCardsSectionHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart borcu kartın kendi kayıtlarından gelir. Harcamalar ve ayarlar kartın içinde.'**
+  String get debtCardsSectionHint;
+
+  /// No description provided for @debtLoansSectionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Krediler ve kişisel borçlar'**
+  String get debtLoansSectionTitle;
+
+  /// No description provided for @debtLoansEmptyCompact.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıtlı kredi ya da kişisel borç yok.'**
+  String get debtLoansEmptyCompact;
+
+  /// No description provided for @kkGuncelBorcKisa.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güncel borç'**
+  String get kkGuncelBorcKisa;
+
+  /// No description provided for @kkEkstreOdendi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekstre ödendi'**
+  String get kkEkstreOdendi;
+
+  /// No description provided for @kkBuDonemHarcanan.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu dönem harcanan'**
+  String get kkBuDonemHarcanan;
+
+  /// No description provided for @kkKalanDonemSatiri.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalan dönem borcu {amount}'**
+  String kkKalanDonemSatiri(Object amount);
+
+  /// No description provided for @debtCardInstallmentWarn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartla taksitli bir alışveriş mi? Onu kartın harcaması olarak gir: borç olarak da girilirse aynı para iki kez sayılır.'**
+  String get debtCardInstallmentWarn;
+
+  /// No description provided for @debtCardInstallmentAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart harcaması olarak gir'**
+  String get debtCardInstallmentAction;
 }
 
 class _AppLocalizationsDelegate

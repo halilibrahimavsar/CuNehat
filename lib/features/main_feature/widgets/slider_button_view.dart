@@ -349,6 +349,17 @@ class _SliderButtonViewState extends State<SliderButtonView> {
         userId: activeWallet.userId,
         currency: activeWallet.currency,
         initialIsDebt: isDebt,
+        // Kartla taksitli alışveriş borç olarak girilmesin: gider formu
+        // kartta (taksit seçicisiyle) bu bağlamın bloc'larıyla açılır.
+        onEnterAsCardExpense: (card) {
+          Navigator.pop(sheetContext);
+          TransactionSheetHandler.showSheet(
+            context: context,
+            userId: userId,
+            walletId: card.id!,
+            type: TransactionTypeModel.expense,
+          );
+        },
       ),
     );
   }

@@ -2781,14 +2781,6 @@
   "kkAsgariOdeme": "Asgari ödeme",
   "kkKalanDonemBorcu": "Kalan dönem borcu",
   "kkKalanAsgari": "Kalan asgari",
-  "kkSonOdeme": "Son ödeme: {date}",
-  "@kkSonOdeme": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
   "kkGunKaldi": "{days} gün kaldı",
   "@kkGunKaldi": {
     "placeholders": {
@@ -2950,20 +2942,6 @@
   "@kkEkstreDonemEtiketi": {
     "placeholders": {
       "range": {
-        "type": "String"
-      }
-    }
-  },
-  "kkNetKirilim": "Net {net} · hesaplar {accounts} · kart borcu {cards}",
-  "@kkNetKirilim": {
-    "placeholders": {
-      "net": {
-        "type": "String"
-      },
-      "accounts": {
-        "type": "String"
-      },
-      "cards": {
         "type": "String"
       }
     }
@@ -3575,5 +3553,56 @@
       "name": {}
     }
   },
-  "reportTrendThisPeriod": "Bu dönem"
+  "reportTrendThisPeriod": "Bu dönem",
+  "netWorthHead": "Net {amount}",
+  "@netWorthHead": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "netPartAccounts": "hesaplar {amount}",
+  "@netPartAccounts": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "netPartCards": "kart borcu {amount}",
+  "@netPartCards": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "netPartLoans": "krediler {amount}",
+  "@netPartLoans": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "netPartReceivables": "alacaklar {amount}",
+  "@netPartReceivables": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "debtBreakdownLine": "krediler {loans} · kartlar {cards}",
+  "@debtBreakdownLine": {
+    "placeholders": {
+      "loans": {},
+      "cards": {}
+    }
+  },
+  "debtCardsSectionHint": "Kart borcu kartın kendi kayıtlarından gelir. Harcamalar ve ayarlar kartın içinde.",
+  "debtLoansSectionTitle": "Krediler ve kişisel borçlar",
+  "debtLoansEmptyCompact": "Kayıtlı kredi ya da kişisel borç yok.",
+  "kkGuncelBorcKisa": "Güncel borç",
+  "kkEkstreOdendi": "Ekstre ödendi",
+  "kkBuDonemHarcanan": "Bu dönem harcanan",
+  "kkKalanDonemSatiri": "Kalan dönem borcu {amount}",
+  "@kkKalanDonemSatiri": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "debtCardInstallmentWarn": "Kartla taksitli bir alışveriş mi? Onu kartın harcaması olarak gir: borç olarak da girilirse aynı para iki kez sayılır.",
+  "debtCardInstallmentAction": "Kart harcaması olarak gir"
 }

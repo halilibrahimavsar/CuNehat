@@ -5200,11 +5200,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kkKalanAsgari => 'Remaining minimum';
 
   @override
-  String kkSonOdeme(String date) {
-    return 'Due: $date';
-  }
-
-  @override
   String kkGunKaldi(int days) {
     return '$days days left';
   }
@@ -5405,11 +5400,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kkOncekiEkstre => 'Previous statement';
-
-  @override
-  String kkNetKirilim(String net, String accounts, String cards) {
-    return 'Net $net · accounts $accounts · card debt $cards';
-  }
 
   @override
   String get kkDahaFazlaAyrinti =>
@@ -6122,4 +6112,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportTrendThisPeriod => 'This period';
+
+  @override
+  String netWorthHead(Object amount) {
+    return 'Net $amount';
+  }
+
+  @override
+  String netPartAccounts(Object amount) {
+    return 'accounts $amount';
+  }
+
+  @override
+  String netPartCards(Object amount) {
+    return 'card debt $amount';
+  }
+
+  @override
+  String netPartLoans(Object amount) {
+    return 'loans $amount';
+  }
+
+  @override
+  String netPartReceivables(Object amount) {
+    return 'receivables $amount';
+  }
+
+  @override
+  String debtBreakdownLine(Object loans, Object cards) {
+    return 'loans $loans · cards $cards';
+  }
+
+  @override
+  String get debtCardsSectionHint =>
+      'Card debt comes from the card\'s own records. Spending and settings live inside the card.';
+
+  @override
+  String get debtLoansSectionTitle => 'Loans and personal debts';
+
+  @override
+  String get debtLoansEmptyCompact => 'No loans or personal debts recorded.';
+
+  @override
+  String get kkGuncelBorcKisa => 'Current debt';
+
+  @override
+  String get kkEkstreOdendi => 'Statement paid';
+
+  @override
+  String get kkBuDonemHarcanan => 'Spent this cycle';
+
+  @override
+  String kkKalanDonemSatiri(Object amount) {
+    return 'Statement due $amount';
+  }
+
+  @override
+  String get debtCardInstallmentWarn =>
+      'Is this a card purchase in installments? Enter it as a card expense: recording it as a debt as well counts the same money twice.';
+
+  @override
+  String get debtCardInstallmentAction => 'Enter as card expense';
 }

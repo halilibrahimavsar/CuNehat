@@ -118,6 +118,10 @@ class CardStatus {
   /// Kesimden sonra karta giren para (bankadan ödeme, iade).
   final double paidSinceClosing;
 
+  /// Kesimden sonra BUGÜNE kadar karta yazılan harcama: bir sonraki
+  /// ekstreye girecek kısım (gelecek tarihli taksitler hariç).
+  final double spentSinceClosing;
+
   /// Bugünkü toplam borç (limit kullanımı; gelecek tarihli taksitler dahil).
   final double currentDebt;
 
@@ -138,6 +142,7 @@ class CardStatus {
     required this.derivedReliable,
     required this.declared,
     required this.paidSinceClosing,
+    this.spentSinceClosing = 0,
     required this.currentDebt,
     required this.availableLimit,
     required this.futureInstallments,
@@ -196,6 +201,7 @@ CardStatus computeCardStatus({
   var balanceAtClosing = openingBalance;
   var balanceNow = openingBalance;
   var paid = 0.0;
+  var spent = 0.0;
   var future = 0.0;
   for (final t in ledger) {
     final signed = t.isIncome ? t.amount : -t.amount;
@@ -203,7 +209,11 @@ CardStatus computeCardStatus({
     if (t.date.isBefore(lastEnd)) {
       balanceAtClosing += signed;
     } else if (t.date.isBefore(todayEnd)) {
-      if (t.isIncome) paid += t.amount;
+      if (t.isIncome) {
+        paid += t.amount;
+      } else {
+        spent += t.amount;
+      }
     } else if (!t.isIncome) {
       future += t.amount;
     }
@@ -226,6 +236,7 @@ CardStatus computeCardStatus({
     derivedReliable: !CardCycle.dateOnly(walletCreatedAt).isAfter(last),
     declared: declaredForThisCycle,
     paidSinceClosing: roundToCents(paid),
+    spentSinceClosing: roundToCents(spent),
     currentDebt: currentDebt,
     availableLimit: limit == null ? null : roundToCents(limit - currentDebt),
     futureInstallments: roundToCents(future),

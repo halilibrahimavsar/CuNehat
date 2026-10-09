@@ -2720,14 +2720,6 @@
   "kkAsgariOdeme": "Minimum payment",
   "kkKalanDonemBorcu": "Remaining statement balance",
   "kkKalanAsgari": "Remaining minimum",
-  "kkSonOdeme": "Due: {date}",
-  "@kkSonOdeme": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
   "kkGunKaldi": "{days} days left",
   "@kkGunKaldi": {
     "placeholders": {
@@ -2845,7 +2837,6 @@
   "kkEkstreDonemEtiketi": "Statement · {range}",
   "kkBuEkstre": "This statement",
   "kkOncekiEkstre": "Previous statement",
-  "kkNetKirilim": "Net {net} · accounts {accounts} · card debt {cards}",
   "kkDahaFazlaAyrinti": "More details (bank, last 4 digits, limit, last statement)",
   "kkKartRengi": "Card colour",
   "onboardingCardRailTitle": "Your card lives inside this wallet",
@@ -3391,5 +3382,20 @@
   "reportBreadcrumbUp": "Go up one level",
   "reportDonutSemantics": "Category ring: {count} items, total {total}",
   "reportDrillInto": "Drill into {name}",
-  "reportTrendThisPeriod": "This period"
+  "reportTrendThisPeriod": "This period",
+  "netWorthHead": "Net {amount}",
+  "netPartAccounts": "accounts {amount}",
+  "netPartCards": "card debt {amount}",
+  "netPartLoans": "loans {amount}",
+  "netPartReceivables": "receivables {amount}",
+  "debtBreakdownLine": "loans {loans} · cards {cards}",
+  "debtCardsSectionHint": "Card debt comes from the card's own records. Spending and settings live inside the card.",
+  "debtLoansSectionTitle": "Loans and personal debts",
+  "debtLoansEmptyCompact": "No loans or personal debts recorded.",
+  "kkGuncelBorcKisa": "Current debt",
+  "kkEkstreOdendi": "Statement paid",
+  "kkBuDonemHarcanan": "Spent this cycle",
+  "kkKalanDonemSatiri": "Statement due {amount}",
+  "debtCardInstallmentWarn": "Is this a card purchase in installments? Enter it as a card expense: recording it as a debt as well counts the same money twice.",
+  "debtCardInstallmentAction": "Enter as card expense"
 }

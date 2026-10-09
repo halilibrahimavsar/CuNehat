@@ -580,7 +580,11 @@ void main() {
       await tester.pumpWidget(app(const CardContextRail()));
       await tester.pumpAndSettle();
 
-      expect(find.text(l10n.kkKalanDonemBorcu), findsOneWidget);
+      // Defter boş: kesilmiş ekstrede ödenecek bir şey yok. Şerit "Kalan
+      // dönem borcu 0,00" yerine bir sonraki ekstreye girecek harcamayı ve
+      // sıradaki kesimi yazar (eskiden geçmiş bir "Son ödeme" tarihi vardı).
+      expect(find.text(l10n.kkBuDonemHarcanan), findsOneWidget);
+      expect(find.textContaining('Sonraki kesim'), findsOneWidget);
       expect(find.byKey(const ValueKey('ctx-card-pay')), findsOneWidget);
       // Kart son kesimden ÖNCE açılmış: dönem borcu defterden güvenilir,
       // ekstre ipucu yok.
@@ -590,6 +594,41 @@ void main() {
       final event = verify(() => bloc.add(captureAny())).captured.single
           as SetActiveWalletEvent;
       expect(event.walletId, 'bank');
+    });
+
+    testWidgets('ödenmemiş ekstre varken şerit KALAN DÖNEM BORCUNU yazar',
+        (tester) async {
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      final repo = _MockTxRepo();
+      getIt.registerSingleton<TransactionsRepository>(repo);
+      // Son kesimden 3 gün önceki harcama: kesilmiş ekstrededir.
+      final today = DateTime.now();
+      final cycle = CardCycle(bonusCard().creditCard!);
+      final spentOn =
+          cycle.lastClosing(today).subtract(const Duration(days: 3));
+      when(() => repo.getTransactions(
+            userId: any(named: 'userId'),
+            walletId: any(named: 'walletId'),
+          )).thenAnswer((_) async => Right([
+            TransactionEntity(
+              id: 't1',
+              userId: 'u',
+              walletId: 'card',
+              title: 'MARKET',
+              tag: 'cat-a',
+              amount: 500,
+              date: spentOn,
+              type: TransactionTypeModel.expense,
+            ),
+          ]));
+      final bank = _wallet('bank');
+      final card = bonusCard();
+      when(() => bloc.state).thenReturn(WalletLoadedSt([bank, card], card));
+      await tester.pumpWidget(app(const CardContextRail()));
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.kkKalanDonemBorcu), findsOneWidget);
+      expect(find.text(l10n.kkBuDonemHarcanan), findsNothing);
     });
 
     testWidgets(

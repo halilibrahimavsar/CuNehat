@@ -75,8 +75,29 @@ void main() {
             {String currency = 'TRY', bool card = false}) =>
         _w(id, card: card).copyWith(balance: balance, currency: currency);
 
-    test('kart yoksa null (kırılım gösterilmez)', () {
+    test('kart, borç ve alacak yoksa null (kırılım gösterilmez)', () {
       expect(netBreakdown([money('a', 100)], rateToTry: (_) => null), isNull);
+    });
+
+    test('REGRESYON: kredi ve alacak da NET\'e girer (kart olmasa bile)', () {
+      // Kredinin ana parası hesaba gelir olarak girdi (13.000'in 10.000'i);
+      // net onu düşmeseydi kullanıcı 10.000 TL zengin görünürdü.
+      final b = netBreakdown([
+        money('a', 13000).copyWith(debt: 10000, credit: 500),
+      ], rateToTry: (_) => null)!;
+      expect(b.accounts, 13000);
+      expect(b.loans, 10000);
+      expect(b.receivables, 500);
+      expect(b.cardDebt, 0);
+      expect(b.net, 3500);
+    });
+
+    test('dört kalem birlikte: hesaplar − kart − kredi + alacak', () {
+      final b = netBreakdown([
+        money('a', 20000).copyWith(debt: 6000, credit: 1000),
+        money('c', -3700, card: true),
+      ], rateToTry: (_) => null)!;
+      expect(b.net, 20000 - 3700 - 6000 + 1000);
     });
 
     test('hesaplar − kart borçları; döviz TL\'ye çevrilir', () {
@@ -98,6 +119,56 @@ void main() {
         ], rateToTry: (_) => null),
         isNull,
       );
+    });
+  });
+
+  group('debtOverview', () {
+    WalletEntity w(String id,
+            {double balance = 0,
+            double debt = 0,
+            String? owner,
+            bool card = false,
+            String currency = 'TRY'}) =>
+        _w(id, owner: owner, card: card)
+            .copyWith(balance: balance, debt: debt, currency: currency);
+
+    test('REGRESYON: kart borcu Borç toplamına girer (eskiden yalnız modül)',
+        () {
+      final bank = w('bank', balance: 8000, debt: 0);
+      final bonus = w('bonus', balance: -1200, owner: 'bank');
+      final o = debtOverview(bank, [bank, bonus]);
+      expect(o.loans, 0);
+      expect(o.cards, 1200);
+      expect(o.total, 1200);
+    });
+
+    test('krediler + kartlar; artıdaki (fazla ödenmiş) kart borç değil', () {
+      final bank = w('bank', debt: 12000);
+      final a = w('a', balance: -1200, owner: 'bank');
+      final b = w('b', balance: 50, owner: 'bank');
+      final o = debtOverview(bank, [bank, a, b]);
+      expect(o.loans, 12000);
+      expect(o.cards, 1200);
+      expect(o.total, 13200);
+    });
+
+    test('bağlı kart aktifken sahibinin ailesi hesaplanır', () {
+      final bank = w('bank', debt: 100);
+      final a = w('a', balance: -50, owner: 'bank');
+      expect(debtOverview(a, [bank, a]).total, 150);
+    });
+
+    test('farklı birimdeki kart toplanmaz (tutar tek birimde yazılır)', () {
+      final bank = w('bank');
+      final usd = w('usd', balance: -10, owner: 'bank', currency: 'USD');
+      expect(debtOverview(bank, [bank, usd]).cards, 0);
+    });
+
+    test('yetim kart kendi borcunu taşır', () {
+      final orphan = w('orphan', balance: -300, card: true);
+      final o = debtOverview(orphan, [orphan]);
+      expect(o.cards, 300);
+      expect(o.loans, 0);
     });
   });
 }

@@ -1,5 +1,8 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/core/config/feature_flags.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/features/credit_card/presentation/card_debt_summary.dart';
+import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/shared/widgets/info_action_menu.dart';
@@ -157,7 +160,11 @@ class DebtListSection extends StatelessWidget {
           final activeDebts =
               sortDebtsForDisplay(state.debts.where((d) => !d.isPaid).toList());
 
-          if (activeDebts.isEmpty) {
+          // Kart borcu da borçtur: bağlı kart varsa liste "Kredi kartları"
+          // özetiyle başlar (bkz. CardDebtSummarySection). Eskiden kart
+          // borcu olan kullanıcı burada "Henüz borç kaydı yok" görüyordu.
+          final hasCards = _hasAttachedCards(context);
+          if (activeDebts.isEmpty && !hasCards) {
             return _EmptyStateCard(
               icon: Icons.outbound_rounded,
               title: context.l10n.henuzBorcKaydiYok,
@@ -165,13 +172,33 @@ class DebtListSection extends StatelessWidget {
               section: AppSection.debt,
             );
           }
-          return ListView.builder(
+          final theme = Theme.of(context);
+          return ListView(
             padding: const EdgeInsets.all(16),
-            itemCount: activeDebts.length,
-            itemBuilder: (context, index) {
-              final debt = activeDebts[index];
-              return _buildDebtCard(context, debt);
-            },
+            children: [
+              if (hasCards) ...[
+                CardDebtSummarySection(accountId: walletId),
+                const SizedBox(height: 14),
+                Text(
+                  context.l10n.debtLoansSectionTitle,
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 10),
+              ],
+              if (activeDebts.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    context.l10n.debtLoansEmptyCompact,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                )
+              else
+                for (final debt in activeDebts) _buildDebtCard(context, debt),
+            ],
           );
         } else if (state is DebtError) {
           return Center(
@@ -194,6 +221,20 @@ class DebtListSection extends StatelessWidget {
         return const SizedBox.shrink();
       },
     );
+  }
+
+  /// Bu hesaba bağlı (aynı birimde) kredi kartı var mı? Cüzdanlar
+  /// değişince (kart eklendi/silindi) yeniden çizilsin diye İZLENİR.
+  bool _hasAttachedCards(BuildContext context) {
+    if (!FeatureFlags.creditCards) return false;
+    try {
+      final state = context.watch<WalletBloc>().state;
+      return state is WalletLoadedSt &&
+          CardDebtSummarySection.cardsFor(walletId, state.wallets)
+              .isNotEmpty;
+    } on ProviderNotFoundException {
+      return false;
+    }
   }
 
   Widget _buildDebtCard(BuildContext context, DebtEntity debt) {

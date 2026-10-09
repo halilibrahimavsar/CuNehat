@@ -1,3 +1,5 @@
+import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
+import 'package:cunehat/features/wallet/domain/card_family.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
@@ -40,6 +42,7 @@ class WalletCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = WalletColors.hexToColor(wallet.colorHex);
+    final debt = debtOverview(wallet, context.allWallets).total;
     final scheme = Theme.of(context).colorScheme;
 
     return AppCard(
@@ -149,8 +152,10 @@ class WalletCardWidget extends StatelessWidget {
             ],
           ),
 
-          // Stat satırı (Birikim, Alacak, Borç)
-          if (wallet.debt > 0 ||
+          // Stat satırı (Birikim, Alacak, Borç). Borç = krediler + bu
+          // cüzdana bağlı kartların borcu (bkz. debtOverview); kartın kendi
+          // kutucuğu cüzdanın altındaki destede ayrıca yazar.
+          if (debt > 0 ||
               wallet.credit > 0 ||
               wallet.investment > 0) ...[
             const SizedBox(height: 12),
@@ -167,7 +172,7 @@ class WalletCardWidget extends StatelessWidget {
                       Colors.green, Icons.savings, scheme),
                   _buildStatItem(context.l10n.alacakLabel, wallet.credit,
                       Colors.teal, Icons.arrow_upward, scheme),
-                  _buildStatItem(context.l10n.borcLabel, wallet.debt,
+                  _buildStatItem(context.l10n.borcLabel, debt,
                       Colors.red, Icons.arrow_downward, scheme),
                 ],
               ),

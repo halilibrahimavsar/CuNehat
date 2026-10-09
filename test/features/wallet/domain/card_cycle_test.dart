@@ -128,6 +128,9 @@ void main() {
       expect(s.paidSinceClosing, 500);
       expect(s.remainingStatementDebt, 300);
       expect(s.futureInstallments, 200);
+      // Kesimden sonra bugüne kadarki harcama: bir sonraki ekstreye girecek
+      // 100 (gelecek tarihli taksit ve karta gelen ödeme hariç).
+      expect(s.spentSinceClosing, 100);
       // 800 − 500 + 100 + 200 (gelecek taksit limiti tutar).
       expect(s.currentDebt, 600);
       expect(s.availableLimit, 9400);

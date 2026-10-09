@@ -23,6 +23,10 @@ import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_en
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry/debt_dynamic_fields.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry/debt_form_widgets.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/core/config/feature_flags.dart';
+import 'package:cunehat/features/wallet/domain/card_family.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
+import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:showcaseview/showcaseview.dart';
@@ -55,6 +59,12 @@ class AddEntrySheet extends StatefulWidget {
   /// benimsenir. Kaydedilince sayfa `true` ile kapanır.
   final TransactionEntity? initialPrincipalTransaction;
 
+  /// "Kart harcaması olarak gir": taksitli borç seçilmiş ve hesabın kartı
+  /// varken formun gösterdiği uyarının eylemi. Sayfayı açan taraf verir —
+  /// gider formu onun bağlamındaki bloc'larla açılmalı (bu sayfanın route'u
+  /// kapanınca kendi kurduğu bloc ölü olurdu). Verilmezse uyarı yalnız metin.
+  final void Function(WalletEntity card)? onEnterAsCardExpense;
+
   const AddEntrySheet({
     super.key,
     required this.walletId,
@@ -64,6 +74,7 @@ class AddEntrySheet extends StatefulWidget {
     this.receivableToEdit,
     this.initialIsDebt = true,
     this.initialPrincipalTransaction,
+    this.onEnterAsCardExpense,
   });
 
   @override
@@ -162,6 +173,24 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     _amountController.addListener(_maybeAutoFillInstallment);
     _termController.addListener(_maybeAutoFillInstallment);
     _installmentController.addListener(_onInstallmentChanged);
+  }
+
+  /// Kartla taksitli alışverişin borç olarak İKİNCİ kez girilmesi riski:
+  /// YENİ kayıt, taksitli borç türü ve hesabın kartı var. Kart döner (gider
+  /// formu onda açılır); risk yoksa `null`.
+  ///
+  /// Kart taksitleri kartın defterinde aylık gider satırlarıdır; aynı
+  /// alışveriş burada da borç olarak kaydedilirse hem karttaki taksitler hem
+  /// borcun ödemeleri hesaptan düşer. Engellemiyoruz (mağaza taksiti ya da
+  /// senetli alışveriş gerçek bir borç olabilir), uyarıp doğru yolu sunuyoruz.
+  WalletEntity? _cardInstallmentRisk(BuildContext context) {
+    if (!FeatureFlags.creditCards ||
+        widget.debtToEdit != null ||
+        _selectedDebtType != DebtType.installmentDebt) {
+      return null;
+    }
+    final cards = cardsOf(widget.walletId, context.allWallets);
+    return cards.isEmpty ? null : cards.first;
   }
 
   @override
@@ -605,6 +634,14 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                             _maybeAutoFillInstallment();
                           },
                         ),
+                        if (_cardInstallmentRisk(context) case final card?) ...[
+                          const SizedBox(height: 12),
+                          _CardInstallmentNotice(
+                            onAction: widget.onEnterAsCardExpense == null
+                                ? null
+                                : () => widget.onEnterAsCardExpense!(card),
+                          ),
+                        ],
                         const SizedBox(height: 20),
                         FilledEntryField(
                           controller: _titleController,
@@ -854,6 +891,56 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Taksitli borç + kart: çift kayıt uyarısı (bkz. `_cardInstallmentRisk`).
+class _CardInstallmentNotice extends StatelessWidget {
+  final VoidCallback? onAction;
+
+  const _CardInstallmentNotice({required this.onAction});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    return Container(
+      key: const ValueKey('debt-card-installment-notice'),
+      padding: const EdgeInsets.fromLTRB(12, 10, 8, 6),
+      decoration: BoxDecoration(
+        color: Colors.orange.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.orange.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.credit_card_rounded,
+                  size: 18, color: Colors.orange),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  context.l10n.debtCardInstallmentWarn,
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: cs.onSurface, height: 1.35),
+                ),
+              ),
+            ],
+          ),
+          if (onAction != null)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: onAction,
+                child: Text(context.l10n.debtCardInstallmentAction),
+              ),
+            ),
+        ],
       ),
     );
   }
