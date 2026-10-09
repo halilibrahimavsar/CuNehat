@@ -257,6 +257,13 @@ void main() {
       expect(find.text('Kira'), findsOneWidget);
     });
 
+    testWidgets('REGRESYON: yol çubuğu SOLA yaslıdır (cihazda sağdaydı)',
+        (tester) async {
+      await pumpExplorer(tester);
+      // Kart 360dp genişlikte; "Giderler" sol kenara yakın başlamalı.
+      expect(tester.getTopLeft(find.text('Giderler')).dx, lessThan(60));
+    });
+
     testWidgets('donut tek halkadır ve seviyenin kalemlerini çizer',
         (tester) async {
       await pumpExplorer(tester);

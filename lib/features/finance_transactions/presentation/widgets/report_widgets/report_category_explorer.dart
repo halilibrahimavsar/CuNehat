@@ -289,33 +289,41 @@ class _Breadcrumb extends StatelessWidget {
               ),
             ),
           Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              // Derin yolda en sağdaki (bulunulan) seviye görünür kalsın.
-              reverse: true,
-              child: Row(
-                children: [
-                  for (var i = 0; i < labels.length; i++) ...[
-                    if (i > 0)
-                      Icon(Icons.chevron_right_rounded,
-                          size: 18, color: scheme.onSurfaceVariant),
-                    if (i == labels.length - 1)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Text(labels[i], style: active),
-                      )
-                    else
-                      InkWell(
-                        onTap: () => onCrumb(i),
-                        borderRadius: BorderRadius.circular(6),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 4, vertical: 6),
-                          child: Text(labels[i], style: link),
-                        ),
-                      ),
-                  ],
-                ],
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                // Derin yolda en sağdaki (bulunulan) seviye görünür kalsın.
+                reverse: true,
+                // `reverse` sığan içeriği de SAĞA iter (cihazda "Giderler"
+                // kartın sağ ucunda duruyordu): satır en az görünür genişlik
+                // kadar tutulur, parçalar soldan dizilir.
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                  child: Row(
+                    children: [
+                      for (var i = 0; i < labels.length; i++) ...[
+                        if (i > 0)
+                          Icon(Icons.chevron_right_rounded,
+                              size: 18, color: scheme.onSurfaceVariant),
+                        if (i == labels.length - 1)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Text(labels[i], style: active),
+                          )
+                        else
+                          InkWell(
+                            onTap: () => onCrumb(i),
+                            borderRadius: BorderRadius.circular(6),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 4, vertical: 6),
+                              child: Text(labels[i], style: link),
+                            ),
+                          ),
+                      ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
