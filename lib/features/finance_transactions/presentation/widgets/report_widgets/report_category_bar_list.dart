@@ -42,7 +42,7 @@ class ReportCategoryBarList extends StatefulWidget {
   final Map<String, String> categoryLabels;
 
   /// Kategorinin bütçe ilerlemesi (yalnız gider tarafında verilir).
-  final ({double progress, bool isExceeded, double limit})? Function(
+  final ReportBudgetProgress? Function(
       String tag, double spent)? budgetProgressFor;
 
   /// Artışın İYİ mi kötü mü olduğu — değişim rozetinin rengi buna bağlı.
@@ -155,7 +155,7 @@ class _ChildRows extends StatelessWidget {
   final ColorScheme scheme;
   final ThemeData theme;
   final Map<String, String> categoryLabels;
-  final ({double progress, bool isExceeded, double limit})? Function(
+  final ReportBudgetProgress? Function(
       String tag, double spent)? budgetProgressFor;
   final void Function(CategoryData category) onCategoryTap;
 
@@ -214,7 +214,7 @@ class _ChildRow extends StatelessWidget {
   final MoneyWriter money;
   final ColorScheme scheme;
   final ThemeData theme;
-  final ({double progress, bool isExceeded, double limit})? budget;
+  final ReportBudgetProgress? budget;
   final VoidCallback? onTap;
 
   const _ChildRow({
@@ -309,7 +309,7 @@ class _ChildRow extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(left: 18),
                   child: Text(
-                    '${formatPercent(budget!.progress * 100)} / '
+                    '${formatPercent(budget!.ratio * 100)} / '
                     '${money(budget!.limit)}',
                     style: TextStyle(
                       fontSize: 10,
@@ -336,7 +336,7 @@ class _Row extends StatelessWidget {
   final ColorScheme scheme;
   final ThemeData theme;
   final String label;
-  final ({double progress, bool isExceeded, double limit})? budget;
+  final ReportBudgetProgress? budget;
   final VoidCallback onTap;
 
   /// Alt kırılım açık mı; [onToggleExpanded] null ise kırılım yoktur ve
@@ -495,7 +495,7 @@ class _Row extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '${formatPercent(budget!.progress * 100)} / '
+                      '${formatPercent(budget!.ratio * 100)} / '
                       '${money(budget!.limit)}',
                       style: TextStyle(
                         fontSize: 10,

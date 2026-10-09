@@ -47,7 +47,7 @@ class ReportCompareChartCard extends StatelessWidget {
   /// Bütçeler eskiden YALNIZ tek taraflı pasta kartına geçiriliyordu, oysa
   /// sayfanın açılış modu karşılaştırma — yani bütçe uyarıları varsayılan
   /// görünümde hiç görünmüyordu.
-  final ({double progress, bool isExceeded, double limit})? Function(
+  final ReportBudgetProgress? Function(
       String tag, double spent)? budgetProgressFor;
 
   const ReportCompareChartCard({

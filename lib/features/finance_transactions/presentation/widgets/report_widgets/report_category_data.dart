@@ -5,6 +5,18 @@ import 'package:cunehat/features/finance_transactions/domain/services/transactio
 import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:flutter/material.dart';
 
+/// Bir kategorinin dönem içi bütçe durumu.
+///
+/// [progress] ÇUBUK içindir ve 0–1'e kırpılır; [ratio] ham orandır ve
+/// ETİKET onu yazar. Eskiden etiket de kırpılmış değeri yazıyordu: Bütçe
+/// sayfası "%112" derken rapor aynı kalem için "%100" gösteriyordu.
+typedef ReportBudgetProgress = ({
+  double progress,
+  double ratio,
+  bool isExceeded,
+  double limit,
+});
+
 /// Rapor sayfasındaki tek bir kategori dilimi: ad, dönem toplamı, o kategoriye
 /// düşen işlemler ve dilim rengi.
 class CategoryData {
@@ -289,6 +301,34 @@ class ReportCategoryDataBuilder {
       universeOf(filterByRange(transactions),
           includeSystemMovements: includeSystemMovements);
 
+  /// [target] dilimini [items] içinde — kökler, sonra alt kırılımlar —
+  /// arar; bulamazsa null.
+  ///
+  /// **Neden özyinelemeli:** kırılım KÖK seviyede toplanır, alt kategoriler
+  /// yalnız [CategoryData.children] içinde durur. Detay sayfası dokunulan
+  /// dilimi eskiden yalnız kök listesinde arıyordu; alt kategoriye (ya da
+  /// alt kategoriye konmuş bütçeye) dokunan kullanıcı 0 ₺ ve "işlem yok"
+  /// görüyordu. Eşleşme kimlik + [CategoryData.isOther] +
+  /// [CategoryData.isDirect] ile: kökün doğrudan dilimi kökle AYNI adı taşır
+  /// ama yalnız kökün kendi işlemlerini kapsar.
+  static CategoryData? findSlice(
+    List<CategoryData> items,
+    CategoryData target,
+  ) {
+    for (final item in items) {
+      if (item.name == target.name &&
+          item.isOther == target.isOther &&
+          item.isDirect == target.isDirect) {
+        return item;
+      }
+    }
+    for (final item in items) {
+      final hit = findSlice(item.children, target);
+      if (hit != null) return hit;
+    }
+    return null;
+  }
+
   List<CategoryData> buildFull(
     List<TransactionEntity> transactions, {
     required bool isExpense,
@@ -552,7 +592,7 @@ class ReportCategoryDataBuilder {
 
   /// [tag] kategorisi için, o an görüntülenen [range]'a göre bütçe
   /// ilerlemesini hesaplar. Bütçe tanımlı değilse null döner.
-  ({double progress, bool isExceeded, double limit})? budgetProgressFor(
+  ReportBudgetProgress? budgetProgressFor(
     String tag,
     double spentInRange,
   ) {
@@ -567,8 +607,10 @@ class ReportCategoryDataBuilder {
       if (b.categoryId == tag) {
         if (b.limitAmount <= 0) return null;
         final limit = b.limitAmount * factor;
+        final ratio = spentInRange / limit;
         return (
-          progress: (spentInRange / limit).clamp(0.0, 1.0),
+          progress: ratio.clamp(0.0, 1.0),
+          ratio: ratio,
           isExceeded: spentInRange > limit,
           limit: limit,
         );

@@ -19,7 +19,7 @@ class ReportCategoryChartCard extends StatefulWidget {
   final ValueChanged<bool> onToggleBarChart;
   final void Function(CategoryData cat, ReportSliceMode sliceMode)
       onCategoryTap;
-  final ({double progress, bool isExceeded, double limit})? Function(
+  final ReportBudgetProgress? Function(
       String tag, double spent) budgetProgressFor;
 
   /// `tag` → görünen ad. Dilim/çubuk anahtarı hep `CategoryData.name` (tag)

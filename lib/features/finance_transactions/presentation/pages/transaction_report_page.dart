@@ -632,18 +632,14 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       isExpense: true,
     );
 
-    // Bütçe alt kategoriye de konabiliyor: önce kökler, sonra çocuklar.
-    for (final root in full) {
-      if (root.name == status.categoryId) {
-        _openCategoryDetails(root, true, ReportSliceMode.full);
-        return;
-      }
-      for (final child in root.children) {
-        if (!child.isDirect && child.name == status.categoryId) {
-          _openCategoryDetails(child, true, ReportSliceMode.full);
-          return;
-        }
-      }
+    // Bütçe alt kategoriye de konabiliyor: arama kökler + çocuklar.
+    final hit = ReportCategoryDataBuilder.findSlice(
+      full,
+      CategoryData(status.categoryId, 0, const [], Colors.transparent),
+    );
+    if (hit != null) {
+      _openCategoryDetails(hit, true, ReportSliceMode.full);
+      return;
     }
 
     // Dönemde hiç harcaması olmayan bütçe kırılımda yer almaz. Eskiden

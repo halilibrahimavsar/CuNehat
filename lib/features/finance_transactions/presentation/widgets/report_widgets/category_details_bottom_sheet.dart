@@ -118,20 +118,23 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
             ),
         };
 
-        final updatedCategory = categoryDataList.firstWhere(
-          (c) =>
-              c.name == initialCategory.name &&
-              c.isOther == initialCategory.isOther,
-          orElse: () => CategoryData(
-            initialCategory.name,
-            0,
-            const [],
-            initialCategory.color,
-            isOther: initialCategory.isOther,
-          ),
-        );
+        // Alt kategori ve kökün doğrudan dilimi yalnız `children` içinde
+        // durur; arama kök listesiyle sınırlı kalırsa ikisi de bulunamaz ve
+        // sayfa 0 ₺ + "işlem yok" yazar (bkz. [ReportCategoryDataBuilder.findSlice]).
+        final updatedCategory = ReportCategoryDataBuilder.findSlice(
+              categoryDataList,
+              initialCategory,
+            ) ??
+            CategoryData(
+              initialCategory.name,
+              0,
+              const [],
+              initialCategory.color,
+              isOther: initialCategory.isOther,
+              isDirect: initialCategory.isDirect,
+            );
 
-        final budgetInfo = isExpense
+        final budgetInfo = isExpense && !updatedCategory.isDirect
             ? dataBuilder.budgetProgressFor(
                 updatedCategory.name, updatedCategory.totalAmount)
             : null;
@@ -188,7 +191,12 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            updatedCategory.labelIn(context, categoryLabels),
+                            updatedCategory.isDirect
+                                ? context.l10n.dogrudanKategoriSec(
+                                    updatedCategory.labelIn(
+                                        context, categoryLabels))
+                                : updatedCategory.labelIn(
+                                    context, categoryLabels),
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -259,47 +267,56 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
     final scheme = theme.colorScheme;
 
     Widget row(
+      CategoryData slice,
       String label,
       double amount, {
       bool muted = false,
       String? budgetNote,
       bool budgetExceeded = false,
     }) =>
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 3),
-          child: Row(
-            children: [
-              Icon(Icons.subdirectory_arrow_right,
-                  size: 14, color: scheme.onSurfaceVariant),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  label,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontStyle: muted ? FontStyle.italic : null,
-                    color: muted ? scheme.onSurfaceVariant : null,
+        InkWell(
+          // Alt kalem de kendi işlemlerini açar: kırılım yalnız rakam
+          // gösteriyordu, "Elektrik'e ne ödedim" sorusunun cevabı yoktu.
+          onTap: () => _openChild(context, slice),
+          borderRadius: BorderRadius.circular(6),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 5),
+            child: Row(
+              children: [
+                Icon(Icons.subdirectory_arrow_right,
+                    size: 14, color: scheme.onSurfaceVariant),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    label,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontStyle: muted ? FontStyle.italic : null,
+                      color: muted ? scheme.onSurfaceVariant : null,
+                    ),
                   ),
                 ),
-              ),
-              if (budgetNote != null) ...[
+                if (budgetNote != null) ...[
+                  Text(
+                    budgetNote,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: budgetExceeded ? MoneyColors.expense : MoneyColors.income,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
                 Text(
-                  budgetNote,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: budgetExceeded ? MoneyColors.expense : MoneyColors.income,
-                  ),
+                  money(amount),
+                  style: const TextStyle(
+                      fontSize: 12.5, fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(width: 8),
+                Icon(Icons.chevron_right_rounded,
+                    size: 16, color: scheme.onSurfaceVariant),
               ],
-              Text(
-                money(amount),
-                style: const TextStyle(
-                    fontSize: 12.5, fontWeight: FontWeight.w600),
-              ),
-            ],
+            ),
           ),
         );
 
@@ -312,6 +329,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
             // "kalan" hesabı yapılmaz (bkz. ReportCategoryDataBuilder).
             if (child.isDirect) {
               return row(
+                child,
                 context.l10n.dogrudanKategoriSec(
                   category.labelIn(context, categoryLabels),
                 ),
@@ -327,11 +345,12 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                 ? dataBuilder.budgetProgressFor(child.name, child.totalAmount)
                 : null;
             return row(
+              child,
               context.categoryLabelForTag(child.name, labels: categoryLabels),
               child.totalAmount,
               budgetNote: budget == null
                   ? null
-                  : '${formatPercent(budget.progress * 100)} / '
+                  : '${formatPercent(budget.ratio * 100)} / '
                       '${money(budget.limit)}',
               budgetExceeded: budget?.isExceeded ?? false,
             );
@@ -340,10 +359,25 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
     );
   }
 
+  /// Kırılımdaki bir alt kalemin (ya da kökün doğrudan diliminin) kendi
+  /// detayını bu sayfanın ÜSTÜNE açar; geri jesti kökün detayına döner.
+  void _openChild(BuildContext context, CategoryData slice) {
+    show(
+      context: context,
+      initialCategory: slice,
+      isExpense: isExpense,
+      sliceMode: sliceMode,
+      categoryIcons: categoryIcons,
+      dataBuilder: dataBuilder,
+      sourceOf: sourceOf,
+      categoryLabels: categoryLabels,
+    );
+  }
+
   Widget _buildBudgetIndicator(
     ThemeData theme,
     MoneyWriter money,
-    ({double progress, bool isExceeded, double limit}) budget,
+    ReportBudgetProgress budget,
   ) {
     final scheme = theme.colorScheme;
     final color = budget.isExceeded ? MoneyColors.expense : MoneyColors.income;
@@ -361,7 +395,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          '${formatPercent(budget.progress * 100)} / ${money(budget.limit)}',
+          '${formatPercent(budget.ratio * 100)} / ${money(budget.limit)}',
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,
