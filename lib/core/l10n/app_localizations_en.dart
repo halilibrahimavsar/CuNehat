@@ -6199,4 +6199,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String kkTaksitPlanSatiri(Object left, Object amount) {
     return '$left left · $amount';
   }
+
+  @override
+  String get kkBilinmiyor => 'unknown';
+
+  @override
+  String get kkDonemBorcuBilinmiyor => 'Statement amount unknown · enter it';
 }

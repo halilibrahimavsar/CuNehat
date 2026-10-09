@@ -195,6 +195,45 @@ void main() {
       expect(s.currentDebt, 2000);
     });
 
+    test(
+        'REGRESYON: kart son kesimden SONRA eklendi, ekstre yok → dönem borcu '
+        'BİLİNMİYOR; açılış borcu ödenecek/gecikmiş sayılmaz', () {
+      // Kesim 25 / son ödeme 5; kart 9 Ekim'de 3.000 TL borçla eklendi.
+      final s = computeCardStatus(
+        card: _card(closing: 25, due: 5),
+        openingBalance: -3000,
+        walletCreatedAt: DateTime(2026, 10, 9),
+        ledger: const [],
+        today: DateTime(2026, 10, 9),
+      );
+      expect(s.statementKnown, isFalse);
+      expect(s.remainingStatementDebt, 0);
+      expect(s.isOverdue, isFalse);
+      expect(s.currentDebt, 3000, reason: 'toplam borç yine doğru');
+    });
+
+    test('aynı kart için ekstre girilince dönem borcu bilinir', () {
+      final s = computeCardStatus(
+        card: _card(
+          closing: 25,
+          due: 5,
+          statement: CardStatement(
+            closingDate: DateTime(2026, 9, 25),
+            dueDate: DateTime(2026, 10, 5),
+            statementBalance: 1200,
+            recordedAt: DateTime(2026, 10, 9),
+          ),
+        ),
+        openingBalance: -3000,
+        walletCreatedAt: DateTime(2026, 10, 9),
+        ledger: const [],
+        today: DateTime(2026, 10, 9),
+      );
+      expect(s.statementKnown, isTrue);
+      expect(s.remainingStatementDebt, 1200);
+      expect(s.isOverdue, isTrue);
+    });
+
     test('son ödeme geçti ve borç kaldıysa gecikmede', () {
       final s = computeCardStatus(
         card: _card(),

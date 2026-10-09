@@ -563,6 +563,29 @@ void main() {
           ));
     });
 
+    test(
+        'REGRESYON: kesimden SONRA borçla eklenen kartta (ekstre yok) '
+        'gecikme bildirimi KURULMAZ', () async {
+      stubLedger(const []);
+      final fresh = card().copyWith(
+        balance: -3000,
+        openingBalance: -3000,
+        createdAt: DateTime(2026, 9, 27),
+      );
+
+      await service.syncCard(fresh, now: DateTime(2026, 9, 27, 10));
+
+      verifyNever(() => notifications.scheduleNotification(
+            id: any(named: 'id'),
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            scheduledDate: any(named: 'scheduledDate'),
+            payload: any(named: 'payload'),
+            channel: any(named: 'channel'),
+            repeatDaily: any(named: 'repeatDaily'),
+          ));
+    });
+
     test('son ödeme geçtiyse gün hatırlatması her sabah TEKRARLAR', () async {
       stubLedger([tx(DateTime(2026, 9, 10), 800)]);
 

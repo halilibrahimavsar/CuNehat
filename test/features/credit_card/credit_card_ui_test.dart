@@ -632,8 +632,9 @@ void main() {
     });
 
     testWidgets(
-        'kart son kesimden SONRA eklendi, ekstre yok: tutar "≈" ile, '
-        '"Ekstreyi gir" ekstre sayfasını açar', (tester) async {
+        'REGRESYON: kart son kesimden SONRA eklendi, ekstre yok: açılış '
+        'borcu geçen ekstreye YAZILMAZ (gecikme yok); "Ekstreyi gir" '
+        'ekstre sayfasını açar', (tester) async {
       emptyLedger();
       final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
       final bank = _wallet('bank');
@@ -652,7 +653,11 @@ void main() {
       await tester.pumpWidget(app(const CardContextRail()));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('≈ '), findsOneWidget);
+      // Eskiden açılış borcunun tamamı geçen ekstreye yazılıyordu:
+      // "≈ 2.500 · N gün gecikti" + kırmızı bant + günlük gecikme bildirimi.
+      expect(find.textContaining('≈ '), findsNothing);
+      expect(find.textContaining('gecikti'), findsNothing);
+      expect(find.text(l10n.kkBuDonemHarcanan), findsOneWidget);
       await tester.tap(find.text(l10n.kkEkstreyiGir));
       await tester.pumpAndSettle();
       expect(find.byType(CardStatementSheet), findsOneWidget);

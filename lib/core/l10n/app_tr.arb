@@ -3632,5 +3632,7 @@
       "left": {},
       "amount": {}
     }
-  }
+  },
+  "kkBilinmiyor": "bilinmiyor",
+  "kkDonemBorcuBilinmiyor": "Dönem borcu bilinmiyor · ekstreyi gir"
 }

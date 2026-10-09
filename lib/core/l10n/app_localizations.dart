@@ -10672,6 +10672,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{left} taksit kaldı · {amount}'**
   String kkTaksitPlanSatiri(Object left, Object amount);
+
+  /// No description provided for @kkBilinmiyor.
+  ///
+  /// In tr, this message translates to:
+  /// **'bilinmiyor'**
+  String get kkBilinmiyor;
+
+  /// No description provided for @kkDonemBorcuBilinmiyor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dönem borcu bilinmiyor · ekstreyi gir'**
+  String get kkDonemBorcuBilinmiyor;
 }
 
 class _AppLocalizationsDelegate

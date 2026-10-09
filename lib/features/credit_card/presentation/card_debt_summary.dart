@@ -165,10 +165,12 @@ class _CardDebtRow extends StatelessWidget {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
-                          due
-                              ? l10n.kkKalanDonemSatiri(
-                                  money(s.remainingStatementDebt))
-                              : l10n.kkEkstreOdendi,
+                          !s.statementKnown
+                              ? l10n.kkDonemBorcuBilinmiyor
+                              : due
+                                  ? l10n.kkKalanDonemSatiri(
+                                      money(s.remainingStatementDebt))
+                                  : l10n.kkEkstreOdendi,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: s.isOverdue ? cs.error : cs.onSurfaceVariant,
                             fontWeight: FontWeight.w600,

@@ -256,23 +256,15 @@ class _CardStrip extends StatelessWidget {
             child: CardStatusBuilder(
               card: card,
               builder: (context, status) {
-                // Kart son kesimden SONRA eklendi ve bu dönemin ekstresi
-                // girilmedi: dönem borcu defterden çıkarılamaz (açılış borcu
-                // tahmindir). Tutar "≈" ile soluk yazılır ve ekstreyi girme
-                // yolu şeridin kendisinde sunulur — not eskiden yalnız
-                // ayrıntı sayfasındaydı, şerit kesinmiş gibi görünüyordu.
-                final guessed = status != null &&
-                    status.declared == null &&
-                    !status.derivedReliable;
-                // Ekstre ödendiyse (ve tahmin değilse) "Kalan dönem borcu
-                // 0,00" yerine bir sonraki ekstreye girecek harcama yazılır.
-                // Başlıktaki "BORÇ 1.200" ile şeritteki "0,00" yan yana iki
-                // açıklamasız borç sayısıydı; şimdi biri toplam, öbürü bu
-                // dönemin harcaması.
-                //
-                // Tahmini dönemde (kart kesimden sonra eklendi) de geçerli:
-                // tahmin edilen ekstre ödendiyse "≈ 0,00" bilgi taşımıyor;
-                // "Ekstreyi gir" çipi yine sunulur.
+                // Dönem borcu bilinmiyor (kart son kesimden SONRA eklendi,
+                // ekstre girilmedi): ödeme çağrısı ya da gecikme YOK (bkz.
+                // [CardStatus.statementKnown]); ekstreyi girme yolu şeridin
+                // kendisinde sunulur.
+                final unknown = status != null && !status.statementKnown;
+                // Ödenecek bir şey yoksa "Kalan dönem borcu 0,00" yerine bir
+                // sonraki ekstreye girecek harcama yazılır. Başlıktaki "BORÇ
+                // 1.200" ile şeritteki "0,00" yan yana iki açıklamasız borç
+                // sayısıydı; şimdi biri toplam, öbürü bu dönemin harcaması.
                 final cycleView = status != null &&
                     !moneyIsPositive(status.remainingStatementDebt);
                 final shownAmount = status == null
@@ -306,21 +298,22 @@ class _CardStrip extends StatelessWidget {
                               Text(
                                 shownAmount == null
                                     ? '…'
-                                    : '${guessed && !cycleView ? '≈ ' : ''}${MoneyWriter(currency: card.currency, visible: context.amountsVisible)(shownAmount)}',
+                                    : MoneyWriter(
+                                            currency: card.currency,
+                                            visible: context.amountsVisible)(
+                                        shownAmount),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w900,
-                                  color: guessed && !cycleView
-                                      ? cs.onSurfaceVariant
-                                      : (status?.isOverdue ?? false)
+                                  color: (status?.isOverdue ?? false)
                                           ? cs.error
                                           : cs.onSurface,
                                 ),
                               ),
                               if (status != null) CardDueChip(status: status),
-                              if (guessed)
+                              if (unknown)
                                 ActionChip(
                                   key: const ValueKey('ctx-card-statement'),
                                   visualDensity: VisualDensity.compact,

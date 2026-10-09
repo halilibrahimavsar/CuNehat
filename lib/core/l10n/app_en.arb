@@ -3403,5 +3403,7 @@
   "installmentThisOne": "this one",
   "installmentMissingHint": "{missing} installments of this purchase were deleted.",
   "kkTaksitliAlisverisler": "Ongoing installment purchases",
-  "kkTaksitPlanSatiri": "{left} left · {amount}"
+  "kkTaksitPlanSatiri": "{left} left · {amount}",
+  "kkBilinmiyor": "unknown",
+  "kkDonemBorcuBilinmiyor": "Statement amount unknown · enter it"
 }

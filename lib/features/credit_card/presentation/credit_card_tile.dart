@@ -116,22 +116,32 @@ class CreditCardTile extends StatelessWidget {
                     Text(l10n.kkKalanDonemBorcu,
                         style: theme.textTheme.bodySmall),
                     // Rakam değişince yumuşak geçiş (karta ödeme sonrası).
-                    TweenAnimationBuilder<double>(
-                      tween: Tween(end: status.remainingStatementDebt),
-                      duration: (MediaQuery.maybeDisableAnimationsOf(context) ??
-                              false)
-                          ? Duration.zero
-                          : const Duration(milliseconds: 500),
-                      curve: Curves.easeOutCubic,
-                      builder: (context, v, _) => Text(
-                        _money(v),
+                    if (!status.statementKnown)
+                      Text(
+                        l10n.kkBilinmiyor,
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w900,
-                          color: status.isOverdue ? cs.error : cs.onSurface,
+                          color: cs.onSurfaceVariant,
+                        ),
+                      )
+                    else
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(end: status.remainingStatementDebt),
+                        duration: (MediaQuery.maybeDisableAnimationsOf(context) ??
+                                false)
+                            ? Duration.zero
+                            : const Duration(milliseconds: 500),
+                        curve: Curves.easeOutCubic,
+                        builder: (context, v, _) => Text(
+                          _money(v),
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            color: status.isOverdue ? cs.error : cs.onSurface,
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -147,7 +157,12 @@ class CreditCardTile extends StatelessWidget {
               limit: card.creditCard!.limit!,
             ),
           const SizedBox(height: 8),
-          _row(context, l10n.kkDonemBorcu, _money(status.statementDebt)),
+          _row(
+              context,
+              l10n.kkDonemBorcu,
+              status.statementKnown
+                  ? _money(status.statementDebt)
+                  : l10n.kkBilinmiyor),
           if (status.remainingMinimum != null)
             _row(context, l10n.kkKalanAsgari, _money(status.remainingMinimum!)),
           _row(context, l10n.kkToplamBorc, _money(status.currentDebt)),

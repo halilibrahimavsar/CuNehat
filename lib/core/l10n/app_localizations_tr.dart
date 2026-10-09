@@ -6152,4 +6152,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String kkTaksitPlanSatiri(Object left, Object amount) {
     return '$left taksit kaldı · $amount';
   }
+
+  @override
+  String get kkBilinmiyor => 'bilinmiyor';
+
+  @override
+  String get kkDonemBorcuBilinmiyor => 'Dönem borcu bilinmiyor · ekstreyi gir';
 }

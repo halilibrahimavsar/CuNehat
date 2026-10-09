@@ -161,9 +161,24 @@ class CardStatus {
   double get statementDebt =>
       declared?.statementBalance ?? derivedStatementDebt;
 
-  /// Dönem borcundan kalan (ödemeler düşülmüş).
-  double get remainingStatementDebt =>
-      _positive(statementDebt - paidSinceClosing);
+  /// Bu kesimin dönem borcu BİLİNİYOR mu: banka beyanı var ya da defter
+  /// güvenilir.
+  ///
+  /// **Neden:** kart son kesimden SONRA eklenip kurulumda "şu anki toplam
+  /// borç" girildiğinde defter bu borcun ne kadarının geçen ekstreye ait
+  /// olduğunu bilemez. Eskiden tamamı geçen ekstreye yazılıyordu: kesim 25 /
+  /// son ödeme 5 kartta 9 Ekim'de eklenen 3.000 ₺ "son ödeme 5 Ekim, 4 gün
+  /// gecikti" oluyordu — oysa içinde Kasım'da ödenecek taksitler vardı.
+  /// Kırmızı bant ve her gün gecikme bildirimi geliyordu. Bilinmeyen dönem
+  /// borcu artık ödenecek sayılmaz; arayüz ekstreyi girmeyi önerir.
+  bool get statementKnown => declared != null || derivedReliable;
+
+  /// Dönem borcundan kalan (ödemeler düşülmüş). Dönem borcu bilinmiyorsa
+  /// ([statementKnown] false) 0: tahmin, ödeme çağrısı ya da gecikme
+  /// üretmemeli.
+  double get remainingStatementDebt => statementKnown
+      ? _positive(statementDebt - paidSinceClosing)
+      : 0;
 
   /// Asgari ödemeden kalan; asgari beyan edilmediyse `null`.
   double? get remainingMinimum {
