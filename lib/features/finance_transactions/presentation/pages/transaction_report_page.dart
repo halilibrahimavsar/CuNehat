@@ -40,6 +40,7 @@ import 'package:cunehat/core/config/feature_flags.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/features/credit_card/domain/card_spending_merge.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
+import 'package:cunehat/features/wallet/domain/card_cycle.dart';
 import 'package:cunehat/features/wallet/domain/card_family.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
@@ -128,7 +129,10 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   bool _includeCards = false;
 
   /// Bağlı kartların defterleri (birleşik); yalnız anahtar açıkken okunur.
+  /// Ham hâl (CSV, kimlik eşleme) ve ödeme gününe taşınmış hâl (analiz;
+  /// bkz. [datedByPayment]) ayrı tutulur.
   List<TransactionEntity> _cardLedger = const [];
+  List<TransactionEntity> _cardLedgerRaw = const [];
   StreamSubscription<TransactionsChange>? _cardChangesSub;
 
   Map<String, IconData> _categoryIcons = {};
@@ -268,8 +272,17 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
         .map((c) => repo.getTransactions(userId: c.userId, walletId: c.id!)));
     if (!mounted) return;
     setState(() {
-      _cardLedger = [
+      _cardLedgerRaw = [
         for (final r in results) ...r.getOrElse(() => const []),
+      ];
+      // Kart harcaması ÖDENDİĞİ aya sayılır: her kart kendi kesim/son ödeme
+      // günüyle taşınır.
+      _cardLedger = [
+        for (var i = 0; i < cards.length; i++)
+          ...datedByPayment(
+            results[i].getOrElse(() => const []),
+            cards[i].creditCard!,
+          ),
       ];
     });
   }
@@ -277,20 +290,50 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   /// Analiz kaynağı: anahtar kapalıyken hesabın defteri; açıkken kart
   /// harcamaları katılmış liste. Girdi kimliklerine göre önbelleklenir
   /// ([_derive]'in önbelleği kimlik tabanlı).
+  ///
+  /// Kart harcamaları ÖDEME gününe taşınır ([datedByPayment]): rapor bir
+  /// kartın (ya da "kartlar dahil" hesabın) harcamasını parasının ödendiği
+  /// aya sayar. Kayıtların kendisi değişmez; CSV ve ayrıntı listesi ham
+  /// tarihi gösterir ([_rawOf]).
   List<TransactionEntity>? _mergeAccountSource;
   List<TransactionEntity>? _mergeCardSource;
+  WalletEntity? _mergeSelf;
+  bool? _mergeIncludeCards;
   List<TransactionEntity> _merged = const [];
 
   List<TransactionEntity> _analysisSource(List<TransactionEntity> account) {
-    if (!_includeCards) return account;
+    final self = context.walletById(widget.walletId);
     if (identical(_mergeAccountSource, account) &&
-        identical(_mergeCardSource, _cardLedger)) {
+        identical(_mergeCardSource, _cardLedger) &&
+        identical(_mergeSelf, self) &&
+        _mergeIncludeCards == _includeCards) {
       return _merged;
     }
     _mergeAccountSource = account;
     _mergeCardSource = _cardLedger;
-    _merged = mergeCardSpending(account: account, cards: _cardLedger);
+    _mergeSelf = self;
+    _mergeIncludeCards = _includeCards;
+    final selfCard = FeatureFlags.creditCards ? self?.creditCard : null;
+    final base = selfCard == null ? account : datedByPayment(account, selfCard);
+    _merged = _includeCards
+        ? mergeCardSpending(account: base, cards: _cardLedger)
+        : base;
     return _merged;
+  }
+
+  /// Analiz kopyasının (ödeme gününe taşınmış) HAM kaydı — CSV ve ayrıntı
+  /// listesi kullanıcının girdiği tarihi göstersin.
+  TransactionEntity _rawOf(TransactionEntity t) {
+    final id = t.id;
+    if (id == null) return t;
+    for (final r in _forWallet(
+        context.read<TransactionBloc>().state.currentTransactions)) {
+      if (r.id == id) return r;
+    }
+    for (final r in _cardLedgerRaw) {
+      if (r.id == id) return r;
+    }
+    return t;
   }
 
   Future<void> _loadCategoryIcons() async {
@@ -355,8 +398,12 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     // girer (eskiden anahtar yok sayılıyordu). Para taşıma hareketleri ise
     // anahtardan bağımsız olarak HEP dosyadadır: CSV bir kayıt dökümüdür,
     // gelir–gider toplamı değil — transferi atmak defteri eksik gösterirdi.
+    // Dönem üyeliği raporla AYNI (kart harcaması ödeme ayında); dosyaya ise
+    // kaydın kendi tarihi yazılır.
     final filtered = _filterTransactionsByRange(
-        _analysisSource(_forWallet(state.currentTransactions)));
+            _analysisSource(_forWallet(state.currentTransactions)))
+        .map(_rawOf)
+        .toList();
     if (filtered.isEmpty) return;
     // Ay adı arayüz dilinde: locale'siz `DateFormat` sistem diline bağlanıp
     // Türkçe arayüzde "Sep" yazabiliyordu.
@@ -690,7 +737,9 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     ReportTransactionListSheet.show(
       context: context,
       title: label,
-      transactions: items,
+      // Gösterilen tarih kaydın kendisi (kart harcaması analizde ödeme
+      // gününe taşınmış olabilir).
+      transactions: items.map(_rawOf).toList(),
       isExpense: true,
       categoryIcons: _categoryIcons,
       categoryLabels: _categoryLabels,
@@ -708,6 +757,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       categoryLabels: _categoryLabels,
       dataBuilder: _dataBuilder(context),
       sourceOf: (all) => _analysisSource(_forWallet(all)),
+      displayOf: _rawOf,
     );
   }
 

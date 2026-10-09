@@ -268,4 +268,47 @@ void main() {
       expect(s.currentDebt, 0);
     });
   });
+
+  group('cardPaymentDate — kart harcaması ÖDENDİĞİ aya sayılır', () {
+    final card = _card(closing: 25, due: 5);
+
+    test('kesim 25 / son ödeme 5: 6 Eki → 5 Kas, 26 Eki → 5 Ara', () {
+      expect(cardPaymentDate(_tx(DateTime(2026, 10, 6, 14), 100), card),
+          DateTime(2026, 11, 5, 14));
+      expect(cardPaymentDate(_tx(DateTime(2026, 10, 26, 9), 100), card),
+          DateTime(2026, 12, 5, 9));
+      // Kesim günü o ekstreye girer.
+      expect(cardPaymentDate(_tx(DateTime(2026, 10, 25, 23), 100), card),
+          DateTime(2026, 11, 5, 23));
+    });
+
+    test('kesimin beyanı varsa bankanın son ödeme tarihi', () {
+      final declared = _card(
+        closing: 25,
+        due: 5,
+        statement: CardStatement(
+          closingDate: DateTime(2026, 10, 25),
+          dueDate: DateTime(2026, 11, 7),
+          statementBalance: 100,
+          recordedAt: DateTime(2026, 10, 26),
+        ),
+      );
+      expect(cardPaymentDate(_tx(DateTime(2026, 10, 6), 100), declared),
+          DateTime(2026, 11, 7));
+    });
+
+    test('sistem hareketi (karta ödeme) gerçek tarihinde kalır', () {
+      final pay = _tx(DateTime(2026, 10, 6), 100,
+          income: true, tag: CashMovementTags.transfer);
+      expect(cardPaymentDate(pay, card), pay.date);
+    });
+
+    test('datedByPayment kaydı DEĞİŞTİRMEZ, kopyalar', () {
+      final t = _tx(DateTime(2026, 10, 6), 100);
+      final out = datedByPayment([t], card);
+      expect(out.single.date, DateTime(2026, 11, 5));
+      expect(t.date, DateTime(2026, 10, 6));
+      expect(out.single.id, t.id);
+    });
+  });
 }

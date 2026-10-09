@@ -41,6 +41,11 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
   /// [ReportCategoryDataBuilder.includeSystemMovements]).
   final List<TransactionEntity> Function(List<TransactionEntity> all) sourceOf;
 
+  /// Listede GÖSTERİLECEK kayıt: analiz kopyası (ör. ödeme gününe taşınmış
+  /// kart harcaması) yerine kullanıcının girdiği hâl. Verilmezse kopya
+  /// olduğu gibi gösterilir.
+  final TransactionEntity Function(TransactionEntity t)? displayOf;
+
   const CategoryDetailsBottomSheet({
     super.key,
     required this.initialCategory,
@@ -49,6 +54,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
     required this.categoryIcons,
     required this.dataBuilder,
     required this.sourceOf,
+    this.displayOf,
     this.categoryLabels = const {},
   });
 
@@ -61,6 +67,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
     required ReportCategoryDataBuilder dataBuilder,
     required List<TransactionEntity> Function(List<TransactionEntity> all)
         sourceOf,
+    TransactionEntity Function(TransactionEntity t)? displayOf,
     Map<String, String> categoryLabels = const {},
   }) {
     // Modal route sayfanın provider'ının altında değil, Overlay'de kardeşi
@@ -81,6 +88,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
             categoryIcons: categoryIcons,
             dataBuilder: dataBuilder,
             sourceOf: sourceOf,
+            displayOf: displayOf,
             categoryLabels: categoryLabels,
           ),
         );
@@ -131,8 +139,11 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                 updatedCategory.name, updatedCategory.totalAmount)
             : null;
 
+        final display = displayOf;
         final transactionsWithBalance = updatedCategory.transactions
-            .map((t) => TransactionWithBalance(transaction: t, balanceAfter: 0))
+            .map((t) => TransactionWithBalance(
+                transaction: display == null ? t : display(t),
+                balanceAfter: 0))
             .toList();
 
         return Container(
@@ -362,6 +373,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
       categoryIcons: categoryIcons,
       dataBuilder: dataBuilder,
       sourceOf: sourceOf,
+      displayOf: displayOf,
       categoryLabels: categoryLabels,
     );
   }

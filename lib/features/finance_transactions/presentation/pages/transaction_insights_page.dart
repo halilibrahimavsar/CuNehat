@@ -45,6 +45,9 @@ import 'package:cunehat/features/recurring_transactions/domain/usecases/get_all_
 import 'package:cunehat/features/recurring_transactions/domain/usecases/save_recurring_transaction_usecase.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_event.dart';
+import 'package:cunehat/features/wallet/domain/card_cycle.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
+import 'package:cunehat/core/config/feature_flags.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
@@ -278,6 +281,25 @@ class _InsightsViewState extends State<_InsightsView> {
     return _walletTransactions;
   }
 
+  /// Analiz kopyası: kart cüzdanında harcamalar ÖDEME gününe taşınır
+  /// ([datedByPayment]) — İçgörü de Rapor gibi kart harcamasını ödendiği
+  /// aya sayar. Kimliğe göre önbelleklenir.
+  List<TransactionEntity>? _analysisSourceRaw;
+  WalletEntity? _analysisSelf;
+  List<TransactionEntity> _analysisList = const [];
+
+  List<TransactionEntity> _analysisOf(List<TransactionEntity> raw) {
+    final self = context.walletById(widget.walletId);
+    if (identical(_analysisSourceRaw, raw) && identical(_analysisSelf, self)) {
+      return _analysisList;
+    }
+    _analysisSourceRaw = raw;
+    _analysisSelf = self;
+    final card = FeatureFlags.creditCards ? self?.creditCard : null;
+    _analysisList = card == null ? raw : datedByPayment(raw, card);
+    return _analysisList;
+  }
+
   _InsightsDerived _derive(BuildContext context, List<TransactionEntity> all) {
     final templates = _templates ?? const <RecurringTransactionEntity>[];
     final currency = context.activeWalletCurrency;
@@ -330,7 +352,10 @@ class _InsightsViewState extends State<_InsightsView> {
           to: _range.end,
         ),
       ),
-      suggestions: _detector.detect(all, existingTemplates: templates),
+      // Tekrar tespiti GERÇEK tarihlerle: ödeme gününe taşınmış kart
+      // satırları hepsi ayın aynı gününde durur, sahte "aylık" örüntü üretirdi.
+      suggestions: _detector.detect(_analysisSourceRaw ?? all,
+          existingTemplates: templates),
       budgetStatuses: _budgets.isEmpty
           ? const <BudgetStatus>[]
           : () {
@@ -484,7 +509,7 @@ class _InsightsViewState extends State<_InsightsView> {
             child: BlocBuilder<TransactionBloc, TransactionState>(
               builder: (context, state) {
                 context.select((TransactionFilterCubit c) => c.period);
-                final all = _forWallet(state.currentTransactions);
+                final all = _analysisOf(_forWallet(state.currentTransactions));
 
                 if (state is TransactionLoading && all.isEmpty) {
                   return const Center(child: CircularProgressIndicator());

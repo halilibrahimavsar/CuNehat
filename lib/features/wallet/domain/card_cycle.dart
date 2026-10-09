@@ -266,3 +266,43 @@ CardStatus computeCardStatus({
     installmentPlans: activeInstallmentPlans(ledger, today: day),
   );
 }
+
+/// Kart satırının ÖDEME günü: harcamanın girdiği ekstrenin son ödeme günü
+/// (o kesimin beyanı varsa bankanın tarihi). Saat korunur.
+///
+/// **Neden:** kullanıcı kart harcamasını PARAYI ÖDEDİĞİ aya sayar. Kesim 25 /
+/// son ödeme 5 kartta 6 Ekim'deki alışveriş 5 Kasım'da ödenir; Rapor onu
+/// Ekim'e yazınca "henüz ödemediğim şey bu ayın gideri" görünüyordu. Taksit
+/// satırları da aynı kuralla kendi ödeme ayına düşer (6 Eki · 6 Kas · 6 Ara →
+/// 5 Kas · 5 Ara · 5 Oca).
+///
+/// Kayıtlı tarih DEĞİŞMEZ (ekstre ataması, ekstre aktarımındaki tekrar
+/// tespiti ve liste ona dayanır); ödeme günü yalnız aylık hesap yapılan
+/// görünümlerde türetilir. Kart ayarı değişince kendiliğinden doğru aya kayar.
+///
+/// Sistem hareketleri (karta yapılan ödeme, karttan transfer) gerçek
+/// tarihinde kalır: para o gün yer değiştirdi.
+DateTime cardPaymentDate(TransactionEntity t, CreditCardInfo card) {
+  if (t.isSystem) return t.date;
+  final cycle = CardCycle(card);
+  final closing = cycle.periodContaining(t.date).end;
+  final declared = card.lastStatement;
+  final due = declared != null &&
+          CardCycle.dateOnly(declared.closingDate) == closing
+      ? declared.dueDate
+      : cycle.dueFor(closing);
+  return DateTime(due.year, due.month, due.day, t.date.hour, t.date.minute,
+      t.date.second, t.date.millisecond);
+}
+
+/// [ledger]'ın ödeme gününe taşınmış KOPYASI (bkz. [cardPaymentDate]) —
+/// yalnız aylık hesap yapan görünümler (Rapor, İçgörü) için. Asla deftere
+/// yazılmaz; düzenleme/silme kimlikle ham kayda gider.
+List<TransactionEntity> datedByPayment(
+  Iterable<TransactionEntity> ledger,
+  CreditCardInfo card,
+) =>
+    [
+      for (final t in ledger)
+        if (t.isSystem) t else t.copyWith(date: cardPaymentDate(t, card)),
+    ];
