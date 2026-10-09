@@ -221,3 +221,40 @@ DateTime? nearestDayOutside(Iterable<DateTime> dates, DateTimeRange range) {
   }
   return before ?? after;
 }
+
+/// Bir dönemin KIYAS penceresi: bir ÖNCEKİ dönemin başından, bu dönemin
+/// yaşanmış gün sayısı kadarı. Aralık tamamen gelecekteyse null.
+///
+/// **Neden takvim hizalı:** eskiden pencere "hemen önceki N gün"dü — ayın
+/// 9'unda Ekim'in ilk 9 günü 22–30 Eylül ile kıyaslanıyordu. Raporun kesikli
+/// "geçen ay" çizgisi ise 1 Eylül'den başlar; rozet çizgiyle aynı şeyi
+/// söylemeli: "geçen ayın AYNI NOKTASINA göre". Yaşanmış kısımla sınırlı
+/// kalması ise eski dersin kendisi: ayın 3'ünde tam ayı tam ayla kıyaslamak
+/// "geçen aya göre %90 az harcadın" derdi.
+///
+/// Önceki dönem [shiftPeriod] ile bulunur (ay → takvim ayı, özel aralık →
+/// kendi uzunluğundaki bitişik pencere). Önceki dönem daha kısaysa (31 Ekim
+/// ↔ 30 Eylül) pencere onun sonunda durur.
+({DateTime start, DateTime end})? comparisonWindowFor(
+  DateTimeRange range, {
+  DateTime? now,
+}) {
+  final start = dayOf(range.start);
+  final end = dayOf(range.end);
+  final today = dayOf(now ?? DateTime.now());
+  final elapsedEnd = end.isAfter(today) ? today : end;
+  if (elapsedEnd.isBefore(start)) return null;
+
+  // Gün farkı takvim alanından: yaz saati geçişinde `inDays` bir gün
+  // eksik sayabiliyor (23 saatlik gün).
+  final elapsedDays =
+      (elapsedEnd.difference(start).inHours / 24).round() + 1;
+
+  final previous = shiftPeriod(range, -1);
+  final previousStart = dayOf(previous.start);
+  final previousEnd = dayOf(previous.end);
+  var windowEnd = DateTime(previousStart.year, previousStart.month,
+      previousStart.day + elapsedDays - 1);
+  if (windowEnd.isAfter(previousEnd)) windowEnd = previousEnd;
+  return (start: previousStart, end: windowEnd);
+}

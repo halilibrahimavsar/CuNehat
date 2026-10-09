@@ -305,7 +305,7 @@ void main() {
     });
   });
 
-  group('sıçrama, EŞDEĞER uzunlukta önceki pencereyle kıyaslanır', () {
+  group('sıçrama, geçen dönemin AYNI noktasıyla kıyaslanır', () {
     test('kısmi dönemde de tetiklenir', () {
       // Ölçülen hata: ayın 3'ünde 3 günlük harcama 31 günlük geçen ayla
       // kıyaslanıyor, 3 kat hızlı harcamada bile uyarı çıkmıyordu.
@@ -326,19 +326,20 @@ void main() {
       expect(r.categorySpike, isNotNull);
       expect(r.categorySpike!.windowDays, 3);
       expect(r.categorySpike!.currentAmount, 900);
-      // 29–31 Ağustos: 3 × 100.
+      // 1–3 Ağustos (geçen ayın aynı 3 günü): 3 × 100.
       expect(r.categorySpike!.previousAmount, 300);
       expect(r.categorySpike!.percentIncrease, 200);
     });
 
     test('geçen döneme göre sıçrama yapan kategoriyi doğru tespit eder', () {
       final txs = [
-        // Önceki pencere (17–31 Mayıs): Market = 200 TL
+        // Önceki pencere — geçen ayın AYNI 15 günü (1–15 Mayıs):
+        // Market = 200 TL
         _tx(
             title: 'Market Eski',
             tag: 'Market',
             amount: 200,
-            date: DateTime(2026, 5, 20)),
+            date: DateTime(2026, 5, 10)),
         // Bu dönemin yaşanmış kısmı: Market = 500 TL (%150 artış)
         _tx(
             title: 'Market Yeni',
@@ -364,8 +365,9 @@ void main() {
 
     test('pencere DIŞINDA kalan eski harcama kıyasa girmez', () {
       final txs = [
-        // 10 Mayıs, 17–31 Mayıs penceresinin dışında.
-        _tx(tag: 'Market', amount: 200, date: DateTime(2026, 5, 10)),
+        // 20 Mayıs, 1–15 Mayıs penceresinin dışında (geçen ayın bu
+        // noktasından SONRA harcanmış).
+        _tx(tag: 'Market', amount: 200, date: DateTime(2026, 5, 20)),
         _tx(tag: 'Market', amount: 500, date: DateTime(2026, 6, 10)),
       ];
 
@@ -410,7 +412,7 @@ void main() {
             title: 'Kahve Eski',
             tag: 'Kahve',
             amount: 40,
-            date: DateTime(2026, 5, 20)),
+            date: DateTime(2026, 5, 10)),
         _tx(
             title: 'Kahve Yeni',
             tag: 'Kahve',
@@ -443,17 +445,18 @@ void main() {
   });
 
   group('önceki dönem toplamları', () {
-    test('eşdeğer uzunlukta pencereden gelir', () {
+    test('geçen dönemin aynı noktasına kadarki pencereden gelir', () {
       final txs = [
-        // 17–31 Mayıs penceresi.
+        // 1–15 Mayıs penceresi: geçen ayın AYNI noktası.
         _tx(
             tag: 'Maaş',
             amount: 800,
-            date: DateTime(2026, 5, 20),
+            date: DateTime(2026, 5, 2),
             type: TransactionTypeModel.income),
-        _tx(tag: 'Market', amount: 300, date: DateTime(2026, 5, 25)),
-        // Pencerenin dışı.
-        _tx(tag: 'Market', amount: 9999, date: DateTime(2026, 5, 2)),
+        _tx(tag: 'Market', amount: 300, date: DateTime(2026, 5, 15)),
+        // Pencerenin dışı: geçen ayın bu noktasından sonrası ve öncesi ay.
+        _tx(tag: 'Market', amount: 9999, date: DateTime(2026, 5, 16)),
+        _tx(tag: 'Market', amount: 7777, date: DateTime(2026, 4, 30)),
       ];
 
       final r = service.analyze(

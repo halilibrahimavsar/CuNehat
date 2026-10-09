@@ -1,6 +1,8 @@
 import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
+import 'package:cunehat/features/finance_transactions/domain/transaction_period.dart';
+import 'package:flutter/material.dart' show DateTimeRange;
 
 /// Tek bir kategorinin dönemsel harcama sıçraması uyarısı.
 class CategorySpike {
@@ -211,10 +213,12 @@ class TransactionAnalyticsService {
         : null;
 
     // Kategori Bazlı Harcama Sıçraması Uyarısı (Category Spike)
+    // Kıyas penceresi Rapor ile ORTAK ([comparisonWindowFor]): iki sayfa
+    // aynı dönem için farklı "önceki dönem" rozeti yazmasın.
     final previousWindow = hasElapsed
-        ? (
-            start: startDay.subtract(Duration(days: elapsedDays)),
-            end: startDay.subtract(const Duration(days: 1)),
+        ? comparisonWindowFor(
+            DateTimeRange(start: startDay, end: endDay),
+            now: today,
           )
         : null;
 
