@@ -269,8 +269,11 @@ class _CardStrip extends StatelessWidget {
                 // Başlıktaki "BORÇ 1.200" ile şeritteki "0,00" yan yana iki
                 // açıklamasız borç sayısıydı; şimdi biri toplam, öbürü bu
                 // dönemin harcaması.
+                //
+                // Tahmini dönemde (kart kesimden sonra eklendi) de geçerli:
+                // tahmin edilen ekstre ödendiyse "≈ 0,00" bilgi taşımıyor;
+                // "Ekstreyi gir" çipi yine sunulur.
                 final cycleView = status != null &&
-                    !guessed &&
                     !moneyIsPositive(status.remainingStatementDebt);
                 final shownAmount = status == null
                     ? null
@@ -303,13 +306,13 @@ class _CardStrip extends StatelessWidget {
                               Text(
                                 shownAmount == null
                                     ? '…'
-                                    : '${guessed ? '≈ ' : ''}${MoneyWriter(currency: card.currency, visible: context.amountsVisible)(shownAmount)}',
+                                    : '${guessed && !cycleView ? '≈ ' : ''}${MoneyWriter(currency: card.currency, visible: context.amountsVisible)(shownAmount)}',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w900,
-                                  color: guessed
+                                  color: guessed && !cycleView
                                       ? cs.onSurfaceVariant
                                       : (status?.isOverdue ?? false)
                                           ? cs.error
