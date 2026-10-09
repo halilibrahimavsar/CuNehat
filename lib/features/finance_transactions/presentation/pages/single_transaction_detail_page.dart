@@ -25,6 +25,8 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
 import 'package:cunehat/features/finance_transactions/domain/installments.dart';
+import 'package:cunehat/core/config/feature_flags.dart';
+import 'package:cunehat/features/wallet/domain/card_cycle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -279,6 +281,15 @@ class _SingleTransactionDetailPageState
                           label: context.l10n.detailLabelTarih,
                           value: AppFormatters.dateLong.format(t.date)),
                       _divider(scheme),
+                      // Kart harcaması: bankanın tahsil ettiği gün. Rapor ve
+                      // İçgörü harcamayı bu güne (ödeme ayına) sayar.
+                      if (_paymentDayOf(context, t) case final paid?) ...[
+                        _infoRow(context,
+                            icon: Icons.credit_card_rounded,
+                            label: context.l10n.kkOdemeGunu,
+                            value: AppFormatters.dateLong.format(paid)),
+                        _divider(scheme),
+                      ],
                       _infoRow(context,
                           icon: Icons.schedule_rounded,
                           label: context.l10n.detailLabelSaat,
@@ -408,6 +419,14 @@ class _SingleTransactionDetailPageState
         );
       },
     );
+  }
+
+  /// Kart harcamasının ödeme günü (bkz. [cardPaymentDate]); kart dışı ya
+  /// da sistem hareketinde `null`.
+  DateTime? _paymentDayOf(BuildContext context, TransactionEntity t) {
+    if (!FeatureFlags.creditCards || t.isSystem) return null;
+    final card = context.walletById(t.walletId)?.creditCard;
+    return card == null ? null : cardPaymentDate(t, card);
   }
 
   void _edit(BuildContext context, TransactionEntity t) {

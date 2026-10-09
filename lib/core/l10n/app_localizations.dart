@@ -10684,6 +10684,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Dönem borcu bilinmiyor · ekstreyi gir'**
   String get kkDonemBorcuBilinmiyor;
+
+  /// No description provided for @kkOdemeNotu.
+  ///
+  /// In tr, this message translates to:
+  /// **'ödeme {date}'**
+  String kkOdemeNotu(Object date);
+
+  /// No description provided for @kkOdemeGunu.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme günü'**
+  String get kkOdemeGunu;
 }
 
 class _AppLocalizationsDelegate

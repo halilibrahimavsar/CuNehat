@@ -6205,4 +6205,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kkDonemBorcuBilinmiyor => 'Statement amount unknown · enter it';
+
+  @override
+  String kkOdemeNotu(Object date) {
+    return 'paid $date';
+  }
+
+  @override
+  String get kkOdemeGunu => 'Payment day';
 }

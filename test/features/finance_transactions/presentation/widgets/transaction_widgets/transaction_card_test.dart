@@ -14,6 +14,9 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_transaction_entity.dart';
 import 'package:cunehat/features/recurring_transactions/domain/usecases/save_recurring_transaction_usecase.dart';
 import 'package:cunehat/config/theme/money_colors.dart';
+import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
+import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -38,6 +41,9 @@ class MockSaveRecurringTransactionUsecase extends Mock
     implements SaveRecurringTransactionUsecase {}
 
 class FakeTransactionEvent extends Fake implements TransactionEvent {}
+
+class _MockWalletBloc extends MockBloc<WalletEvent, WalletState>
+    implements WalletBloc {}
 
 class FakeTransactionEntity extends Fake implements TransactionEntity {}
 
@@ -184,6 +190,64 @@ void main() {
     )));
     await tester.pumpAndSettle();
     expect(amountColor('-150,00 ₺'), MoneyColors.expense);
+  });
+
+  testWidgets(
+      'kart harcamasında saatin yanına ÖDEME günü yazılır (kesim 25 / son '
+      'ödeme 5: 6 Eki → 5 Kas); kart dışında yazılmaz', (tester) async {
+    tester.view.physicalSize = const Size(1200, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    WalletEntity wallet(String id, {CreditCardInfo? card}) => WalletEntity(
+          id: id,
+          userId: 'user_123',
+          name: id,
+          balance: 0,
+          debt: 0,
+          credit: 0,
+          investment: 0,
+          colorHex: '0xFF000000',
+          iconName: 'wallet',
+          createdAt: DateTime(2026, 1, 1),
+          openingBalance: 0,
+          creditCard: card,
+        );
+    final cardWallet = wallet('card',
+        card: const CreditCardInfo(closingDay: 25, dueDay: 5));
+    final walletBloc = _MockWalletBloc();
+    when(() => walletBloc.state).thenReturn(
+        WalletLoadedSt([wallet('wallet_123'), cardWallet], cardWallet));
+    final onCard = TransactionEntity(
+      id: 'c1',
+      userId: 'user_123',
+      walletId: 'card',
+      title: 'Laptop',
+      tag: 'Yemek',
+      amount: 150,
+      date: DateTime(2026, 10, 6, 14, 30),
+      type: TransactionTypeModel.expense,
+    );
+    when(() => mockTransactionBloc.state).thenReturn(TransactionLoaded(
+      groupedTransactions: const {},
+      allTransactions: [onCard],
+    ));
+
+    Future<void> pump(TransactionEntity t) => tester.pumpWidget(
+          BlocProvider<WalletBloc>.value(
+            value: walletBloc,
+            child: buildTestableWidget(TransactionCard(
+              item: TransactionWithBalance(transaction: t, balanceAfter: 0),
+            )),
+          ),
+        );
+
+    await pump(onCard);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('ödeme 5 Kas'), findsOneWidget);
+
+    await pump(createTx(isSystem: false, id: 'plain'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('ödeme'), findsNothing);
   });
 
   testWidgets('renders TransactionCard with correct details',

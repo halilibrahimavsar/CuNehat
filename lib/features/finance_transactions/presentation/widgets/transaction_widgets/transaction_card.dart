@@ -12,6 +12,10 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/calcu
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_action_sheet.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
+import 'package:cunehat/core/config/feature_flags.dart';
+import 'package:cunehat/features/wallet/domain/card_cycle.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -206,16 +210,27 @@ class TransactionCard extends StatelessWidget {
                   // Sütun daraldığında (büyük yazı ölçeği) kategori çipine yer
                   // açmak için düşer — kırpılmış bir "1…" kimseye bir şey
                   // söylemez.
+                  //
+                  // Kart harcamasında saatin yanına ÖDEME günü yazılır: liste
+                  // harcama gününde durur, Rapor/İçgörü ise onu ödendiği aya
+                  // sayar ("ödeme 5 Kas"). Dar sütunda saat düşer, not kalır.
                   LayoutBuilder(
-                    builder: (context, inner) => Row(
+                    builder: (context, inner) {
+                      final payment = _paymentNote(context, t);
+                      final wide = inner.maxWidth >= _timeMinWidth;
+                      final meta = [
+                        if (wide) AppFormatters.time.format(t.date),
+                        if (payment != null) payment,
+                      ].join(' · ');
+                      return Row(
                       children: [
                         if (t.tag.isNotEmpty)
                           _categoryChip(context, accent, t.tag),
-                        if (inner.maxWidth >= _timeMinWidth) ...[
+                        if (meta.isNotEmpty) ...[
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
-                              AppFormatters.time.format(t.date),
+                              meta,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.bodySmall?.copyWith(
@@ -227,7 +242,8 @@ class TransactionCard extends StatelessWidget {
                           ),
                         ],
                       ],
-                    ),
+                    );
+                    },
                   ),
                 ],
               ),
@@ -271,6 +287,17 @@ class TransactionCard extends StatelessWidget {
 
   /// Saatin çizilmesi için başlık sütununda gereken en az genişlik.
   static const double _timeMinWidth = 110;
+
+  /// Kart harcamasının ödeme günü notu ("ödeme 5 Kas"); kart dışı ya da
+  /// sistem hareketinde `null` (bkz. [cardPaymentDate]).
+  String? _paymentNote(BuildContext context, TransactionEntity t) {
+    if (!FeatureFlags.creditCards || t.isSystem) return null;
+    final card = context.walletById(t.walletId)?.creditCard;
+    if (card == null) return null;
+    final paid = cardPaymentDate(t, card);
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    return context.l10n.kkOdemeNotu(DateFormat('d MMM', locale).format(paid));
+  }
 
   Widget _categoryChip(BuildContext context, Color accent, String tag) {
     return Flexible(

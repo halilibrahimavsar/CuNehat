@@ -10,6 +10,9 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
+import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
+import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -20,6 +23,8 @@ class MockCategoryRepository extends Mock implements CategoryRepository {}
 
 class MockTransactionsRepository extends Mock
     implements TransactionsRepository {}
+
+class MockWalletRepository extends Mock implements WalletRepository {}
 
 void main() {
   late MockBudgetRepository mockBudgetRepo;
@@ -60,6 +65,67 @@ void main() {
     limitAmount: 1000.0,
     spentAmount: 0.0,
   );
+
+  group('GetBudgetsUsecase — kart cüzdanı', () {
+    test(
+        'kart harcaması ÖDENDİĞİ aya sayılır: geçen ayın harcaması bu ayın '
+        'bütçesini doldurur, bu ayınki doldurmaz', () async {
+      final now = DateTime.now();
+      // Kesim günü ayın 1'i, son ödeme 15'i: önceki ayın 2'sinde yapılan
+      // harcama bu ayın 1'inde kesilir ve bu ayın 15'inde ÖDENİR; bu ayın
+      // 2'sindeki harcama gelecek ay ödenir.
+      final lastMonth = DateTime(now.year, now.month - 1, 2, 12);
+      final thisMonth = DateTime(now.year, now.month, 2, 12);
+      TransactionEntity expense(String id, DateTime at, double amount) =>
+          TransactionEntity(
+            id: id,
+            userId: 'u',
+            walletId: 'card',
+            title: id,
+            tag: 'm',
+            amount: amount,
+            date: at,
+            type: TransactionTypeModel.expense,
+          );
+      final wallets = MockWalletRepository();
+      when(() => wallets.getWalletById('card')).thenAnswer((_) async => Right(
+            WalletEntity(
+              id: 'card',
+              userId: 'u',
+              name: 'Bonus',
+              balance: -500,
+              debt: 0,
+              credit: 0,
+              investment: 0,
+              colorHex: '0xFF000000',
+              iconName: 'credit_card',
+              createdAt: DateTime(2020),
+              openingBalance: 0,
+              creditCard: const CreditCardInfo(closingDay: 1, dueDay: 15),
+            ),
+          ));
+      when(() => mockBudgetRepo.getBudgets('card')).thenAnswer((_) async =>
+          const Right([
+            BudgetEntity(walletId: 'card', categoryId: 'm', limitAmount: 1000)
+          ]));
+      when(() => mockTransactionsRepo.getTransactions(
+            userId: any(named: 'userId'),
+            walletId: any(named: 'walletId'),
+            startDate: any(named: 'startDate'),
+            endDate: any(named: 'endDate'),
+            type: any(named: 'type'),
+          )).thenAnswer((_) async => Right([
+            expense('old', lastMonth, 300),
+            expense('new', thisMonth, 200),
+          ]));
+
+      final result = await GetBudgetsUsecase(mockBudgetRepo,
+          mockTransactionsRepo, mockCategoryRepo, wallets)('u', 'card');
+
+      final budgets = result.getOrElse(() => const []);
+      expect(budgets.single.spentAmount, 300);
+    });
+  });
 
   group('GetBudgetsUsecase', () {
     test('ANA kategori bütçesi alt kategori harcamalarını da sayar', () async {

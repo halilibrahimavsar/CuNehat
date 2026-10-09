@@ -9,6 +9,9 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
+import 'package:cunehat/features/wallet/domain/card_cycle.dart';
+import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
+import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
 import 'package:injectable/injectable.dart';
 
 @injectable
@@ -17,11 +20,17 @@ class GetBudgetsUsecase {
   final TransactionsRepository transactionsRepository;
   final CategoryRepository categoryRepository;
 
+  /// Kart cüzdanında harcama ÖDEME ayına sayılır (bkz. [cardPaymentDate]);
+  /// kartın kesim/son ödeme bilgisi buradan okunur. Verilmezse (yalıtılmış
+  /// testler) her cüzdan takvim ayıyla sayılır.
+  final WalletRepository? walletRepository;
+
   GetBudgetsUsecase(
     this.budgetRepository,
     this.transactionsRepository,
-    this.categoryRepository,
-  );
+    this.categoryRepository, [
+    this.walletRepository,
+  ]);
 
   Future<Either<Failure, List<BudgetEntity>>> call(
       String userId, String walletId) async {
@@ -49,13 +58,31 @@ class GetBudgetsUsecase {
         final endOfMonth =
             DateTime(now.year, now.month + 1, 0, 23, 59, 59, 999);
 
-        final transactionsResult = await transactionsRepository.getTransactions(
-          userId: userId,
-          walletId: walletId,
-          startDate: startOfMonth,
-          endDate: endOfMonth,
-          type: TransactionTypeModel.expense,
-        );
+        // Kart cüzdanı: harcama PARASININ ödendiği aya sayılır (Rapor ve
+        // İçgörü ile aynı kural). 6 Ekim'deki alışveriş 5 Kasım'da ödenir;
+        // Ekim bütçesini değil Kasım'ınkini doldurur. Takvim süzgeci kayıt
+        // tarihine baktığı için kartın tüm giderleri okunur, ödeme gününe
+        // göre süzülür.
+        final card = await _cardOf(walletId);
+        final transactionsResult = card == null
+            ? await transactionsRepository.getTransactions(
+                userId: userId,
+                walletId: walletId,
+                startDate: startOfMonth,
+                endDate: endOfMonth,
+                type: TransactionTypeModel.expense,
+              )
+            : (await transactionsRepository.getTransactions(
+                userId: userId,
+                walletId: walletId,
+                type: TransactionTypeModel.expense,
+              ))
+                .map((all) => [
+                      for (final t in datedByPayment(all, card))
+                        if (!t.date.isBefore(startOfMonth) &&
+                            !t.date.isAfter(endOfMonth))
+                          t,
+                    ]);
 
         return transactionsResult.fold(
           (tFailure) => Left(
@@ -88,5 +115,16 @@ class GetBudgetsUsecase {
         );
       },
     );
+  }
+
+  Future<CreditCardInfo?> _cardOf(String walletId) async {
+    final repo = walletRepository;
+    if (repo == null) return null;
+    try {
+      final result = await repo.getWalletById(walletId);
+      return result.fold((_) => null, (w) => w?.creditCard);
+    } catch (_) {
+      return null;
+    }
   }
 }

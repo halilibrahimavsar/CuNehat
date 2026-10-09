@@ -300,6 +300,17 @@ class _InsightsViewState extends State<_InsightsView> {
     return _analysisList;
   }
 
+  /// Analiz kopyasının HAM kaydı: listeler kullanıcının girdiği tarihi
+  /// göstersin (kart harcaması analizde ödeme gününe taşınmış olabilir).
+  TransactionEntity _rawOf(TransactionEntity t) {
+    final raw = _analysisSourceRaw;
+    if (raw == null || identical(raw, _analysisList) || t.id == null) return t;
+    for (final r in raw) {
+      if (r.id == t.id) return r;
+    }
+    return t;
+  }
+
   _InsightsDerived _derive(BuildContext context, List<TransactionEntity> all) {
     final templates = _templates ?? const <RecurringTransactionEntity>[];
     final currency = context.activeWalletCurrency;
@@ -455,7 +466,7 @@ class _InsightsViewState extends State<_InsightsView> {
     ReportTransactionListSheet.show(
       context: context,
       title: context.categoryLabelForTag(rootTag, labels: _categoryLabels),
-      transactions: members,
+      transactions: members.map(_rawOf).toList(),
       isExpense: true,
       categoryIcons: _categoryIcons,
       categoryLabels: _categoryLabels,
@@ -480,7 +491,7 @@ class _InsightsViewState extends State<_InsightsView> {
     ReportTransactionListSheet.show(
       context: context,
       title: context.l10n.insightTopExpensesTitle,
-      transactions: members,
+      transactions: members.map(_rawOf).toList(),
       isExpense: true,
       categoryIcons: _categoryIcons,
       categoryLabels: _categoryLabels,

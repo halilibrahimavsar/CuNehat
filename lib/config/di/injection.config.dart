@@ -324,11 +324,6 @@ extension GetItInjectableX on _i174.GetIt {
         ));
     gh.lazySingleton<_i851.GoalRepository>(() => _i260.GoalRepositoryImpl(
         localDataSource: gh<_i1036.GoalLocalDataSource>()));
-    gh.factory<_i21.GetBudgetsUsecase>(() => _i21.GetBudgetsUsecase(
-          gh<_i94.BudgetRepository>(),
-          gh<_i543.TransactionsRepository>(),
-          gh<_i896.CategoryRepository>(),
-        ));
     gh.factory<_i207.WalletCreateUseCase>(
         () => _i207.WalletCreateUseCase(gh<_i504.WalletRepository>()));
     gh.factory<_i207.WalletDeleteUseCase>(
@@ -389,18 +384,6 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i866.UpdateReceivableUseCase(gh<_i468.ReceivableRepository>()));
     gh.factory<_i866.DeleteReceivableUseCase>(
         () => _i866.DeleteReceivableUseCase(gh<_i468.ReceivableRepository>()));
-    gh.lazySingleton<_i222.BudgetAlertMonitor>(
-      () => _i222.BudgetAlertMonitor(
-        gh<_i21.GetBudgetsUsecase>(),
-        gh<_i551.NotificationService>(),
-        gh<_i721.NotificationSettingsService>(),
-        gh<_i931.NotificationLocalizer>(),
-        gh<_i460.SharedPreferences>(),
-        gh<_i896.CategoryRepository>(),
-        gh<_i777.TransactionsChangedNotifier>(),
-      ),
-      dispose: (i) => i.dispose(),
-    );
     gh.factory<_i832.InstallStarterPackUseCase>(
         () => _i832.InstallStarterPackUseCase(
               gh<_i896.CategoryRepository>(),
@@ -492,6 +475,12 @@ extension GetItInjectableX on _i174.GetIt {
           transactionsChangedNotifier: gh<_i777.TransactionsChangedNotifier>(),
           reminderSync: gh<_i534.ReminderSyncService>(),
         ));
+    gh.factory<_i21.GetBudgetsUsecase>(() => _i21.GetBudgetsUsecase(
+          gh<_i94.BudgetRepository>(),
+          gh<_i543.TransactionsRepository>(),
+          gh<_i896.CategoryRepository>(),
+          gh<_i504.WalletRepository>(),
+        ));
     gh.factory<_i510.DeleteGoalUseCase>(() => _i510.DeleteGoalUseCase(
           gh<_i851.GoalRepository>(),
           gh<_i589.InvestmentRepository>(),
@@ -570,6 +559,18 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i691.DeleteBudgetUsecase>(),
           gh<_i777.TransactionsChangedNotifier>(),
         ));
+    gh.lazySingleton<_i222.BudgetAlertMonitor>(
+      () => _i222.BudgetAlertMonitor(
+        gh<_i21.GetBudgetsUsecase>(),
+        gh<_i551.NotificationService>(),
+        gh<_i721.NotificationSettingsService>(),
+        gh<_i931.NotificationLocalizer>(),
+        gh<_i460.SharedPreferences>(),
+        gh<_i896.CategoryRepository>(),
+        gh<_i777.TransactionsChangedNotifier>(),
+      ),
+      dispose: (i) => i.dispose(),
+    );
     gh.lazySingleton<_i530.AutoBackupService>(
       () => _i530.AutoBackupService(
         gh<_i186.GoogleDriveBackupService>(),

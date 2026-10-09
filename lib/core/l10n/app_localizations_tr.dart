@@ -6158,4 +6158,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get kkDonemBorcuBilinmiyor => 'Dönem borcu bilinmiyor · ekstreyi gir';
+
+  @override
+  String kkOdemeNotu(Object date) {
+    return 'ödeme $date';
+  }
+
+  @override
+  String get kkOdemeGunu => 'Ödeme günü';
 }

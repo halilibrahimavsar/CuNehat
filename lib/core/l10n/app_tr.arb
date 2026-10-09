@@ -3634,5 +3634,12 @@
     }
   },
   "kkBilinmiyor": "bilinmiyor",
-  "kkDonemBorcuBilinmiyor": "Dönem borcu bilinmiyor · ekstreyi gir"
+  "kkDonemBorcuBilinmiyor": "Dönem borcu bilinmiyor · ekstreyi gir",
+  "kkOdemeNotu": "ödeme {date}",
+  "@kkOdemeNotu": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "kkOdemeGunu": "Ödeme günü"
 }

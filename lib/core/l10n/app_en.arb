@@ -3405,5 +3405,7 @@
   "kkTaksitliAlisverisler": "Ongoing installment purchases",
   "kkTaksitPlanSatiri": "{left} left · {amount}",
   "kkBilinmiyor": "unknown",
-  "kkDonemBorcuBilinmiyor": "Statement amount unknown · enter it"
+  "kkDonemBorcuBilinmiyor": "Statement amount unknown · enter it",
+  "kkOdemeNotu": "paid {date}",
+  "kkOdemeGunu": "Payment day"
 }
