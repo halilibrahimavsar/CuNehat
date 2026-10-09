@@ -78,7 +78,7 @@ const int _kPairMinRest = 3;
 /// düğmesi kapalıyken tooltip de eksen de tutarı ele vermez.
 ///
 /// Kart DEĞİL panel: bakiye çizgisiyle aynı [AppCard] içinde, aynı zaman
-/// ekseni üzerinde durur (bkz. `ReportPeriodChartCard`). Tarih etiketleri
+/// ekseni üzerinde durur (bkz. `ReportTrendCard`). Tarih etiketleri
 /// alttaki panelde bir kez yazıldığı için burada [showDateAxis] kapalı
 /// gelebilir.
 class ReportDailyNetFlowChart extends StatelessWidget {
@@ -90,12 +90,21 @@ class ReportDailyNetFlowChart extends StatelessWidget {
   /// Alt eksende tarih etiketleri yazılsın mı?
   final bool showDateAxis;
 
+  /// Çizilecek taraflar. Zaman çizgisi tek ölçüye (gider ya da gelir)
+  /// bakarken karşı tarafın sıfır çubuğu yalnız yer kaplar ve kovayı
+  /// dilim ortasından kaydırır; efsane de o zaman gereksizdir (ölçüyü kartın
+  /// seçicisi söylüyor).
+  final bool showIncome;
+  final bool showExpense;
+
   const ReportDailyNetFlowChart({
     super.key,
     required this.series,
     this.height = 200,
     this.showDateAxis = true,
-  });
+    this.showIncome = true,
+    this.showExpense = true,
+  }) : assert(showIncome || showExpense);
 
   static const incomeColor = MoneyColors.income;
   static const expenseColor = MoneyColors.expense;
@@ -109,7 +118,17 @@ class ReportDailyNetFlowChart extends StatelessWidget {
     // 30 boş çubuk bilgi değil gürültüdür.
     if (series.isEmpty || series.hasNoActivity) return const SizedBox();
 
-    final buckets = series.buckets;
+    // Gizlenen taraf eksen ve kırpma kararına da girmez: görünmeyen bir maaş
+    // çubuğu gider çubuklarını ezmemeli.
+    final buckets = [
+      for (final b in series.buckets)
+        ReportBucket(
+          start: b.start,
+          endExclusive: b.endExclusive,
+          income: showIncome ? b.income : 0,
+          expense: showExpense ? b.expense : 0,
+        ),
+    ];
 
     final trueMax = buckets.fold<double>(0.0, (prev, b) {
       final m = b.income > b.expense ? b.income : b.expense;
@@ -130,7 +149,7 @@ class ReportDailyNetFlowChart extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _Legend(scheme: scheme),
+        if (showIncome && showExpense) _Legend(scheme: scheme),
         if (cap != null) ...[
           const SizedBox(height: 6),
           Text(
@@ -184,8 +203,10 @@ class ReportDailyNetFlowChart extends StatelessWidget {
                         x: index,
                         barsSpace: barWidth / 4,
                         barRods: [
-                          _rod(b.income, incomeColor, barWidth, cap),
-                          _rod(b.expense, expenseColor, barWidth, cap),
+                          if (showIncome)
+                            _rod(b.income, incomeColor, barWidth, cap),
+                          if (showExpense)
+                            _rod(b.expense, expenseColor, barWidth, cap),
                         ],
                       );
                     }),
@@ -198,7 +219,7 @@ class ReportDailyNetFlowChart extends StatelessWidget {
                             return null;
                           }
                           final bucket = buckets[group.x];
-                          final isIncome = rodIndex == 0;
+                          final isIncome = showIncome && rodIndex == 0;
                           final label = isIncome
                               ? context.l10n.detailLabelGelir
                               : context.l10n.detailLabelGider;

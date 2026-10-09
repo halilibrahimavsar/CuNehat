@@ -3,9 +3,10 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/report_series_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_chart_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_explorer.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_trend_card.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/report_trend.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_compare_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_cumulative_balance_chart.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_daily_net_flow_chart.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_summary_cards.dart';
@@ -118,43 +119,45 @@ void main() {
       expect(find.text('**** ₺'), findsNWidgets(3));
     });
 
-    testWidgets('karşılaştırma kartının toplamları ve efsanesi maskelenir',
+    testWidgets('zaman çizgisinin manşeti ve bağlam satırı maskelenir',
         (tester) async {
+      final series = flowSeries();
       await tester.pumpWidget(host(
         visible: false,
-        ReportCompareChartCard(
-          incomeSlices: [
-            CategoryData('Maaş', 6200, [tx(DateTime(2026, 6, 1), 6200, true)],
-                Colors.green),
-          ],
-          expenseSlices: slices(),
-          onSliceTap: (_, __) {},
+        ReportTrendCard(
+          metric: TrendMetric.expense,
+          onMetricChanged: (_) {},
+          asLine: true,
+          onAsLineChanged: (_) {},
+          totals: const ReportTotals(
+              totalIncome: 6200, totalExpense: 1500, net: 4700),
+          previousTotals: const ReportTotals(),
+          flow: series,
+          balance: series,
+          elapsedCount: series.buckets.length,
+          currentLabel: 'Haziran 2026',
+          previousLabel: 'Mayıs 2026',
         ),
       ));
       await tester.pump();
 
       final all = texts(tester).toList();
+      expect(all.where((t) => t.contains('1.500')), isEmpty);
       expect(all.where((t) => t.contains('6.200')), isEmpty,
-          reason: 'taraf toplamı ve "En büyük: ..." satırı da maskelenmeli');
-      expect(all.where((t) => t.contains('1.200')), isEmpty,
-          reason: 'efsane satırındaki tutar maskelenmeli');
-      // Yüzdeler tutar DEĞİL: gizlenmezler, kırılım okunur kalır.
-      expect(all.any((t) => t.contains('%80')), isTrue);
+          reason: 'bağlam satırındaki gelir de maskelenmeli');
+      expect(all.where((t) => t.contains('4.700')), isEmpty);
     });
 
-    testWidgets('pasta kartının toplamı ve efsanesi maskelenir',
+    testWidgets('kategori keşfinin merkezi ve listesi maskelenir',
         (tester) async {
       await tester.pumpWidget(host(
         visible: false,
-        ReportCategoryChartCard(
-          title: 'Giderler',
-          fullData: slices(),
-          pieData: slices(),
+        ReportCategoryExplorer(
           isExpense: true,
-          showBarChart: false,
-          onToggleBarChart: (_) {},
-          onCategoryTap: (_, __) {},
-          budgetProgressFor: (_, __) => null,
+          top: slices(),
+          nodes: const [],
+          onPathChanged: (_) {},
+          onOpenTransactions: (_) {},
         ),
       ));
       await tester.pump();

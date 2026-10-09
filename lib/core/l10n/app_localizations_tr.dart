@@ -3217,9 +3217,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get drawerActiveWalletLabel => 'AKTİF CÜZDAN';
 
   @override
-  String get reportBalanceTrend => 'Bakiye seyri';
-
-  @override
   String get reportExpensesTitle => 'Giderler';
 
   @override
@@ -3233,11 +3230,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get reportNoPreviousPeriod => 'Önceki dönem yok';
-
-  @override
-  String reportCompareTopSlice(String ad, String tutar) {
-    return 'En büyük: $ad · $tutar';
-  }
 
   @override
   String reportCompareOverspend(String oran) {
@@ -4220,15 +4212,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get hedefEkleKisa => 'Hedef ekle';
 
   @override
-  String get reportFlowTitleDay => 'Günlük gelir–gider';
-
-  @override
-  String get reportFlowTitleWeek => 'Haftalık gelir–gider';
-
-  @override
-  String get reportFlowTitleMonth => 'Aylık gelir–gider';
-
-  @override
   String get reportUnitDay => 'Gün';
 
   @override
@@ -4279,37 +4262,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get reportNoIncomeForRate => 'Bu dönemde gelir yok';
 
   @override
-  String get reportViewPie => 'Pasta görünümü';
-
-  @override
   String get reportViewBars => 'Çubuk görünümü';
 
   @override
-  String reportPieSemantics(Object title, Object count, Object total) {
-    return '$title kategori dağılımı: $count kalem, toplam $total. Kalem başına ayrıntı için aşağıdaki listeye bakın.';
-  }
-
-  @override
-  String reportCompareBarSemantics(Object side, Object total, Object count) {
-    return '$side çubuğu: $total, $count kalem.';
-  }
-
-  @override
   String get reportTotalLabel => 'Toplam';
-
-  @override
-  String reportSunburstSemantics(Object roots, Object children, Object total) {
-    return 'Kategori çemberi: $roots ana kategori, $children alt kategori, toplam $total. İç halka ana kategorileri, dış halka alt kırılımı gösterir.';
-  }
-
-  @override
-  String get reportHierarchyHint =>
-      'İç halka ana, dış halka alt kategoriler · dokun: ayrıntı';
-
-  @override
-  String reportBreakdownToggle(Object ad) {
-    return '$ad alt kırılımı';
-  }
 
   @override
   String get reportTopPayeesTitle => 'En çok harcanan yerler';
@@ -5732,9 +5688,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get reportModeIncome => 'Gelir';
 
   @override
-  String get reportModeBoth => 'İkisi';
-
-  @override
   String get filterTypeSection => 'TÜR';
 
   @override
@@ -6059,4 +6012,67 @@ class AppLocalizationsTr extends AppLocalizations {
   String kasaAcilisSatirdan(String amount) {
     return 'Başlangıç: $amount (defterdeki satırdan)';
   }
+
+  @override
+  String get reportViewLine => 'Çizgi görünümü';
+
+  @override
+  String get reportTrendVsPrevious => 'önceki dönemin aynı noktasına göre';
+
+  @override
+  String reportTrendBalanceStart(Object amount) {
+    return 'Dönem başı $amount';
+  }
+
+  @override
+  String reportFocusShareExpense(Object percent) {
+    return 'Giderlerdeki payı $percent';
+  }
+
+  @override
+  String reportFocusShareIncome(Object percent) {
+    return 'Gelirlerdeki payı $percent';
+  }
+
+  @override
+  String reportPreviousAmount(Object amount) {
+    return 'Önceki dönem $amount';
+  }
+
+  @override
+  String get reportFocusClear => 'Kategori odağını kaldır';
+
+  @override
+  String reportTrendSemantics(Object metric, Object period, Object amount) {
+    return '$metric çizgisi, $period: $amount. Ara değerler için çizgiye dokunun.';
+  }
+
+  @override
+  String reportTrendTooltipPrevious(Object amount) {
+    return 'Önceki: $amount';
+  }
+
+  @override
+  String reportSeeTransactions(Object count) {
+    return 'İşlemleri gör ($count)';
+  }
+
+  @override
+  String get reportDrillHint => 'Kategoriye dokun, içine in';
+
+  @override
+  String get reportBreadcrumbUp => 'Bir üst seviyeye çık';
+
+  @override
+  String reportDonutSemantics(Object count, Object total) {
+    return 'Kategori halkası: $count kalem, toplam $total';
+  }
+
+  @override
+  String reportDrillInto(Object name) {
+    return '$name kırılımına in';
+  }
+
+  @override
+  String get reportTrendThisPeriod => 'Bu dönem';
 }

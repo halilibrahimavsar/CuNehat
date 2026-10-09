@@ -21,14 +21,13 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_report_page.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_chart_card.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_compare_chart_card.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_summary_cards.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/report_trend.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_explorer.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_trend_card.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_budget_summary_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/category_details_bottom_sheet.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_daily_net_flow_chart.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_period_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
@@ -133,15 +132,15 @@ void main() {
     getIt.reset();
   });
 
-  /// Kategori modunu "İkisi"ne (karşılaştırma) alır. Varsayılan artık GİDER.
-  Future<void> showBoth(WidgetTester tester) async {
-    final both = find.descendant(
-      of: find.byType(LabeledSegment<FinanceMode>),
-      matching: find.text('İkisi'),
+  /// Zaman çizgisinin ölçüsünü seçer (Gider · Gelir · Net · Bakiye).
+  Future<void> selectMetric(WidgetTester tester, String label) async {
+    final cell = find.descendant(
+      of: find.byType(LabeledSegment<TrendMetric>),
+      matching: find.text(label),
     );
-    await tester.ensureVisible(both);
+    await tester.ensureVisible(cell);
     await tester.pumpAndSettle();
-    await tester.tap(both);
+    await tester.tap(cell);
     await tester.pumpAndSettle();
   }
 
@@ -251,27 +250,67 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Varsayılan mod GİDER: hiyerarşik çember ilk ekranda (eski varsayılan
-    // "karşılaştırma" özetin sayılarını tekrarlayıp çemberi saklıyordu).
-    expect(find.byType(ReportSummaryCards), findsOneWidget);
-    expect(find.byType(ReportCategoryChartCard), findsOneWidget);
-    expect(find.byType(ReportCompareChartCard), findsNothing);
-
-    await showBoth(tester);
-
-    expect(find.byType(ReportCompareChartCard), findsOneWidget);
-    // Karşılaştırma modunda tek taraflı pasta kartları GÖSTERİLMEZ — eskiden
-    // "compare" sadece ikisini alt alta diziyordu.
-    expect(find.byType(ReportCategoryChartCard), findsNothing);
-    expect(find.text('Giderler'), findsNothing);
-    expect(find.text('Gelirler'), findsNothing);
-
-    // İki taraf da kendi toplamını yazar (özet kartıyla birlikte iki kez).
-    expect(find.text('200,00 ₺'), findsNWidgets(2));
-    expect(find.text('50,00 ₺'), findsNWidgets(2));
+    // Kullanıcı isteği: açılışta ZAMAN ÇİZGİSİ (çizgi grafik) + GİDER.
+    final trend = tester.widget<ReportTrendCard>(find.byType(ReportTrendCard));
+    expect(trend.metric, TrendMetric.expense);
+    expect(trend.asLine, isTrue);
+    expect(
+      find.descendant(
+          of: find.byType(ReportTrendCard), matching: find.byType(LineChart)),
+      findsOneWidget,
+    );
+    // Özet kutuları manşete katıldı: seçili ölçü büyük, diğerleri altında.
+    expect(find.text('50,00 ₺'), findsWidgets);
+    expect(find.textContaining('Gelir 200,00 ₺'), findsOneWidget);
+    // Kategori keşfi gider tarafında açılır.
+    final explorer = tester
+        .widget<ReportCategoryExplorer>(find.byType(ReportCategoryExplorer));
+    expect(explorer.isExpense, isTrue);
+    expect(find.text('Giderler'), findsOneWidget);
   });
 
-  testWidgets('mod Gidere alınınca tek taraflı pasta kartına dönülür',
+  testWidgets('çubuk görünümüne geçilebilir; Bakiye ölçüsü hep çizgidir',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 1920);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    final now = DateTime.now();
+    final transactions = [
+      TransactionEntity(
+        id: 'tx_1',
+        userId: 'user_123',
+        walletId: 'wallet_123',
+        title: 'Lunch',
+        tag: 'Food',
+        amount: 50.0,
+        date: now,
+        type: TransactionTypeModel.expense,
+      ),
+    ];
+    when(() => mockTransactionBloc.state).thenReturn(TransactionLoaded(
+      groupedTransactions: {now: transactions},
+      allTransactions: transactions,
+    ));
+    await tester.pumpWidget(buildTestableWidget(const TransactionReportPage(
+      userId: 'user_123',
+      walletId: 'wallet_123',
+    )));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Çubuk görünümü'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ReportDailyNetFlowChart), findsOneWidget);
+    final bars = tester
+        .widget<ReportDailyNetFlowChart>(find.byType(ReportDailyNetFlowChart));
+    expect(bars.showExpense, isTrue);
+    expect(bars.showIncome, isFalse, reason: 'Gider ölçüsünde gelir çubuğu yok');
+
+    await selectMetric(tester, 'Bakiye');
+    expect(find.byType(ReportDailyNetFlowChart), findsNothing);
+    expect(find.byTooltip('Çubuk görünümü'), findsNothing);
+  });
+
+  testWidgets('Gelir ölçüsü seçilince kategori keşfi de GELİRE geçer',
       (WidgetTester tester) async {
     // Mod seçici varsayılan 800x600 görünümde katlamanın altında kalıyor;
     // dokunma isabet etmiyor.
@@ -323,17 +362,32 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final expenseModeIcon = find.descendant(of: find.byType(LabeledSegment<FinanceMode>), matching: find.text('Gider'));
-    await tester.ensureVisible(expenseModeIcon);
-    await tester.pumpAndSettle();
-    await tester.tap(expenseModeIcon);
-    await tester.pumpAndSettle();
+    await selectMetric(tester, 'Gelir');
 
-    expect(find.byType(ReportCompareChartCard), findsNothing);
-    expect(find.byType(ReportCategoryChartCard), findsOneWidget);
-    expect(find.text('Giderler'), findsOneWidget);
-    // Yalnız gider tarafı — gelir kartı bu modda yok.
-    expect(find.text('Gelirler'), findsNothing);
+    final explorer = tester
+        .widget<ReportCategoryExplorer>(find.byType(ReportCategoryExplorer));
+    expect(explorer.isExpense, isFalse);
+    expect(find.text('Gelirler'), findsOneWidget);
+
+    // Net seçmek keşfi olduğu yerde bırakır.
+    await selectMetric(tester, 'Net');
+    expect(
+      tester
+          .widget<ReportCategoryExplorer>(find.byType(ReportCategoryExplorer))
+          .isExpense,
+      isFalse,
+    );
+
+    // Keşifte tarafı değiştirmek ölçüyü de taşır (Gider/Gelir'deyken).
+    await selectMetric(tester, 'Gelir');
+    final expenseChip = find.widgetWithText(ChoiceChip, 'Gider');
+    await tester.ensureVisible(expenseChip);
+    await tester.tap(expenseChip);
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<ReportTrendCard>(find.byType(ReportTrendCard)).metric,
+      TrendMetric.expense,
+    );
   });
 
   testWidgets('opens DateRangePickerDialog on takvim düğmesi tap',
@@ -484,7 +538,6 @@ void main() {
     );
 
     await tester.pumpAndSettle();
-    await showBoth(tester);
 
     expect(find.text('Diğer'), findsNothing);
     expect(find.text('Tiny'), findsOneWidget);
@@ -659,9 +712,13 @@ void main() {
           (tester) async {
         await pump(tester);
         // Eskiden: Gelir 0, Gider 0, "↓%100 önceki döneme göre" ve boş
-        // eksenli karşılaştırma grafiği ("İki çubuk aynı ölçekte").
-        expect(find.byType(ReportSummaryCards), findsNothing);
-        expect(find.byType(ReportCompareChartCard), findsNothing);
+        // eksenli karşılaştırma grafiği. Kategori keşfi çizilmez; zaman
+        // çizgisi bakiyeyi gösterir (orada hareket var).
+        expect(find.byType(ReportCategoryExplorer), findsNothing);
+        expect(
+          tester.widget<ReportTrendCard>(find.byType(ReportTrendCard)).metric,
+          TrendMetric.balance,
+        );
         expect(find.text('Bu dönemde gelir ya da gider yok'), findsOneWidget);
         expect(find.textContaining('1 para taşıma hareketi var'),
             findsOneWidget);
@@ -672,7 +729,7 @@ void main() {
         await pump(tester);
         await tester.tap(find.text('Para taşımayı dahil et'));
         await tester.pumpAndSettle();
-        expect(find.byType(ReportSummaryCards), findsOneWidget);
+        expect(find.byType(ReportCategoryExplorer), findsOneWidget);
         expect(find.text('2.500,00 ₺'), findsWidgets);
       });
 
@@ -684,7 +741,7 @@ void main() {
         await tester.tap(find.text('$previous dönemine git'));
         await tester.pumpAndSettle();
         expect(find.text(previous), findsOneWidget);
-        expect(find.byType(ReportSummaryCards), findsOneWidget);
+        expect(find.byType(ReportCategoryExplorer), findsOneWidget);
         expect(find.text('300,00 ₺'), findsWidgets);
       });
     });
@@ -894,7 +951,7 @@ void main() {
     }
 
     testWidgets(
-        'REGRESYON: bütçe ilerlemesi açılış modunda da karşılaştırmada da görünür',
+        'REGRESYON: bütçe ilerlemesi açılıştaki kategori keşfinde görünür',
         (tester) async {
       when(() => mockBudgetRepository.getBudgets(any())).thenAnswer(
         (_) async => const Right<Failure, List<BudgetEntity>>([
@@ -911,25 +968,13 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      // Açılış modu (Gider) kartında bütçe çubuğu var.
+      // Açılıştaki (Gider) keşif listesinde bütçe çubuğu var.
       expect(
         find.descendant(
-          of: find.byType(ReportCategoryChartCard),
+          of: find.byType(ReportCategoryExplorer),
           matching: find.byType(LinearProgressIndicator),
         ),
         findsWidgets,
-      );
-
-      // Bütçe çubuğu eskiden yalnız tek taraflı pasta kartına geçiriliyordu;
-      // karşılaştırma modunda da görünmeli.
-      await showBoth(tester);
-      expect(find.byType(ReportCompareChartCard), findsOneWidget);
-      expect(
-        find.descendant(
-          of: find.byType(ReportCompareChartCard),
-          matching: find.byType(LinearProgressIndicator),
-        ),
-        findsOneWidget,
       );
     });
 
@@ -995,11 +1040,10 @@ void main() {
         const TransactionReportPage(userId: 'user_123', walletId: 'wallet_123'),
       ));
       await tester.pumpAndSettle();
-      await showBoth(tester);
 
       double progressOf() => tester
           .widget<LinearProgressIndicator>(find.descendant(
-            of: find.byType(ReportCompareChartCard),
+            of: find.byType(ReportCategoryExplorer),
             matching: find.byType(LinearProgressIndicator),
           ))
           .value!;
@@ -1096,6 +1140,13 @@ void main() {
       ];
     }
 
+    /// Zaman çizgisinin ÇİZDİĞİ son kova: güncel çizgi yaşanmış kısımda
+    /// biter (eksen önceki dönem için daha uzun olabilir).
+    DateTime lastDrawn(WidgetTester tester) {
+      final card = tester.widget<ReportTrendCard>(find.byType(ReportTrendCard));
+      return card.flow.buckets[card.elapsedCount - 1].start;
+    }
+
     Future<void> pump(WidgetTester tester, List<TransactionEntity> txs) async {
       when(() => mockTransactionBloc.state).thenReturn(
         TransactionLoaded(groupedTransactions: {}, allTransactions: txs),
@@ -1116,16 +1167,52 @@ void main() {
       final now = DateTime.now();
       await pump(tester, monthDays([1]));
 
-      final flow = tester
-          .widget<ReportDailyNetFlowChart>(find.byType(ReportDailyNetFlowChart))
-          .series;
+      final card = tester.widget<ReportTrendCard>(find.byType(ReportTrendCard));
       final today = DateTime(now.year, now.month, now.day);
-      expect(flow.buckets.last.start, today);
+      expect(lastDrawn(tester), today);
+      // Önceki dönem boş: eksen de bugünde biter (boş sağ yarı çizilmez).
       expect(
-        flow.buckets.where((b) => b.start.isAfter(today)),
+        card.flow.buckets.where((b) => b.start.isAfter(today)),
         isEmpty,
         reason: 'gelecek bir gün "harcama yapılmadı" demek değil',
       );
+    });
+
+    testWidgets(
+        'önceki dönemde hareket varsa eksen dönem sonuna uzar, güncel çizgi '
+        'yine BUGÜNDE biter', (tester) async {
+      final now = DateTime.now();
+      final lastDay = DateTime(now.year, now.month + 1, 0).day;
+      if (now.day >= lastDay) return; // ayın son günü: uzatılacak gün yok
+      final previousMonth = DateTime(now.year, now.month - 1, 5, 12);
+      await pump(tester, [
+        ...monthDays([1]),
+        TransactionEntity(
+          id: 'tx_prev',
+          userId: 'user_123',
+          walletId: 'wallet_123',
+          title: 'Geçen ay',
+          tag: 'Food',
+          amount: 400,
+          date: previousMonth,
+          type: TransactionTypeModel.expense,
+        ),
+      ]);
+
+      final card = tester.widget<ReportTrendCard>(find.byType(ReportTrendCard));
+      expect(card.flow.buckets.last.start,
+          DateTime(now.year, now.month, lastDay));
+      expect(lastDrawn(tester), DateTime(now.year, now.month, now.day));
+      // Kesikli çizgi: önceki dönemin serisi gerçekten veri taşıyor.
+      expect(card.previousFlow?.hasNoActivity, isFalse);
+      final lines = tester
+          .widget<LineChart>(find.descendant(
+              of: find.byType(ReportTrendCard),
+              matching: find.byType(LineChart)))
+          .data
+          .lineBarsData;
+      expect(lines, hasLength(2));
+      expect(lines.first.dashArray, isNotNull, reason: 'önceki dönem kesikli');
     });
 
     testWidgets('ileri tarihli kayıt pencereden DÜŞMEZ', (tester) async {
@@ -1138,10 +1225,7 @@ void main() {
       final future = now.day + 1;
       await pump(tester, monthDays([1, future]));
 
-      final flow = tester
-          .widget<ReportDailyNetFlowChart>(find.byType(ReportDailyNetFlowChart))
-          .series;
-      expect(flow.buckets.last.start, DateTime(now.year, now.month, future));
+      expect(lastDrawn(tester), DateTime(now.year, now.month, future));
     });
 
     testWidgets('veri OLMAYAN bir aya gidince başlıksız boşluk kalmaz',
@@ -1154,9 +1238,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.chevron_right_rounded));
       await tester.pumpAndSettle();
 
-      expect(find.byType(ReportPeriodChartCard), findsNothing);
-      expect(find.text('Günlük gelir–gider'), findsNothing);
-      expect(find.text('Bakiye seyri'), findsNothing);
+      expect(find.byType(ReportTrendCard), findsNothing);
       expect(find.text('Kategori dağılımı'), findsNothing);
     });
   });

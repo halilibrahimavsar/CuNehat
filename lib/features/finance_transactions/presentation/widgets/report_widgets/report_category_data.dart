@@ -1,5 +1,6 @@
 import 'package:cunehat/core/utils/date_range_helper.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
 import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
@@ -16,6 +17,11 @@ typedef ReportBudgetProgress = ({
   bool isExceeded,
   double limit,
 });
+
+/// Kategori keşfinde inilen yolun bir adımı. Ad tek başına yetmez: kökün
+/// doğrudan dilimi kökle, sentetik "Diğer" kovası kullanıcının gerçek bir
+/// "Diğer" kategorisiyle aynı adı taşıyabilir.
+typedef CategoryPathStep = ({String name, bool isOther, bool isDirect});
 
 /// Rapor sayfasındaki tek bir kategori dilimi: ad, dönem toplamı, o kategoriye
 /// düşen işlemler ve dilim rengi.
@@ -60,6 +66,14 @@ class CategoryData {
     this.children = const [],
     this.previousAmount,
   });
+
+  /// Bu dilime inen yol adımı (bkz. [ReportCategoryDataBuilder.resolvePath]).
+  CategoryPathStep get step => (name: name, isOther: isOther, isDirect: isDirect);
+
+  /// İçine inilebilir mi? Alt kategorisi olan kök ve küçük kalemleri
+  /// toplayan "Diğer" kovası; doğrudan dilim ve yaprak İNİLMEZ, işlemleri
+  /// açılır.
+  bool get canDrill => children.isNotEmpty && !isDirect;
 
   /// Önceki döneme göre yüzde değişim; kıyas yoksa ya da önceki dönem sıfırsa
   /// null (sıfırdan artışın yüzdesi tanımsızdır).
@@ -109,78 +123,9 @@ enum ReportSliceMode {
 
   /// Payı eşiğin altındakiler "Diğer"de toplanmış (pasta).
   pie,
-
-  /// İlk N kalem + "Diğer" (karşılaştırma çubuğu).
-  ranked,
 }
 
-/// Karşılaştırma çubuğunun gelir(yeşil)/gider(kırmızı) renk rampaları.
-///
-/// Adımlar GÖZLE seçilmedi. `AppCard(section: transactions)`'ın gerçek zemini
-/// üzerinde — light `#DCE9FD`, dark `#213B69`; ikisi de kartın accent
-/// gradyanının kontrast açısından en kötü köşesi — sıralı (ordinal) rampa
-/// kapısından geçirilerek OKLCH'de üretildi: tek hue, monoton açıklık, komşu
-/// adımlar arası ΔL ≥ 0.06, yüzeye en yakın uç ≥ 2:1 kontrast.
-///
-/// Neden Material `Colors.green/red` swatch'ı değil: bu zeminde swatch 2:1
-/// tabanının üstünde yalnız **3** adım bırakıyor (yeşil 900/800/600). Amaca
-/// göre üretilen adımlar **5**'e çıkarır — bir taraftaki dilim sayısının
-/// tavanı budur, keyfi bir sınır değil.
-///
-/// UYARI — renk tek başına gelir/gideri ANLATMAZ: tam şiddette deuteranopia
-/// altında bu iki rampa çakışır (ölçülen ΔE 1.2–4.6; taban 6). Kutupluluğu
-/// taşıyan şey konum + satır etiketi + ikondur; renk yalnız pekiştirir.
-abstract final class ReportCompareRamp {
-  /// Bir tarafta gösterilebilen en fazla dilim. Rampanın adım sayısıyla
-  /// birebir: her dilim kendi adımını alır, renk asla tekrar etmez.
-  static int get maxSlices => _incomeLight.length;
-
-  // rank 1 (en büyük kalem) → rank 5 ("Diğer"): light modda koyudan açığa.
-  static const _incomeLight = [
-    Color(0xFF215E2E),
-    Color(0xFF2A733A),
-    Color(0xFF338846),
-    Color(0xFF3D9F52),
-    Color(0xFF47B55F),
-  ];
-  static const _expenseLight = [
-    Color(0xFF8D2525),
-    Color(0xFFAA2E2F),
-    Color(0xFFC93839),
-    Color(0xFFE94344),
-    Color(0xFFEE6E67),
-  ];
-
-  // Dark modda yön TERSİNE döner: koyu zeminde "daha çok" = daha parlak.
-  // Rampa otomatik çevrilmedi, kendi zeminine göre ayrı seçildi.
-  static const _incomeDark = [
-    Color(0xFF59DF76),
-    Color(0xFF4FC86A),
-    Color(0xFF45B25D),
-    Color(0xFF3C9D51),
-    Color(0xFF338745),
-  ];
-  static const _expenseDark = [
-    Color(0xFFF3A9A3),
-    Color(0xFFF08B83),
-    Color(0xFFED6862),
-    Color(0xFFE64243),
-    Color(0xFFC83839),
-  ];
-
-  static List<Color> of({
-    required bool isExpense,
-    required Brightness brightness,
-  }) {
-    if (brightness == Brightness.dark) {
-      return isExpense ? _expenseDark : _incomeDark;
-    }
-    return isExpense ? _expenseLight : _incomeLight;
-  }
-}
-
-/// Tek taraflı (yalnız gider ya da yalnız gelir) pasta/çubuk için KATEGORİK
-/// palet.
+/// Kategori donutunun ve listesinin KATEGORİK paleti.
 ///
 /// İki karar bilinçli:
 ///
@@ -190,8 +135,7 @@ abstract final class ReportCompareRamp {
 /// ilişkisi yok, ayırt edilebilirlik var. Aynı aileden dört ton yan yana
 /// gelince ayırt edilemiyorlardı. Gelir/gider kutupluluğunu kartın başlığı,
 /// toplamı ve mod seçicisi zaten taşıyor — dilimlerin ayrıca kırmızı olmasına
-/// gerek yok. (Karşılaştırma kartı FARKLIDIR: orada sıralama anlamlıdır ve
-/// [ReportCompareRamp]'in sıralı rampası kullanılır.)
+/// gerek yok.
 ///
 /// **Hue'lar eşit aralıklı değil.** Göz sarı-yeşil bandında yakın hue'ları
 /// ayırt edemez; adımlar el ile açılıp kapatıldı ve açıklık, kartın gerçek
@@ -329,6 +273,55 @@ class ReportCategoryDataBuilder {
     return null;
   }
 
+  /// [path] boyunca iner ve yolun GEÇERLİ önekindeki düğümleri döner.
+  ///
+  /// Dönem değişince kullanıcı inmiş olduğu yerde kalır (Eylül'de Fatura'ya
+  /// inmişken Ağustos'a geçmek Fatura'da kalır); yeni dönemde o düğüm yoksa
+  /// yol bulunabildiği yere kadar kısalır — boş bir seviye gösterilmez.
+  static List<CategoryData> resolvePath(
+    List<CategoryData> top,
+    List<CategoryPathStep> path,
+  ) {
+    final out = <CategoryData>[];
+    var level = top;
+    for (final step in path) {
+      CategoryData? hit;
+      for (final item in level) {
+        if (item.step == step) {
+          hit = item;
+          break;
+        }
+      }
+      if (hit == null || !hit.canDrill) break;
+      out.add(hit);
+      level = hit.children;
+    }
+    return out;
+  }
+
+  /// [node] dilimine düşen işlemleri seçen yüklem — zaman çizgisi bir
+  /// kategoriye odaklanınca HEM bu dönemi HEM önceki dönemi bununla süzer.
+  ///
+  /// İşlem listesiyle değil kimlikle süzülür: önceki dönemin işlemleri
+  /// düğümün listesinde yoktur. Kural kırılımın kendisiyle aynı
+  /// ([rootIdOf]): kök kendi alt ağacını, alt kategori yalnız kendini,
+  /// doğrudan dilim yalnız kökün kendi kaydını, "Diğer" katladığı kökleri
+  /// kapsar.
+  bool Function(TransactionEntity) focusFilter(
+    CategoryData node, {
+    required bool isExpense,
+  }) {
+    bool side(TransactionEntity t) => t.isExpense == isExpense;
+    if (node.isDirect) return (t) => side(t) && t.tag == node.name;
+    if (node.isOther) {
+      final roots = {for (final c in node.children) c.name};
+      return (t) => side(t) && roots.contains(rootIdOf(t.tag, rootIndex));
+    }
+    return (t) =>
+        side(t) &&
+        (t.tag == node.name || rootIdOf(t.tag, rootIndex) == node.name);
+  }
+
   List<CategoryData> buildFull(
     List<TransactionEntity> transactions, {
     required bool isExpense,
@@ -449,12 +442,34 @@ class ReportCategoryDataBuilder {
         if (!p.isOther) p.name: p.totalAmount,
     };
 
+    // Alt kategoriler de rozet alır: kullanıcı Fatura'ya indiğinde
+    // "Elektrik geçen aya göre ↑%30" görmeli. Doğrudan dilim kökle AYNI adı
+    // taşıdığı için ayrı tutulur.
+    final childByName = <String, double>{};
+    final directByName = <String, double>{};
+    for (final p in previous) {
+      for (final c in p.children) {
+        (c.isDirect ? directByName : childByName)[c.name] = c.totalAmount;
+      }
+    }
+
+    CategoryData withChildren(CategoryData item) => item.children.isEmpty
+        ? item
+        : item.copyWith(children: [
+            for (final c in item.children)
+              c.copyWith(
+                previousAmount: (c.isDirect ? directByName : childByName)[
+                        c.name] ??
+                    0,
+              ),
+          ]);
+
     return [
       for (final item in current)
         if (item.isOther)
           item
         else
-          item.copyWith(previousAmount: byName[item.name] ?? 0),
+          withChildren(item).copyWith(previousAmount: byName[item.name] ?? 0),
     ];
   }
 
@@ -501,6 +516,7 @@ class ReportCategoryDataBuilder {
     if (total <= 0) return fullData;
 
     final major = <CategoryData>[];
+    final folded = <CategoryData>[];
     double otherTotal = 0;
     final otherTx = <TransactionEntity>[];
 
@@ -509,84 +525,24 @@ class ReportCategoryDataBuilder {
       if (percent >= _pieThresholdPercent) {
         major.add(item);
       } else {
+        folded.add(item);
         otherTotal += item.totalAmount;
         otherTx.addAll(item.transactions);
       }
     }
 
     if (otherTx.isEmpty) return major;
+    // Kovaya TEK kalem düşerse kova kurulmaz: tek bir kalemin adını "Diğer"
+    // ardında saklamanın kazancı yok, üstüne bir iniş adımı daha ekler.
+    if (folded.length == 1) return [...major, folded.single];
 
+    // Kova katladığı kalemleri `children` olarak TAŞIR: içine inilebilir.
+    // Eskiden kovaya düşen küçük bir kökün alt kategorileri hiçbir yerden
+    // görülemiyordu.
     return [
       ...major,
       CategoryData(otherCategoryLabel, otherTotal, otherTx, _otherColor,
-          isOther: true),
-    ];
-  }
-
-  /// Karşılaştırma çubuğunun dilimleri: ilk [ReportCompareRamp.maxSlices] − 1
-  /// kalem + kalanların "Diğer" kovası, renkler o tarafın rampasından.
-  ///
-  /// Sayı tavanının yanında [_pieThresholdPercent] eşiği de uygulanır: 2px
-  /// boşluklu yığılmış çubukta payı %3'ün altında kalan bir dilim telefonda
-  /// ~9dp'den ince kalır, ne okunur ne dokunulur — kovaya iner.
-  ///
-  /// Kovaya TEK bir kategori düşerse kova KURULMAZ, kategori kendi adıyla
-  /// gösterilir: tek bir kalemin adını "Diğer" ardında saklamanın kazancı yok.
-  List<CategoryData> buildRanked(
-    List<CategoryData> fullData, {
-    required bool isExpense,
-    required Brightness brightness,
-  }) {
-    if (fullData.isEmpty) return const [];
-
-    final total =
-        fullData.fold<double>(0.0, (sum, item) => sum + item.totalAmount);
-    if (total <= 0) return const [];
-
-    final ramp =
-        ReportCompareRamp.of(isExpense: isExpense, brightness: brightness);
-
-    final kept = <CategoryData>[];
-    final folded = <CategoryData>[];
-    for (final item in fullData) {
-      final percent = (item.totalAmount / total) * 100;
-      final hasRoom = kept.length < ramp.length - 1;
-      if (hasRoom && percent >= _pieThresholdPercent) {
-        kept.add(item);
-      } else {
-        folded.add(item);
-      }
-    }
-
-    final slices = <CategoryData>[
-      ...kept,
-      if (folded.length == 1)
-        folded.single
-      else if (folded.length > 1)
-        CategoryData(
-          otherCategoryLabel,
-          folded.fold<double>(0.0, (sum, item) => sum + item.totalAmount),
-          [for (final item in folded) ...item.transactions],
-          ramp.last,
-          isOther: true,
-        ),
-    ]
-      // "Diğer" kovası her zaman SONA eklenir ama her zaman en küçük DEĞİLDİR:
-      // ölçüldü — Kira %54, Market %27, Sağlık %5, Fatura %5 tutulurken kova
-      // %9 çıkıyordu, yani 3. büyük kalem "en küçük" rampa adımını alıyordu.
-      // Rampa sıralı (ordinal) bir kodlama olduğuna göre sıra GERÇEK olmalı.
-      ..sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
-
-    // Renk sırayı izler: rank 1 rampanın ilk adımını alır. Sıralama anlamlı
-    // olduğu için bu bir sıralı (ordinal) kodlamadır, kimlik kodlaması değil —
-    // kimliği efsane ve etiketler taşır.
-    //
-    // `copyWith` ŞART: elle kurulan bir `CategoryData` önceki dönem tutarını
-    // düşürüyordu, yani karşılaştırma kartının efsanesinde değişim rozeti
-    // hiç görünmüyordu.
-    return [
-      for (int i = 0; i < slices.length; i++)
-        slices[i].copyWith(color: ramp[i]),
+          isOther: true, children: folded),
     ];
   }
 

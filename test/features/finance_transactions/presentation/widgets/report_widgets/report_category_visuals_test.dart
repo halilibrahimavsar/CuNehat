@@ -2,7 +2,7 @@ import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_bar_list.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_chart_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_explorer.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -102,15 +102,12 @@ void main() {
         for (var i = 0; i < 8; i++) 'K$i': 400.0,
       });
 
-      await tester.pumpWidget(host(ReportCategoryChartCard(
-        title: 'Giderler',
-        fullData: data,
-        pieData: data,
+      await tester.pumpWidget(host(ReportCategoryExplorer(
         isExpense: true,
-        showBarChart: false,
-        onToggleBarChart: (_) {},
-        onCategoryTap: (_, __) {},
-        budgetProgressFor: (_, __) => null,
+        top: data,
+        nodes: const [],
+        onPathChanged: (_) {},
+        onOpenTransactions: (_) {},
       )));
       await tester.pumpAndSettle();
 
@@ -129,15 +126,12 @@ void main() {
     testWidgets('yeterince büyük dilimler etiketlenir', (tester) async {
       final data = full({'A': 500, 'B': 300, 'C': 200});
 
-      await tester.pumpWidget(host(ReportCategoryChartCard(
-        title: 'Giderler',
-        fullData: data,
-        pieData: data,
+      await tester.pumpWidget(host(ReportCategoryExplorer(
         isExpense: true,
-        showBarChart: false,
-        onToggleBarChart: (_) {},
-        onCategoryTap: (_, __) {},
-        budgetProgressFor: (_, __) => null,
+        top: data,
+        nodes: const [],
+        onPathChanged: (_) {},
+        onOpenTransactions: (_) {},
       )));
       await tester.pumpAndSettle();
 
@@ -151,20 +145,17 @@ void main() {
     });
   });
 
-  group('çubuk görünümü', () {
+  group('sıralı liste (donutun efsanesi)', () {
     testWidgets('REGRESYON: çubuklar artık ad ve tutar TAŞIYOR',
         (tester) async {
       final data = full({'Kira': 2400, 'Market': 1200, 'Ulasim': 400});
 
-      await tester.pumpWidget(host(ReportCategoryChartCard(
-        title: 'Giderler',
-        fullData: data,
-        pieData: data,
+      await tester.pumpWidget(host(ReportCategoryExplorer(
         isExpense: true,
-        showBarChart: true,
-        onToggleBarChart: (_) {},
-        onCategoryTap: (_, __) {},
-        budgetProgressFor: (_, __) => null,
+        top: data,
+        nodes: const [],
+        onPathChanged: (_) {},
+        onOpenTransactions: (_) {},
       )));
       await tester.pumpAndSettle();
 
@@ -173,23 +164,18 @@ void main() {
       expect(find.text('Kira'), findsOneWidget);
       expect(find.text('Market'), findsOneWidget);
       expect(find.textContaining('2.400,00 ₺'), findsOneWidget);
-      // Yatay kaydırma gerekmez.
-      expect(find.byType(PieChart), findsNothing);
     });
 
     testWidgets('satıra dokunmak kategoriyi bildirir', (tester) async {
       final data = full({'Kira': 2400, 'Market': 1200});
       CategoryData? tapped;
 
-      await tester.pumpWidget(host(ReportCategoryChartCard(
-        title: 'Giderler',
-        fullData: data,
-        pieData: data,
+      await tester.pumpWidget(host(ReportCategoryExplorer(
         isExpense: true,
-        showBarChart: true,
-        onToggleBarChart: (_) {},
-        onCategoryTap: (cat, _) => tapped = cat,
-        budgetProgressFor: (_, __) => null,
+        top: data,
+        nodes: const [],
+        onPathChanged: (_) {},
+        onOpenTransactions: (cat) => tapped = cat,
       )));
       await tester.pumpAndSettle();
 
@@ -201,15 +187,12 @@ void main() {
     testWidgets('en küçük kalem bile görünür genişlikte kalır', (tester) async {
       final data = full({'Kira': 100000, 'Sakiz': 5});
 
-      await tester.pumpWidget(host(ReportCategoryChartCard(
-        title: 'Giderler',
-        fullData: data,
-        pieData: data,
+      await tester.pumpWidget(host(ReportCategoryExplorer(
         isExpense: true,
-        showBarChart: true,
-        onToggleBarChart: (_) {},
-        onCategoryTap: (_, __) {},
-        budgetProgressFor: (_, __) => null,
+        top: data,
+        nodes: const [],
+        onPathChanged: (_) {},
+        onOpenTransactions: (_) {},
       )));
       await tester.pumpAndSettle();
 

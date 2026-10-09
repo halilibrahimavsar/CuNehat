@@ -22,7 +22,7 @@ import 'package:flutter/material.dart';
 /// çizgisi gösterilir.
 ///
 /// Kart DEĞİL panel: akış çubuklarıyla aynı [AppCard] içinde, aynı zaman
-/// ekseni üzerinde durur (bkz. `ReportPeriodChartCard`).
+/// ekseni üzerinde durur (bkz. `ReportTrendCard`).
 class ReportCumulativeBalanceChart extends StatelessWidget {
   final ReportSeries series;
 

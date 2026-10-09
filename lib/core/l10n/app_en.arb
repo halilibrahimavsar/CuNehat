@@ -1652,23 +1652,11 @@
   "drawerSecurityTitle": "Security & Biometrics",
   "drawerSecuritySubtitle": "App lock and PIN settings",
   "drawerActiveWalletLabel": "ACTIVE WALLET",
-  "reportBalanceTrend": "Balance over time",
   "reportExpensesTitle": "Expenses",
   "reportIncomesTitle": "Incomes",
   "reportNoDataTitle": "No Data to Build a Report",
   "reportNetLabel": "Net",
   "reportNoPreviousPeriod": "No prior period",
-  "reportCompareTopSlice": "Largest: {ad} · {tutar}",
-  "@reportCompareTopSlice": {
-    "placeholders": {
-      "ad": {
-        "type": "String"
-      },
-      "tutar": {
-        "type": "String"
-      }
-    }
-  },
   "reportCompareOverspend": "{oran}% over income",
   "@reportCompareOverspend": {
     "placeholders": {
@@ -2265,9 +2253,6 @@
   "hedefYonetimi": "Goals",
   "hedefYokAciklama": "No goals yet. Create one and gather gold, quarter coins and stocks under the same goal.",
   "hedefEkleKisa": "Add goal",
-  "reportFlowTitleDay": "Daily income vs. spending",
-  "reportFlowTitleWeek": "Weekly income vs. spending",
-  "reportFlowTitleMonth": "Monthly income vs. spending",
   "reportUnitDay": "Day",
   "reportUnitWeek": "Week",
   "reportUnitMonth": "Month",
@@ -2313,40 +2298,8 @@
   "reportSystemMovementsHint": "Transfers between wallets, debt payments and investment buys/sells are not spending: the money isn't spent, it only moves. The balance line always includes them.",
   "reportShareTooltip": "Share transactions as CSV",
   "reportNoIncomeForRate": "No income this period",
-  "reportViewPie": "Pie view",
   "reportViewBars": "Bar view",
-  "reportPieSemantics": "{title} category breakdown: {count} items, {total} in total. See the list below for per-item detail.",
-  "@reportPieSemantics": {
-    "placeholders": {
-      "title": {},
-      "count": {},
-      "total": {}
-    }
-  },
-  "reportCompareBarSemantics": "{side} bar: {total}, {count} items.",
-  "@reportCompareBarSemantics": {
-    "placeholders": {
-      "side": {},
-      "total": {},
-      "count": {}
-    }
-  },
   "reportTotalLabel": "Total",
-  "reportSunburstSemantics": "Category ring: {roots} top-level categories, {children} subcategories, {total} in total. The inner ring shows top-level categories, the outer ring the breakdown.",
-  "@reportSunburstSemantics": {
-    "placeholders": {
-      "roots": {},
-      "children": {},
-      "total": {}
-    }
-  },
-  "reportHierarchyHint": "Inner ring: main categories · outer ring: sub-categories · tap for details",
-  "reportBreakdownToggle": "{ad} breakdown",
-  "@reportBreakdownToggle": {
-    "placeholders": {
-      "ad": {}
-    }
-  },
   "reportTopPayeesTitle": "Top places",
   "reportTopPayeesHint": "Similar titles merged (e.g. branches of the same store)",
   "reportTopPayeesCoverage": "This list covers {yuzde}% of period expenses",
@@ -3183,7 +3136,6 @@
   "analysisPeriodEmptyBody": "Nothing recorded in this range. Try another period.",
   "reportModeExpense": "Spending",
   "reportModeIncome": "Income",
-  "reportModeBoth": "Both",
   "filterTypeSection": "TYPE",
   "filterTypeAll": "All",
   "insightPeriodLinkTitle": "{period} summary",
@@ -3424,5 +3376,20 @@
         "type": "String"
       }
     }
-  }
+  },
+  "reportViewLine": "Line view",
+  "reportTrendVsPrevious": "vs. same point last period",
+  "reportTrendBalanceStart": "Start of period {amount}",
+  "reportFocusShareExpense": "{percent} of expenses",
+  "reportFocusShareIncome": "{percent} of income",
+  "reportPreviousAmount": "Previous period {amount}",
+  "reportFocusClear": "Clear category focus",
+  "reportTrendSemantics": "{metric} line, {period}: {amount}. Touch the line for values.",
+  "reportTrendTooltipPrevious": "Previous: {amount}",
+  "reportSeeTransactions": "See transactions ({count})",
+  "reportDrillHint": "Tap a category to drill in",
+  "reportBreadcrumbUp": "Go up one level",
+  "reportDonutSemantics": "Category ring: {count} items, total {total}",
+  "reportDrillInto": "Drill into {name}",
+  "reportTrendThisPeriod": "This period"
 }

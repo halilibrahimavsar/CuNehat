@@ -3226,9 +3226,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get drawerActiveWalletLabel => 'ACTIVE WALLET';
 
   @override
-  String get reportBalanceTrend => 'Balance over time';
-
-  @override
   String get reportExpensesTitle => 'Expenses';
 
   @override
@@ -3242,11 +3239,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportNoPreviousPeriod => 'No prior period';
-
-  @override
-  String reportCompareTopSlice(String ad, String tutar) {
-    return 'Largest: $ad · $tutar';
-  }
 
   @override
   String reportCompareOverspend(String oran) {
@@ -4231,15 +4223,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hedefEkleKisa => 'Add goal';
 
   @override
-  String get reportFlowTitleDay => 'Daily income vs. spending';
-
-  @override
-  String get reportFlowTitleWeek => 'Weekly income vs. spending';
-
-  @override
-  String get reportFlowTitleMonth => 'Monthly income vs. spending';
-
-  @override
   String get reportUnitDay => 'Day';
 
   @override
@@ -4302,37 +4285,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportNoIncomeForRate => 'No income this period';
 
   @override
-  String get reportViewPie => 'Pie view';
-
-  @override
   String get reportViewBars => 'Bar view';
 
   @override
-  String reportPieSemantics(Object title, Object count, Object total) {
-    return '$title category breakdown: $count items, $total in total. See the list below for per-item detail.';
-  }
-
-  @override
-  String reportCompareBarSemantics(Object side, Object total, Object count) {
-    return '$side bar: $total, $count items.';
-  }
-
-  @override
   String get reportTotalLabel => 'Total';
-
-  @override
-  String reportSunburstSemantics(Object roots, Object children, Object total) {
-    return 'Category ring: $roots top-level categories, $children subcategories, $total in total. The inner ring shows top-level categories, the outer ring the breakdown.';
-  }
-
-  @override
-  String get reportHierarchyHint =>
-      'Inner ring: main categories · outer ring: sub-categories · tap for details';
-
-  @override
-  String reportBreakdownToggle(Object ad) {
-    return '$ad breakdown';
-  }
 
   @override
   String get reportTopPayeesTitle => 'Top places';
@@ -5773,9 +5729,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportModeIncome => 'Income';
 
   @override
-  String get reportModeBoth => 'Both';
-
-  @override
   String get filterTypeSection => 'TYPE';
 
   @override
@@ -6106,4 +6059,67 @@ class AppLocalizationsEn extends AppLocalizations {
   String kasaAcilisSatirdan(String amount) {
     return 'Starting amount: $amount (from the ledger line)';
   }
+
+  @override
+  String get reportViewLine => 'Line view';
+
+  @override
+  String get reportTrendVsPrevious => 'vs. same point last period';
+
+  @override
+  String reportTrendBalanceStart(Object amount) {
+    return 'Start of period $amount';
+  }
+
+  @override
+  String reportFocusShareExpense(Object percent) {
+    return '$percent of expenses';
+  }
+
+  @override
+  String reportFocusShareIncome(Object percent) {
+    return '$percent of income';
+  }
+
+  @override
+  String reportPreviousAmount(Object amount) {
+    return 'Previous period $amount';
+  }
+
+  @override
+  String get reportFocusClear => 'Clear category focus';
+
+  @override
+  String reportTrendSemantics(Object metric, Object period, Object amount) {
+    return '$metric line, $period: $amount. Touch the line for values.';
+  }
+
+  @override
+  String reportTrendTooltipPrevious(Object amount) {
+    return 'Previous: $amount';
+  }
+
+  @override
+  String reportSeeTransactions(Object count) {
+    return 'See transactions ($count)';
+  }
+
+  @override
+  String get reportDrillHint => 'Tap a category to drill in';
+
+  @override
+  String get reportBreadcrumbUp => 'Go up one level';
+
+  @override
+  String reportDonutSemantics(Object count, Object total) {
+    return 'Category ring: $count items, total $total';
+  }
+
+  @override
+  String reportDrillInto(Object name) {
+    return 'Drill into $name';
+  }
+
+  @override
+  String get reportTrendThisPeriod => 'This period';
 }

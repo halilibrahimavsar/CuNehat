@@ -5759,12 +5759,6 @@ abstract class AppLocalizations {
   /// **'AKTİF CÜZDAN'**
   String get drawerActiveWalletLabel;
 
-  /// No description provided for @reportBalanceTrend.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bakiye seyri'**
-  String get reportBalanceTrend;
-
   /// No description provided for @reportExpensesTitle.
   ///
   /// In tr, this message translates to:
@@ -5794,12 +5788,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Önceki dönem yok'**
   String get reportNoPreviousPeriod;
-
-  /// No description provided for @reportCompareTopSlice.
-  ///
-  /// In tr, this message translates to:
-  /// **'En büyük: {ad} · {tutar}'**
-  String reportCompareTopSlice(String ad, String tutar);
 
   /// No description provided for @reportCompareOverspend.
   ///
@@ -7445,24 +7433,6 @@ abstract class AppLocalizations {
   /// **'Hedef ekle'**
   String get hedefEkleKisa;
 
-  /// No description provided for @reportFlowTitleDay.
-  ///
-  /// In tr, this message translates to:
-  /// **'Günlük gelir–gider'**
-  String get reportFlowTitleDay;
-
-  /// No description provided for @reportFlowTitleWeek.
-  ///
-  /// In tr, this message translates to:
-  /// **'Haftalık gelir–gider'**
-  String get reportFlowTitleWeek;
-
-  /// No description provided for @reportFlowTitleMonth.
-  ///
-  /// In tr, this message translates to:
-  /// **'Aylık gelir–gider'**
-  String get reportFlowTitleMonth;
-
   /// No description provided for @reportUnitDay.
   ///
   /// In tr, this message translates to:
@@ -7541,53 +7511,17 @@ abstract class AppLocalizations {
   /// **'Bu dönemde gelir yok'**
   String get reportNoIncomeForRate;
 
-  /// No description provided for @reportViewPie.
-  ///
-  /// In tr, this message translates to:
-  /// **'Pasta görünümü'**
-  String get reportViewPie;
-
   /// No description provided for @reportViewBars.
   ///
   /// In tr, this message translates to:
   /// **'Çubuk görünümü'**
   String get reportViewBars;
 
-  /// No description provided for @reportPieSemantics.
-  ///
-  /// In tr, this message translates to:
-  /// **'{title} kategori dağılımı: {count} kalem, toplam {total}. Kalem başına ayrıntı için aşağıdaki listeye bakın.'**
-  String reportPieSemantics(Object title, Object count, Object total);
-
-  /// No description provided for @reportCompareBarSemantics.
-  ///
-  /// In tr, this message translates to:
-  /// **'{side} çubuğu: {total}, {count} kalem.'**
-  String reportCompareBarSemantics(Object side, Object total, Object count);
-
   /// No description provided for @reportTotalLabel.
   ///
   /// In tr, this message translates to:
   /// **'Toplam'**
   String get reportTotalLabel;
-
-  /// No description provided for @reportSunburstSemantics.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kategori çemberi: {roots} ana kategori, {children} alt kategori, toplam {total}. İç halka ana kategorileri, dış halka alt kırılımı gösterir.'**
-  String reportSunburstSemantics(Object roots, Object children, Object total);
-
-  /// No description provided for @reportHierarchyHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'İç halka ana, dış halka alt kategoriler · dokun: ayrıntı'**
-  String get reportHierarchyHint;
-
-  /// No description provided for @reportBreakdownToggle.
-  ///
-  /// In tr, this message translates to:
-  /// **'{ad} alt kırılımı'**
-  String reportBreakdownToggle(Object ad);
 
   /// No description provided for @reportTopPayeesTitle.
   ///
@@ -9983,12 +9917,6 @@ abstract class AppLocalizations {
   /// **'Gelir'**
   String get reportModeIncome;
 
-  /// No description provided for @reportModeBoth.
-  ///
-  /// In tr, this message translates to:
-  /// **'İkisi'**
-  String get reportModeBoth;
-
   /// No description provided for @filterTypeSection.
   ///
   /// In tr, this message translates to:
@@ -10540,6 +10468,96 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Başlangıç: {amount} (defterdeki satırdan)'**
   String kasaAcilisSatirdan(String amount);
+
+  /// No description provided for @reportViewLine.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çizgi görünümü'**
+  String get reportViewLine;
+
+  /// No description provided for @reportTrendVsPrevious.
+  ///
+  /// In tr, this message translates to:
+  /// **'önceki dönemin aynı noktasına göre'**
+  String get reportTrendVsPrevious;
+
+  /// No description provided for @reportTrendBalanceStart.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dönem başı {amount}'**
+  String reportTrendBalanceStart(Object amount);
+
+  /// No description provided for @reportFocusShareExpense.
+  ///
+  /// In tr, this message translates to:
+  /// **'Giderlerdeki payı {percent}'**
+  String reportFocusShareExpense(Object percent);
+
+  /// No description provided for @reportFocusShareIncome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelirlerdeki payı {percent}'**
+  String reportFocusShareIncome(Object percent);
+
+  /// No description provided for @reportPreviousAmount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önceki dönem {amount}'**
+  String reportPreviousAmount(Object amount);
+
+  /// No description provided for @reportFocusClear.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori odağını kaldır'**
+  String get reportFocusClear;
+
+  /// No description provided for @reportTrendSemantics.
+  ///
+  /// In tr, this message translates to:
+  /// **'{metric} çizgisi, {period}: {amount}. Ara değerler için çizgiye dokunun.'**
+  String reportTrendSemantics(Object metric, Object period, Object amount);
+
+  /// No description provided for @reportTrendTooltipPrevious.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önceki: {amount}'**
+  String reportTrendTooltipPrevious(Object amount);
+
+  /// No description provided for @reportSeeTransactions.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlemleri gör ({count})'**
+  String reportSeeTransactions(Object count);
+
+  /// No description provided for @reportDrillHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategoriye dokun, içine in'**
+  String get reportDrillHint;
+
+  /// No description provided for @reportBreadcrumbUp.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir üst seviyeye çık'**
+  String get reportBreadcrumbUp;
+
+  /// No description provided for @reportDonutSemantics.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori halkası: {count} kalem, toplam {total}'**
+  String reportDonutSemantics(Object count, Object total);
+
+  /// No description provided for @reportDrillInto.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} kırılımına in'**
+  String reportDrillInto(Object name);
+
+  /// No description provided for @reportTrendThisPeriod.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu dönem'**
+  String get reportTrendThisPeriod;
 }
 
 class _AppLocalizationsDelegate

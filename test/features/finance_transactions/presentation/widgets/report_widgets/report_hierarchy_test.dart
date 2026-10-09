@@ -3,10 +3,8 @@ import 'package:cunehat/features/finance_transactions/domain/entities/category_e
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_bar_list.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_chart_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_explorer.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_sunburst_chart.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -151,212 +149,130 @@ void main() {
     });
   });
 
-  group('çember', () {
-    testWidgets('iki halka çizilir ve dış halka iç halkayla AYNI toplamı taşır',
-        (tester) async {
-      final data = hierarchical();
-      await tester.pumpWidget(host(ReportSunburstChart(
-        roots: data,
-        onFocusChanged: (_) {},
-        onSliceTap: (_) {},
+  group('kategori keşfi (yerinde iniş)', () {
+    const labels = {
+      'fatura': 'Fatura',
+      'kira': 'Kira',
+      'elektrik': 'Elektrik',
+      'su': 'Su',
+    };
+
+    /// Keşif kontrollüdür (yol sayfada durur); test, sayfanın yaptığını
+    /// yapar: yolu tutar, [ReportCategoryDataBuilder.resolvePath] ile çözer.
+    Future<List<CategoryData>> pumpExplorer(
+      WidgetTester tester, {
+      List<CategoryPathStep> initialPath = const [],
+    }) async {
+      final opened = <CategoryData>[];
+      var path = initialPath;
+      final top = builder().buildPie(hierarchical());
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(host(StatefulBuilder(
+        builder: (context, setState) => ReportCategoryExplorer(
+          isExpense: true,
+          top: top,
+          nodes: ReportCategoryDataBuilder.resolvePath(top, path),
+          onPathChanged: (p) => setState(() => path = p),
+          onOpenTransactions: opened.add,
+          categoryLabels: labels,
+        ),
       )));
       await tester.pumpAndSettle();
-
-      final charts =
-          tester.widgetList<PieChart>(find.byType(PieChart)).toList();
-      expect(charts, hasLength(2), reason: 'iç + dış halka');
-
-      double sumOf(PieChart c) =>
-          c.data.sections.fold<double>(0, (s, x) => s + x.value);
-
-      // Toplamlar eşit DEĞİLSE açılar kayar ve çocuk yanlış anaya bakar.
-      expect(sumOf(charts[0]), closeTo(sumOf(charts[1]), 0.001));
-    });
-
-    testWidgets('kırılımı olmayan kök dış halkada kendi arkını kaplar',
-        (tester) async {
-      final data = hierarchical();
-      await tester.pumpWidget(host(ReportSunburstChart(
-        roots: data,
-        onFocusChanged: (_) {},
-        onSliceTap: (_) {},
-      )));
-      await tester.pumpAndSettle();
-
-      final outer = tester.widgetList<PieChart>(find.byType(PieChart)).first;
-      // Kira (24.000) çocuksuz: dış halkada tek parça durmalı.
-      expect(
-        outer.data.sections.where((s) => s.value == 24000),
-        hasLength(1),
-      );
-      // Fatura üç parçaya bölünmüş.
-      expect(
-        outer.data.sections.where((s) => s.value == 2200),
-        hasLength(1),
-      );
-    });
-
-    testWidgets('hiç alt kategori yoksa dış halka HİÇ çizilmez',
-        (tester) async {
-      final flat = builder().buildFull([tx('kira', 24000)], isExpense: true);
-      await tester.pumpWidget(host(ReportSunburstChart(
-        roots: flat,
-        onFocusChanged: (_) {},
-        onSliceTap: (_) {},
-      )));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(PieChart), findsOneWidget);
-    });
-
-    testWidgets('merkez odak yokken TOPLAMI yazar', (tester) async {
-      await tester.pumpWidget(host(ReportSunburstChart(
-        roots: hierarchical(),
-        onFocusChanged: (_) {},
-        onSliceTap: (_) {},
-      )));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Toplam'), findsOneWidget);
-      expect(find.text('28,2 B ₺'), findsOneWidget);
-    });
-
-    testWidgets('odaklanınca merkez o kategoriye döner', (tester) async {
-      await tester.pumpWidget(host(ReportSunburstChart(
-        roots: hierarchical(),
-        focusedIndex: 1,
-        onFocusChanged: (_) {},
-        onSliceTap: (_) {},
-        categoryLabels: const {'fatura': 'Fatura', 'kira': 'Kira'},
-      )));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Toplam'), findsNothing);
-      expect(find.text('Fatura'), findsOneWidget);
-      expect(find.text('4,2 B ₺'), findsOneWidget);
-    });
-  });
-
-  group('açılır çubuk satırları', () {
-    Future<void> pumpBars(WidgetTester tester) async {
-      final data = hierarchical();
-      await tester.pumpWidget(host(ReportCategoryChartCard(
-        title: 'Giderler',
-        fullData: data,
-        pieData: data,
-        isExpense: true,
-        showBarChart: true,
-        onToggleBarChart: (_) {},
-        onCategoryTap: (_, __) {},
-        budgetProgressFor: (_, __) => null,
-        categoryLabels: const {
-          'fatura': 'Fatura',
-          'kira': 'Kira',
-          'elektrik': 'Elektrik',
-          'su': 'Su',
-        },
-      )));
-      await tester.pumpAndSettle();
+      return opened;
     }
 
-    testWidgets('kırılımı olan satırda chevron var, olmayanda yok',
+    testWidgets('üst seviye kökleri listeler ve iniş ipucunu yazar',
         (tester) async {
-      await pumpBars(tester);
-      // Yalnız Fatura'nın chevron'u olmalı.
-      expect(find.byIcon(Icons.expand_more_rounded), findsOneWidget);
-    });
-
-    testWidgets('chevron alt kırılımı açar', (tester) async {
-      await pumpBars(tester);
-
+      await pumpExplorer(tester);
+      expect(find.text('Fatura'), findsOneWidget);
+      expect(find.text('Kira'), findsOneWidget);
       expect(find.text('Elektrik'), findsNothing);
-      await tester.tap(find.byIcon(Icons.expand_more_rounded));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Elektrik'), findsOneWidget);
-      expect(find.text('Su'), findsOneWidget);
-      // Kökün doğrudan harcaması "Doğrudan Fatura" olarak yazılır.
-      expect(find.textContaining('Fatura').evaluate().length,
-          greaterThanOrEqualTo(2));
-      // Paylar ANA KALEME göre: 2.200 / 4.240 = %52.
-      expect(find.textContaining('(%52)'), findsOneWidget);
+      expect(find.text('Kategoriye dokun, içine in'), findsOneWidget);
+      // Alt kırılımı olan satır `›` taşır, yaprak taşımaz.
+      expect(find.byIcon(Icons.chevron_right_rounded), findsOneWidget);
     });
 
-    testWidgets('chevron satırın kendi dokunmasını YUTMAZ', (tester) async {
-      final data = hierarchical();
-      CategoryData? tapped;
-      await tester.pumpWidget(host(ReportCategoryChartCard(
-        title: 'Giderler',
-        fullData: data,
-        pieData: data,
-        isExpense: true,
-        showBarChart: true,
-        onToggleBarChart: (_) {},
-        onCategoryTap: (cat, _) => tapped = cat,
-        budgetProgressFor: (_, __) => null,
-        categoryLabels: const {'fatura': 'Fatura', 'kira': 'Kira'},
-      )));
-      await tester.pumpAndSettle();
-
-      // Satır adına dokunmak işlem listesini açar; chevron kırılımı açar.
+    testWidgets('alt kategorisi olan satıra dokunmak İNER', (tester) async {
+      final opened = await pumpExplorer(tester);
       await tester.tap(find.text('Fatura'));
       await tester.pumpAndSettle();
-      expect(tapped?.name, 'fatura');
-      expect(find.text('Elektrik'), findsNothing);
+
+      expect(opened, isEmpty, reason: 'iniş detay sayfası AÇMAZ');
+      expect(find.text('Elektrik'), findsOneWidget);
+      expect(find.text('Su'), findsOneWidget);
+      expect(find.text('Doğrudan "Fatura"'), findsOneWidget);
+      expect(find.text('Kira'), findsNothing);
+      // Yol: "Giderler › Fatura"; kalemin TÜM işlemleri tek düğmede.
+      expect(find.text('Giderler'), findsOneWidget);
+      expect(find.text('İşlemleri gör (3)'), findsOneWidget);
     });
 
-    testWidgets('alt satırlar da dokunulabilir', (tester) async {
-      final data = hierarchical();
-      CategoryData? tapped;
-      await tester.pumpWidget(host(ReportCategoryChartCard(
-        title: 'Giderler',
-        fullData: data,
-        pieData: data,
-        isExpense: true,
-        showBarChart: true,
-        onToggleBarChart: (_) {},
-        onCategoryTap: (cat, _) => tapped = cat,
-        budgetProgressFor: (_, __) => null,
-        categoryLabels: const {
-          'fatura': 'Fatura',
-          'kira': 'Kira',
-          'elektrik': 'Elektrik',
-          'su': 'Su',
-        },
-      )));
+    testWidgets('yaprak satır işlemleri açar, inmez', (tester) async {
+      final opened = await pumpExplorer(tester);
+      await tester.tap(find.text('Kira'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.expand_more_rounded));
-      await tester.pumpAndSettle();
+      expect(opened.single.name, 'kira');
+      expect(find.text('Fatura'), findsOneWidget, reason: 'seviye değişmedi');
+    });
+
+    testWidgets('inilmiş seviyede alt kategori KENDİ işlemlerini açar',
+        (tester) async {
+      final top = builder().buildPie(hierarchical());
+      final fatura = top.firstWhere((c) => c.name == 'fatura');
+      final opened = await pumpExplorer(tester, initialPath: [fatura.step]);
 
       await tester.tap(find.text('Elektrik'));
       await tester.pumpAndSettle();
-      expect(tapped?.name, 'elektrik');
+      expect(opened.single.name, 'elektrik');
+      expect(opened.single.totalAmount, 2200);
+
+      await tester.tap(find.text('Doğrudan "Fatura"'));
+      await tester.pumpAndSettle();
+      expect(opened.last.isDirect, isTrue);
+      expect(opened.last.totalAmount, 850);
+
+      await tester.tap(find.text('İşlemleri gör (3)'));
+      await tester.pumpAndSettle();
+      expect(opened.last.name, 'fatura');
+      expect(opened.last.isDirect, isFalse);
     });
 
-    testWidgets('dönem değişince açık satırlar kapanmaz ama YETİM kalmaz',
+    testWidgets('yol parçası ve geri oku bir üst seviyeye çıkarır',
         (tester) async {
-      await pumpBars(tester);
-      await tester.tap(find.byIcon(Icons.expand_more_rounded));
-      await tester.pumpAndSettle();
-      expect(find.text('Elektrik'), findsOneWidget);
+      final top = builder().buildPie(hierarchical());
+      final fatura = top.firstWhere((c) => c.name == 'fatura');
+      await pumpExplorer(tester, initialPath: [fatura.step]);
 
-      // Fatura listeden düşerse açık kaydı da düşmeli.
-      final onlyKira =
-          builder().buildFull([tx('kira', 24000)], isExpense: true);
-      await tester.pumpWidget(host(ReportCategoryChartCard(
-        title: 'Giderler',
-        fullData: onlyKira,
-        pieData: onlyKira,
-        isExpense: true,
-        showBarChart: true,
-        onToggleBarChart: (_) {},
-        onCategoryTap: (_, __) {},
-        budgetProgressFor: (_, __) => null,
-      )));
+      await tester.tap(find.byTooltip('Bir üst seviyeye çık'));
       await tester.pumpAndSettle();
+      expect(find.text('Kira'), findsOneWidget);
+      expect(find.byTooltip('Bir üst seviyeye çık'), findsNothing);
 
-      expect(find.byType(ReportCategoryBarList), findsOneWidget);
-      expect(find.text('Elektrik'), findsNothing);
+      await tester.tap(find.text('Fatura'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Giderler'));
+      await tester.pumpAndSettle();
+      expect(find.text('Kira'), findsOneWidget);
+    });
+
+    testWidgets('donut tek halkadır ve seviyenin kalemlerini çizer',
+        (tester) async {
+      await pumpExplorer(tester);
+      final pies = tester.widgetList<PieChart>(find.byType(PieChart));
+      expect(pies, hasLength(1));
+      expect(pies.single.data.sections, hasLength(2)); // Kira, Fatura
+
+      await tester.tap(find.text('Fatura'));
+      await tester.pumpAndSettle();
+      final inner = tester.widget<PieChart>(find.byType(PieChart));
+      // Elektrik + Su + doğrudan; toplam kökün toplamına eşit.
+      expect(inner.data.sections, hasLength(3));
+      expect(
+        inner.data.sections.fold<double>(0, (s, x) => s + x.value),
+        4240,
+      );
     });
   });
 }

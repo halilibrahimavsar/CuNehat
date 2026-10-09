@@ -2,9 +2,11 @@ import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/report_series_service.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_chart_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_explorer.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_trend_card.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/report_trend.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_compare_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_cumulative_balance_chart.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_daily_net_flow_chart.dart';
 import 'package:flutter/material.dart';
@@ -97,7 +99,7 @@ void main() {
     handle.dispose();
   });
 
-  testWidgets('kategori çemberi ana/alt sayısını ve toplamı söyler',
+  testWidgets('kategori halkası kalem sayısını ve toplamı söyler',
       (tester) async {
     final handle = tester.ensureSemantics();
     final data = [
@@ -105,44 +107,51 @@ void main() {
       CategoryData('Market', 1200, const [], Colors.blue),
     ];
 
-    await tester.pumpWidget(host(ReportCategoryChartCard(
-      title: 'Giderler',
-      fullData: data,
-      pieData: data,
+    await tester.pumpWidget(host(ReportCategoryExplorer(
       isExpense: true,
-      showBarChart: false,
-      onToggleBarChart: (_) {},
-      onCategoryTap: (_, __) {},
-      budgetProgressFor: (_, __) => null,
+      top: data,
+      nodes: const [],
+      onPathChanged: (_) {},
+      onOpenTransactions: (_) {},
     )));
     await tester.pumpAndSettle();
 
     expect(
       labels(tester).any((l) =>
-          l.contains('Kategori çemberi') &&
-          l.contains('2 ana kategori') &&
+          l.contains('Kategori halkası') &&
+          l.contains('2 kalem') &&
           l.contains('3.600,00 ₺')),
       isTrue,
     );
     handle.dispose();
   });
 
-  testWidgets('karşılaştırma çubukları taraf ve toplam söyler', (tester) async {
+  testWidgets('zaman çizgisi ölçüyü, dönemi ve tutarı söyler', (tester) async {
     final handle = tester.ensureSemantics();
-    await tester.pumpWidget(host(ReportCompareChartCard(
-      incomeSlices: [CategoryData('Maaş', 6200, const [], Colors.green)],
-      expenseSlices: [CategoryData('Kira', 2400, const [], Colors.red)],
-      onSliceTap: (_, __) {},
+    final s = series();
+    await tester.pumpWidget(host(ReportTrendCard(
+      metric: TrendMetric.expense,
+      onMetricChanged: (_) {},
+      asLine: true,
+      onAsLineChanged: (_) {},
+      totals: const ReportTotals(
+          totalIncome: 6200, totalExpense: 1500, net: 4700),
+      previousTotals: const ReportTotals(),
+      flow: s,
+      balance: s,
+      elapsedCount: s.buckets.length,
+      currentLabel: 'Haziran 2026',
+      previousLabel: 'Mayıs 2026',
     )));
     await tester.pumpAndSettle();
 
-    final all = labels(tester).toList();
     expect(
-        all.any((l) => l.contains('Gelir çubuğu') && l.contains('6.200,00 ₺')),
-        isTrue);
-    expect(
-        all.any((l) => l.contains('Gider çubuğu') && l.contains('2.400,00 ₺')),
-        isTrue);
+      labels(tester).any((l) =>
+          l.contains('Gider çizgisi') &&
+          l.contains('Haziran 2026') &&
+          l.contains('1.500,00 ₺')),
+      isTrue,
+    );
     handle.dispose();
   });
 }

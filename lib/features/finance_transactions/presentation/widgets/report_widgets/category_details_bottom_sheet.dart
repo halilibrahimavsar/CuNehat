@@ -1,5 +1,4 @@
 import 'package:cunehat/config/theme/money_colors.dart';
-import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/utils/money_format.dart';
@@ -93,8 +92,6 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final brightness =
-        (theme.extension<AppSurface>() ?? AppSurface.light).brightness;
     final money = MoneyWriter.of(context);
 
     return BlocBuilder<TransactionBloc, TransactionState>(
@@ -111,11 +108,6 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
         final categoryDataList = switch (sliceMode) {
           ReportSliceMode.full => fullList,
           ReportSliceMode.pie => dataBuilder.buildPie(fullList),
-          ReportSliceMode.ranked => dataBuilder.buildRanked(
-              fullList,
-              isExpense: isExpense,
-              brightness: brightness,
-            ),
         };
 
         // Alt kategori ve kökün doğrudan dilimi yalnız `children` içinde

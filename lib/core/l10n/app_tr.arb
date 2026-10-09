@@ -1673,23 +1673,11 @@
   "drawerSecurityTitle": "Güvenlik & Biyometrik",
   "drawerSecuritySubtitle": "Uygulama kilidi ve PIN ayarları",
   "drawerActiveWalletLabel": "AKTİF CÜZDAN",
-  "reportBalanceTrend": "Bakiye seyri",
   "reportExpensesTitle": "Giderler",
   "reportIncomesTitle": "Gelirler",
   "reportNoDataTitle": "Rapor Oluşturmak İçin Veri Yok",
   "reportNetLabel": "Net",
   "reportNoPreviousPeriod": "Önceki dönem yok",
-  "reportCompareTopSlice": "En büyük: {ad} · {tutar}",
-  "@reportCompareTopSlice": {
-    "placeholders": {
-      "ad": {
-        "type": "String"
-      },
-      "tutar": {
-        "type": "String"
-      }
-    }
-  },
   "reportCompareOverspend": "Gelirin %{oran} üzerinde",
   "@reportCompareOverspend": {
     "placeholders": {
@@ -2286,9 +2274,6 @@
   "hedefYonetimi": "Hedefler",
   "hedefYokAciklama": "Henüz hedefin yok. Hedef aç, gram altını, çeyreği ve hisseyi aynı hedefin altında topla.",
   "hedefEkleKisa": "Hedef ekle",
-  "reportFlowTitleDay": "Günlük gelir–gider",
-  "reportFlowTitleWeek": "Haftalık gelir–gider",
-  "reportFlowTitleMonth": "Aylık gelir–gider",
   "reportUnitDay": "Gün",
   "reportUnitWeek": "Hafta",
   "reportUnitMonth": "Ay",
@@ -2334,40 +2319,8 @@
   "reportSystemMovementsHint": "Cüzdanlar arası transfer, borç ödemesi ve yatırım alım/satımı harcama değildir: para harcanmaz, yalnızca yer değiştirir. Bakiye çizgisi bunları her zaman içerir.",
   "reportShareTooltip": "İşlemleri CSV olarak paylaş",
   "reportNoIncomeForRate": "Bu dönemde gelir yok",
-  "reportViewPie": "Pasta görünümü",
   "reportViewBars": "Çubuk görünümü",
-  "reportPieSemantics": "{title} kategori dağılımı: {count} kalem, toplam {total}. Kalem başına ayrıntı için aşağıdaki listeye bakın.",
-  "@reportPieSemantics": {
-    "placeholders": {
-      "title": {},
-      "count": {},
-      "total": {}
-    }
-  },
-  "reportCompareBarSemantics": "{side} çubuğu: {total}, {count} kalem.",
-  "@reportCompareBarSemantics": {
-    "placeholders": {
-      "side": {},
-      "total": {},
-      "count": {}
-    }
-  },
   "reportTotalLabel": "Toplam",
-  "reportSunburstSemantics": "Kategori çemberi: {roots} ana kategori, {children} alt kategori, toplam {total}. İç halka ana kategorileri, dış halka alt kırılımı gösterir.",
-  "@reportSunburstSemantics": {
-    "placeholders": {
-      "roots": {},
-      "children": {},
-      "total": {}
-    }
-  },
-  "reportHierarchyHint": "İç halka ana, dış halka alt kategoriler · dokun: ayrıntı",
-  "reportBreakdownToggle": "{ad} alt kırılımı",
-  "@reportBreakdownToggle": {
-    "placeholders": {
-      "ad": {}
-    }
-  },
   "reportTopPayeesTitle": "En çok harcanan yerler",
   "reportTopPayeesHint": "Benzer başlıklar birleştirildi (ör. aynı mağazanın şubeleri)",
   "reportTopPayeesCoverage": "Bu liste dönem giderinin %{yuzde}'ini kapsar",
@@ -3319,7 +3272,6 @@
   "analysisPeriodEmptyBody": "Bu aralıkta kayıt yok. Başka bir döneme geçebilirsin.",
   "reportModeExpense": "Gider",
   "reportModeIncome": "Gelir",
-  "reportModeBoth": "İkisi",
   "filterTypeSection": "TÜR",
   "filterTypeAll": "Tümü",
   "insightPeriodLinkTitle": "{period} özeti",
@@ -3560,5 +3512,68 @@
         "type": "String"
       }
     }
-  }
+  },
+  "reportViewLine": "Çizgi görünümü",
+  "reportTrendVsPrevious": "önceki dönemin aynı noktasına göre",
+  "reportTrendBalanceStart": "Dönem başı {amount}",
+  "@reportTrendBalanceStart": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "reportFocusShareExpense": "Giderlerdeki payı {percent}",
+  "@reportFocusShareExpense": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
+  "reportFocusShareIncome": "Gelirlerdeki payı {percent}",
+  "@reportFocusShareIncome": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
+  "reportPreviousAmount": "Önceki dönem {amount}",
+  "@reportPreviousAmount": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "reportFocusClear": "Kategori odağını kaldır",
+  "reportTrendSemantics": "{metric} çizgisi, {period}: {amount}. Ara değerler için çizgiye dokunun.",
+  "@reportTrendSemantics": {
+    "placeholders": {
+      "metric": {},
+      "period": {},
+      "amount": {}
+    }
+  },
+  "reportTrendTooltipPrevious": "Önceki: {amount}",
+  "@reportTrendTooltipPrevious": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "reportSeeTransactions": "İşlemleri gör ({count})",
+  "@reportSeeTransactions": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "reportDrillHint": "Kategoriye dokun, içine in",
+  "reportBreadcrumbUp": "Bir üst seviyeye çık",
+  "reportDonutSemantics": "Kategori halkası: {count} kalem, toplam {total}",
+  "@reportDonutSemantics": {
+    "placeholders": {
+      "count": {},
+      "total": {}
+    }
+  },
+  "reportDrillInto": "{name} kırılımına in",
+  "@reportDrillInto": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "reportTrendThisPeriod": "Bu dönem"
 }

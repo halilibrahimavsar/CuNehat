@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 /// eylem üretmiyor; eylemi üreten "Market %38 arttı" satırıdır.
 ///
 /// Kutupluluk RENKLE TAŞINMAZ: ok yönü + işaret zaten söylüyor, renk yalnız
-/// pekiştiriyor (bkz. `ReportCompareRamp` uyarısı). Gider tarafında artış
+/// pekiştiriyor (deuteranopia altında yeşil–kırmızı ayrımı çöker). Gider tarafında artış
 /// kötü, gelir tarafında iyidir — bu yüzden [increaseIsGood] açıkça verilir,
 /// widget kendi tahmin etmez.
 class ReportChangeBadge extends StatelessWidget {

@@ -1,4 +1,3 @@
-import 'package:cunehat/core/shared/motion/app_motion.dart';
 import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
@@ -8,42 +7,42 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/repor
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_change_badge.dart';
 import 'package:flutter/material.dart';
 
-/// Kategorilerin YATAY çubuklarla sıralanmış listesi — pasta kartının "çubuk"
-/// görünümü.
+/// Kategorilerin YATAY çubuklarla sıralanmış listesi — kategori keşfinin
+/// (bkz. `ReportCategoryExplorer`) efsanesi ve dokunma yüzeyi.
 ///
 /// **Neden fl_chart'lı dikey çubuk değil:** eskiden bu görünüm bir `BarChart`
 /// idi ve ölçüldü — `leftTitles`, `bottomTitles`, `gridData` HEPSİ kapalıydı.
-/// Yani ekranda ne isim ne değer taşıyan, yatay kaydırılan (kaydırma
-/// göstergesi de olmayan) renkli çubuklar duruyordu; her şeyi altındaki
-/// efsaneyle renk eşleştirerek okumak gerekiyordu.
+/// Yatay düzen bu veriye daha uygun: kategori adları Türkçede uzun ve dikey
+/// eksende kesiliyor; yatayda her satır tam genişlik alır, çubuk uzunlukları
+/// ortak tabandan kıyaslanabilir. Satırın kendisi dokunma hedefidir.
 ///
-/// Yatay düzen bu veriye daha uygun: kategori adları Türkçede uzun
-/// ("Ulaşım", "Sağlık", "Ev ve Kira") ve dikey eksende kesiliyorlar; yatayda
-/// her satır tam genişlik alır, kaydırma gerekmez, çubuk uzunlukları ortak
-/// tabandan kıyaslanabilir. Satırın kendisi aynı zamanda dokunma hedefidir —
-/// 28dp'lik bir çubuğa nişan almak gerekmez.
-///
-/// Bu görünüm efsanenin YERİNE geçer: ad, tutar ve pay zaten satırda.
-///
-/// Alt kategorisi olan satırlar AÇILIR: chevron'a dokununca çocuklar girintili
-/// alt çubuklar olarak açılır ve kendi içlerinde (ana kalemin toplamına göre)
-/// ölçeklenir. Hiyerarşi eskiden yalnız detay sayfasındaki düz metin
-/// satırlarında görünüyordu.
-class ReportCategoryBarList extends StatefulWidget {
+/// **İniş modeli:** alt kategorisi olan satır (ya da "Diğer" kovası) İNER —
+/// keşif kartı o kalemin kırılımını gösterir. Yaprak satır işlemlerini açar.
+/// Eskiden satır içinde açılan alt satırlar vardı; alt satıra dokunmak boş
+/// bir detay açıyordu ve iki ayrı dokunma hedefi (satır + chevron) aynı
+/// satırda yarışıyordu.
+class ReportCategoryBarList extends StatelessWidget {
   final List<CategoryData> data;
 
   /// Payların paydası. Dilimlerin toplamı verilir; sıfır ya da negatifse
   /// yüzdeler yazılmaz.
   final double total;
 
+  /// Yaprak kalemin (ya da doğrudan dilimin) işlemlerini açar.
   final void Function(CategoryData category) onCategoryTap;
+
+  /// İnilebilir kalemin kırılımına iner; null ise her satır [onCategoryTap].
+  final void Function(CategoryData category)? onDrill;
+
+  /// Doğrudan dilimin etiketi için üst kalemin adı ("Doğrudan "Fatura"").
+  final String? parentLabel;
 
   /// `tag` → görünen ad.
   final Map<String, String> categoryLabels;
 
   /// Kategorinin bütçe ilerlemesi (yalnız gider tarafında verilir).
-  final ReportBudgetProgress? Function(
-      String tag, double spent)? budgetProgressFor;
+  final ReportBudgetProgress? Function(String tag, double spent)?
+      budgetProgressFor;
 
   /// Artışın İYİ mi kötü mü olduğu — değişim rozetinin rengi buna bağlı.
   /// Gelir tarafında artış iyidir, gider tarafında kötü.
@@ -54,6 +53,8 @@ class ReportCategoryBarList extends StatefulWidget {
     required this.data,
     required this.total,
     required this.onCategoryTap,
+    this.onDrill,
+    this.parentLabel,
     this.categoryLabels = const {},
     this.budgetProgressFor,
     this.increaseIsGood = false,
@@ -62,27 +63,9 @@ class ReportCategoryBarList extends StatefulWidget {
   /// Çubuk kalınlığı — mark tavanı 24dp (bkz. karşılaştırma kartı).
   static const double barHeight = 8;
 
-  /// Alt çubuk daha ince: hiyerarşi kalınlıkla da okunur.
-  static const double childBarHeight = 5;
-
-  @override
-  State<ReportCategoryBarList> createState() => _ReportCategoryBarListState();
-}
-
-class _ReportCategoryBarListState extends State<ReportCategoryBarList> {
-  /// Açık ana kategorilerin id'leri. Liste değişince (dönem/mod) temizlenir.
-  final Set<String> _expanded = {};
-
-  @override
-  void didUpdateWidget(ReportCategoryBarList oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    final names = {for (final c in widget.data) c.name};
-    _expanded.removeWhere((id) => !names.contains(id));
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (widget.data.isEmpty) return const SizedBox.shrink();
+    if (data.isEmpty) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
@@ -91,239 +74,35 @@ class _ReportCategoryBarListState extends State<ReportCategoryBarList> {
     // Çubuk uzunlukları EN BÜYÜK KALEME göre ölçeklenir, toplama göre değil:
     // toplamla ölçeklenince %8'lik bir kalem 26dp'ye iniyor ve kalemler
     // arasındaki fark okunmuyordu. Paylar zaten satırda yazılı.
-    final maxAmount = widget.data
-        .fold<double>(0, (m, c) => c.totalAmount > m ? c.totalAmount : m);
+    final maxAmount =
+        data.fold<double>(0, (m, c) => c.totalAmount > m ? c.totalAmount : m);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final item in widget.data) ...[
+        for (final item in data)
           _Row(
             item: item,
             fraction: maxAmount <= 0 ? 0 : item.totalAmount / maxAmount,
-            percent: widget.total <= 0
-                ? null
-                : item.totalAmount / widget.total * 100,
+            percent: total <= 0 ? null : item.totalAmount / total * 100,
             money: money,
             scheme: scheme,
             theme: theme,
-            label: item.labelIn(context, widget.categoryLabels),
-            budget: widget.budgetProgressFor?.call(item.name, item.totalAmount),
-            increaseIsGood: widget.increaseIsGood,
-            expanded: _expanded.contains(item.name),
-            onToggleExpanded: item.children.isEmpty
+            label: item.isDirect && parentLabel != null
+                ? context.l10n.dogrudanKategoriSec(parentLabel!)
+                : item.labelIn(context, categoryLabels),
+            // Doğrudan dilim kökle aynı kimliği taşır; kökün bütçesini onun
+            // altında yazmak yanlış olurdu.
+            budget: item.isDirect || item.isOther
                 ? null
-                : () => setState(() {
-                      if (!_expanded.remove(item.name)) {
-                        _expanded.add(item.name);
-                      }
-                    }),
-            onTap: () => widget.onCategoryTap(item),
+                : budgetProgressFor?.call(item.name, item.totalAmount),
+            increaseIsGood: increaseIsGood,
+            drills: onDrill != null && item.canDrill,
+            onTap: onDrill != null && item.canDrill
+                ? () => onDrill!(item)
+                : () => onCategoryTap(item),
           ),
-          // Alt kırılım yumuşakça açılır/kapanır; eskiden tek karede
-          // beliriyordu ve altındaki satırlar zıplıyordu.
-          AnimatedSize(
-            duration: AppMotion.of(context).d(AppMotion.medium),
-            curve: AppMotion.standard,
-            alignment: Alignment.topCenter,
-            child: _expanded.contains(item.name)
-                ? _ChildRows(
-                    parent: item,
-                    money: money,
-                    scheme: scheme,
-                    theme: theme,
-                    categoryLabels: widget.categoryLabels,
-                    budgetProgressFor: widget.budgetProgressFor,
-                    onCategoryTap: widget.onCategoryTap,
-                  )
-                : const SizedBox(width: double.infinity),
-          ),
-        ],
       ],
-    );
-  }
-}
-
-/// Bir ana kategorinin açılmış alt kırılımı.
-///
-/// Alt çubuklar ANA KALEMİN toplamına göre ölçeklenir, listenin en büyüğüne
-/// göre değil: kırılımın sorusu "bu 4.240 TL'nin içinde ne var", "Kira'ya
-/// göre ne kadar" değil.
-class _ChildRows extends StatelessWidget {
-  final CategoryData parent;
-  final MoneyWriter money;
-  final ColorScheme scheme;
-  final ThemeData theme;
-  final Map<String, String> categoryLabels;
-  final ReportBudgetProgress? Function(
-      String tag, double spent)? budgetProgressFor;
-  final void Function(CategoryData category) onCategoryTap;
-
-  const _ChildRows({
-    required this.parent,
-    required this.money,
-    required this.scheme,
-    required this.theme,
-    required this.categoryLabels,
-    required this.budgetProgressFor,
-    required this.onCategoryTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final maxChild = parent.children
-        .fold<double>(0, (m, c) => c.totalAmount > m ? c.totalAmount : m);
-
-    return Padding(
-      padding: const EdgeInsets.only(left: 18, bottom: 6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (final child in parent.children)
-            _ChildRow(
-              child: child,
-              // Kökün doğrudan harcaması ayrı bir kategori DEĞİL; adı
-              // "Doğrudan Fatura" biçiminde yazılır ve tıklanabilir olmaz.
-              label: child.isDirect
-                  ? context.l10n.dogrudanKategoriSec(
-                      parent.labelIn(context, categoryLabels))
-                  : child.labelIn(context, categoryLabels),
-              fraction: maxChild <= 0 ? 0 : child.totalAmount / maxChild,
-              percent: parent.totalAmount <= 0
-                  ? null
-                  : child.totalAmount / parent.totalAmount * 100,
-              money: money,
-              scheme: scheme,
-              theme: theme,
-              budget: child.isDirect
-                  ? null
-                  : budgetProgressFor?.call(child.name, child.totalAmount),
-              onTap: child.isDirect ? null : () => onCategoryTap(child),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ChildRow extends StatelessWidget {
-  final CategoryData child;
-  final String label;
-  final double fraction;
-  final double? percent;
-  final MoneyWriter money;
-  final ColorScheme scheme;
-  final ThemeData theme;
-  final ReportBudgetProgress? budget;
-  final VoidCallback? onTap;
-
-  const _ChildRow({
-    required this.child,
-    required this.label,
-    required this.fraction,
-    required this.percent,
-    required this.money,
-    required this.scheme,
-    required this.theme,
-    required this.budget,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final amountText = percent == null
-        ? money(child.totalAmount)
-        : context.l10n.formatMoneyItemTotalamountPercent(
-            money(child.totalAmount),
-            percent!.toStringAsFixed(0),
-          );
-
-    return Semantics(
-      button: onTap != null,
-      label: '$label, $amountText',
-      excludeSemantics: true,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 2),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.subdirectory_arrow_right,
-                      size: 13,
-                      color: scheme.onSurfaceVariant.withValues(alpha: 0.7)),
-                  const SizedBox(width: 5),
-                  Expanded(
-                    child: Text(
-                      label,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontStyle: child.isDirect ? FontStyle.italic : null,
-                        color: scheme.onSurface.withValues(alpha: 0.85),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    amountText,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Padding(
-                padding: const EdgeInsets.only(left: 18),
-                child: LayoutBuilder(
-                  builder: (context, constraints) => Stack(
-                    children: [
-                      Container(
-                        height: ReportCategoryBarList.childBarHeight,
-                        decoration: BoxDecoration(
-                          color: scheme.onSurface.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                      ),
-                      Container(
-                        width: visibleBarWidth(
-                          maxWidth: constraints.maxWidth,
-                          fraction: fraction,
-                          minVisible: 3.0,
-                        ),
-                        height: ReportCategoryBarList.childBarHeight,
-                        decoration: BoxDecoration(
-                          color: child.color,
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              if (budget != null) ...[
-                const SizedBox(height: 4),
-                Padding(
-                  padding: const EdgeInsets.only(left: 18),
-                  child: Text(
-                    '${formatPercent(budget!.ratio * 100)} / '
-                    '${money(budget!.limit)}',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color:
-                          budget!.isExceeded ? MoneyColors.expense : MoneyColors.income,
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
@@ -339,10 +118,9 @@ class _Row extends StatelessWidget {
   final ReportBudgetProgress? budget;
   final VoidCallback onTap;
 
-  /// Alt kırılım açık mı; [onToggleExpanded] null ise kırılım yoktur ve
-  /// chevron çizilmez.
-  final bool expanded;
-  final VoidCallback? onToggleExpanded;
+  /// Satır bir kırılıma mı iner (yoksa işlemleri mi açar)? İnen satır
+  /// sağda `›` taşır.
+  final bool drills;
 
   final bool increaseIsGood;
 
@@ -357,8 +135,7 @@ class _Row extends StatelessWidget {
     required this.budget,
     required this.onTap,
     this.increaseIsGood = false,
-    this.expanded = false,
-    this.onToggleExpanded,
+    this.drills = false,
   });
 
   @override
@@ -372,8 +149,11 @@ class _Row extends StatelessWidget {
 
     return Semantics(
       button: true,
-      label: '$label, $amountText',
+      label: drills
+          ? '$label, $amountText. ${context.l10n.reportDrillInto(label)}'
+          : '$label, $amountText',
       excludeSemantics: true,
+      onTap: onTap,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
@@ -416,32 +196,11 @@ class _Row extends StatelessWidget {
                       color: scheme.onSurfaceVariant,
                     ),
                   ),
-                  // Chevron AYRI dokunma hedefi: satırın kendisi işlemleri
-                  // açar, chevron kırılımı. İkisi tek jeste bindirilirse
-                  // kırılıma bakmak isteyen kullanıcı her seferinde alt
-                  // sayfayla karşılaşırdı.
-                  if (onToggleExpanded != null)
-                    Semantics(
-                      button: true,
-                      expanded: expanded,
-                      label: context.l10n.reportBreakdownToggle(label),
-                      child: InkWell(
-                        onTap: onToggleExpanded,
-                        customBorder: const CircleBorder(),
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 4),
-                          child: AnimatedRotation(
-                            turns: expanded ? 0.5 : 0,
-                            duration:
-                                AppMotion.of(context).d(AppMotion.short),
-                            child: Icon(
-                              Icons.expand_more_rounded,
-                              size: 20,
-                              color: scheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                      ),
+                  if (drills)
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 20,
+                      color: scheme.onSurfaceVariant,
                     ),
                 ],
               ),
