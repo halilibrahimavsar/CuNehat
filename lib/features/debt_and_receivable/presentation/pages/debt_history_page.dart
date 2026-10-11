@@ -200,6 +200,9 @@ class _DebtHistoryTab extends StatelessWidget {
                     showModalBottomSheet(
                       context: context,
                       isScrollControlled: true,
+                      // Uzun form ekranı doldurunca başlık durum çubuğunun altına
+                      // giriyordu; yalnız ÜST payı ekler.
+                      useSafeArea: true,
                       backgroundColor: Colors.transparent,
                       builder: (_) => BlocProvider.value(
                         value: debtBloc,
@@ -342,6 +345,9 @@ class _ReceivableHistoryTab extends StatelessWidget {
                     showModalBottomSheet(
                       context: context,
                       isScrollControlled: true,
+                      // Uzun form ekranı doldurunca başlık durum çubuğunun altına
+                      // giriyordu; yalnız ÜST payı ekler.
+                      useSafeArea: true,
                       backgroundColor: Colors.transparent,
                       builder: (_) => BlocProvider.value(
                         value: receivableBloc,

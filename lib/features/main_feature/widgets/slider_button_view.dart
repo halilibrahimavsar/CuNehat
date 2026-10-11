@@ -343,6 +343,9 @@ class _SliderButtonViewState extends State<SliderButtonView> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      // Uzun form ekranı doldurunca başlık durum çubuğunun altına
+      // giriyordu; yalnız ÜST payı ekler.
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => AddEntrySheet(
         walletId: activeWallet.id!,

@@ -443,6 +443,9 @@ Future<void> _linkDebtPrincipal(
   final sent = await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
+    // Uzun form ekranı doldurunca başlık durum çubuğunun altına
+    // giriyordu; yalnız ÜST payı ekler.
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (_) => AddEntrySheet(
       walletId: tx.walletId,

@@ -285,6 +285,9 @@ class DebtListSection extends StatelessWidget {
           showModalBottomSheet(
             context: context,
             isScrollControlled: true,
+            // Uzun form ekranı doldurunca başlık durum çubuğunun altına
+            // giriyordu; yalnız ÜST payı ekler.
+            useSafeArea: true,
             backgroundColor: Colors.transparent,
             builder: (context) => AddEntrySheet(
               walletId: walletId,
@@ -624,6 +627,9 @@ class ReceivableListSection extends StatelessWidget {
           showModalBottomSheet(
             context: context,
             isScrollControlled: true,
+            // Uzun form ekranı doldurunca başlık durum çubuğunun altına
+            // giriyordu; yalnız ÜST payı ekler.
+            useSafeArea: true,
             backgroundColor: Colors.transparent,
             builder: (context) => AddEntrySheet(
               walletId: walletId,

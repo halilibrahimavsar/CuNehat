@@ -943,9 +943,22 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
 
   Widget _buildSaveButton(double radius) {
     final br = BorderRadius.circular(radius.clamp(16, 20));
-    return SizedBox(
+    // Gölge Material'ın DIŞINDA: `Ink` süslemesi Material'ın sınırına
+    // kırpılır; gölge içeride kalınca yuvarlak köşelerin arkasında düz renkli
+    // bir dikdörtgen olarak görünüyordu (cihazda görüldü).
+    return Container(
       width: double.infinity,
       height: 56,
+      decoration: BoxDecoration(
+        borderRadius: br,
+        boxShadow: [
+          BoxShadow(
+            color: _accent.withValues(alpha: 0.35),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -955,13 +968,6 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
             decoration: BoxDecoration(
               gradient: AppGradients.vivid(_accent),
               borderRadius: br,
-              boxShadow: [
-                BoxShadow(
-                  color: _accent.withValues(alpha: 0.35),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
-                ),
-              ],
             ),
             child: Center(
               child: Row(
