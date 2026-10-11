@@ -411,9 +411,11 @@ class _ActionButton extends StatelessWidget {
         child: InkResponse(
           onTap: onTap,
           radius: 20,
+          // 36×44: eskiden 30×40'tı — satırın tek görünür eylem kolu için
+          // dar bir hedef. Daha geniş yapmak tutar sütununu daraltırdı.
           child: SizedBox(
-            width: 30,
-            height: 40,
+            width: 36,
+            height: 44,
             child: Icon(
               Icons.more_vert_rounded,
               size: 18,

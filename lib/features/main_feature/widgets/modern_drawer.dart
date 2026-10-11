@@ -15,6 +15,7 @@ import 'package:cunehat/features/recurring_transactions/presentation/bloc/pendin
 import 'package:cunehat/features/wallet/domain/card_family.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
+import 'package:cunehat/core/constants/app_version.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -926,7 +927,7 @@ class _ModernDrawerState extends State<ModernDrawer>
           ),
           const SizedBox(width: 8),
           Text(
-            'ÇuHat v1.0.0',
+            'ÇuHat v$kAppVersionName',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,

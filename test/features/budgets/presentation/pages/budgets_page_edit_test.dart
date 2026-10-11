@@ -153,6 +153,33 @@ void main() {
     expect(find.text(l10n.butceyiDuzenle), findsNothing);
   });
 
+  // UX Tur 5 · T1 — satır eylemleri her yerde ⋮'de.
+  testWidgets('⋮ menüsü: Düzenle formu açar, Sil onay ister', (tester) async {
+    final l10n = await pumpPage(tester);
+
+    await tester.tap(find.byKey(const ValueKey('budget-menu-market')));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.duzenle), findsOneWidget);
+    expect(find.text(l10n.sil), findsOneWidget);
+
+    await tester.tap(find.text(l10n.duzenle));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.butceyiDuzenle), findsOneWidget);
+    await tester.tap(find.widgetWithText(OutlinedButton, l10n.iptal));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('budget-menu-market')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.sil));
+    await tester.pumpAndSettle();
+    // Onay diyaloğu: onaylanmadan silinmez.
+    expect(find.text(l10n.budgetDeleteConfirmTitle), findsOneWidget);
+    verifyNever(() => budgets.add(any(that: isA<DeleteBudgetEvent>())));
+    await tester.tap(find.text(l10n.sil).last);
+    await tester.pumpAndSettle();
+    verify(() => budgets.add(const DeleteBudgetEvent('market'))).called(1);
+  });
+
   testWidgets('düzenlemede vazgeçmek hiçbir şey yazmaz', (tester) async {
     final l10n = await pumpPage(tester);
 

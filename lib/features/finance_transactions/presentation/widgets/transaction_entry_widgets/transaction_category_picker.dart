@@ -127,7 +127,8 @@ class _CategoryPickerState extends State<CategoryPicker> {
                       fontWeight: FontWeight.w700)),
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
-                minimumSize: const Size(0, 30),
+                // 40dp: eskiden 30dp'lik bir hedefti.
+                minimumSize: const Size(0, 40),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ),

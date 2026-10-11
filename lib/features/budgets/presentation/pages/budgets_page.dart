@@ -351,6 +351,26 @@ class _BudgetListItem extends StatelessWidget {
   /// Eskiden karta dokunmak BOŞTU. Limiti değiştirmenin tek yolu "+" ile
   /// yeni bütçe formunu açıp AYNI kategoriyi yeniden seçmekti — form o zaman
   /// sessizce "Güncelle"ye dönüyordu; bunu bilen kullanıcı azdı.
+  Future<void> _delete(BuildContext context) async {
+    final confirmed = await ConfirmDialog.show(
+      context,
+      title: context.l10n.budgetDeleteConfirmTitle,
+      message: context.l10n.budgetDeleteConfirmMessage(context
+          .categoryLabelForTag(budget.categoryId, labels: categoryLabels)),
+      confirmText: context.l10n.sil,
+    );
+    if (!confirmed || !context.mounted) return;
+    context.read<BudgetsBloc>().add(DeleteBudgetEvent(budget.categoryId));
+  }
+
+  static Widget _menuRow(IconData icon, String label, Color color) => Row(
+        children: [
+          Icon(icon, size: 20, color: color),
+          const SizedBox(width: 10),
+          Text(label, style: TextStyle(color: color)),
+        ],
+      );
+
   void _edit(BuildContext context) => _showBudgetForm(
         context,
         walletId: walletId,
@@ -439,23 +459,26 @@ class _BudgetListItem extends StatelessWidget {
                   ),
                 ),
               ),
-              IconButton(
-                icon:
-                    Icon(Icons.delete_outline, color: scheme.onSurfaceVariant),
-                onPressed: () async {
-                  final confirmed = await ConfirmDialog.show(
-                    context,
-                    title: context.l10n.budgetDeleteConfirmTitle,
-                    message: context.l10n.budgetDeleteConfirmMessage(
-                        context.categoryLabelForTag(budget.categoryId,
-                            labels: categoryLabels)),
-                    confirmText: context.l10n.sil,
-                  );
-                  if (!confirmed || !context.mounted) return;
-                  context
-                      .read<BudgetsBloc>()
-                      .add(DeleteBudgetEvent(budget.categoryId));
-                },
+              // Satır eylemleri uygulamanın her yerinde aynı yerde: ⋮.
+              // (Eskiden burada çıplak bir çöp kutusu vardı; borç kartı ⋮,
+              // işlem satırı ⋮, bütçe ve şablon ise tek ikon kullanıyordu.)
+              PopupMenuButton<void>(
+                key: ValueKey('budget-menu-${budget.categoryId}'),
+                tooltip: context.l10n.txRowActions,
+                icon: Icon(Icons.more_vert_rounded,
+                    color: scheme.onSurfaceVariant),
+                itemBuilder: (_) => [
+                  PopupMenuItem<void>(
+                    onTap: () => _edit(context),
+                    child: _menuRow(Icons.edit_outlined, context.l10n.duzenle,
+                        scheme.onSurface),
+                  ),
+                  PopupMenuItem<void>(
+                    onTap: () => _delete(context),
+                    child: _menuRow(Icons.delete_outline_rounded,
+                        context.l10n.sil, scheme.error),
+                  ),
+                ],
               ),
             ],
           ),

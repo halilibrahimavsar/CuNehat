@@ -216,6 +216,26 @@ void main() {
     expect(find.textContaining('12.000'), findsNothing);
   });
 
+  // UX Tur 5 · T1 — satır eylemleri her yerde ⋮'de.
+  testWidgets('⋮ menüsü: Düzenle formu açar, Sil onay ister', (tester) async {
+    final l10n = await pumpPage(tester);
+
+    await tester.tap(find.byKey(const ValueKey('template-menu-r1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.duzenle));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.sablonuDuzenle), findsOneWidget);
+    await tester.tap(find.widgetWithText(OutlinedButton, l10n.iptal));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('template-menu-r1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.sil));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.sablonuSil), findsOneWidget);
+    verifyNever(() => pending.add(any(that: isA<DeleteTransactionEvent>())));
+  });
+
   testWidgets('düzenlemede vazgeçmek hiçbir şey yazmaz', (tester) async {
     final l10n = await pumpPage(tester);
 

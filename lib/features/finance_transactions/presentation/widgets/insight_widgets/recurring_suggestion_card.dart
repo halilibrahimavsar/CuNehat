@@ -4,6 +4,7 @@ import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/recurring_transactions/domain/services/recurring_pattern_detector.dart';
+import 'package:cunehat/features/recurring_transactions/presentation/widgets/recurring_template_form_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -69,7 +70,7 @@ class RecurringSuggestionCard extends StatelessWidget {
               // Sıradaki vade de yazılır: "aylık · 4 kez tekrarlandı" öneriyi
               // anlatıyor ama şablonun İLK NE ZAMAN işleyeceğini söylemiyordu,
               // oysa ekleme düğmesinin sonucu tam olarak bu.
-              '${suggestion.frequency.displayName} • '
+              '${recurringFrequencyLabel(suggestion.frequency, context.l10n)} • '
               '${context.l10n.kezTekrarlandi(suggestion.occurrenceCount)} • '
               '${DateFormat.yMMMd(locale).format(suggestion.nextExecutionDate)}',
               style: theme.textTheme.bodySmall

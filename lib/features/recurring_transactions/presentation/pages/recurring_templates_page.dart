@@ -794,11 +794,37 @@ class _TemplateCard extends StatelessWidget {
                 activeThumbColor: Colors.green,
                 onChanged: (_) => onToggle(template),
               ),
-              IconButton(
-                visualDensity: VisualDensity.compact,
-                icon: Icon(Icons.delete_outline,
+              // Satır eylemleri her yerde ⋮'de (bkz. bütçe kartı).
+              PopupMenuButton<void>(
+                key: ValueKey('template-menu-${template.id}'),
+                tooltip: context.l10n.txRowActions,
+                icon: Icon(Icons.more_vert_rounded,
                     color: scheme.onSurfaceVariant, size: 22),
-                onPressed: () => onDelete(template),
+                itemBuilder: (_) => [
+                  PopupMenuItem<void>(
+                    onTap: () => onEdit(template),
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit_outlined,
+                            size: 20, color: scheme.onSurface),
+                        const SizedBox(width: 10),
+                        Text(context.l10n.duzenle),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<void>(
+                    onTap: () => onDelete(template),
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete_outline_rounded,
+                            size: 20, color: scheme.error),
+                        const SizedBox(width: 10),
+                        Text(context.l10n.sil,
+                            style: TextStyle(color: scheme.error)),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
