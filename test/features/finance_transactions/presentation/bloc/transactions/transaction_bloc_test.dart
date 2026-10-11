@@ -508,6 +508,101 @@ void main() {
     });
   });
 
+  // UX Tur 4 · E6 — defterde çoklu seçimle toplu kategori değiştirme.
+  group('ChangeTransactionsCategoryEvent', () {
+    final second = TransactionEntity(
+      id: 'tx_456',
+      userId: 'user_123',
+      walletId: 'wallet_123',
+      title: 'Bakkal',
+      tag: 'Other',
+      amount: 40,
+      date: DateTime(2026, 6, 12),
+      type: TransactionTypeModel.expense,
+    );
+
+    TransactionLoaded seed(List<TransactionEntity> list) => TransactionLoaded(
+          groupedTransactions: {DateTime(2026, 6, 13): list},
+          allTransactions: list,
+        );
+
+    blocTest<TransactionBloc, TransactionState>(
+      'her satır yeni kategoriyle yazılır; bakiye eşitlenmez (tutar aynı); '
+      'sistem satırı ve zaten o kategoride olan atlanır',
+      build: () {
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        return transactionBloc;
+      },
+      seed: () => seed([testTransaction, second, testSystemTransaction]),
+      act: (bloc) => bloc.add(ChangeTransactionsCategoryEvent(
+        transactions: [
+          testTransaction,
+          second,
+          testSystemTransaction,
+          second.copyWith(id: 'tx_same', tag: 'Market'),
+        ],
+        categoryId: 'Market',
+      )),
+      expect: () => [
+        TransactionActionSuccess(
+          '2 işlemin kategorisi değiştirildi',
+          transactions: [
+            testTransaction.copyWith(tag: 'Market'),
+            second.copyWith(tag: 'Market'),
+            testSystemTransaction,
+          ],
+        ),
+      ],
+      verify: (_) {
+        verify(() => mockUpdateUseCase(testTransaction.copyWith(tag: 'Market')))
+            .called(1);
+        verify(() => mockUpdateUseCase(second.copyWith(tag: 'Market')))
+            .called(1);
+        verifyNever(() =>
+            mockUpdateUseCase(testSystemTransaction.copyWith(tag: 'Market')));
+        verifyZeroInteractions(mockMetricsService);
+      },
+    );
+
+    blocTest<TransactionBloc, TransactionState>(
+      'bir satır yazılamazsa yazılabilen kalır ve hata bildirilir',
+      build: () {
+        when(() => mockUpdateUseCase(testTransaction.copyWith(tag: 'Market')))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockUpdateUseCase(second.copyWith(tag: 'Market')))
+            .thenAnswer((_) async => const Left(ServerFailure('disk')));
+        return transactionBloc;
+      },
+      seed: () => seed([testTransaction, second]),
+      act: (bloc) => bloc.add(ChangeTransactionsCategoryEvent(
+        transactions: [testTransaction, second],
+        categoryId: 'Market',
+      )),
+      expect: () => [
+        TransactionActionSuccess(
+          '1 işlemin kategorisi değiştirildi',
+          transactions: [testTransaction.copyWith(tag: 'Market'), second],
+        ),
+        TransactionError(
+          'Bazı işlemlerin kategorisi değiştirilemedi: disk',
+          transactions: [testTransaction.copyWith(tag: 'Market'), second],
+        ),
+      ],
+    );
+
+    blocTest<TransactionBloc, TransactionState>(
+      'değişecek satır yoksa hiçbir şey yayılmaz',
+      build: () => transactionBloc,
+      seed: () => seed([testSystemTransaction]),
+      act: (bloc) => bloc.add(ChangeTransactionsCategoryEvent(
+        transactions: [testSystemTransaction],
+        categoryId: 'Market',
+      )),
+      expect: () => <TransactionState>[],
+    );
+  });
+
   group('DeleteTransactionEvent', () {
     blocTest<TransactionBloc, TransactionState>(
       'emits error when transaction lookup fails',

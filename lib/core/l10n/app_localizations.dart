@@ -10906,6 +10906,54 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'İlk vade'**
   String get ilkVadeLabel;
+
+  /// No description provided for @birdenCokSec.
+  ///
+  /// In tr, this message translates to:
+  /// **'Birden çok seç'**
+  String get birdenCokSec;
+
+  /// No description provided for @birdenCokSecAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçtiklerinin kategorisini topluca değiştir'**
+  String get birdenCokSecAciklama;
+
+  /// No description provided for @nIslemSecili.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} seçili'**
+  String nIslemSecili(int count);
+
+  /// No description provided for @kategoriDegistir.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori değiştir'**
+  String get kategoriDegistir;
+
+  /// No description provided for @topluKategoriOnayBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori değiştirilsin mi?'**
+  String get topluKategoriOnayBaslik;
+
+  /// No description provided for @topluKategoriOnayMesaj.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} işlemin kategorisi “{kategori}” olacak.'**
+  String topluKategoriOnayMesaj(int count, String kategori);
+
+  /// No description provided for @topluKategoriAtlanan.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} işlem türü uymadığı için değişmeyecek.'**
+  String topluKategoriAtlanan(int count);
+
+  /// No description provided for @secimiKapat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçimi kapat'**
+  String get secimiKapat;
 }
 
 class _AppLocalizationsDelegate

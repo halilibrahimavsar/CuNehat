@@ -10,6 +10,7 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/finance_transactions/presentation/pages/single_transaction_detail_page.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/ledger_selection.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_action_sheet.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/core/config/feature_flags.dart';
@@ -61,10 +62,12 @@ class TransactionCard extends StatelessWidget {
   Future<void> _showActionSheet(BuildContext context, Color accent) async {
     final t = item.transaction;
 
+    final selection = LedgerSelectionScope.maybeOf(context);
     final action = await TransactionActionSheet.show(
       context,
       transaction: t,
       accent: accent,
+      canSelect: selection != null,
     );
     if (action == null || !context.mounted) return;
 
@@ -87,8 +90,17 @@ class TransactionCard extends StatelessWidget {
         );
       case TransactionAction.removeTransfer:
         await confirmAndRemoveTransfer(context, t);
+      case TransactionAction.select:
+        if (t.id case final id?) selection?.toggle(id);
     }
   }
+
+  /// Seçilebilir mi: kategorisi toplu değiştirilebilen satırlar. Sistem ve
+  /// benimsenmiş satırların etiketi kategori değildir.
+  bool get _selectable =>
+      item.transaction.id != null &&
+      !item.transaction.isSystem &&
+      !item.transaction.isAdopted;
 
   void _edit(BuildContext context) {
     final t = item.transaction;
@@ -148,13 +160,23 @@ class TransactionCard extends StatelessWidget {
     // çiziliyordu (bkz. [MoneyColors]).
     final moved = !isSpendingMovement(t);
     final accent = MoneyColors.of(t, theme.brightness);
+    // Çoklu seçim (yalnız defterde, bkz. [LedgerSelectionScope]). Seçim
+    // kipinde dokunmak satırı seçer/bırakır; detay ve eylem menüsü durur.
+    final selection = LedgerSelectionScope.maybeOf(context);
+    final selecting = selection?.active ?? false;
+    final selected = selection?.contains(t.id) ?? false;
+    void toggle() {
+      if (_selectable) selection?.toggle(t.id!);
+    }
 
     return AppCard(
       accent: accent,
+      selected: selected,
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      onTap: () => _openDetail(context),
-      onLongPress: () => _showActionSheet(context, accent),
+      onTap: selecting ? toggle : () => _openDetail(context),
+      onLongPress:
+          selecting ? toggle : () => _showActionSheet(context, accent),
       // Satır yazı ölçeğine duyarlı olmalı: ölçek 2.0'da "−18.500,00 ₺"
       // 17px yerine 34px çiziliyor ve başlık sütununu 40dp'ye düşürüp satırı
       // 24px taşırıyordu (ölçüldü). Tutar artık satırın en çok [_amountShare]
@@ -176,12 +198,18 @@ class TransactionCard extends StatelessWidget {
                   ),
                 ),
                 child: Icon(
-                  categoryIcon ??
-                      (moved
-                          ? Icons.swap_horiz_rounded
-                          : t.isIncome
-                              ? Icons.arrow_upward_rounded
-                              : Icons.arrow_downward_rounded),
+                  // Seçim kipinde simge seçim durumunu gösterir; seçilemeyen
+                  // (sistem) satır kendi simgesinde kalır.
+                  selecting && _selectable
+                      ? (selected
+                          ? Icons.check_circle_rounded
+                          : Icons.radio_button_unchecked_rounded)
+                      : categoryIcon ??
+                          (moved
+                              ? Icons.swap_horiz_rounded
+                              : t.isIncome
+                                  ? Icons.arrow_upward_rounded
+                                  : Icons.arrow_downward_rounded),
                   color: accent,
                   size: 18,
                 ),
@@ -287,8 +315,16 @@ class TransactionCard extends StatelessWidget {
               ),
             ),
 
-            // Eylem menüsü: uzun basmanın GÖRÜNÜR karşılığı.
-            _ActionButton(onTap: () => _showActionSheet(context, accent)),
+            // Eylem menüsü: uzun basmanın GÖRÜNÜR karşılığı. Seçim kipinde
+            // gizlenir (genişliği korunur ki satır zıplamasın).
+            Visibility(
+              visible: !selecting,
+              maintainSize: true,
+              maintainAnimation: true,
+              maintainState: true,
+              child:
+                  _ActionButton(onTap: () => _showActionSheet(context, accent)),
+            ),
           ],
         ),
       ),

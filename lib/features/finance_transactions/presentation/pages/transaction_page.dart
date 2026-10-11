@@ -12,6 +12,9 @@ import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'package:cunehat/core/messaging/deletion_undo_message.dart';
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/core/shared/widgets/app_date_range_picker.dart';
+import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_picker_sheet.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/ledger_selection.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
@@ -113,6 +116,10 @@ class _TransactionsViewState extends State<_TransactionsView> {
   /// defter arasında paylaşılır.
   final LedgerCollapseController _collapse = LedgerCollapseController();
 
+  /// Çoklu seçim (bkz. [LedgerSelection]): seçili satırların kategorisi
+  /// topluca değiştirilir.
+  final LedgerSelection _selection = LedgerSelection();
+
   /// Şeritte vurgulanan gün. Yalnız gezinme durumu — filtreye yazılmaz,
   /// çünkü bir güne bakmak dönemi daraltmak DEĞİLDİR (eski takvimde bir
   /// sayfa kaydırmak kullanıcının seçtiği yıllık dönemi tek aya düşürüyordu).
@@ -197,8 +204,62 @@ class _TransactionsViewState extends State<_TransactionsView> {
     }
     _categoriesSub?.cancel();
     _collapse.dispose();
+    _selection.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  /// Seçili işlemlerin kategorisini topluca değiştirir.
+  ///
+  /// Kategori tek bir türe aittir: seçim gider + gelir karışıksa seçici tür
+  /// değiştirmeye izin verir ve kategori YALNIZ kendi türündeki satırlara
+  /// uygulanır; kaç satırın değişmeyeceği onaydan ÖNCE yazar.
+  Future<void> _recategorizeSelected(List<TransactionEntity> all) async {
+    final rows = [
+      for (final t in all)
+        if (_selection.contains(t.id)) t,
+    ];
+    if (rows.isEmpty) {
+      _selection.clear();
+      return;
+    }
+    final hasExpense = rows.any((t) => t.isExpense);
+    final hasIncome = rows.any((t) => t.isIncome);
+    final picked = await showCategoryPickerSheet(
+      context: context,
+      isExpense: hasExpense,
+      walletId: widget.wallet.id ?? '',
+      allowTypeSwitch: hasExpense && hasIncome,
+    );
+    if (picked == null || !mounted) return;
+
+    final l10n = context.l10n;
+    final matching = [
+      for (final t in rows)
+        if (t.isExpense == picked.isExpense) t,
+    ];
+    final skipped = rows.length - matching.length;
+    if (matching.isEmpty) {
+      AppMessenger.info(l10n.topluKategoriAtlanan(skipped));
+      return;
+    }
+    final confirmed = await ConfirmDialog.show(
+      context,
+      title: l10n.topluKategoriOnayBaslik,
+      message: [
+        l10n.topluKategoriOnayMesaj(matching.length, picked.name),
+        if (skipped > 0) l10n.topluKategoriAtlanan(skipped),
+      ].join('\n\n'),
+      // Kısa etiket: onay diyaloğunun düğme satırı dar ekranda taşmasın.
+      confirmText: l10n.degistir,
+    );
+    if (!confirmed || !mounted) return;
+
+    context.read<TransactionBloc>().add(ChangeTransactionsCategoryEvent(
+          transactions: matching,
+          categoryId: picked.id,
+        ));
+    _selection.clear();
   }
 
   @override
@@ -206,6 +267,8 @@ class _TransactionsViewState extends State<_TransactionsView> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.wallet.id != widget.wallet.id) {
       context.read<TransactionFilterCubit>().bindWallet(widget.wallet.id);
+      // Seçim başka bir cüzdanın satırlarına aitti.
+      _selection.clear();
       _loadData();
     }
     if (oldWidget.wallet.id != widget.wallet.id ||
@@ -464,11 +527,26 @@ class _TransactionsViewState extends State<_TransactionsView> {
 
             return Scaffold(
               backgroundColor: Colors.transparent,
-              body: Column(
+              body: LedgerSelectionScope(
+                selection: _selection,
+                child: Column(
                 children: [
                   // Cüzdan ↔ bağlı kartları (yalnız kartı olan cüzdanda).
                   const CardContextRail(),
-                  TransactionTopBar(
+                  // Seçim kipinde üst çubuğun yerini seçim çubuğu alır:
+                  // süzgeç/dönem o sırada değişmez, seçili satırlar ekrandan
+                  // kaybolup "görünmeyen satırlara uygulandı" olmaz.
+                  ListenableBuilder(
+                    listenable: _selection,
+                    builder: (context, topBar) => _selection.active
+                        ? _SelectionBar(
+                            count: _selection.count,
+                            onClose: _selection.clear,
+                            onRecategorize: () => _recategorizeSelected(
+                                state.currentTransactions),
+                          )
+                        : topBar!,
+                    child: TransactionTopBar(
                     filter: filterState,
                     periodLabel: statementPeriodLabel(cubit, context.l10n),
                     categoryLabels: _categoryLabels,
@@ -486,6 +564,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
                     onClearAllFilters: () => cubit
                       ..clearDataFilters()
                       ..setFinanceMode(FinanceMode.compare),
+                  ),
                   ),
                   Expanded(
                     child: isLoading && walletIsEmpty
@@ -506,6 +585,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
                           ),
                   ),
                 ],
+              ),
               ),
             );
           },
@@ -620,6 +700,69 @@ class _TransactionsViewState extends State<_TransactionsView> {
         ),
       ),
     ];
+  }
+}
+
+/// Çoklu seçim çubuğu: kaç satır seçili + toplu eylem.
+class _SelectionBar extends StatelessWidget {
+  final int count;
+  final VoidCallback onClose;
+  final VoidCallback onRecategorize;
+
+  const _SelectionBar({
+    required this.count,
+    required this.onClose,
+    required this.onRecategorize,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Material(
+        key: const ValueKey('ledger-selection-bar'),
+        color: cs.primaryContainer,
+        borderRadius: BorderRadius.circular(18),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(4, 4, 8, 4),
+          child: Row(
+            children: [
+              IconButton(
+                tooltip: l10n.secimiKapat,
+                icon: Icon(Icons.close_rounded, color: cs.onPrimaryContainer),
+                onPressed: onClose,
+              ),
+              Text(
+                l10n.nIslemSecili(count),
+                maxLines: 1,
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  color: cs.onPrimaryContainer,
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Düğme dar ekranda / büyük yazıda taşmak yerine küçülür.
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: FilledButton.icon(
+                      key: const ValueKey('ledger-recategorize'),
+                      onPressed: onRecategorize,
+                      icon: const Icon(Icons.label_outline_rounded, size: 18),
+                      label: Text(l10n.kategoriDegistir),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

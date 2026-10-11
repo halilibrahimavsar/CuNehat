@@ -6282,4 +6282,35 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get ilkVadeLabel => 'İlk vade';
+
+  @override
+  String get birdenCokSec => 'Birden çok seç';
+
+  @override
+  String get birdenCokSecAciklama =>
+      'Seçtiklerinin kategorisini topluca değiştir';
+
+  @override
+  String nIslemSecili(int count) {
+    return '$count seçili';
+  }
+
+  @override
+  String get kategoriDegistir => 'Kategori değiştir';
+
+  @override
+  String get topluKategoriOnayBaslik => 'Kategori değiştirilsin mi?';
+
+  @override
+  String topluKategoriOnayMesaj(int count, String kategori) {
+    return '$count işlemin kategorisi “$kategori” olacak.';
+  }
+
+  @override
+  String topluKategoriAtlanan(int count) {
+    return '$count işlem türü uymadığı için değişmeyecek.';
+  }
+
+  @override
+  String get secimiKapat => 'Seçimi kapat';
 }

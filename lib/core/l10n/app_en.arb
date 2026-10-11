@@ -3466,5 +3466,37 @@
   "sablonBaslikLabel": "Title",
   "tekrarSikligiLabel": "Frequency",
   "sonrakiVadeLabel": "Next due",
-  "ilkVadeLabel": "First due"
+  "ilkVadeLabel": "First due",
+  "birdenCokSec": "Select multiple",
+  "birdenCokSecAciklama": "Change the category of the selected ones at once",
+  "nIslemSecili": "{count} selected",
+  "@nIslemSecili": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kategoriDegistir": "Change category",
+  "topluKategoriOnayBaslik": "Change category?",
+  "topluKategoriOnayMesaj": "{count} transactions will be set to “{kategori}”.",
+  "@topluKategoriOnayMesaj": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "kategori": {
+        "type": "String"
+      }
+    }
+  },
+  "topluKategoriAtlanan": "{count} transactions won't change because their type doesn't match.",
+  "@topluKategoriAtlanan": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "secimiKapat": "Close selection"
 }

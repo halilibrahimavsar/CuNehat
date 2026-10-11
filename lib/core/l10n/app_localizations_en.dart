@@ -6329,4 +6329,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ilkVadeLabel => 'First due';
+
+  @override
+  String get birdenCokSec => 'Select multiple';
+
+  @override
+  String get birdenCokSecAciklama =>
+      'Change the category of the selected ones at once';
+
+  @override
+  String nIslemSecili(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get kategoriDegistir => 'Change category';
+
+  @override
+  String get topluKategoriOnayBaslik => 'Change category?';
+
+  @override
+  String topluKategoriOnayMesaj(int count, String kategori) {
+    return '$count transactions will be set to “$kategori”.';
+  }
+
+  @override
+  String topluKategoriAtlanan(int count) {
+    return '$count transactions won\'t change because their type doesn\'t match.';
+  }
+
+  @override
+  String get secimiKapat => 'Close selection';
 }

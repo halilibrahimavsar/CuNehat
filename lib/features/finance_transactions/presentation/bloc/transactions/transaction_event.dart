@@ -64,6 +64,25 @@ class UpdateTransactionEvent extends TransactionEvent {
       ];
 }
 
+/// Birden çok işlemin kategorisini TEK eylemde değiştirir (defterde çoklu
+/// seçim). Sistem ve benimsenmiş satırlar atlanır; tutar ve tür değişmediği
+/// için bakiye etkilenmez, ama bütçe/rapor dinleyicileri bir kez uyarılır.
+///
+/// Kategorinin türü (gider/gelir) satırın türüyle uyuşmalıdır; uyuşmayanları
+/// ayıklamak çağıranın işidir — bloc kategori deposunu bilmez.
+class ChangeTransactionsCategoryEvent extends TransactionEvent {
+  final List<TransactionEntity> transactions;
+  final String categoryId;
+
+  const ChangeTransactionsCategoryEvent({
+    required this.transactions,
+    required this.categoryId,
+  });
+
+  @override
+  List<Object?> get props => [transactions, categoryId];
+}
+
 class DeleteTransactionEvent extends TransactionEvent {
   final String transactionId;
 

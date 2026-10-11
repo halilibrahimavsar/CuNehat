@@ -17,6 +17,9 @@ enum TransactionAction {
   /// Çift kimliği olan transferi iki bacağıyla kaldır — bkz.
   /// `TransferService.unlinkTransfer`.
   removeTransfer,
+
+  /// Defterde çoklu seçimi bu satırla başlat (toplu kategori değiştirme).
+  select,
 }
 
 /// Transfer bacağı mı ve sonradan kaldırılabilir mi: çift kimliği (şema 11)
@@ -30,16 +33,21 @@ class TransactionActionSheet extends StatelessWidget {
   final TransactionEntity transaction;
   final Color accent;
 
+  /// "Birden çok seç" sunulsun mu: yalnız çoklu seçimi olan yüzeyde (defter).
+  final bool canSelect;
+
   const TransactionActionSheet({
     super.key,
     required this.transaction,
     required this.accent,
+    this.canSelect = false,
   });
 
   static Future<TransactionAction?> show(
     BuildContext context, {
     required TransactionEntity transaction,
     required Color accent,
+    bool canSelect = false,
   }) {
     return showModalBottomSheet<TransactionAction>(
       context: context,
@@ -51,6 +59,7 @@ class TransactionActionSheet extends StatelessWidget {
       builder: (context) => TransactionActionSheet(
         transaction: transaction,
         accent: accent,
+        canSelect: canSelect,
       ),
     );
   }
@@ -157,6 +166,17 @@ class TransactionActionSheet extends StatelessWidget {
                     title: context.l10n.baglaEylemi,
                     subtitle: context.l10n.baglaEylemiAciklama,
                     action: TransactionAction.link,
+                  ),
+                if (canSelect &&
+                    transaction.id != null &&
+                    !transaction.isAdopted)
+                  _tile(
+                    context,
+                    icon: Icons.checklist_rounded,
+                    color: cs.primary,
+                    title: context.l10n.birdenCokSec,
+                    subtitle: context.l10n.birdenCokSecAciklama,
+                    action: TransactionAction.select,
                   ),
                 _tile(
                   context,

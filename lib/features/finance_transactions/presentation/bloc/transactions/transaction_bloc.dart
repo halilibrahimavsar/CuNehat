@@ -39,6 +39,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     on<AddTransactionEvent>(_onAddTransaction);
     on<AddTransactionsEvent>(_onAddTransactions);
     on<UpdateTransactionEvent>(_onUpdateTransaction);
+    on<ChangeTransactionsCategoryEvent>(_onChangeCategory);
     on<DeleteTransactionEvent>(_onDeleteTransaction);
     on<DeleteTransactionsEvent>(_onDeleteTransactions);
 
@@ -234,6 +235,59 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         }
       },
     );
+  }
+
+  /// Toplu kategori değişimi: her satır yazılır, dinleyiciler cüzdan başına
+  /// BİR kez uyarılır. Bir satır yazılamazsa yazılabilenler kalır ve hata
+  /// bildirilir (taksit ekleme deseni).
+  Future<void> _onChangeCategory(
+    ChangeTransactionsCategoryEvent event,
+    Emitter<TransactionState> emit,
+  ) async {
+    final currentData = state.currentTransactions;
+    final targets = [
+      for (final t in event.transactions)
+        if (t.id != null &&
+            !t.isSystem &&
+            !t.isAdopted &&
+            t.tag != event.categoryId)
+          t,
+    ];
+    if (targets.isEmpty) return;
+
+    final changed = <String, TransactionEntity>{};
+    String? failure;
+    for (final t in targets) {
+      final next = t.copyWith(tag: event.categoryId);
+      final result = await updateTransactionUseCase(next);
+      result.fold(
+        (f) => failure ??= f.message,
+        (_) => changed[next.id!] = next,
+      );
+    }
+
+    final after = [for (final t in currentData) changed[t.id] ?? t];
+    if (changed.isNotEmpty) {
+      emit(TransactionActionSuccess(
+        '${changed.length} işlemin kategorisi değiştirildi',
+        transactions: after,
+      ));
+      final wallets = <String>{};
+      for (final t in changed.values) {
+        if (wallets.add(t.walletId)) {
+          transactionsChangedNotifier.notify(
+            userId: t.userId,
+            walletId: t.walletId,
+          );
+        }
+      }
+    }
+    if (failure != null) {
+      emit(TransactionError(
+        'Bazı işlemlerin kategorisi değiştirilemedi: $failure',
+        transactions: after,
+      ));
+    }
   }
 
   Future<void> _onDeleteTransaction(

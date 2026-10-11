@@ -3700,5 +3700,37 @@
   "sablonBaslikLabel": "Başlık",
   "tekrarSikligiLabel": "Tekrar sıklığı",
   "sonrakiVadeLabel": "Sonraki vade",
-  "ilkVadeLabel": "İlk vade"
+  "ilkVadeLabel": "İlk vade",
+  "birdenCokSec": "Birden çok seç",
+  "birdenCokSecAciklama": "Seçtiklerinin kategorisini topluca değiştir",
+  "nIslemSecili": "{count} seçili",
+  "@nIslemSecili": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kategoriDegistir": "Kategori değiştir",
+  "topluKategoriOnayBaslik": "Kategori değiştirilsin mi?",
+  "topluKategoriOnayMesaj": "{count} işlemin kategorisi “{kategori}” olacak.",
+  "@topluKategoriOnayMesaj": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "kategori": {
+        "type": "String"
+      }
+    }
+  },
+  "topluKategoriAtlanan": "{count} işlem türü uymadığı için değişmeyecek.",
+  "@topluKategoriAtlanan": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "secimiKapat": "Seçimi kapat"
 }

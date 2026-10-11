@@ -9,6 +9,7 @@ import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
+import 'package:cunehat/core/services/recent_categories_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
@@ -32,6 +33,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 
@@ -705,6 +707,103 @@ void main() {
       expect(find.byType(TransactionActionSheet), findsOneWidget);
       expect(find.text('Düzenle'), findsOneWidget);
       expect(find.text('İşlemi Sil'), findsOneWidget);
+    });
+  });
+
+  // UX Tur 4 · E6 — ÖNCE: yanlış kategoriye düşen on satırı düzeltmenin tek
+  // yolu her birini tek tek açıp düzenlemekti.
+  group('çoklu seçim → toplu kategori', () {
+    final selectionBar = find.byKey(const ValueKey('ledger-selection-bar'));
+
+    setUp(() async {
+      // Kategori seçicisi "son kullanılanlar"ı bu servisten okur.
+      SharedPreferences.setMockInitialValues({});
+      getIt.registerSingleton<RecentCategoriesService>(
+        RecentCategoriesService(await SharedPreferences.getInstance()),
+      );
+    });
+
+    /// İlk satırın (Elektrik faturası) ⋮ menüsünden seçimi başlatır.
+    Future<void> startSelection(WidgetTester tester) async {
+      seed([txMarket, txFatura]);
+      await pumpPage(tester);
+      await tester.tap(find.byIcon(Icons.more_vert_rounded).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Birden çok seç'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets(
+        'eylem sayfasından başlar; dokunmak seçer (detay AÇMAZ); seçilenlerin '
+        'kategorisi tek onayla değişir', (tester) async {
+      await startSelection(tester);
+
+      expect(selectionBar, findsOneWidget);
+      expect(find.text('1 seçili'), findsOneWidget);
+
+      await tester.tap(find.text('ŞOK 4712'));
+      await tester.pumpAndSettle();
+      expect(find.byType(SingleTransactionDetailPage), findsNothing);
+      expect(find.text('2 seçili'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('ledger-recategorize')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Fatura').last);
+      await tester.pumpAndSettle();
+
+      // Yazmadan önce kaç işlemin neye döneceği söylenir.
+      expect(find.text('Kategori değiştirilsin mi?'), findsOneWidget);
+      expect(find.textContaining('2 işlemin kategorisi “Fatura”'),
+          findsOneWidget);
+      await tester.tap(find.text('Değiştir'));
+      await tester.pumpAndSettle();
+
+      final event = verify(() => bloc.add(captureAny()))
+          .captured
+          .whereType<ChangeTransactionsCategoryEvent>()
+          .single;
+      expect(event.categoryId, 'cat-fatura');
+      expect(event.transactions.map((t) => t.id).toSet(),
+          {'tx-market', 'tx-fatura'});
+      // Seçim kipi kapanır.
+      expect(selectionBar, findsNothing);
+    });
+
+    testWidgets('onayda vazgeçilirse hiçbir şey yazılmaz, seçim durur',
+        (tester) async {
+      await startSelection(tester);
+
+      await tester.tap(find.byKey(const ValueKey('ledger-recategorize')));
+      await tester.pumpAndSettle();
+      // Seçicide açılışta ilk kök (Fatura) etkin: sağdaki satırı seçilir.
+      await tester.tap(find.text('Fatura').last);
+      await tester.pumpAndSettle();
+      expect(find.text('Kategori değiştirilsin mi?'), findsOneWidget);
+      await tester.tap(find.text('İptal'));
+      await tester.pumpAndSettle();
+
+      verifyNever(() =>
+          bloc.add(any(that: isA<ChangeTransactionsCategoryEvent>())));
+      expect(find.text('1 seçili'), findsOneWidget);
+    });
+
+    testWidgets('son seçim kalkınca kip biter; çarpı da kapatır',
+        (tester) async {
+      await startSelection(tester);
+
+      // Seçili satıra yeniden dokun: seçim kalkar, kip biter.
+      await tester.tap(find.text('Elektrik faturası'));
+      await tester.pumpAndSettle();
+      expect(selectionBar, findsNothing);
+      expect(find.byType(SingleTransactionDetailPage), findsNothing);
+
+      await tester.tap(find.byIcon(Icons.more_vert_rounded).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Birden çok seç'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Seçimi kapat'));
+      await tester.pumpAndSettle();
+      expect(selectionBar, findsNothing);
     });
   });
 
