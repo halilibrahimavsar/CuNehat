@@ -60,8 +60,6 @@ void main() {
     final position = tester.state<ScrollableState>(wheelFinder).position
         as FixedExtentMetrics;
     expect(position.itemIndex, 0, reason: 'Tanıtım alt sayfaya geçirdi');
-    // '+' rozeti yalnız ana başlık ortadayken görünür: seçim korunmuş demek.
-    expect(find.byIcon(Icons.add), findsOneWidget);
 
     await tester.pumpAndSettle();
   });

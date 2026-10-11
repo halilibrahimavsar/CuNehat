@@ -74,6 +74,8 @@ class TransactionCard extends StatelessWidget {
     switch (action) {
       case TransactionAction.edit:
         _edit(context);
+      case TransactionAction.duplicate:
+        _duplicate(context);
       case TransactionAction.delete:
         await _delete(context);
       case TransactionAction.link:
@@ -96,6 +98,18 @@ class TransactionCard extends StatelessWidget {
       walletId: t.walletId,
       type: t.type,
       initialTransaction: t,
+    );
+  }
+
+  /// Her hafta aynı markete giden kullanıcı aynı kaydı sıfırdan yazıyordu.
+  void _duplicate(BuildContext context) {
+    final t = item.transaction;
+    TransactionSheetHandler.showSheet(
+      context: context,
+      userId: t.userId,
+      walletId: t.walletId,
+      type: t.type,
+      prefill: t,
     );
   }
 

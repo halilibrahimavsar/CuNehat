@@ -3641,5 +3641,23 @@
       "date": {}
     }
   },
-  "kkOdemeGunu": "Ödeme günü"
+  "kkOdemeGunu": "Ödeme günü",
+  "dun": "Dün",
+  "kaydetVeYeni": "Kaydet ve yeni",
+  "kaydedildiOzet": "Kaydedildi: {baslik} · {tutar}",
+  "@kaydedildiOzet": {
+    "placeholders": {
+      "baslik": {
+        "type": "String"
+      },
+      "tutar": {
+        "type": "String"
+      }
+    }
+  },
+  "sonKullanilanlar": "Son kullanılanlar",
+  "yenidenEkle": "Yeniden ekle",
+  "yenidenEkleAciklama": "Aynı içerikle, bugünün tarihiyle yeni kayıt",
+  "giderEkle": "Gider ekle",
+  "gelirEkle": "Gelir ekle"
 }

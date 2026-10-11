@@ -399,8 +399,13 @@ class _SingleTransactionDetailPageState
                       ),
                     ],
                   ),
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: () => _duplicate(context, t),
+                    icon: const Icon(Icons.content_copy_rounded),
+                    label: Text(context.l10n.yenidenEkle),
+                  ),
                   if (canLinkTransaction(t)) ...[
-                    const SizedBox(height: 8),
                     TextButton.icon(
                       onPressed: () => startLinkTransactionFlow(
                         context,
@@ -427,6 +432,17 @@ class _SingleTransactionDetailPageState
     if (!FeatureFlags.creditCards || t.isSystem) return null;
     final card = context.walletById(t.walletId)?.creditCard;
     return card == null ? null : cardPaymentDate(t, card);
+  }
+
+  /// Aynı içerikle yeni kayıt (bkz. `TransactionAction.duplicate`).
+  void _duplicate(BuildContext context, TransactionEntity t) {
+    TransactionSheetHandler.showSheet(
+      context: context,
+      userId: t.userId,
+      walletId: t.walletId,
+      type: t.type,
+      prefill: t,
+    );
   }
 
   void _edit(BuildContext context, TransactionEntity t) {

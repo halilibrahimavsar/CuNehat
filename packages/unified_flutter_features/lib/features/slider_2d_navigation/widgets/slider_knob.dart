@@ -26,9 +26,12 @@ class SliderKnob extends StatelessWidget {
   /// aldı (bkz. [SliderMetrics]).
   final SliderMetrics metrics;
 
-  /// Whether the add ('+') affordance should be shown. Only true when the main
-  /// title is centered in the carousel (i.e. tapping opens the mini buttons).
+  /// '+' rozeti gösterilsin mi: durumun mini düğmesi varsa — ana başlıkta da
+  /// alt sayfada da.
   final bool showAddButton;
+
+  /// ORTADAKİ öğeye (ana başlık ya da açık alt sayfanın etiketi) dokunuş:
+  /// mini düğmeleri açar/kapatır.
   final VoidCallback onTap;
   final VoidCallback? onMainTitleTap;
   final VoidCallback onHorizontalDragStart;
@@ -193,16 +196,21 @@ class SliderKnob extends StatelessWidget {
             height: metrics.sliderHeight,
             physics: const NeverScrollableScrollPhysics(),
             onItemTapped: (index) {
-              if (index == 0) {
+              if (index >= items.length) return;
+              HapticFeedback.lightImpact();
+              // Dokunuşun anlamı öğenin KONUMUNA bağlı: ortadaki öğe "ekle",
+              // komşu etiket "oraya git". Eskiden ana başlık her zaman ekle +
+              // ana görünüme dön, alt menü her zaman gezinmeydi; alt
+              // sayfadayken ortadaki etikete dokunmak hiçbir şey yapmıyordu.
+              if (index == selectedIndex) {
                 onTap();
-                onMainTitleTap?.call();
-                HapticFeedback.lightImpact();
                 return;
               }
-              if (index < items.length) {
-                items[index].onTap();
-                HapticFeedback.lightImpact();
+              if (index == 0) {
+                onMainTitleTap?.call();
+                return;
               }
+              items[index].onTap();
             },
             children: items.map((item) {
               return Center(

@@ -6166,4 +6166,31 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get kkOdemeGunu => 'Ödeme günü';
+
+  @override
+  String get dun => 'Dün';
+
+  @override
+  String get kaydetVeYeni => 'Kaydet ve yeni';
+
+  @override
+  String kaydedildiOzet(String baslik, String tutar) {
+    return 'Kaydedildi: $baslik · $tutar';
+  }
+
+  @override
+  String get sonKullanilanlar => 'Son kullanılanlar';
+
+  @override
+  String get yenidenEkle => 'Yeniden ekle';
+
+  @override
+  String get yenidenEkleAciklama =>
+      'Aynı içerikle, bugünün tarihiyle yeni kayıt';
+
+  @override
+  String get giderEkle => 'Gider ekle';
+
+  @override
+  String get gelirEkle => 'Gelir ekle';
 }

@@ -14,6 +14,8 @@ import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/core/shared/widgets/app_date_range_picker.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/daily_spending_summary_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/transaction_period.dart';
@@ -542,6 +544,12 @@ class _TransactionsViewState extends State<_TransactionsView> {
                 walletIsEmpty ? 0 : _matchesOutsidePeriod(ledger, filterState),
             onWidenPeriod: () => _widenToAllHistory(cubit, ledger),
             onClearFilters: cubit.clearAll,
+            onAdd: (type) => TransactionSheetHandler.showSheet(
+              context: context,
+              userId: widget.userId,
+              walletId: widget.wallet.id ?? '',
+              type: type,
+            ),
           ),
         ),
       ];
@@ -630,6 +638,11 @@ class _EmptyState extends StatelessWidget {
   final VoidCallback onWidenPeriod;
   final VoidCallback onClearFilters;
 
+  /// Cüzdan BOŞKEN gösterilen "ekle" düğmeleri. Eskiden boş defter yalnız
+  /// "sürgü butonunu kullanın" diyordu: yeni kullanıcının ilk işi, ekranda
+  /// görünmeyen bir jesti bulmaktı.
+  final ValueChanged<TransactionTypeModel> onAdd;
+
   const _EmptyState({
     required this.mode,
     required this.isFiltered,
@@ -637,6 +650,7 @@ class _EmptyState extends StatelessWidget {
     required this.outsidePeriodMatches,
     required this.onWidenPeriod,
     required this.onClearFilters,
+    required this.onAdd,
   });
 
   @override
@@ -712,6 +726,28 @@ class _EmptyState extends StatelessWidget {
               color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
             ),
           ),
+          if (!isFiltered) ...[
+            const SizedBox(height: 20),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 10,
+              runSpacing: 8,
+              children: [
+                FilledButton.tonalIcon(
+                  key: const ValueKey('tx-empty-add-expense'),
+                  onPressed: () => onAdd(TransactionTypeModel.expense),
+                  icon: const Icon(Icons.south_west_rounded, size: 18),
+                  label: Text(l10n.giderEkle),
+                ),
+                FilledButton.tonalIcon(
+                  key: const ValueKey('tx-empty-add-income'),
+                  onPressed: () => onAdd(TransactionTypeModel.income),
+                  icon: const Icon(Icons.north_east_rounded, size: 18),
+                  label: Text(l10n.gelirEkle),
+                ),
+              ],
+            ),
+          ],
           if (isFiltered) ...[
             const SizedBox(height: 20),
             if (hasElsewhere)

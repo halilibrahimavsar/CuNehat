@@ -4,6 +4,12 @@ import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+/// Elle girilen bir kaydın (işlem, transfer) alabileceği en eski tarih.
+///
+/// Form 2020'den, transfer 2000'den başlıyordu: 2019 ekstresini içe aktaran
+/// kullanıcı aynı döneme elle işlem ekleyemiyordu.
+final DateTime kEarliestEntryDate = DateTime(2000);
+
 class ThemeNames {
   static const String sysLight = "Sistem [Açık]";
   static const String sysDark = "Sistem [Kapalı]";

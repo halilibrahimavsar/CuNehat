@@ -6213,4 +6213,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kkOdemeGunu => 'Payment day';
+
+  @override
+  String get dun => 'Yesterday';
+
+  @override
+  String get kaydetVeYeni => 'Save & new';
+
+  @override
+  String kaydedildiOzet(String baslik, String tutar) {
+    return 'Saved: $baslik · $tutar';
+  }
+
+  @override
+  String get sonKullanilanlar => 'Recently used';
+
+  @override
+  String get yenidenEkle => 'Add again';
+
+  @override
+  String get yenidenEkleAciklama =>
+      'New entry with the same details, dated today';
+
+  @override
+  String get giderEkle => 'Add expense';
+
+  @override
+  String get gelirEkle => 'Add income';
 }

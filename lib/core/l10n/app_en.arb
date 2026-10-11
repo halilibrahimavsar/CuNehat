@@ -3407,5 +3407,23 @@
   "kkBilinmiyor": "unknown",
   "kkDonemBorcuBilinmiyor": "Statement amount unknown · enter it",
   "kkOdemeNotu": "paid {date}",
-  "kkOdemeGunu": "Payment day"
+  "kkOdemeGunu": "Payment day",
+  "dun": "Yesterday",
+  "kaydetVeYeni": "Save & new",
+  "kaydedildiOzet": "Saved: {baslik} · {tutar}",
+  "@kaydedildiOzet": {
+    "placeholders": {
+      "baslik": {
+        "type": "String"
+      },
+      "tutar": {
+        "type": "String"
+      }
+    }
+  },
+  "sonKullanilanlar": "Recently used",
+  "yenidenEkle": "Add again",
+  "yenidenEkleAciklama": "New entry with the same details, dated today",
+  "giderEkle": "Add expense",
+  "gelirEkle": "Add income"
 }

@@ -35,8 +35,19 @@ class TransactionFormSheet extends StatefulWidget {
   final String walletId;
   final String userId;
   final TransactionEntity? initialTransaction;
+
+  /// "Yeniden ekle": bu işlemin başlığı, tutarı ve kategorisiyle YENİ kayıt
+  /// başlatır (tarih bugün). Düzenleme değildir; [initialTransaction] ile
+  /// birlikte verilmez.
+  final TransactionEntity? prefill;
   final void Function(
       TransactionEntity transaction, RecurringFrequency? frequency) onSave;
+
+  /// "Kaydet ve yeni": kayıt yazılır, sayfa AÇIK kalır ve form bir sonraki
+  /// kayda hazırlanır. Taksitli alışverişte [rows] bölünmüş satırlardır,
+  /// aksi halde tek elemanlıdır. Verilmezse düğme gösterilmez.
+  final void Function(
+      List<TransactionEntity> rows, RecurringFrequency? frequency)? onSaveAndNew;
 
   /// Taksitli alışveriş kaydedilince (kart cüzdanı, taksit > 1) bölünmüş
   /// satırlarla çağrılır; verilmezse taksit seçici gösterilmez.
@@ -49,7 +60,9 @@ class TransactionFormSheet extends StatefulWidget {
     required this.walletId,
     required this.userId,
     this.initialTransaction,
+    this.prefill,
     required this.onSave,
+    this.onSaveAndNew,
     this.onSaveInstallments,
     required this.onCancel,
   });
@@ -61,11 +74,12 @@ class TransactionFormSheet extends StatefulWidget {
 class _TransactionFormSheetState extends State<TransactionFormSheet> {
   late final TransactionFormController _c;
   final FocusNode _amountFocus = FocusNode();
+  final ScrollController _scroll = ScrollController();
   Animation<double>? _routeAnimation;
 
   bool get _isEdit => widget.initialTransaction != null;
-  Color get _accent =>
-      widget.isExpense ? AppGradients.debt : AppGradients.savings;
+  bool get _isExpense => _c.isExpense.value;
+  Color get _accent => _isExpense ? AppGradients.debt : AppGradients.savings;
 
   @override
   void initState() {
@@ -73,8 +87,13 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
     _c = TransactionFormController(
       isExpense: widget.isExpense,
       walletId: widget.walletId,
+      userId: widget.userId,
     );
-    if (_isEdit) _c.initialize(widget.initialTransaction!);
+    if (_isEdit) {
+      _c.initialize(widget.initialTransaction!);
+    } else if (widget.prefill case final source?) {
+      _c.prefill(source);
+    }
     _c.targetWalletId.addListener(_onTargetChanged);
 
     // Açılış animasyonu bitince işle: ne kategori yüklemesi ne de klavye
@@ -129,11 +148,13 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
     _routeAnimation?.removeStatusListener(_onAnimStatus);
     _c.targetWalletId.removeListener(_onTargetChanged);
     _amountFocus.dispose();
+    _scroll.dispose();
     _c.dispose();
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  /// [keepOpen]: "Kaydet ve yeni" — kayıt yazılır, sayfa kapanmaz.
+  Future<void> _submit({bool keepOpen = false}) async {
     final err =
         _c.validate(categoryRequiredMessage: context.l10n.kategoriSecmeUyarisi);
     if (err != null) {
@@ -170,9 +191,8 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
                 ?.name ??
             context.l10n.islem)
         : _c.titleController.text.trim();
-    final type = widget.isExpense
-        ? TransactionTypeModel.expense
-        : TransactionTypeModel.income;
+    final type =
+        _isExpense ? TransactionTypeModel.expense : TransactionTypeModel.income;
     // Düzenlemede formda OLMAYAN alanlar (bankanın numarası vb.) özgün
     // kayıttan taşınır; sıfırdan kurmak onları sessizce siliyordu.
     final transaction = _isEdit
@@ -201,8 +221,34 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
           );
     final installments = _c.installments.value;
     final onInstallments = widget.onSaveInstallments;
-    if (!_isEdit && installments > 1 && onInstallments != null) {
-      onInstallments(splitIntoInstallments(transaction, installments));
+    final rows = !_isEdit && installments > 1 && onInstallments != null
+        ? splitIntoInstallments(transaction, installments)
+        : null;
+
+    final onSaveAndNew = widget.onSaveAndNew;
+    if (keepOpen && onSaveAndNew != null) {
+      // Taksitli alışveriş tekrarlayan işlem olamaz.
+      onSaveAndNew(
+        rows ?? [transaction],
+        rows == null ? _c.recurringFrequency.value : null,
+      );
+      _c.resetForNext(
+        savedSummary: context.l10n.kaydedildiOzet(
+          title,
+          formatMoney(
+            transaction.amount,
+            currency: context.walletById(transaction.walletId)?.currency ??
+                context.activeWalletCurrency,
+          ),
+        ),
+      );
+      if (_scroll.hasClients) _scroll.jumpTo(0);
+      _amountFocus.requestFocus();
+      return;
+    }
+
+    if (rows != null) {
+      onInstallments!(rows);
       return;
     }
     widget.onSave(transaction, _c.recurringFrequency.value);
@@ -212,7 +258,7 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
   bool _offersInstallments(BuildContext context, String targetId) =>
       FeatureFlags.creditCards &&
       !_isEdit &&
-      widget.isExpense &&
+      _isExpense &&
       widget.onSaveInstallments != null &&
       (context.walletById(targetId)?.isCreditCard ?? false);
 
@@ -220,7 +266,7 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
   /// + ona bağlı kartlar, AYNI birimde olanlar (tutar tek birimde yazılır).
   /// Yalnız YENİ giderde ve bayrak açıkken; tek seçenek kalırsa boş.
   List<WalletEntity> _paymentOptions(BuildContext context) {
-    if (!FeatureFlags.creditCards || _isEdit || !widget.isExpense) {
+    if (!FeatureFlags.creditCards || _isEdit || !_isExpense) {
       return const [];
     }
     final all = context.allWallets;
@@ -244,7 +290,13 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
       keys: _tourKeys,
       // Düzenleme modunda tanıtım gösterilmez.
       enabled: !_isEdit,
-      child: _buildContent(context, surface),
+      // Tür değişince vurgu rengi, kategori listesi ve türe özgü alanlar
+      // (ödeme yöntemi, taksit) birlikte değişir; nadir bir olay olduğundan
+      // içeriğin tamamı yeniden kurulur.
+      child: ValueListenableBuilder<bool>(
+        valueListenable: _c.isExpense,
+        builder: (context, _, __) => _buildContent(context, surface),
+      ),
     );
   }
 
@@ -260,117 +312,157 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
         clipBehavior: Clip.antiAlias,
         child: SafeArea(
           top: false,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const _DragHandle(),
-                Showcase(
-                  key: OnboardingKeys.transactionAddForm,
-                  title: context.l10n.onboardingTransactionsAddTitle,
-                  description: context.l10n.onboardingTransactionsAddDesc,
-                  child: AmountHero(
-                    controller: _c,
-                    accent: _accent,
-                    isExpense: widget.isExpense,
-                    isEdit: _isEdit,
-                    focusNode: _amountFocus,
-                    onClose: widget.onCancel,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+          // Kaydet kaydırılan alanın DIŞINDA. Eskiden içeriğin sonundaydı;
+          // tutar alanı açılışta odaklandığı için klavye hep açıktı ve düğme
+          // görünür alanın 210dp altında kalıyordu (ölçüldü, 360×800: y=710,
+          // sınır 500) — her kayıtta klavyeyi kapatmak ya da kaydırmak
+          // gerekiyordu.
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const _DragHandle(),
+              Flexible(
+                child: SingleChildScrollView(
+                  controller: _scroll,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (_paymentOptions(context) case final options
-                          when options.isNotEmpty) ...[
-                        PaymentMethodSelector(
-                          options: options,
-                          selected: _c.targetWalletId,
-                          accent: _accent,
-                        ),
-                        const SizedBox(height: 22),
-                      ],
-                      _TitleField(controller: _c, accent: _accent),
-                      const SizedBox(height: 22),
                       Showcase(
-                        key: OnboardingKeys.transactionAddCategory,
-                        title:
-                            context.l10n.onboardingTransactionsAddCategoryTitle,
-                        description:
-                            context.l10n.onboardingTransactionsAddCategoryDesc,
-                        child: CategoryPicker(
+                        key: OnboardingKeys.transactionAddForm,
+                        title: context.l10n.onboardingTransactionsAddTitle,
+                        description: context.l10n.onboardingTransactionsAddDesc,
+                        child: AmountHero(
                           controller: _c,
                           accent: _accent,
-                          isExpense: widget.isExpense,
+                          isExpense: _isExpense,
+                          isEdit: _isEdit,
+                          focusNode: _amountFocus,
+                          onClose: widget.onCancel,
+                          onTypeChanged: _c.setExpense,
                         ),
                       ),
-                      const SizedBox(height: 22),
-                      WhenRow(controller: _c, accent: _accent),
-                      if (!_isEdit) _TodayDateHint(controller: _c),
-                      const SizedBox(height: 22),
-                      ReceiptRow(controller: _c, accent: _accent),
-                      const SizedBox(height: 22),
-                      Showcase(
-                        key: OnboardingKeys.transactionAddRecurring,
-                        title: context
-                            .l10n.onboardingTransactionsAddRecurringTitle,
-                        description:
-                            context.l10n.onboardingTransactionsAddRecurringDesc,
-                        child: ValueListenableBuilder<int>(
-                          valueListenable: _c.installments,
-                          // Taksitli alışveriş tekrarlayan işlem olamaz.
-                          builder: (context, n, _) => n > 1
-                              ? const SizedBox.shrink()
-                              : _RecurringRow(
-                                  controller: _c,
-                                  accent: _accent,
-                                  isEdit: _isEdit),
-                        ),
-                      ),
-                      ValueListenableBuilder<String>(
-                        valueListenable: _c.targetWalletId,
-                        builder: (context, targetId, _) {
-                          final offers = _offersInstallments(context, targetId);
-                          return AnimatedSize(
-                            duration: _disableAnimations(context)
-                                ? Duration.zero
-                                : const Duration(milliseconds: 260),
-                            curve: Curves.easeOutCubic,
-                            alignment: Alignment.topCenter,
-                            child: offers
-                                ? Padding(
-                                    padding: const EdgeInsets.only(top: 12),
-                                    child: _InstallmentRow(
-                                      controller: _c,
-                                      currency: context
-                                              .walletById(targetId)
-                                              ?.currency ??
-                                          context.activeWalletCurrency,
-                                    ),
-                                  )
-                                : const SizedBox(width: double.infinity),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      _ErrorBanner(controller: _c),
-                      _SaveButton(
-                        controller: _c,
-                        accent: _accent,
-                        isEdit: _isEdit,
-                        onSubmit: _submit,
-                        radius: surface.radius,
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                        child: _buildFields(context),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _ErrorBanner(controller: _c),
+                    _SavedNotice(controller: _c),
+                    Row(
+                      children: [
+                        if (!_isEdit && widget.onSaveAndNew != null) ...[
+                          Expanded(
+                            flex: 4,
+                            child: _SaveAndNewButton(
+                              controller: _c,
+                              accent: _accent,
+                              onSubmit: () => _submit(keepOpen: true),
+                              radius: surface.radius,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                        ],
+                        Expanded(
+                          flex: 5,
+                          child: _SaveButton(
+                            controller: _c,
+                            accent: _accent,
+                            isEdit: _isEdit,
+                            onSubmit: _submit,
+                            radius: surface.radius,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildFields(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_paymentOptions(context) case final options
+            when options.isNotEmpty) ...[
+          PaymentMethodSelector(
+            options: options,
+            selected: _c.targetWalletId,
+            accent: _accent,
+          ),
+          const SizedBox(height: 18),
+        ],
+        // Kategori nottan ÖNCE: zorunlu alan, klavye açıkken de kaydırmadan
+        // görünmeli. Not isteğe bağlı ve üstteyken şeridi sabit Kaydet
+        // satırının arkasına itiyordu (cihazda görüldü: karolar yarıdan
+        // kesikti).
+        Showcase(
+          key: OnboardingKeys.transactionAddCategory,
+          title: context.l10n.onboardingTransactionsAddCategoryTitle,
+          description: context.l10n.onboardingTransactionsAddCategoryDesc,
+          child: CategoryPicker(
+            controller: _c,
+            accent: _accent,
+            isExpense: _isExpense,
+          ),
+        ),
+        const SizedBox(height: 18),
+        _TitleField(controller: _c, accent: _accent),
+        const SizedBox(height: 22),
+        WhenRow(controller: _c, accent: _accent),
+        const SizedBox(height: 22),
+        ReceiptRow(controller: _c, accent: _accent),
+        const SizedBox(height: 22),
+        Showcase(
+          key: OnboardingKeys.transactionAddRecurring,
+          title: context.l10n.onboardingTransactionsAddRecurringTitle,
+          description: context.l10n.onboardingTransactionsAddRecurringDesc,
+          child: ValueListenableBuilder<int>(
+            valueListenable: _c.installments,
+            // Taksitli alışveriş tekrarlayan işlem olamaz.
+            builder: (context, n, _) => n > 1
+                ? const SizedBox.shrink()
+                : _RecurringRow(
+                    controller: _c, accent: _accent, isEdit: _isEdit),
+          ),
+        ),
+        ValueListenableBuilder<String>(
+          valueListenable: _c.targetWalletId,
+          builder: (context, targetId, _) {
+            final offers = _offersInstallments(context, targetId);
+            return AnimatedSize(
+              duration: _disableAnimations(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 260),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: offers
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: _InstallmentRow(
+                        controller: _c,
+                        currency: context.walletById(targetId)?.currency ??
+                            context.activeWalletCurrency,
+                      ),
+                    )
+                  : const SizedBox(width: double.infinity),
+            );
+          },
+        ),
+      ],
     );
   }
 }
@@ -438,51 +530,6 @@ class _TitleField extends StatelessWidget {
           borderSide: BorderSide(color: accent, width: 1.6),
         ),
       ),
-    );
-  }
-}
-
-// ============================================================ Date hint
-
-/// Yeni işlem formunda, tarih bugüne ayarlıyken gösterilen küçük ipucu.
-/// Kullanıcı takvimde başka bir gün seçili sanıp yanılmasın diye uyarır;
-/// tarih değiştirilince (bugün değilse) otomatik gizlenir.
-class _TodayDateHint extends StatelessWidget {
-  final TransactionFormController controller;
-
-  const _TodayDateHint({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return ValueListenableBuilder<DateTime>(
-      valueListenable: controller.dateTime,
-      builder: (context, when, _) {
-        final now = DateTime.now();
-        final isToday = when.year == now.year &&
-            when.month == now.month &&
-            when.day == now.day;
-        if (!isToday) return const SizedBox.shrink();
-        return Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: Row(
-            children: [
-              Icon(Icons.info_outline_rounded,
-                  size: 14, color: cs.onSurfaceVariant.withValues(alpha: 0.8)),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  context.l10n.islemBuguneAyarliIpucu,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: cs.onSurfaceVariant.withValues(alpha: 0.9),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 }
@@ -585,29 +632,134 @@ class _SaveButton extends StatelessWidget {
                                 AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              isEdit ? Icons.check_rounded : Icons.add_rounded,
-                              color: Colors.white,
-                              size: 22,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              isEdit
-                                  ? context.l10n.guncelle
-                                  : context.l10n.kaydet,
-                              style: const TextStyle(
+                      : FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                isEdit
+                                    ? Icons.check_rounded
+                                    : Icons.add_rounded,
                                 color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16,
+                                size: 22,
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 8),
+                              Text(
+                                isEdit
+                                    ? context.l10n.guncelle
+                                    : context.l10n.kaydet,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                 ),
               ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ============================================================ Save & new
+
+/// "Kaydet ve yeni": kaydı yazar, sayfayı açık bırakır. Art arda birkaç fiş
+/// giren kullanıcı her kayıtta kaydırıcı → mini düğme yolunu baştan
+/// yürüyordu.
+class _SaveAndNewButton extends StatelessWidget {
+  final TransactionFormController controller;
+  final Color accent;
+  final VoidCallback onSubmit;
+  final double radius;
+
+  const _SaveAndNewButton({
+    required this.controller,
+    required this.accent,
+    required this.onSubmit,
+    required this.radius,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final br = BorderRadius.circular(radius.clamp(16, 20));
+    return ValueListenableBuilder<bool>(
+      valueListenable: controller.submitting,
+      builder: (context, submitting, _) {
+        return SizedBox(
+          height: 56,
+          child: Material(
+            color: accent.withValues(alpha: 0.10),
+            borderRadius: br,
+            child: InkWell(
+              borderRadius: br,
+              onTap: submitting ? null : onSubmit,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      context.l10n.kaydetVeYeni,
+                      maxLines: 1,
+                      style: TextStyle(
+                        color: accent,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// "Kaydet ve yeni" sonrası onay satırı; yeni tutar yazılmaya başlanınca
+/// çekilir (bkz. `AmountHero`).
+class _SavedNotice extends StatelessWidget {
+  final TransactionFormController controller;
+
+  const _SavedNotice({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<String?>(
+      valueListenable: controller.lastSaved,
+      builder: (context, summary, _) {
+        if (summary == null) return const SizedBox.shrink();
+        final color = AppGradients.savings;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Semantics(
+            liveRegion: true,
+            child: Row(
+              children: [
+                Icon(Icons.check_circle_rounded, size: 18, color: color),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    summary,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         );

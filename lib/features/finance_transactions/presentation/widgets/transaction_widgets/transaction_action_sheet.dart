@@ -5,6 +5,9 @@ import 'package:cunehat/core/extensions/context_extensions.dart';
 
 enum TransactionAction {
   edit,
+
+  /// Aynı içerikle, bugünün tarihiyle YENİ kayıt aç (form dolu gelir).
+  duplicate,
   delete,
 
   /// Düz satırı bir kaydın (birikim, borç, transfer) nakit bacağı yap —
@@ -40,6 +43,10 @@ class TransactionActionSheet extends StatelessWidget {
   }) {
     return showModalBottomSheet<TransactionAction>(
       context: context,
+      // Yükseklik içeriğe göre: varsayılan sınır ekranın 9/16'sı ve dört
+      // eylem + başlık 600dp'lik ekranda 29px taşıyordu (ölçüldü). İçerik
+      // ayrıca kaydırılabilir — büyük yazı ölçeğinde de taşmaz.
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => TransactionActionSheet(
         transaction: transaction,
@@ -63,95 +70,106 @@ class TransactionActionSheet extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 4),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: cs.onSurface.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(2),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 4),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: cs.onSurface.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Row(
-                children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.14),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      transaction.isIncome
-                          ? Icons.arrow_upward_rounded
-                          : Icons.arrow_downward_rounded,
-                      color: accent,
-                      size: 18,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      transaction.title,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: cs.onSurface,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (transaction.isSystem) ...[
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
-                child: _systemNotice(context, cs),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: accent.withValues(alpha: 0.14),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        transaction.isIncome
+                            ? Icons.arrow_upward_rounded
+                            : Icons.arrow_downward_rounded,
+                        color: accent,
+                        size: 18,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        transaction.title,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: cs.onSurface,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              if (isRemovableTransferLeg(transaction))
+              if (transaction.isSystem) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+                  child: _systemNotice(context, cs),
+                ),
+                if (isRemovableTransferLeg(transaction))
+                  _tile(
+                    context,
+                    icon: Icons.link_off_rounded,
+                    color: Colors.red,
+                    title: context.l10n.transferiKaldir,
+                    subtitle: context.l10n.transferiKaldirAciklama,
+                    action: TransactionAction.removeTransfer,
+                  ),
+              ] else ...[
                 _tile(
                   context,
-                  icon: Icons.link_off_rounded,
+                  icon: Icons.edit_rounded,
+                  color: Colors.blueGrey,
+                  title: context.l10n.duzenle,
+                  subtitle: context.l10n.duzenleSubtitle,
+                  action: TransactionAction.edit,
+                ),
+                _tile(
+                  context,
+                  icon: Icons.content_copy_rounded,
+                  color: Colors.blueGrey,
+                  title: context.l10n.yenidenEkle,
+                  subtitle: context.l10n.yenidenEkleAciklama,
+                  action: TransactionAction.duplicate,
+                ),
+                if (transaction.id != null)
+                  _tile(
+                    context,
+                    icon: Icons.link_rounded,
+                    color: cs.primary,
+                    title: context.l10n.baglaEylemi,
+                    subtitle: context.l10n.baglaEylemiAciklama,
+                    action: TransactionAction.link,
+                  ),
+                _tile(
+                  context,
+                  icon: Icons.delete_outline_rounded,
                   color: Colors.red,
-                  title: context.l10n.transferiKaldir,
-                  subtitle: context.l10n.transferiKaldirAciklama,
-                  action: TransactionAction.removeTransfer,
+                  title: context.l10n.islemiSil,
+                  subtitle: context.l10n.silSubtitle,
+                  action: TransactionAction.delete,
                 ),
-            ] else ...[
-              _tile(
-                context,
-                icon: Icons.edit_rounded,
-                color: Colors.blueGrey,
-                title: context.l10n.duzenle,
-                subtitle: context.l10n.duzenleSubtitle,
-                action: TransactionAction.edit,
-              ),
-              if (transaction.id != null)
-                _tile(
-                  context,
-                  icon: Icons.link_rounded,
-                  color: cs.primary,
-                  title: context.l10n.baglaEylemi,
-                  subtitle: context.l10n.baglaEylemiAciklama,
-                  action: TransactionAction.link,
-                ),
-              _tile(
-                context,
-                icon: Icons.delete_outline_rounded,
-                color: Colors.red,
-                title: context.l10n.islemiSil,
-                subtitle: context.l10n.silSubtitle,
-                action: TransactionAction.delete,
-              ),
+              ],
+              const SizedBox(height: 8),
             ],
-            const SizedBox(height: 8),
-          ],
+          ),
         ),
       ),
     );

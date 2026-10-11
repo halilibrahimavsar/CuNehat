@@ -73,6 +73,22 @@ class _CategoryPickerState extends State<CategoryPicker> {
     });
   }
 
+  /// "Son kullanılanlar"dan seçim. Alt kategoriyse kökünün altları da açılır:
+  /// seçimin şeritte nereye düştüğü görünsün.
+  void _selectRecent(CategoryEntity category, List<CategoryNode> tree) {
+    _apply(category.id);
+    final rootId = category.parentId ?? category.id;
+    final root = tree.where((n) => n.category.id == rootId).firstOrNull;
+    setState(() {
+      _expandedRootId =
+          root == null || root.children.isEmpty ? null : root.category.id;
+    });
+  }
+
+  /// Şeridin ilk ekranına sığan kök sayısı (80dp karo + 10dp ara). Kısayol
+  /// satırı yalnız bunların DIŞINDA bir kategori sunabiliyorsa gösterilir.
+  static const int _stripCapacity = 4;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -136,6 +152,7 @@ class _CategoryPickerState extends State<CategoryPicker> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    _recents(tree),
                     SizedBox(height: 96, child: _strip(tree)),
                     _expansion(tree),
                   ],
@@ -145,6 +162,68 @@ class _CategoryPickerState extends State<CategoryPicker> {
           },
         ),
       ],
+    );
+  }
+
+  /// Bu cüzdanda en son kullanılan kategoriler — tek dokunuşla seçilir.
+  ///
+  /// Şerit kullanıcının kendi sırasında kalır; bu satır onun ÖNÜNE gelir.
+  /// Defter boşsa (ya da okunamadıysa) hiç yer kaplamaz.
+  Widget _recents(List<CategoryNode> tree) {
+    final cs = Theme.of(context).colorScheme;
+    return ValueListenableBuilder<List<CategoryEntity>>(
+      valueListenable: widget.controller.recentCategories,
+      builder: (context, recents, _) {
+        // Şeridin ilk ekranında zaten duran köklerden ibaretse satır yalnız
+        // yer kaplar (cihazda görüldü: tek öğesi şeridin ilk karosuydu).
+        final onScreen = {
+          for (final node in tree.take(_stripCapacity)) node.category.id,
+        };
+        if (recents.every((c) => onScreen.contains(c.id))) {
+          return const SizedBox.shrink();
+        }
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Row(
+            children: [
+              Tooltip(
+                message: context.l10n.sonKullanilanlar,
+                child: Icon(
+                  Icons.history_rounded,
+                  size: 18,
+                  color: cs.onSurfaceVariant,
+                  semanticLabel: context.l10n.sonKullanilanlar,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: SizedBox(
+                  height: 40,
+                  child: ValueListenableBuilder<String?>(
+                    valueListenable: widget.controller.categoryId,
+                    builder: (context, selectedId, _) => ListView.separated(
+                      key: const ValueKey('tx-recent-categories'),
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: recents.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (context, index) {
+                        final category = recents[index];
+                        return _SubCategoryChip(
+                          category: category,
+                          selected: selectedId == category.id,
+                          accent: widget.accent,
+                          onTap: () => _selectRecent(category, tree),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -266,6 +345,8 @@ class _SubCategoryChip extends StatelessWidget {
               width: 1.4,
             ),
           ),
+          // En az 40dp: çipin kendi yüksekliği 31dp'ydi.
+          constraints: const BoxConstraints(minHeight: 40),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
           child: Row(
             mainAxisSize: MainAxisSize.min,

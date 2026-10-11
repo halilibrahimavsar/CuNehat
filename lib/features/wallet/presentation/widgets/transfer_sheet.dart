@@ -235,7 +235,7 @@ class _TransferSheetState extends State<TransferSheet> {
     final picked = await showDatePicker(
       context: context,
       initialDate: _date,
-      firstDate: DateTime(2000),
+      firstDate: kEarliestEntryDate,
       // İleri tarihli transfer deftere yaşanmamış bir hareket yazar.
       lastDate: DateTime.now(),
       helpText: context.l10n.tarihSec,

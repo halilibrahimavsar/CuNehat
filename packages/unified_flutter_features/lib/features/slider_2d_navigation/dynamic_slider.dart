@@ -146,8 +146,6 @@ class _DynamicSliderState extends State<DynamicSlider> {
   /// her oturma sonrası tazelensin.
   int _selectedCarouselIndex = 0;
 
-  bool get _isMainSelected => _selectedCarouselIndex == 0;
-
   /// Dikey sürüklemenin BAŞLADIĞI çark indeksi; dokunsal geri bildirimin
   /// ölçütü budur.
   int _verticalDragStartIndex = 0;
@@ -526,10 +524,13 @@ class _DynamicSliderState extends State<DynamicSlider> {
               final state = _getCurrentState();
               final activeColor = SliderStateHelper.getColorForState(state);
               final subItems = widget.subMenuItems[state] ?? [];
-              // The add ('+') affordance and the mini-button tap are only valid
-              // when the main title (carousel index 0) is centered. In subviews
-              // the centered item is a submenu entry, so hide/disable them.
-              final isMainSelected = _isMainSelected;
+              // '+' ve mini düğmeler ALT SAYFADA DA çalışır. Eskiden yalnız
+              // ana başlık ortadayken açıktı: Rapor'a ya da İçgörü'ye bakan
+              // kullanıcı kaydırıcıya dokunduğunda hiçbir şey olmuyor, işlem
+              // eklemek için önce ana görünüme dönmesi gerekiyordu. Durumun
+              // eklenecek bir şeyi yoksa (mini düğme tanımsız) '+' gizlenir.
+              final hasMiniButtons =
+                  (widget.miniButtons[state] ?? const []).isNotEmpty;
               final sectionWidth = _widgetWidth / SliderState.values.length;
               final knobPosition = SliderConfig.trackPadding +
                   (value * (_widgetWidth - metrics.knobWidth)) -
@@ -568,13 +569,9 @@ class _DynamicSliderState extends State<DynamicSlider> {
                         isDragging: _isDragging,
                         transitionProgress: transitionProgress,
                         selectedIndex: _selectedCarouselIndex,
-                        showAddButton: isMainSelected,
+                        showAddButton: hasMiniButtons,
                         texts: widget.texts,
-                        onTap: isMainSelected
-                            ? () {
-                                _toggleMiniButtons();
-                              }
-                            : () {},
+                        onTap: _toggleMiniButtons,
                         onMainTitleTap: () => widget.onStateTap?.call(state),
                         onHorizontalDragStart: () =>
                             setState(() => _isDragging = true),

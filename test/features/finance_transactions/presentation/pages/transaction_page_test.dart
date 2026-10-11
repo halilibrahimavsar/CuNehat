@@ -334,6 +334,26 @@ void main() {
       expect(find.text('Filtreleri temizle'), findsNothing);
     });
 
+    // Boş defter eskiden yalnız "sürgü butonunu kullanın" diyordu.
+    testWidgets('cüzdan boşken Gider/Gelir ekle düğmeleri görünür',
+        (tester) async {
+      seed(const []);
+      await pumpPage(tester);
+
+      expect(find.byKey(const ValueKey('tx-empty-add-expense')), findsOneWidget);
+      expect(find.byKey(const ValueKey('tx-empty-add-income')), findsOneWidget);
+    });
+
+    testWidgets('filtre boşalttıysa ekle düğmeleri ÇIKMAZ', (tester) async {
+      seed([txMarket]);
+      await pumpPage(tester);
+
+      await tester.enterText(await openSearch(tester), 'zzzz');
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('tx-empty-add-expense')), findsNothing);
+    });
+
     testWidgets('kayıt varken filtre boşaltmışsa temizleme önerilir',
         (tester) async {
       seed([txMarket]);

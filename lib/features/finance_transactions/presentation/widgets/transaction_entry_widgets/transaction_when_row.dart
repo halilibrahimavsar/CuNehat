@@ -17,7 +17,7 @@ class WhenRow extends StatelessWidget {
     final picked = await showDatePicker(
       context: context,
       initialDate: current,
-      firstDate: DateTime(2020),
+      firstDate: kEarliestEntryDate,
       lastDate: DateTime.now(),
     );
     if (picked != null) {
@@ -48,43 +48,137 @@ class WhenRow extends StatelessWidget {
     }
   }
 
+  /// Günü [daysAgo] gün önceye çeker; saat korunur.
+  void _setDay(int daysAgo) {
+    final current = controller.dateTime.value;
+    final day = DateTime.now().subtract(Duration(days: daysAgo));
+    controller.dateTime.value = DateTime(
+      day.year,
+      day.month,
+      day.day,
+      current.hour,
+      current.minute,
+    );
+  }
+
+  static bool _isDaysAgo(DateTime when, int daysAgo) {
+    final day = DateTime.now().subtract(Duration(days: daysAgo));
+    return when.year == day.year &&
+        when.month == day.month &&
+        when.day == day.day;
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<DateTime>(
       valueListenable: controller.dateTime,
       builder: (context, when, _) {
-        // Yeni işlem varsayılan olarak bugüne düşer; takvimde başka bir gün
-        // seçili olsa bile. Kullanıcı yanılmasın diye tarih bugünse etikette
-        // "Bugün" öneki gösterilir.
-        final now = DateTime.now();
-        final isToday = when.year == now.year &&
-            when.month == now.month &&
-            when.day == now.day;
-        final dateLabel = isToday
-            ? '${context.l10n.bugun} · ${AppFormatters.dateLong.format(when)}'
-            : AppFormatters.dateLong.format(when);
-        return Row(
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: _WhenPill(
-                icon: Icons.calendar_today_rounded,
-                label: dateLabel,
-                accent: accent,
-                onTap: () => _pickDate(context),
-              ),
+            // En sık iki gün tek dokunuş: "dün" için eskiden hap → takvim →
+            // gün → Tamam gerekiyordu. Seçili çip aynı zamanda formun bugüne
+            // ayarlı olduğunu söyler (eski ipucu satırının işi).
+            Row(
+              children: [
+                _DayChip(
+                  key: const ValueKey('tx-day-today'),
+                  label: context.l10n.bugun,
+                  selected: _isDaysAgo(when, 0),
+                  accent: accent,
+                  onTap: () => _setDay(0),
+                ),
+                const SizedBox(width: 8),
+                _DayChip(
+                  key: const ValueKey('tx-day-yesterday'),
+                  label: context.l10n.dun,
+                  selected: _isDaysAgo(when, 1),
+                  accent: accent,
+                  onTap: () => _setDay(1),
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _WhenPill(
-                icon: Icons.schedule_rounded,
-                label: AppFormatters.time.format(when),
-                accent: accent,
-                onTap: () => _pickTime(context),
-              ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: _WhenPill(
+                    icon: Icons.calendar_today_rounded,
+                    label: AppFormatters.dateLong.format(when),
+                    accent: accent,
+                    onTap: () => _pickDate(context),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _WhenPill(
+                    icon: Icons.schedule_rounded,
+                    label: AppFormatters.time.format(when),
+                    accent: accent,
+                    onTap: () => _pickTime(context),
+                  ),
+                ),
+              ],
             ),
           ],
         );
       },
+    );
+  }
+}
+
+/// "Bugün" / "Dün" kısayolu.
+class _DayChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final Color accent;
+  final VoidCallback onTap;
+
+  const _DayChip({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.accent,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    const radius = BorderRadius.all(Radius.circular(14));
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: Material(
+        color: selected
+            ? accent.withValues(alpha: 0.12)
+            : cs.onSurface.withValues(alpha: 0.04),
+        borderRadius: radius,
+        child: InkWell(
+          borderRadius: radius,
+          onTap: onTap,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 40, minWidth: 64),
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(
+              borderRadius: radius,
+              border: Border.all(
+                color: selected ? accent : Colors.transparent,
+                width: 1.4,
+              ),
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                color: selected ? accent : cs.onSurface,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

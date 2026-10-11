@@ -1,4 +1,7 @@
 // transaction_form_fields.dart'tan bölündü (v1 temizliği): davranış aynı.
+import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/shared/widgets/labeled_segment.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_controller.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
@@ -14,6 +17,11 @@ class AmountHero extends StatelessWidget {
   final FocusNode focusNode;
   final VoidCallback onClose;
 
+  /// Gider ↔ gelir. Başlık eskiden sabit bir "Gider Ekle" rozetiydi: tür
+  /// sayfayı açan düğmeyle donuyor, yanlış basan kullanıcı kapatıp baştan
+  /// başlıyordu.
+  final ValueChanged<bool> onTypeChanged;
+
   const AmountHero({
     super.key,
     required this.controller,
@@ -22,49 +30,45 @@ class AmountHero extends StatelessWidget {
     required this.isEdit,
     required this.focusNode,
     required this.onClose,
+    required this.onTypeChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final label = isExpense ? 'Gider' : 'Gelir';
+    final l10n = context.l10n;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 4, 12, 24),
+      padding: const EdgeInsets.fromLTRB(20, 4, 12, 12),
       child: Column(
         children: [
           Row(
             children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isEdit
-                          ? Icons.edit_outlined
-                          : (isExpense
-                              ? Icons.south_west_rounded
-                              : Icons.north_east_rounded),
-                      size: 15,
-                      color: accent,
+              if (isEdit) ...[
+                Icon(Icons.edit_outlined, size: 18, color: accent),
+                const SizedBox(width: 8),
+              ],
+              // Genişlik sabit: segment hücrelerini eşit böler ve sınırsız
+              // genişlikte ölçülemez.
+              SizedBox(
+                width: 172,
+                child: LabeledSegment<bool>(
+                  key: const ValueKey('tx-type-segment'),
+                  items: [
+                    SegmentItem(
+                      value: true,
+                      label: l10n.menuExpense,
+                      color: AppGradients.debt,
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      isEdit ? '$label Düzenle' : '$label Ekle',
-                      style: TextStyle(
-                        color: accent,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                      ),
+                    SegmentItem(
+                      value: false,
+                      label: l10n.menuIncome,
+                      color: AppGradients.savings,
                     ),
                   ],
+                  selected: isExpense,
+                  onChanged: onTypeChanged,
                 ),
               ),
               const Spacer(),
@@ -73,7 +77,7 @@ class AmountHero extends StatelessWidget {
                   focusNode.unfocus();
                   onClose();
                 },
-                visualDensity: VisualDensity.compact,
+                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                 icon: Icon(Icons.close_rounded,
                     color: cs.onSurface.withValues(alpha: 0.5)),
               ),
@@ -97,6 +101,10 @@ class AmountHero extends StatelessWidget {
                     onChanged: (_) {
                       if (controller.error.value != null) {
                         controller.error.value = null;
+                      }
+                      // Yeni kayda başlandı: önceki kaydın onayı çekilir.
+                      if (controller.lastSaved.value != null) {
+                        controller.lastSaved.value = null;
                       }
                     },
                     style: TextStyle(

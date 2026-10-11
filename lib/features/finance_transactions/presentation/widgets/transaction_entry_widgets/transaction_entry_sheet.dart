@@ -21,15 +21,56 @@ class TransactionSheetHandler {
   /// (kendi route'unda açılır, ana sayfanın ağacında değildir) çağrılırken
   /// açıkça geçilir. Her ikisi de DI'da factory; ayrı örnekten yazılan işlem
   /// `TransactionsChangedNotifier` üzerinden ana sayfadaki bloc'a ulaşır.
+  ///
+  /// [prefill]: "Yeniden ekle" — bu işlemin içeriğiyle YENİ kayıt açar.
   static void showSheet({
     required BuildContext context,
     required String userId,
     required String walletId,
     required TransactionTypeModel type,
     TransactionEntity? initialTransaction,
+    TransactionEntity? prefill,
     TransactionBloc? transactionBloc,
     PendingRecurringBloc? pendingBloc,
   }) {
+    // Bloc'lar KULLANILDIĞI anda çözülür (sayfa açılırken değil): çağıran
+    // [context] sayfa kapandıktan sonra da ağaçta kalır.
+    TransactionBloc txBloc() =>
+        transactionBloc ?? context.read<TransactionBloc>();
+    PendingRecurringBloc pending() =>
+        pendingBloc ?? context.read<PendingRecurringBloc>();
+
+    void addNew(TransactionEntity transaction, RecurringFrequency? frequency) {
+      txBloc().add(AddTransactionEvent(transaction));
+      if (frequency == null) return;
+
+      // Çapa, işlemin KENDİ gününden alınır — hesaplanan ilk vadeden değil:
+      // 31 Oca'lık bir işlemde ilk vade 28 Şub'a kenetlenir ve çapayı oradan
+      // türetmek şablonu kalıcı olarak 28'e sabitlerdi.
+      final template = RecurringTransactionEntity(
+        id: UidGenerator.generateV7(),
+        userId: userId,
+        // İşlemin KENDİ cüzdanı ve türü: formdaki ödeme yöntemi seçicisi
+        // kaydı sahibinden bir karta (ya da tersi) yönlendirebilir, tür
+        // seçicisi de sayfa açıldıktan sonra değişebilir.
+        walletId: transaction.walletId,
+        title: transaction.title,
+        tag: transaction.tag,
+        amount: transaction.amount,
+        type: transaction.type,
+        frequency: frequency,
+        nextExecutionDate: _calculateNextDate(transaction.date, frequency),
+        anchorDay: transaction.date.day,
+      );
+      final pendingBloc = pending();
+      // Geçmiş tarihli bir işleme tekrar eklenirse şablon ANINDA vadesi
+      // gelmiş olur; bekleyen liste tazelenmezse hatırlatma ancak ana sayfa
+      // yeniden kurulduğunda çıkardı.
+      getIt<SaveRecurringTransactionUsecase>()(template).then(
+        (_) => pendingBloc.add(const LoadPendingTransactionsEvent()),
+      );
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -41,62 +82,34 @@ class TransactionSheetHandler {
           userId: userId,
           isExpense: type == TransactionTypeModel.expense,
           initialTransaction: initialTransaction,
+          prefill: prefill,
           onSave: (transaction, recurringFrequency) {
             Navigator.pop(sheetContext);
 
-            // Send to BLoC
-            final txBloc = transactionBloc ?? context.read<TransactionBloc>();
             if (initialTransaction != null) {
-              txBloc.add(
+              txBloc().add(
                 UpdateTransactionEvent(
                   newTransaction: transaction,
                   previousTransaction: initialTransaction,
                 ),
               );
             } else {
-              txBloc.add(
-                AddTransactionEvent(transaction),
-              );
-
-              if (recurringFrequency != null) {
-                // Şablonu da kaydet
-                // Şablonun id'si uuid ile oluşturulmalı, ama burada uuid paketi
-                // var mı? Evet, UidGenerator kullanabiliriz.
-                // Çapa, işlemin KENDİ gününden alınır — hesaplanan ilk
-                // vadeden değil: 31 Oca'lık bir işlemde ilk vade 28 Şub'a
-                // kenetlenir ve çapayı oradan türetmek şablonu kalıcı olarak
-                // 28'e sabitlerdi.
-                final template = RecurringTransactionEntity(
-                  id: UidGenerator.generateV7(),
-                  userId: userId,
-                  // İşlemin KENDİ cüzdanı: formdaki ödeme yöntemi seçicisi
-                  // kaydı sahibinden bir karta (ya da tersi) yönlendirebilir.
-                  walletId: transaction.walletId,
-                  title: transaction.title,
-                  tag: transaction.tag,
-                  amount: transaction.amount,
-                  type: type,
-                  frequency: recurringFrequency,
-                  nextExecutionDate:
-                      _calculateNextDate(transaction.date, recurringFrequency),
-                  anchorDay: transaction.date.day,
-                );
-                final saveUsecase = getIt<SaveRecurringTransactionUsecase>();
-                final pending =
-                    pendingBloc ?? context.read<PendingRecurringBloc>();
-                // Geçmiş tarihli bir işleme tekrar eklenirse şablon ANINDA
-                // vadesi gelmiş olur; bekleyen liste tazelenmezse hatırlatma
-                // ancak ana sayfa yeniden kurulduğunda çıkardı.
-                saveUsecase(template).then(
-                  (_) => pending.add(const LoadPendingTransactionsEvent()),
-                );
-              }
+              addNew(transaction, recurringFrequency);
             }
           },
+          // Düzenlemede "yeni" yok: tek kayıt güncellenir ve sayfa kapanır.
+          onSaveAndNew: initialTransaction != null
+              ? null
+              : (rows, recurringFrequency) {
+                  if (rows.length > 1) {
+                    txBloc().add(AddTransactionsEvent(rows));
+                  } else {
+                    addNew(rows.single, recurringFrequency);
+                  }
+                },
           onSaveInstallments: (installments) {
             Navigator.pop(sheetContext);
-            final txBloc = transactionBloc ?? context.read<TransactionBloc>();
-            txBloc.add(AddTransactionsEvent(installments));
+            txBloc().add(AddTransactionsEvent(installments));
           },
           onCancel: () => Navigator.pop(sheetContext),
         );

@@ -10696,6 +10696,54 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Ödeme günü'**
   String get kkOdemeGunu;
+
+  /// No description provided for @dun.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dün'**
+  String get dun;
+
+  /// No description provided for @kaydetVeYeni.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaydet ve yeni'**
+  String get kaydetVeYeni;
+
+  /// No description provided for @kaydedildiOzet.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaydedildi: {baslik} · {tutar}'**
+  String kaydedildiOzet(String baslik, String tutar);
+
+  /// No description provided for @sonKullanilanlar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son kullanılanlar'**
+  String get sonKullanilanlar;
+
+  /// No description provided for @yenidenEkle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeniden ekle'**
+  String get yenidenEkle;
+
+  /// No description provided for @yenidenEkleAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aynı içerikle, bugünün tarihiyle yeni kayıt'**
+  String get yenidenEkleAciklama;
+
+  /// No description provided for @giderEkle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gider ekle'**
+  String get giderEkle;
+
+  /// No description provided for @gelirEkle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelir ekle'**
+  String get gelirEkle;
 }
 
 class _AppLocalizationsDelegate
