@@ -260,27 +260,36 @@ StatementLayoutResult analyzeStatementLayout(List<LayoutWord> words) {
     }
   }
 
-  // --- tarihsiz satırları en yakın çapaya bağla ---
-  final headerRows = _headerRowIndices(rows);
-  final attachments = _attachContinuationRows(
-    rows: rows,
-    anchorIdx: anchorIdx,
-    excluded: headerRows,
-    medianHeight: medianHeight,
-  );
-
   // --- açılış (devreden) bakiyesi: ilk çapanın ÜSTÜNDEKİ, bakiye sütununda
   // değer taşıyan tarihsiz satır ---
   double? openingBalance;
+  final openingRows = <int>{};
   if (roles.balanceRight != null) {
     for (var i = 0; i < anchorIdx.first; i++) {
       for (final c in rows[i].cells) {
         if ((c.right - roles.balanceRight!).abs() > columnTolerance) continue;
         final v = parseLayoutMoney(c.text, englishGrouping: englishGrouping);
-        if (v != null) openingBalance = v;
+        if (v != null) {
+          openingBalance = v;
+          openingRows.add(i);
+        }
       }
     }
   }
+
+  // --- tarihsiz satırları en yakın çapaya bağla ---
+  // Devreden bakiye satırı bir HAREKETİN devamı değildir. Açıklaması tarih
+  // satırının üstüne taşan ekstrelerde (QNB) ilk harekete yapışıyordu:
+  // açıklamaya "DEVREDEN BAKİYE" ekleniyor, ilk hareketin bakiyesi yerine
+  // devreden tutar okunuyor ve tutarların hepsi doğruyken ekran
+  // "Doğrulanamadı" diyordu (gerçek dosyayla ölçüldü, 11 Eki 2026).
+  final headerRows = _headerRowIndices(rows);
+  final attachments = _attachContinuationRows(
+    rows: rows,
+    anchorIdx: anchorIdx,
+    excluded: {...headerRows, ...openingRows},
+    medianHeight: medianHeight,
+  );
 
   // --- kayıtlar ---
   final records = <LayoutRecord>[];

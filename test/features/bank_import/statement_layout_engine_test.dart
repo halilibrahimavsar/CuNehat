@@ -61,6 +61,42 @@ void main() {
       }
     });
 
+    /// GERÇEK HATA (11 Eki 2026, QNB hesap hareketleri): tablonun başındaki
+    /// "DEVREDEN BAKİYE" satırı tarihsiz olduğu için ilk harekete DEVAM
+    /// satırı diye yapışıyordu. İlk açıklamaya "DEVREDEN BAKİYE" ekleniyor,
+    /// ilk hareketin bakiyesi yerine devreden tutar okunuyor; satırların
+    /// hepsi doğruyken bakiye zinciri bir halkada kopuyor ve ekran
+    /// "Doğrulanamadı" diyordu.
+    test('devreden bakiye satırı ilk harekete YAPIŞMAZ', () {
+      final words = <LayoutWord>[
+        _w('Tarih', _dateX, 60),
+        _w('Açıklama', _descX, 60),
+        _right('Tutar', _amountRight, 60),
+        _right('Bakiye', _balanceRight, 60),
+        _w('DEVREDEN BAKİYE', 300, 72),
+        _right('1,000.00', _balanceRight, 72),
+        _w('01/09/2026', _dateX, 84),
+        _w('Kart İşlemleri - 4321 nolu kart ödemesi', _descX, 84),
+        _right('-400.00', _amountRight, 84),
+        _right('600.00', _balanceRight, 84),
+        _w('02/09/2026', _dateX, 96),
+        _w('Transfer İşlemleri - Gönderen: ORNEK', _descX, 96),
+        _right('2,500.00', _amountRight, 96),
+        _right('3,100.00', _balanceRight, 96),
+        _w('02/09/2026', _dateX, 108),
+        _w('Transfer İşlemleri - EFT Ücreti', _descX, 108),
+        _right('-7.97', _amountRight, 108),
+        _right('3,092.03', _balanceRight, 108),
+      ];
+
+      final r = analyzeStatementLayout(words);
+      expect(r.usable, isTrue);
+      expect(r.openingBalance, 1000.0);
+      expect(r.records, hasLength(3));
+      expect(r.records.first.balance, 600.0);
+      expect(r.records.first.description, isNot(contains('DEVREDEN')));
+    });
+
     /// GERÇEK HATA: dekont no tutara bitişik geliyordu
     /// ("… PARA YATIRMA, 55636820,000.00"); regex ortadan `820,000.00` gibi
     /// var olmayan bir sayı çıkarıp gerçek tutarı 0'a düşürüyor, satır
