@@ -6551,4 +6551,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get blocMsgBackupFailed => 'The backup couldn\'t be completed.';
+
+  @override
+  String get borcEkle => 'Add debt';
+
+  @override
+  String get alacakEkle => 'Add receivable';
 }

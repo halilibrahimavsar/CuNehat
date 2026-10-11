@@ -170,6 +170,15 @@ class DebtListSection extends StatelessWidget {
               title: context.l10n.henuzBorcKaydiYok,
               description: context.l10n.henuzBorcKaydiYokAciklama,
               section: AppSection.debt,
+              actionKey: const ValueKey('debt-empty-add'),
+              actionLabel: context.l10n.borcEkle,
+              onAction: () => _openAddEntrySheet(
+                context,
+                walletId: walletId,
+                userId: userId,
+                currency: currency,
+                isDebt: true,
+              ),
             );
           }
           final theme = Theme.of(context);
@@ -538,6 +547,15 @@ class ReceivableListSection extends StatelessWidget {
               title: context.l10n.henuzAlacakKaydiYok,
               description: context.l10n.henuzAlacakKaydiYokAciklama,
               section: AppSection.savings,
+              actionKey: const ValueKey('receivable-empty-add'),
+              actionLabel: context.l10n.alacakEkle,
+              onAction: () => _openAddEntrySheet(
+                context,
+                walletId: walletId,
+                userId: userId,
+                currency: currency,
+                isDebt: false,
+              ),
             );
           }
           return ListView.builder(
@@ -760,17 +778,53 @@ class ReceivableListSection extends StatelessWidget {
   }
 }
 
+/// Boş ekrandan doğrudan yeni borç/alacak formu.
+///
+/// Eskiden boş ekran yalnız "ekleme butonunu kullanın" diyordu; buton alttaki
+/// kaydırıcının ortasındaki "+" idi ve oradan da bir mini düğme daha
+/// seçiliyordu. Boş defterdeki "Gider ekle / Gelir ekle" ile aynı kalıp.
+void _openAddEntrySheet(
+  BuildContext context, {
+  required String walletId,
+  required String userId,
+  required String currency,
+  required bool isDebt,
+}) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    // Uzun form ekranı doldurunca başlık durum çubuğunun altına giriyordu;
+    // yalnız ÜST payı ekler.
+    useSafeArea: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => AddEntrySheet(
+      walletId: walletId,
+      userId: userId,
+      currency: currency,
+      initialIsDebt: isDebt,
+    ),
+  );
+}
+
 class _EmptyStateCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String description;
   final AppSection section;
 
+  /// Boş ekranın birincil eylemi (ör. "Borç ekle").
+  final String? actionLabel;
+  final VoidCallback? onAction;
+  final Key? actionKey;
+
   const _EmptyStateCard({
     required this.icon,
     required this.title,
     required this.description,
     required this.section,
+    this.actionLabel,
+    this.onAction,
+    this.actionKey,
   });
 
   @override
@@ -831,6 +885,15 @@ class _EmptyStateCard extends StatelessWidget {
                           height: 1.4,
                         ),
                       ),
+                      if (actionLabel != null && onAction != null) ...[
+                        const SizedBox(height: 18),
+                        FilledButton.tonalIcon(
+                          key: actionKey,
+                          onPressed: onAction,
+                          icon: const Icon(Icons.add_rounded, size: 20),
+                          label: Text(actionLabel!),
+                        ),
+                      ],
                     ],
                   ),
                 ),

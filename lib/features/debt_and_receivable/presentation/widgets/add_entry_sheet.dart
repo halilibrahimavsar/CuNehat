@@ -595,14 +595,14 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
         clipBehavior: Clip.antiAlias,
         child: SafeArea(
           top: false,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHandleAndHeader(cs),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHandleAndHeader(cs),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -732,17 +732,28 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                         const SizedBox(height: 14),
                         _buildDueDateStep(context),
                       ],
-                      if (_error != null) ...[
-                        const SizedBox(height: 16),
-                        _buildErrorBanner(),
-                      ],
-                      const SizedBox(height: 22),
-                      _buildSaveButton(surface.radius),
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+              // Hata ve Kaydet SABİT: eskiden kaydırılan içeriğin sonundaydı;
+              // kişi adı ya da tutar yazılırken klavyenin altında kalıyordu
+              // (cihazda görüldü). İşlem formundaki kalıbın aynısı.
+              Padding(
+                key: const ValueKey('debt-form-actions'),
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_error != null) ...[
+                      _buildErrorBanner(),
+                      const SizedBox(height: 12),
+                    ],
+                    _buildSaveButton(surface.radius),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),

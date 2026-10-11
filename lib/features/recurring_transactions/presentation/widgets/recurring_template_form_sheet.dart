@@ -252,169 +252,182 @@ class _RecurringTemplateFormSheetState
     final wallet = _wallet;
     final categoryId = _categoryId;
 
+    // Alanlar kaydırılır, düğmeler SABİT kalır: klavye açıkken Kaydet
+    // klavyenin altına düşüyordu (cihazda görüldü) ve kullanıcı kaydetmek
+    // için önce klavyeyi kapatmak zorunda kalıyordu.
     return Padding(
       padding: EdgeInsets.fromLTRB(20, 0, 20, 16 + sheetBottomInset(context)),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _isEdit ? l10n.sablonuDuzenle : l10n.yeniDuzenliIslem,
-              style: theme.textTheme.titleMedium,
-            ),
-            const SizedBox(height: 14),
-            if (!_isEdit) ...[
-              LabeledSegment<TransactionTypeModel>(
-                key: const ValueKey('template-type'),
-                items: [
-                  SegmentItem(
-                    value: TransactionTypeModel.expense,
-                    label: l10n.detailLabelGider,
-                    color: AppGradients.debt,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _isEdit ? l10n.sablonuDuzenle : l10n.yeniDuzenliIslem,
+                    style: theme.textTheme.titleMedium,
                   ),
-                  SegmentItem(
-                    value: TransactionTypeModel.income,
-                    label: l10n.detailLabelGelir,
-                    color: AppGradients.savings,
+                  const SizedBox(height: 14),
+                  if (!_isEdit) ...[
+                    LabeledSegment<TransactionTypeModel>(
+                      key: const ValueKey('template-type'),
+                      items: [
+                        SegmentItem(
+                          value: TransactionTypeModel.expense,
+                          label: l10n.detailLabelGider,
+                          color: AppGradients.debt,
+                        ),
+                        SegmentItem(
+                          value: TransactionTypeModel.income,
+                          label: l10n.detailLabelGelir,
+                          color: AppGradients.savings,
+                        ),
+                      ],
+                      selected: _type,
+                      onChanged: (type) => setState(() {
+                        if (type == _type) return;
+                        _type = type;
+                        // Gider kategorisi gelir şablonuna yazılamaz.
+                        _categoryId = null;
+                      }),
+                    ),
+                    const SizedBox(height: 12),
+                    if (_choices.length > 1) ...[
+                      DropdownButtonFormField<String>(
+                        key: const ValueKey('template-wallet'),
+                        initialValue: _walletId,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          labelText: l10n.wallet,
+                          border: const OutlineInputBorder(),
+                        ),
+                        items: [
+                          for (final w in _choices)
+                            DropdownMenuItem(
+                              value: w.id,
+                              child: Text(
+                                familyLabel(w, widget.wallets),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                        ],
+                        onChanged: (id) => setState(() {
+                          if (id == _walletId) return;
+                          _walletId = id;
+                          // Kategoriler cüzdana göre görünür.
+                          _categoryId = null;
+                        }),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                  ],
+                  TextField(
+                    key: const ValueKey('template-title'),
+                    controller: _title,
+                    textCapitalization: TextCapitalization.sentences,
+                    onChanged: (_) => _clearError(),
+                    decoration: InputDecoration(
+                      labelText: l10n.sablonBaslikLabel,
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    key: const ValueKey('template-amount'),
+                    controller: _amount,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [AmountInputFormatter()],
+                    onChanged: (_) => _clearError(),
+                    decoration: InputDecoration(
+                      labelText: l10n.tutarHint,
+                      // Şablon tutarı, ait olduğu cüzdanın biriminde tutulur.
+                      suffixText:
+                          currencySymbol(wallet?.currency ?? kDefaultCurrency),
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _FieldTile(
+                    key: const ValueKey('template-category'),
+                    icon: Icons.label_outline_rounded,
+                    label: l10n.labelKategori,
+                    value: categoryId == null
+                        ? l10n.bankImportPickCategoryHint
+                        : context.categoryLabelForTag(categoryId,
+                            labels: _labels),
+                    missing: categoryId == null,
+                    onTap: _pickCategory,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    l10n.tekrarSikligiLabel,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: [
+                      for (final f in RecurringFrequency.values)
+                        ChoiceChip(
+                          label: Text(recurringFrequencyLabel(f, l10n)),
+                          selected: _frequency == f,
+                          onSelected: (_) => setState(() => _frequency = f),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _FieldTile(
+                    key: const ValueKey('template-date'),
+                    icon: Icons.event_rounded,
+                    label: _isEdit ? l10n.sonrakiVadeLabel : l10n.ilkVadeLabel,
+                    value: AppFormatters.dateLong.format(_date),
+                    onTap: _pickDate,
                   ),
                 ],
-                selected: _type,
-                onChanged: (type) => setState(() {
-                  if (type == _type) return;
-                  _type = type;
-                  // Gider kategorisi gelir şablonuna yazılamaz.
-                  _categoryId = null;
-                }),
-              ),
-              const SizedBox(height: 12),
-              if (_choices.length > 1) ...[
-                DropdownButtonFormField<String>(
-                  key: const ValueKey('template-wallet'),
-                  initialValue: _walletId,
-                  isExpanded: true,
-                  decoration: InputDecoration(
-                    labelText: l10n.wallet,
-                    border: const OutlineInputBorder(),
-                  ),
-                  items: [
-                    for (final w in _choices)
-                      DropdownMenuItem(
-                        value: w.id,
-                        child: Text(
-                          familyLabel(w, widget.wallets),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                  ],
-                  onChanged: (id) => setState(() {
-                    if (id == _walletId) return;
-                    _walletId = id;
-                    // Kategoriler cüzdana göre görünür.
-                    _categoryId = null;
-                  }),
-                ),
-                const SizedBox(height: 12),
-              ],
-            ],
-            TextField(
-              key: const ValueKey('template-title'),
-              controller: _title,
-              textCapitalization: TextCapitalization.sentences,
-              onChanged: (_) => _clearError(),
-              decoration: InputDecoration(
-                labelText: l10n.sablonBaslikLabel,
-                border: const OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              key: const ValueKey('template-amount'),
-              controller: _amount,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [AmountInputFormatter()],
-              onChanged: (_) => _clearError(),
-              decoration: InputDecoration(
-                labelText: l10n.tutarHint,
-                // Şablon tutarı, ait olduğu cüzdanın biriminde tutulur.
-                suffixText:
-                    currencySymbol(wallet?.currency ?? kDefaultCurrency),
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _FieldTile(
-              key: const ValueKey('template-category'),
-              icon: Icons.label_outline_rounded,
-              label: l10n.labelKategori,
-              value: categoryId == null
-                  ? l10n.bankImportPickCategoryHint
-                  : context.categoryLabelForTag(categoryId, labels: _labels),
-              missing: categoryId == null,
-              onTap: _pickCategory,
-            ),
-            const SizedBox(height: 12),
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 10),
             Text(
-              l10n.tekrarSikligiLabel,
+              _error!,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: cs.onSurfaceVariant,
+                color: cs.error,
               ),
-            ),
-            const SizedBox(height: 6),
-            Wrap(
-              spacing: 8,
-              runSpacing: 4,
-              children: [
-                for (final f in RecurringFrequency.values)
-                  ChoiceChip(
-                    label: Text(recurringFrequencyLabel(f, l10n)),
-                    selected: _frequency == f,
-                    onSelected: (_) => setState(() => _frequency = f),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _FieldTile(
-              key: const ValueKey('template-date'),
-              icon: Icons.event_rounded,
-              label: _isEdit ? l10n.sonrakiVadeLabel : l10n.ilkVadeLabel,
-              value: AppFormatters.dateLong.format(_date),
-              onTap: _pickDate,
-            ),
-            if (_error != null) ...[
-              const SizedBox(height: 10),
-              Text(
-                _error!,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: cs.error,
-                ),
-              ),
-            ],
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(l10n.iptal),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: _save,
-                    child: Text(_isEdit ? l10n.guncelle : l10n.kaydet),
-                  ),
-                ),
-              ],
             ),
           ],
-        ),
+          const SizedBox(height: 14),
+          Row(
+            key: const ValueKey('template-actions'),
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(l10n.iptal),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: _save,
+                  child: Text(_isEdit ? l10n.guncelle : l10n.kaydet),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -38,6 +38,9 @@ Future<void> showCreateEditDialog({
   await showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
+    // Klavye açılınca sayfa ekranı dolduruyor ve başlığı durum çubuğunun
+    // altına giriyordu (cihazda görüldü); yalnız ÜST payı ekler.
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (_) => BlocProvider.value(
       value: context.read<WalletBloc>(),
@@ -178,16 +181,16 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
         clipBehavior: Clip.antiAlias,
         child: SafeArea(
           top: false,
-          child: SingleChildScrollView(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHandleAndHeader(cs),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHandleAndHeader(cs),
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -210,15 +213,31 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
                         _sectionLabel(context.l10n.ikonSecin2, cs),
                         const SizedBox(height: 12),
                         _buildIconPicker(cs),
-                        const SizedBox(height: 24),
-                        _buildSaveButton(surface.radius),
-                        const SizedBox(height: 4),
-                        _buildCancelButton(cs),
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+                // Birincil eylem SABİT: eskiden kaydırılan içeriğin sonundaydı
+                // ve ad ya da bakiye yazılırken klavyenin altında kalıyordu
+                // (cihazda görüldü) — ilk cüzdanını kuran kullanıcı "Oluştur"u
+                // bulmak için önce klavyeyi kapatmak zorundaydı.
+                Padding(
+                  key: const ValueKey('wallet-form-actions'),
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildSaveButton(surface.radius),
+                      // Klavye açıkken yer dar; kapatma başlıktaki ✕'te de
+                      // var.
+                      if (MediaQuery.viewInsetsOf(context).bottom == 0) ...[
+                        const SizedBox(height: 4),
+                        _buildCancelButton(cs),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -604,9 +623,23 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
 
   Widget _buildSaveButton(double radius) {
     final br = BorderRadius.circular(radius.clamp(16, 20));
-    return SizedBox(
+    // Gölge Material'ın DIŞINDA: `Ink` süslemesi Material'ın sınırına
+    // kırpılır; gölge içeride kalınca yuvarlak köşelerin arkasında düz renkli
+    // bir dikdörtgen olarak görünüyordu (cihazda görüldü).
+    return Container(
+      key: const ValueKey('wallet-form-save'),
       width: double.infinity,
       height: 56,
+      decoration: BoxDecoration(
+        borderRadius: br,
+        boxShadow: [
+          BoxShadow(
+            color: _accent.withValues(alpha: 0.35),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -616,13 +649,6 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
             decoration: BoxDecoration(
               gradient: AppGradients.vivid(_accent),
               borderRadius: br,
-              boxShadow: [
-                BoxShadow(
-                  color: _accent.withValues(alpha: 0.35),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
-                ),
-              ],
             ),
             child: Center(
               child: _isLoading

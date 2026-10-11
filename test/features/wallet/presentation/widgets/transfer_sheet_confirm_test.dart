@@ -111,6 +111,10 @@ void main() {
   testWidgets('bakiye yetiyorsa onay SORULMAZ; transfer doğrudan yapılır',
       (tester) async {
     final l10n = await pumpAndFill(tester, '250');
+    // Kendi cüzdanları arasında para taşıyan kullanıcı "ödeme" yapmıyor:
+    // alanın adı yalnız "Tutar".
+    expect(find.text('${l10n.tutarHint} *'), findsOneWidget);
+    expect(find.text(l10n.labelOdemeTutari), findsNothing);
     await submit(tester, l10n);
 
     expect(find.text(l10n.transferOnayBasligi), findsNothing);

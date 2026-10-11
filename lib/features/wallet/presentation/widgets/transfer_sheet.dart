@@ -424,7 +424,9 @@ class _TransferSheetState extends State<TransferSheet> {
                     inputFormatters: [AmountInputFormatter()],
                     onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
-                      labelText: context.l10n.labelOdemeTutari,
+                      // "Ödeme Tutarı" değil: kendi cüzdanları arasında para
+                      // taşıyan kullanıcı bir ödeme yapmıyor.
+                      labelText: '${context.l10n.tutarHint} *',
                       hintText: '0,00',
                       prefixIcon: const Icon(Icons.payments_rounded),
                       suffixText: currencySymbol(_from.currency),

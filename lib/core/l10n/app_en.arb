@@ -3714,5 +3714,7 @@
       }
     }
   },
-  "blocMsgBackupFailed": "The backup couldn't be completed."
+  "blocMsgBackupFailed": "The backup couldn't be completed.",
+  "borcEkle": "Add debt",
+  "alacakEkle": "Add receivable"
 }

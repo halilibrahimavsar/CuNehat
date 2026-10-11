@@ -324,6 +324,7 @@ class _AppBarContentState extends State<AppBarContent> {
     if (target.id == null || target.id == currentId) return;
     if (target.id == _pendingAccountId) return;
 
+    _dismissHint();
     _pendingAccountId = target.id;
     _pendingTimer?.cancel();
     _pendingTimer = Timer(_confirmWindow, () {
@@ -357,6 +358,20 @@ class _AppBarContentState extends State<AppBarContent> {
         controller.jumpToPage(activeIndex);
       }
     });
+  }
+
+  /// Kullanıcı başlığı KENDİ kaydırdı: ipucunun öğreteceği şeyi zaten
+  /// biliyor. Kabuk turu sürerken ipucu bekletildiği için, turdan sonraki
+  /// ilk kaydırmanın ARDINDAN oynuyor ve yeni oturmuş başlığı yerinden
+  /// oynatıyordu (cihazda görüldü).
+  void _dismissHint() {
+    _hintTimer?.cancel();
+    if (_hintSettled && _hintTimer == null) return;
+    _hintSettled = true;
+    _hintTimer = null;
+    if (getIt.isRegistered<SharedPreferences>()) {
+      unawaited(WalletCarouselHintStore(getIt<SharedPreferences>()).markSeen());
+    }
   }
 
   /// Tek seferlik ipucu: ikinci cüzdan kurulduğunda başlık komşu cüzdana

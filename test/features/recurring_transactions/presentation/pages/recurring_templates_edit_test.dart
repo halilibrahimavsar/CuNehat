@@ -242,6 +242,61 @@ void main() {
     verifyNever(() => pending.add(any(that: isA<DeleteTransactionEvent>())));
   });
 
+  testWidgets('klavye açıkken Kaydet görünür kalır; alanlar kaydırılır',
+      (tester) async {
+    // Cihazda görüldü: düğmeler kaydırılan içeriğin SONUNDAYDI; tutar
+    // yazılırken klavyenin altına düşüyordu.
+    final l10n = await pumpPage(tester);
+    await tester.tap(find.byKey(const ValueKey('template-add')));
+    await tester.pumpAndSettle();
+
+    // Kısa ekran + açık klavye: forma 440dp kalır.
+    tester.view.physicalSize = const Size(800, 760);
+    tester.view.viewInsets = const FakeViewPadding(bottom: 320);
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    final actions =
+        tester.getRect(find.byKey(const ValueKey('template-actions')));
+    expect(actions.bottom, lessThanOrEqualTo(760 - 320));
+    expect(
+      find.widgetWithText(FilledButton, l10n.kaydet).hitTestable(),
+      findsOneWidget,
+    );
+    // Sığmayan alan kaybolmadı: kaydırılabilir bölgede duruyor.
+    expect(find.byKey(const ValueKey('template-date')), findsOneWidget);
+  });
+
+  testWidgets(
+      'vadesi gelmiş şablon Şablonlar sekmesinde de listelenir ve '
+      'düzenlenebilir', (tester) async {
+    // Cihazda görüldü: ilk vadesi bugün olan yeni şablon yalnız "Onay
+    // Bekleyenler"e düşüyor, açık duran "Şablonlar" sekmesi 0 kayıtla
+    // BOMBOŞ görünüyordu.
+    final now = DateTime.now();
+    store = [
+      rent.copyWith(
+        id: 'd1',
+        title: 'Aidat',
+        nextExecutionDate: DateTime(now.year, now.month, now.day - 3, 9),
+        anchorDay: 1,
+      ),
+    ];
+    final l10n = await pumpPage(tester);
+
+    await tester.tap(find.text(l10n.sablonlar));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('template-card-d1')), findsOneWidget);
+    // Üç gün gecikmiş şablon "Bugün" diye yazılmaz.
+    expect(find.textContaining(l10n.kkGecikti(3)), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('template-card-d1')));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.sablonuDuzenle), findsOneWidget);
+    expect(textOf(tester, 'template-title'), 'Aidat');
+  });
+
   testWidgets('düzenlemede vazgeçmek hiçbir şey yazmaz', (tester) async {
     final l10n = await pumpPage(tester);
 

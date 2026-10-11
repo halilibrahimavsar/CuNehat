@@ -1,4 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/features/main_feature/utils/wallet_carousel_hint_store.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
@@ -64,6 +67,8 @@ WalletEntity _cardOf(String ownerId) => WalletEntity(
 /// ÖNCE: ekranda yalnız etkin cüzdan vardı. Başka cüzdana geçmek = başlığa
 /// dokun → sayfa %60 açılır (≈1 cüzdan görünür) → aşağı kaydır → karta dokun →
 /// sayfayı kapat: en az 4 etkileşim. ŞİMDİ: başlığı yana kaydır (1 jest).
+class _MockCoordinator extends Mock implements OnboardingCoordinator {}
+
 void main() {
   late _MockWalletBloc bloc;
 
@@ -71,6 +76,7 @@ void main() {
     ShowcaseView.register(onFinish: () {}, onDismiss: (_) {});
     registerFallbackValue(
         const SetActiveWalletEvent(userId: 'u', walletId: 'x'));
+    registerFallbackValue(OnboardingFlow.shell);
   });
 
   setUp(() {
@@ -195,6 +201,40 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('NAKİT'), findsOneWidget);
     expect(find.text('BANKA'), findsNothing);
+  });
+
+  testWidgets(
+      'kullanıcı başlığı KENDİ kaydırdıysa "kaydırılabilir" ipucu bir daha '
+      'oynamaz', (tester) async {
+    // Cihazda görüldü: kabuk turu sürerken ipucu bekletiliyor, tur bitince
+    // kullanıcının İLK kaydırmasının ardından oynuyor ve yeni oturmuş
+    // başlığı ~36dp yerinden oynatıyordu.
+    final prefs = await SharedPreferences.getInstance();
+    getIt.registerSingleton<SharedPreferences>(prefs);
+    final coordinator = _MockCoordinator();
+    when(() => coordinator.runningFlow).thenReturn(OnboardingFlow.shell);
+    when(() => coordinator.isPending(any())).thenReturn(false);
+    when(() => coordinator.isSeen(any())).thenReturn(true);
+    getIt.registerSingleton<OnboardingCoordinator>(coordinator);
+
+    final a = _wallet('a', 'Nakit');
+    final b = _wallet('b', 'Banka');
+    when(() => bloc.state).thenReturn(WalletLoadedSt([a, b], a));
+    await pumpHeader(tester);
+    expect(WalletCarouselHintStore(prefs).seen, isFalse);
+
+    await swipeLeft(tester);
+    expect(find.text('BANKA'), findsOneWidget);
+    expect(WalletCarouselHintStore(prefs).seen, isTrue);
+
+    // Tur bitti: ipucu artık serbest ama oynamamalı — başlık yerinde durur.
+    when(() => coordinator.runningFlow).thenReturn(null);
+    final before = tester.getTopLeft(find.text('BANKA')).dx;
+    await tester.pump(const Duration(milliseconds: 1500));
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(tester.getTopLeft(find.text('BANKA')).dx, before);
+
+    await tester.pump(const Duration(seconds: 3));
   });
 
   testWidgets('cüzdan başka yerden değişince başlık o sayfaya gider',

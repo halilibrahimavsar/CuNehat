@@ -10,6 +10,7 @@ import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivable_bloc/receivable_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/pages/debt_and_receivable_page.dart';
+import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry_sheet.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/debt_payment_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -257,6 +258,63 @@ void main() {
       await tester.pumpAndSettle();
       verify(() => mockReceivableBloc
           .add(any(that: isA<MarkReceivableAsPaidEvent>()))).called(1);
+    });
+  });
+
+  group('boş ekrandan doğrudan ekleme', () {
+    // Cihazda görüldü: boş ekran yalnız "ekleme butonunu kullanın" diyordu;
+    // buton alttaki kaydırıcının "+"sı, ardından bir mini düğmeydi.
+    testWidgets('borç yokken "Borç ekle" yeni borç formunu açar',
+        (tester) async {
+      when(() => mockDebtBloc.state).thenReturn(const DebtLoaded([]));
+      when(() => mockReceivableBloc.state)
+          .thenReturn(const ReceivableLoaded([]));
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(buildTestableWidget(currency: 'TRY'));
+      await tester.pumpAndSettle();
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+
+      await tester.tap(find.byKey(const ValueKey('debt-empty-add')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AddEntrySheet), findsOneWidget);
+      expect(find.text(l10n.yeniBorcTitle), findsOneWidget);
+    });
+
+    testWidgets('alacak yokken "Alacak ekle" yeni alacak formunu açar',
+        (tester) async {
+      when(() => mockDebtBloc.state).thenReturn(const DebtLoaded([]));
+      when(() => mockReceivableBloc.state)
+          .thenReturn(const ReceivableLoaded([]));
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(buildTestableWidget(currency: 'TRY'));
+      await tester.pumpAndSettle();
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      await tester.tap(find.text('Alacaklarım'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('receivable-empty-add')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AddEntrySheet), findsOneWidget);
+      expect(find.text(l10n.yeniAlacakTitle), findsOneWidget);
+    });
+
+    testWidgets('kayıt varken boş ekran düğmesi yok', (tester) async {
+      when(() => mockDebtBloc.state).thenReturn(DebtLoaded([activeDebt]));
+      when(() => mockReceivableBloc.state)
+          .thenReturn(const ReceivableLoaded([]));
+
+      await tester.pumpWidget(buildTestableWidget(currency: 'TRY'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('debt-empty-add')), findsNothing);
     });
   });
 

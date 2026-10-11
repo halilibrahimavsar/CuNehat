@@ -79,6 +79,9 @@ class TransactionSheetHandler {
       context: context,
       isScrollControlled: true,
       isDismissible: true,
+      // Klavye açılınca form ekranı dolduruyor ve tutamağı durum çubuğunun
+      // altına giriyordu (cihazda görüldü); yalnız ÜST payı ekler.
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
         return TransactionFormSheet(

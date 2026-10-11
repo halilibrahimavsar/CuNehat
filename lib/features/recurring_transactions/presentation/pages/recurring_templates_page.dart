@@ -270,7 +270,9 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage>
             Tab(
               child: _TabLabel(
                 text: context.l10n.sablonlar,
-                count: groups.upcoming.length + groups.paused.length,
+                // Şablonlar sekmesi envanterin TAMAMIDIR: vadesi gelmiş
+                // şablon da burada durur (bkz. _templatesTab).
+                count: _templates.length,
               ),
             ),
           ],
@@ -280,7 +282,7 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage>
             controller: _tabController,
             children: [
               _pendingTab(groups.pending),
-              _templatesTab(groups.upcoming, groups.paused),
+              _templatesTab(groups.pending, groups.upcoming, groups.paused),
             ],
           ),
         ),
@@ -318,7 +320,15 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage>
     );
   }
 
+  /// Şablonların TAMAMI: vadesi gelenler, yaklaşanlar, duraklatılmışlar.
+  ///
+  /// Eskiden vadesi gelmiş şablon yalnız "Onay Bekleyenler"de görünüyordu.
+  /// İlk vadesi bugün olan yeni bir şablon kuran kullanıcı, açık duran bu
+  /// sekmede BOŞ bir sayfa görüyordu (cihazda görüldü: "Şablonlar 0");
+  /// ayrıca vadesi gelmiş şablonun başlığı, kategorisi ve sıklığı onaylanana
+  /// ya da atlanana kadar düzenlenemiyordu.
   Widget _templatesTab(
+    List<RecurringTransactionEntity> pending,
     List<RecurringTransactionEntity> upcoming,
     List<RecurringTransactionEntity> paused,
   ) {
@@ -330,6 +340,16 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage>
             .plusSystemBottom(context)
             .plusFabClearance(),
         children: [
+          if (pending.isNotEmpty) ...[
+            _SectionHeader(
+                title: context.l10n.onayBekleyenler, count: pending.length),
+            ...pending.map((t) => _TemplateCard(
+                  template: t,
+                  onToggle: _toggleActive,
+                  onDelete: _delete,
+                  onEdit: _edit,
+                )),
+          ],
           if (upcoming.isNotEmpty) ...[
             _SectionHeader(
                 title: context.l10n.yaklasanlar, count: upcoming.length),
@@ -652,7 +672,10 @@ class _TemplateCard extends StatelessWidget {
     final days = DateTime(date.year, date.month, date.day)
         .difference(DateTime(now.year, now.month, now.day))
         .inDays;
-    if (days <= 0) return context.l10n.bugun;
+    // Vadesi geçmiş şablon artık bu sekmede de listeleniyor; "Bugün" demek
+    // üç gün gecikmiş bir kirayı zamanında gösterirdi.
+    if (days < 0) return context.l10n.kkGecikti(-days);
+    if (days == 0) return context.l10n.bugun;
     if (days == 1) return context.l10n.yarin;
     return context.l10n.gunSonra(days);
   }

@@ -11224,6 +11224,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Yedekleme işlemi tamamlanamadı.'**
   String get blocMsgBackupFailed;
+
+  /// No description provided for @borcEkle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç ekle'**
+  String get borcEkle;
+
+  /// No description provided for @alacakEkle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alacak ekle'**
+  String get alacakEkle;
 }
 
 class _AppLocalizationsDelegate

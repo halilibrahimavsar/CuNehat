@@ -3948,5 +3948,7 @@
       }
     }
   },
-  "blocMsgBackupFailed": "Yedekleme işlemi tamamlanamadı."
+  "blocMsgBackupFailed": "Yedekleme işlemi tamamlanamadı.",
+  "borcEkle": "Borç ekle",
+  "alacakEkle": "Alacak ekle"
 }

@@ -616,6 +616,32 @@ void main() {
         .single
         .debt;
 
+    testWidgets('klavye açıkken Kaydet görünür kalır; hata da sabit bölümde',
+        (tester) async {
+      // Cihazda görüldü: Kaydet kaydırılan içeriğin SONUNDAYDI; kişi adı
+      // yazılırken klavyenin altında kalıyordu.
+      final l10n = await pumpNew(tester);
+
+      // Kısa ekran + açık klavye: forma 440dp kalır, alanlar sığmaz.
+      tester.view.physicalSize = const Size(800, 760);
+      tester.view.viewInsets = const FakeViewPadding(bottom: 320);
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      final actions = find.byKey(const ValueKey('debt-form-actions'));
+      expect(tester.getRect(actions).bottom, lessThanOrEqualTo(760 - 320));
+      final save =
+          find.descendant(of: actions, matching: find.text(l10n.kaydet));
+      expect(save.hitTestable(), findsOneWidget);
+
+      // Eksik formla Kaydet: kaydırmadan basılır, hata da görünür bölgede.
+      await tester.tap(save);
+      await tester.pumpAndSettle();
+      verifyNever(() => mockDebtBloc.add(any(that: isA<AddDebtEvent>())));
+      expect(tester.getRect(actions).bottom, lessThanOrEqualTo(760 - 320));
+      expect(tester.getRect(actions).height, greaterThan(56 + 24));
+    });
+
     testWidgets('ilk açılış Kişisel: 3 metin alanı, kredi alanı yok',
         (tester) async {
       final l10n = await pumpNew(tester);

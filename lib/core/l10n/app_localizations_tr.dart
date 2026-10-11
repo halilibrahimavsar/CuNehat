@@ -6504,4 +6504,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get blocMsgBackupFailed => 'Yedekleme işlemi tamamlanamadı.';
+
+  @override
+  String get borcEkle => 'Borç ekle';
+
+  @override
+  String get alacakEkle => 'Alacak ekle';
 }

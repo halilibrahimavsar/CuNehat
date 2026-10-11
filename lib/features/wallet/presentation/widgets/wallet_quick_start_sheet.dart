@@ -57,7 +57,9 @@ class WalletQuickStartSheet extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _handle(cs),
+              // Sütun sola yaslı; tutamak ortalanmazsa sol kenarda kalıyordu
+              // (cihazda görüldü).
+              Center(child: _handle(cs)),
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
                 child: Column(
@@ -113,6 +115,7 @@ class WalletQuickStartSheet extends StatelessWidget {
   }
 
   Widget _handle(ColorScheme cs) => Container(
+        key: const ValueKey('quick-start-handle'),
         margin: const EdgeInsets.only(top: 12, bottom: 12),
         width: 40,
         height: 4,
