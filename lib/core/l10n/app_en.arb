@@ -454,7 +454,7 @@
   },
   "duzenliIslemler": "Recurring Transactions",
   "henuzDuzenliIslemYok": "No recurring transactions yet",
-  "islemEklerkenTekrarSikligi": "If you select repeat frequency while adding a transaction\nthe template appears here.",
+  "islemEklerkenTekrarSikligi": "Create a template directly with +\nor pick a repeat frequency while adding a transaction.",
   "bekleyenDuzenliIslemler": "Pending Recurring Transactions",
   "vadesiGelmisIslemlerinizVar": "You have transactions whose maturity has arrived. You can approve them to be recorded in the ledger.",
   "titleTarihDatestrNtutarTx": "Date: {dateStr}\nAmount: {amount}",
@@ -3460,5 +3460,11 @@
   "transferKisa": "Transfer",
   "ekstreAktarKisa": "Import statement",
   "yeniCuzdanKisa": "New wallet",
-  "butceyiDuzenle": "Edit budget"
+  "butceyiDuzenle": "Edit budget",
+  "sablonuDuzenle": "Edit template",
+  "yeniDuzenliIslem": "New recurring transaction",
+  "sablonBaslikLabel": "Title",
+  "tekrarSikligiLabel": "Frequency",
+  "sonrakiVadeLabel": "Next due",
+  "ilkVadeLabel": "First due"
 }

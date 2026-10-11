@@ -999,7 +999,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get islemEklerkenTekrarSikligi =>
-      'İşlem eklerken tekrar sıklığı seçerseniz\nşablon burada görünür.';
+      '+ ile doğrudan şablon oluşturun\nya da işlem eklerken tekrar sıklığı seçin.';
 
   @override
   String get bekleyenDuzenliIslemler => 'Bekleyen Düzenli İşlemler';
@@ -6264,4 +6264,22 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get butceyiDuzenle => 'Bütçeyi düzenle';
+
+  @override
+  String get sablonuDuzenle => 'Şablonu düzenle';
+
+  @override
+  String get yeniDuzenliIslem => 'Yeni düzenli işlem';
+
+  @override
+  String get sablonBaslikLabel => 'Başlık';
+
+  @override
+  String get tekrarSikligiLabel => 'Tekrar sıklığı';
+
+  @override
+  String get sonrakiVadeLabel => 'Sonraki vade';
+
+  @override
+  String get ilkVadeLabel => 'İlk vade';
 }

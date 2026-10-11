@@ -996,7 +996,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get islemEklerkenTekrarSikligi =>
-      'If you select repeat frequency while adding a transaction\nthe template appears here.';
+      'Create a template directly with +\nor pick a repeat frequency while adding a transaction.';
 
   @override
   String get bekleyenDuzenliIslemler => 'Pending Recurring Transactions';
@@ -6311,4 +6311,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get butceyiDuzenle => 'Edit budget';
+
+  @override
+  String get sablonuDuzenle => 'Edit template';
+
+  @override
+  String get yeniDuzenliIslem => 'New recurring transaction';
+
+  @override
+  String get sablonBaslikLabel => 'Title';
+
+  @override
+  String get tekrarSikligiLabel => 'Frequency';
+
+  @override
+  String get sonrakiVadeLabel => 'Next due';
+
+  @override
+  String get ilkVadeLabel => 'First due';
 }

@@ -454,7 +454,7 @@
   },
   "duzenliIslemler": "Düzenli İşlemler",
   "henuzDuzenliIslemYok": "Henüz düzenli işlem yok",
-  "islemEklerkenTekrarSikligi": "İşlem eklerken tekrar sıklığı seçerseniz\nşablon burada görünür.",
+  "islemEklerkenTekrarSikligi": "+ ile doğrudan şablon oluşturun\nya da işlem eklerken tekrar sıklığı seçin.",
   "bekleyenDuzenliIslemler": "Bekleyen Düzenli İşlemler",
   "vadesiGelmisIslemlerinizVar": "Vadesi gelmiş işlemleriniz var. Onaylayarak deftere işlenmesini sağlayabilirsiniz.",
   "titleTarihDatestrNtutarTx": "Tarih: {dateStr}\nTutar: {amount}",
@@ -3694,5 +3694,11 @@
   "transferKisa": "Transfer",
   "ekstreAktarKisa": "Ekstre aktar",
   "yeniCuzdanKisa": "Yeni cüzdan",
-  "butceyiDuzenle": "Bütçeyi düzenle"
+  "butceyiDuzenle": "Bütçeyi düzenle",
+  "sablonuDuzenle": "Şablonu düzenle",
+  "yeniDuzenliIslem": "Yeni düzenli işlem",
+  "sablonBaslikLabel": "Başlık",
+  "tekrarSikligiLabel": "Tekrar sıklığı",
+  "sonrakiVadeLabel": "Sonraki vade",
+  "ilkVadeLabel": "İlk vade"
 }

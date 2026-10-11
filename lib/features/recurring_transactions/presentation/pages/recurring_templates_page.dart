@@ -11,6 +11,9 @@ import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
+import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
 import '../../domain/entities/recurring_transaction_entity.dart';
@@ -21,6 +24,7 @@ import '../bloc/pending_recurring_bloc.dart';
 import '../bloc/pending_recurring_event.dart';
 import '../bloc/pending_recurring_state.dart';
 import '../widgets/pending_recurring_row.dart';
+import '../widgets/recurring_template_form_sheet.dart';
 
 /// Düzenli işlemlerin tek takip ekranı.
 ///
@@ -127,6 +131,44 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage>
     await _loadTemplates();
   }
 
+  /// Şablonu düzenle (karta dokununca).
+  Future<void> _edit(RecurringTransactionEntity template) =>
+      _openForm(template: template);
+
+  /// Sayfadan doğrudan yeni şablon ("+"): işlem yazmadan.
+  Future<void> _create() => _openForm();
+
+  Future<void> _openForm({RecurringTransactionEntity? template}) async {
+    final walletState = context.read<WalletBloc>().state;
+    final wallets = walletState is WalletLoadedSt
+        ? walletState.wallets
+        : const <WalletEntity>[];
+    if (template == null && wallets.isEmpty) {
+      AppMessenger.info(context.l10n.createWallet);
+      return;
+    }
+    final pendingBloc = context.read<PendingRecurringBloc>();
+    final saved = await showRecurringTemplateForm(
+      context,
+      wallets: wallets,
+      template: template,
+      initialWalletId:
+          walletState is WalletLoadedSt ? walletState.activeWallet?.id : null,
+    );
+    if (saved == null || !mounted) return;
+
+    // Vade değişmiş olabilir: kaydetme hatırlatmayı da yeniden kurar (bkz.
+    // SaveRecurringTransactionUsecase); bekleyen liste ve sayfa tazelenir.
+    final result = await _saveUsecase(saved);
+    if (!mounted) return;
+    result.fold(
+      (failure) => AppMessenger.error(failure.message),
+      (_) => pendingBloc
+          .add(const LoadPendingTransactionsEvent(suppressNudge: true)),
+    );
+    await _loadTemplates();
+  }
+
   Future<void> _delete(RecurringTransactionEntity template) async {
     final confirmed = await ConfirmDialog.show(
       context,
@@ -179,6 +221,15 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage>
           ),
         ),
         body: _buildBody(),
+        // Şablonun tek kurulma yolu bir işlem eklerken "tekrar" seçmekti.
+        floatingActionButton: _isLoading || _error != null
+            ? null
+            : FloatingActionButton(
+                key: const ValueKey('template-add'),
+                tooltip: context.l10n.yeniDuzenliIslem,
+                onPressed: _create,
+                child: const Icon(Icons.add),
+              ),
       ),
     );
   }
@@ -273,8 +324,10 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage>
     return RefreshIndicator(
       onRefresh: _loadTemplates,
       child: ListView(
-        padding:
-            const EdgeInsets.fromLTRB(16, 4, 16, 32).plusSystemBottom(context),
+        // FAB (56dp) son kartın üstüne binmesin.
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 32)
+            .plusSystemBottom(context)
+            .plusFabClearance(),
         children: [
           if (upcoming.isNotEmpty) ...[
             _SectionHeader(
@@ -283,6 +336,7 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage>
                   template: t,
                   onToggle: _toggleActive,
                   onDelete: _delete,
+                  onEdit: _edit,
                 )),
           ],
           if (paused.isNotEmpty) ...[
@@ -292,6 +346,7 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage>
                   template: t,
                   onToggle: _toggleActive,
                   onDelete: _delete,
+                  onEdit: _edit,
                 )),
           ],
         ],
@@ -578,10 +633,15 @@ class _TemplateCard extends StatelessWidget {
   final ValueChanged<RecurringTransactionEntity> onToggle;
   final ValueChanged<RecurringTransactionEntity> onDelete;
 
+  /// Karta dokununca: şablonu düzenle. Eskiden şablon hiç düzenlenemiyordu
+  /// (yalnız duraklat/sil); kirası artan kullanıcı silip baştan kuruyordu.
+  final ValueChanged<RecurringTransactionEntity> onEdit;
+
   const _TemplateCard({
     required this.template,
     required this.onToggle,
     required this.onDelete,
+    required this.onEdit,
   });
 
   /// Vadeye kalan süreyi "Bugün / Yarın / N gün sonra" olarak anlatır; ham
@@ -611,8 +671,10 @@ class _TemplateCard extends StatelessWidget {
     final wallet = context.walletById(template.walletId);
 
     return AppCard(
+      key: ValueKey('template-card-${template.id}'),
       accent: accent,
       margin: const EdgeInsets.only(bottom: 12),
+      onTap: () => onEdit(template),
       child: Row(
         children: [
           Container(
@@ -660,7 +722,8 @@ class _TemplateCard extends StatelessWidget {
                             Border.all(color: accent.withValues(alpha: 0.3)),
                       ),
                       child: Text(
-                        template.frequency.displayName,
+                        recurringFrequencyLabel(
+                            template.frequency, context.l10n),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: accent,
                           fontWeight: FontWeight.w900,
@@ -701,14 +764,24 @@ class _TemplateCard extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: 6),
-                Text(
-                  // Şablon tutarı, ait olduğu cüzdanın biriminde tutulur.
-                  formatMoney(template.amount,
-                      currency: wallet?.currency ?? kDefaultCurrency),
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: accent,
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      // Şablon tutarı, ait olduğu cüzdanın biriminde tutulur.
+                      formatMoney(template.amount,
+                          currency: wallet?.currency ?? kDefaultCurrency),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: accent,
+                      ),
+                    ),
+                    // Düzenlenebilir olduğunu gösteren işaret; kartın tamamı
+                    // aynı formu açar.
+                    const SizedBox(width: 6),
+                    Icon(Icons.edit_outlined,
+                        size: 14, color: scheme.onSurfaceVariant),
+                  ],
                 ),
               ],
             ),

@@ -1862,7 +1862,7 @@ abstract class AppLocalizations {
   /// No description provided for @islemEklerkenTekrarSikligi.
   ///
   /// In tr, this message translates to:
-  /// **'İşlem eklerken tekrar sıklığı seçerseniz\nşablon burada görünür.'**
+  /// **'+ ile doğrudan şablon oluşturun\nya da işlem eklerken tekrar sıklığı seçin.'**
   String get islemEklerkenTekrarSikligi;
 
   /// No description provided for @bekleyenDuzenliIslemler.
@@ -10870,6 +10870,42 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bütçeyi düzenle'**
   String get butceyiDuzenle;
+
+  /// No description provided for @sablonuDuzenle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şablonu düzenle'**
+  String get sablonuDuzenle;
+
+  /// No description provided for @yeniDuzenliIslem.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni düzenli işlem'**
+  String get yeniDuzenliIslem;
+
+  /// No description provided for @sablonBaslikLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık'**
+  String get sablonBaslikLabel;
+
+  /// No description provided for @tekrarSikligiLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tekrar sıklığı'**
+  String get tekrarSikligiLabel;
+
+  /// No description provided for @sonrakiVadeLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonraki vade'**
+  String get sonrakiVadeLabel;
+
+  /// No description provided for @ilkVadeLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'İlk vade'**
+  String get ilkVadeLabel;
 }
 
 class _AppLocalizationsDelegate
