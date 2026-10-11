@@ -3432,5 +3432,25 @@
   "borcGelismisOzetDiger": "Overdue interest",
   "borcEtkiDefterKisa": "In ledger",
   "borcEtkiUrunKisa": "Product / service",
-  "borcEtkiSecin": "Choose what you received for this debt"
+  "borcEtkiSecin": "Choose what you received for this debt",
+  "bankImportReviewWarningShort": "Data was detected automatically; check before adding.",
+  "bankImportUncategorizedBlockedShort": "{count} selected rows have no category; they can't be added without one.",
+  "@bankImportUncategorizedBlockedShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportAssignBlocked": "Assign category",
+  "bankImportGroupTile": "Categorize {count} similar groups at once",
+  "@bankImportGroupTile": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportEditRowTitle": "Edit row",
+  "bankImportEditTypeNote": "Changing the type re-guesses the category."
 }

@@ -10786,6 +10786,42 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bu borç karşılığında ne aldığını seç'**
   String get borcEtkiSecin;
+
+  /// No description provided for @bankImportReviewWarningShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Veriler otomatik algılandı; eklemeden önce kontrol et.'**
+  String get bankImportReviewWarningShort;
+
+  /// No description provided for @bankImportUncategorizedBlockedShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçili {count} satırın kategorisi yok; kategori seçilmeden eklenemez.'**
+  String bankImportUncategorizedBlockedShort(int count);
+
+  /// No description provided for @bankImportAssignBlocked.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori ata'**
+  String get bankImportAssignBlocked;
+
+  /// No description provided for @bankImportGroupTile.
+  ///
+  /// In tr, this message translates to:
+  /// **'Benzer {count} grubu tek seferde kategorile'**
+  String bankImportGroupTile(int count);
+
+  /// No description provided for @bankImportEditRowTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satırı düzenle'**
+  String get bankImportEditRowTitle;
+
+  /// No description provided for @bankImportEditTypeNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tür değişince kategori yeniden tahmin edilir.'**
+  String get bankImportEditTypeNote;
 }
 
 class _AppLocalizationsDelegate

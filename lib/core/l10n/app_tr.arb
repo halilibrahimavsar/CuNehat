@@ -3666,5 +3666,25 @@
   "borcGelismisOzetDiger": "Gecikme faizi",
   "borcEtkiDefterKisa": "Defterde var",
   "borcEtkiUrunKisa": "Ürün / hizmet",
-  "borcEtkiSecin": "Bu borç karşılığında ne aldığını seç"
+  "borcEtkiSecin": "Bu borç karşılığında ne aldığını seç",
+  "bankImportReviewWarningShort": "Veriler otomatik algılandı; eklemeden önce kontrol et.",
+  "bankImportUncategorizedBlockedShort": "Seçili {count} satırın kategorisi yok; kategori seçilmeden eklenemez.",
+  "@bankImportUncategorizedBlockedShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportAssignBlocked": "Kategori ata",
+  "bankImportGroupTile": "Benzer {count} grubu tek seferde kategorile",
+  "@bankImportGroupTile": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportEditRowTitle": "Satırı düzenle",
+  "bankImportEditTypeNote": "Tür değişince kategori yeniden tahmin edilir."
 }

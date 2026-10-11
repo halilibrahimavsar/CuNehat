@@ -215,6 +215,12 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// Arama alanı artık süzgeç çiplerinin ucundaki büyüteçle açılır.
+  Future<void> openSearch(WidgetTester tester) async {
+    await tester.tap(find.byKey(const ValueKey('review-search-open')));
+    await tester.pumpAndSettle();
+  }
+
   testWidgets('inceleme listesi hatasız çizilir ve satırları gösterir',
       (tester) async {
     await pump(
@@ -254,6 +260,7 @@ void main() {
       ]),
     );
 
+    await openSearch(tester);
     await tester.enterText(find.byType(TextField), 'trendyol');
     await tester.pumpAndSettle();
 
@@ -671,6 +678,7 @@ void main() {
       ]),
     );
 
+    await openSearch(tester);
     await tester.enterText(find.byType(TextField), 'ışık');
     await tester.pumpAndSettle();
 
@@ -952,7 +960,9 @@ void main() {
     // da diyalog kapanınca Flutter odağı arama alanına iade ediyor, klavye
     // kendiliğinden açılıyordu.
     await pump(tester, review(drafts: [_draft(description: 'A')]));
-    await tester.tap(find.byType(TextField));
+    await openSearch(tester);
+    // Sorgu doluyken satır açık kalır (boşken odak bırakılınca kapanırdı).
+    await tester.enterText(find.byType(TextField), 'A');
     await tester.pumpAndSettle();
     expect(tester.testTextInput.isVisible, isTrue);
     tester.testTextInput.hide();
@@ -971,14 +981,43 @@ void main() {
     // özet kartı sayfayı 41px taşırıyordu.
     await pump(tester, review(drafts: [_draft(description: 'A')]));
     expect(find.textContaining('otomatik algılandı'), findsOneWidget);
+    // Arama alanı kapalı başlar: kalıcı bir satır tutmaz.
+    expect(find.byType(TextField), findsNothing);
 
-    await tester.tap(find.byType(TextField));
-    await tester.pumpAndSettle();
+    await openSearch(tester);
+    expect(find.byType(TextField), findsOneWidget);
     expect(find.textContaining('otomatik algılandı'), findsNothing);
 
     await tester.tapAt(const Offset(5, 590)); // alan dışına
     await tester.pumpAndSettle();
     expect(find.textContaining('otomatik algılandı'), findsOneWidget);
+    // Sorgu boşken odak bırakılınca satır da kapanır.
+    expect(find.byType(TextField), findsNothing);
+  });
+
+  testWidgets('sorgu doluyken arama satırı kapanmaz; çarpı siler ve kapatır',
+      (tester) async {
+    await pump(
+      tester,
+      review(drafts: [
+        _draft(description: 'MARKET', categoryId: 'Market'),
+        _draft(description: 'TRENDYOL', categoryId: 'Market', day: 6),
+      ]),
+    );
+    await openSearch(tester);
+    await tester.enterText(find.byType(TextField), 'trend');
+    await tester.pumpAndSettle();
+    await tester.tapAt(const Offset(5, 590)); // odak bırakılır
+    await tester.pumpAndSettle();
+
+    // Görünmeyen bir süzgeç listeyi sessizce daraltmasın.
+    expect(find.byType(TextField), findsOneWidget);
+    expect(find.text('MARKET'), findsNothing);
+
+    await tester.tap(find.byIcon(Icons.close_rounded));
+    await tester.pumpAndSettle();
+    expect(find.byType(TextField), findsNothing);
+    expect(find.text('MARKET'), findsOneWidget);
   });
 
   testWidgets('toplu tür çevirme önce kaç satırın değişeceğini sorar',
@@ -1462,6 +1501,7 @@ void main() {
           _draft(description: 'SOK', categoryId: 'Market', amount: 45, day: 6),
         ]),
       );
+      await openSearch(tester);
       await tester.enterText(find.byType(TextField), '913');
       await tester.pumpAndSettle();
       expect(find.text('BIM'), findsOneWidget);
@@ -1564,6 +1604,226 @@ void main() {
         ),
       );
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  // ---------------------------------------------------------------------
+  // UX Tur 2 (11 Eki 2026) — en sık gereken eylemler görünür yerde
+  // ---------------------------------------------------------------------
+  group('engel şeridi ve görünür eylemler', () {
+    testWidgets(
+        'engel şeridinden toplu atama: seçili kategorisizlerin HEPSİ, '
+        'süzgeç onları gizlese de', (tester) async {
+      // ÖNCE: şerit yalnız "Göster" diyordu; toplu atama ⋮ menüsündeydi ve
+      // kullanıcı satırları tek tek kategorize ediyordu.
+      await pump(
+        tester,
+        review(drafts: [
+          _draft(description: 'MARKET ALISVERISI', categoryId: 'Market'),
+          _draft(description: 'BILINMEYEN ISLEM', day: 6),
+          _draft(description: 'BASKA BILINMEYEN', day: 7),
+          _draft(description: 'MAAS', income: true, categoryId: 'Maaş'),
+        ]),
+      );
+      // Gelir süzgeci açık: kategorisiz (gider) satırlar ekranda yok.
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Gelir'));
+      await tester.pumpAndSettle();
+      expect(find.text('BILINMEYEN ISLEM'), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('review-assign-blocked')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Fatura').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('2 satıra uygula'));
+      await tester.pumpAndSettle();
+
+      final captured = verify(
+        () => cubit.applyCategoryToIndexes(captureAny(), 'Fatura'),
+      ).captured;
+      expect(captured.single, [1, 2]);
+    });
+
+    testWidgets(
+        'kural değişmedi: kategorisiz seçili satır varken ekleme kapalı',
+        (tester) async {
+      await pump(
+        tester,
+        review(drafts: [
+          _draft(description: 'A', categoryId: 'Market'),
+          _draft(description: 'B', day: 6),
+        ]),
+      );
+      final add = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(add.onPressed, isNull);
+      expect(
+          find.textContaining('kategori seçilmeden eklenemez'), findsOneWidget);
+    });
+
+    testWidgets('benzer grup varsa listenin başında kısayol; sayfayı açar',
+        (tester) async {
+      await pump(
+        tester,
+        review(drafts: [
+          _draft(description: 'SOK-10419-USKUDAR', day: 5),
+          _draft(description: 'SOK 22133 KADIKOY', day: 6),
+          _draft(description: 'BASKA BIR ISLEM', day: 7),
+        ]),
+      );
+      final tile = find.byKey(const ValueKey('review-group-tile'));
+      expect(tile, findsOneWidget);
+      expect(find.textContaining('Benzer 1 grubu'), findsOneWidget);
+
+      await tester.tap(tile);
+      await tester.pumpAndSettle();
+      expect(
+          find.text('SOK-10419-USKUDAR  ·  SOK 22133 KADIKOY'), findsOneWidget);
+    });
+
+    testWidgets('gruplanacak kategorisiz satır yoksa kısayol çıkmaz',
+        (tester) async {
+      await pump(
+        tester,
+        review(drafts: [
+          _draft(description: 'SOK-10419-USKUDAR', categoryId: 'Market'),
+          _draft(description: 'SOK 22133 KADIKOY', categoryId: 'Market'),
+          _draft(description: 'TEK KATEGORISIZ', day: 7),
+        ]),
+      );
+      expect(find.byKey(const ValueKey('review-group-tile')), findsNothing);
+    });
+
+    testWidgets(
+        'satırda GÖRÜNÜR düzenleme kolu: açıklama, tutar ve tür tek sayfada',
+        (tester) async {
+      await pump(
+        tester,
+        review(drafts: [
+          _draft(description: 'ESKI ACIKLAMA', categoryId: 'Market'),
+        ]),
+      );
+
+      // ÖNCE: satırın ucunda dokununca türü ONAYSIZ çeviren 20dp'lik bir ok
+      // vardı; artık yok.
+      expect(find.byIcon(Icons.trending_down_rounded), findsNothing);
+
+      await tester.tap(find.byIcon(Icons.edit_outlined));
+      await tester.pumpAndSettle();
+      expect(find.text('Satırı düzenle'), findsOneWidget);
+
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Açıklama'), 'Yeni açıklama');
+      await tester.tap(find.descendant(
+        of: find.byKey(const ValueKey('draft-edit-type')),
+        matching: find.text('Gelir'),
+      ));
+      await tester.pumpAndSettle();
+      // Türün yan etkisi kaydetmeden önce yazıyor.
+      expect(find.textContaining('kategori yeniden tahmin'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Kaydet'));
+      await tester.pumpAndSettle();
+
+      verify(() => cubit.setDraftDescription(0, 'Yeni açıklama')).called(1);
+      verify(() => cubit.setDraftType(0, TransactionTypeModel.income))
+          .called(1);
+      // Tutar değişmedi: yazılmaz.
+      verifyNever(() => cubit.setDraftAmount(any(), any()));
+    });
+
+    testWidgets('düzenleme sayfasında vazgeçmek hiçbir şey yazmaz',
+        (tester) async {
+      await pump(
+        tester,
+        review(drafts: [_draft(description: 'X', categoryId: 'Market')]),
+      );
+      await tester.tap(find.byIcon(Icons.edit_outlined));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.widgetWithText(TextField, 'Açıklama'), 'Y');
+      await tester.tap(find.widgetWithText(OutlinedButton, 'İptal'));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => cubit.setDraftDescription(any(), any()));
+      verifyNever(() => cubit.setDraftType(any(), any()));
+    });
+
+    testWidgets(
+        'dar ekranda (360dp) şerit, kısayol ve düzenleme sayfası taşmaz',
+        (tester) async {
+      tester.view.physicalSize = const Size(360, 720);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await pump(
+        tester,
+        review(drafts: [
+          _draft(description: 'SOK-10419-USKUDAR', day: 5),
+          _draft(description: 'SOK 22133 KADIKOY', day: 6),
+          _draft(
+            description: 'ODEME ISLEMI ACIKLAMASI COK UZUN OLAN BIR SATIR',
+            categoryId: 'Fatura',
+            amount: 123456.78,
+          ),
+        ]),
+      );
+      expect(tester.takeException(), isNull);
+
+      await tester.tap(find.byIcon(Icons.edit_outlined).first);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  // ---------------------------------------------------------------------
+  // UX Tur 2 (11 Eki 2026) — listeye kalan yer
+  // ---------------------------------------------------------------------
+  group('listeye kalan yer (360×800)', () {
+    /// Uygulamadaki gövde: 800 − durum çubuğu 24 − AppBar 56 = 720dp.
+    Future<({double listHeight, int rows})> measure(
+      WidgetTester tester,
+      BankImportReview state,
+    ) async {
+      tester.view.physicalSize = const Size(360, 720);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await pump(tester, state);
+      final list = tester.getRect(find.byType(ListView));
+      var rows = 0;
+      for (final box in find.byType(Checkbox).evaluate()) {
+        final rect = tester.getRect(find.byWidget(box.widget));
+        if (rect.top >= list.top && rect.bottom <= list.bottom) rows++;
+      }
+      debugPrint('ÖLÇÜM liste: top=${list.top} bottom=${list.bottom} '
+          'yükseklik=${list.height} · tam görünen satır=$rows');
+      return (listHeight: list.height, rows: rows);
+    }
+
+    List<ImportDraft> statement({int uncategorized = 3}) => [
+          for (var i = 0; i < 20; i++)
+            _draft(
+              description: 'HAREKET ${i + 1}',
+              categoryId: i < uncategorized ? null : 'Market',
+              income: i == 19,
+              day: 1 + i,
+            ),
+        ];
+
+    // ÖNCE (ölçüldü): liste 151dp (gövdenin %21'i), 2 tam satır. Üstte özet
+    // kartı + arama alanı 299dp, altta engel şeridi + toplam + düğme 270dp
+    // tutuyordu. Test fontu gerçek fonttan ~1,5× geniş olduğundan metinler
+    // burada daha çok satıra bölünür; cihazdaki sayı bundan iyidir.
+    testWidgets('kategorisiz satır varken liste gövdenin en az %40\'ı',
+        (tester) async {
+      final m = await measure(tester, review(drafts: statement()));
+      expect(tester.takeException(), isNull);
+      expect(m.listHeight, greaterThanOrEqualTo(720 * 0.40));
+      expect(m.rows, greaterThanOrEqualTo(3));
+    });
+
+    // ÖNCE (ölçüldü): liste 315dp, 4 tam satır.
+    testWidgets('hepsi kategoriliyken en az 5 tam satır', (tester) async {
+      final m =
+          await measure(tester, review(drafts: statement(uncategorized: 0)));
+      expect(tester.takeException(), isNull);
+      expect(m.rows, greaterThanOrEqualTo(5));
     });
   });
 }

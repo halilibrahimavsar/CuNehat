@@ -21,6 +21,7 @@ import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state
 import 'package:cunehat/features/bank_import/presentation/import_category_labels.dart';
 import 'package:cunehat/features/bank_import/presentation/review_search.dart';
 import 'package:cunehat/features/bank_import/presentation/widgets/bulk_category_dialog.dart';
+import 'package:cunehat/features/bank_import/presentation/widgets/draft_edit_sheet.dart';
 import 'package:cunehat/features/bank_import/presentation/widgets/duplicate_match_panel.dart';
 import 'package:cunehat/features/bank_import/presentation/widgets/leftover_review_sheet.dart';
 import 'package:cunehat/features/bank_import/presentation/widgets/similar_group_sheet.dart';
@@ -94,14 +95,43 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
   final _searchFocus = FocusNode();
   bool _searching = false;
 
+  /// Arama satırı açık mı. Alan eskiden hep duruyordu ve listeden kalıcı bir
+  /// satır (52dp) götürüyordu; artık süzgeç çiplerinin ucundaki büyüteçle
+  /// açılır. Sorgu doluyken kapanmaz — görünmeyen bir süzgeç listeyi sessizce
+  /// daraltmasın.
+  bool _searchOpen = false;
+
   @override
   void initState() {
     super.initState();
     _searchFocus.addListener(() {
-      if (_searching != _searchFocus.hasFocus) {
-        setState(() => _searching = _searchFocus.hasFocus);
-      }
+      final focused = _searchFocus.hasFocus;
+      if (_searching == focused) return;
+      setState(() {
+        _searching = focused;
+        if (!focused && _query.isEmpty) _searchOpen = false;
+      });
     });
+  }
+
+  List<ImportDraft>? _groupKey;
+  int _groupCount = 0;
+
+  /// Kategorisiz satırlar arasındaki benzer grup sayısı — "Benzerleri grupla"
+  /// satırı yalnız gerçekten gruplanacak bir şey varken çıkar. Taslak listesi
+  /// her mutasyonda YENİ bir liste olduğundan kimliğe göre önbelleklenir.
+  int get _uncategorizedGroupCount {
+    if (!identical(_groupKey, _s.drafts)) {
+      _groupKey = _s.drafts;
+      final scope = [
+        for (var i = 0; i < _s.drafts.length; i++)
+          if (_s.drafts[i].categoryId == null) i,
+      ];
+      _groupCount = scope.length < kMinGroupSize
+          ? 0
+          : groupSimilarDrafts(_s.drafts, scope: scope).length;
+    }
+    return _groupCount;
   }
 
   BankImportCubit get _cubit => context.read<BankImportCubit>();
@@ -333,7 +363,18 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
         (_showKnown &&
             _s.knownCount > 0 &&
             _effectiveFilter != _ReviewFilter.duplicates);
-    final extra = showKnownTile ? 1 : 0;
+    // Benzer grup kısayolu: süzgeçsiz ya da "kategorisiz" görünümde, listenin
+    // İLK satırı olarak. Sabit başlıkta değil listede durur — görünür ama
+    // kaydırınca yer tutmaz. (Eskiden yalnız ⋮ menüsündeydi.)
+    final groups = _query.isEmpty &&
+            (_effectiveFilter == _ReviewFilter.all ||
+                _effectiveFilter == _ReviewFilter.uncategorized)
+        ? _uncategorizedGroupCount
+        : 0;
+    final headers = [
+      if (groups > 0) _groupTile(context, groups),
+      if (showKnownTile) _knownTile(context, hidden),
+    ];
     return Column(
       children: [
         // Aranırken (klavye açık) özet kartı çekilir: kart kaydırılmayan
@@ -358,24 +399,56 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
           ),
         _toolbar(context),
         Expanded(
-          child: visible.isEmpty && !showKnownTile
+          child: visible.isEmpty && headers.isEmpty
               ? Center(child: Text(context.l10n.bankImportNoMatch))
               : ListView.separated(
                   padding: const EdgeInsets.only(bottom: 8),
-                  itemCount: visible.length + extra,
+                  itemCount: visible.length + headers.length,
                   separatorBuilder: (_, __) =>
                       const Divider(height: 1, indent: 16, endIndent: 16),
                   itemBuilder: (context, k) {
-                    if (showKnownTile && k == 0) {
-                      return _knownTile(context, hidden);
-                    }
-                    final (index, draft) = visible[k - extra];
+                    if (k < headers.length) return headers[k];
+                    final (index, draft) = visible[k - headers.length];
                     return _row(context, index, draft);
                   },
                 ),
         ),
         _bottomBar(context),
       ],
+    );
+  }
+
+  /// "Benzer N grubu tek seferde kategorile ›" — benzer hareketler sayfasını
+  /// açar. Tek satır: etiket ile eylem aynı metindir.
+  Widget _groupTile(BuildContext context, int groups) {
+    final cs = Theme.of(context).colorScheme;
+    return InkWell(
+      key: const ValueKey('review-group-tile'),
+      onTap: () => showSimilarGroupSheet(context),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 44),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 6, 8, 6),
+          child: Row(
+            children: [
+              Icon(Icons.workspaces_outline, size: 18, color: cs.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  context.l10n.bankImportGroupTile(groups),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: cs.primary),
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, size: 20, color: cs.primary),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -424,6 +497,10 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
   /// ortadan başlıyordu. Eylem isteyen şeritler (hedef önerisi, tahminle
   /// atlananlar, karşılıksız kayıtlar) ve hatalar her zaman görünür.
   ///
+  /// Sıkı kipte sayaçlar TEK satırdır (sığmazsa yana kayar, alt satıra
+  /// inmez) ve genel uyarı kısa hâliyle tek satır yazar; tam metin ok ile ya
+  /// da uyarıya dokununca açılır.
+  ///
   /// Tam ekran kipinde listeden çıkar ama KAYBOLMAZ: taşma menüsünden aynı
   /// kart ayrıntılı olarak bir sayfada açılır (bkz. [_showSummarySheet]).
   Widget _statusCard(BuildContext context, {bool? expanded}) {
@@ -436,47 +513,50 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     final reconciled =
         _s.verification.status == StatementVerificationStatus.unavailable &&
             _s.reconciliation?.status == ReconcileStatus.matched;
-    final hasDetails = verified || _s.cardFacts != null;
+    final stats = [
+      _stat(context, '${_s.drafts.length}', context.l10n.bankImportStatRows,
+          cs.primary),
+      if (_s.duplicateCount > 0)
+        _stat(context, '${_s.duplicateCount}',
+            context.l10n.bankImportStatDuplicates, AppGradients.debt),
+      if (_s.uncategorizedCount > 0)
+        _stat(context, '${_s.uncategorizedCount}',
+            context.l10n.bankImportStatUncategorized, cs.error),
+      if (_s.skippedRows > 0)
+        _stat(context, '${_s.skippedRows}', context.l10n.bankImportStatSkipped,
+            cs.onSurfaceVariant),
+      if ((verified && !full) || reconciled)
+        _chip(context, Icons.verified_rounded,
+            context.l10n.bankImportVerifiedChip, Colors.green),
+    ];
 
     return Container(
       width: double.infinity,
       color: cs.surfaceContainerHighest,
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      padding: EdgeInsets.fromLTRB(12, full ? 10 : 4, 12, full ? 10 : 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+                full ? CrossAxisAlignment.start : CrossAxisAlignment.center,
             children: [
               Expanded(
-                child: Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: [
-                    _stat(context, '${_s.drafts.length}',
-                        context.l10n.bankImportStatRows, cs.primary),
-                    if (_s.duplicateCount > 0)
-                      _stat(
-                          context,
-                          '${_s.duplicateCount}',
-                          context.l10n.bankImportStatDuplicates,
-                          AppGradients.debt),
-                    if (_s.uncategorizedCount > 0)
-                      _stat(context, '${_s.uncategorizedCount}',
-                          context.l10n.bankImportStatUncategorized, cs.error),
-                    if (_s.skippedRows > 0)
-                      _stat(
-                          context,
-                          '${_s.skippedRows}',
-                          context.l10n.bankImportStatSkipped,
-                          cs.onSurfaceVariant),
-                    if ((verified && !full) || reconciled)
-                      _chip(context, Icons.verified_rounded,
-                          context.l10n.bankImportVerifiedChip, Colors.green),
-                  ],
-                ),
+                child: full
+                    ? Wrap(spacing: 6, runSpacing: 6, children: stats)
+                    : SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            for (var i = 0; i < stats.length; i++) ...[
+                              if (i > 0) const SizedBox(width: 6),
+                              stats[i],
+                            ],
+                          ],
+                        ),
+                      ),
               ),
-              if (hasDetails && expanded == null)
+              if (expanded == null)
                 IconButton(
                   visualDensity: VisualDensity.compact,
                   tooltip: full
@@ -513,12 +593,21 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
             _leftoverBanner(context, _s.leftovers.length),
           ],
           // Genel "otomatik algılandı" uyarısı HER ZAMAN görünür (kullanıcı
-          // talebi) ama sıkı kipte kutusuz tek bir satırdır; asıl hatalar
-          // (OCR, para birimi, tutmayan bakiye…) kutuda kalır.
+          // talebi) ama sıkı kipte kutusuz TEK satırdır ve kısa yazar; tam
+          // metin dokununca açılır. Asıl hatalar (OCR, para birimi, tutmayan
+          // bakiye…) kutuda kalır.
           if (!full) ...[
-            const SizedBox(height: 8),
-            _inlineNote(context, Icons.warning_amber_rounded,
-                context.l10n.bankImportReviewWarning, Colors.orange),
+            const SizedBox(height: 2),
+            InkWell(
+              onTap: expanded == null
+                  ? () => setState(() => _summaryExpanded = true)
+                  : null,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: _inlineNote(context, Icons.warning_amber_rounded,
+                    context.l10n.bankImportReviewWarningShort, Colors.orange),
+              ),
+            ),
           ],
           if (full ? warnings.isNotEmpty : warnings.length > 1) ...[
             const SizedBox(height: 10),
@@ -566,6 +655,8 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
         Expanded(
           child: Text(
             text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 11,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -1028,80 +1119,100 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
         f.hiddenKnown > 0;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
       child: Column(
         children: [
-          TextField(
-            controller: _searchController,
-            focusNode: _searchFocus,
-            // Dışarı dokununca odak bırakılır. Bırakılmazsa klavye kapansa da
-            // alan odakta kalıyor ve her diyalog/menü kapanışında Flutter
-            // odağı ona iade edip klavyeyi yeniden açıyordu (cihazda ölçüldü).
-            // `FocusScope.of(context).unfocus()` YETMEZ: kapsam, son odaklanan
-            // çocuğunu (bu alanı) hatırlamaya devam ediyor ve rota kapanınca
-            // yine ona dönüyor — alanın KENDİ düğümü bırakılmalı.
-            onTapOutside: (_) => _searchFocus.unfocus(),
-            // Sorgu tuş başına BİR kez katlanır, aday satır başına değil.
-            onChanged: (v) => setState(() {
-              _query = foldTr(v);
-              _rawQuery = v;
-            }),
-            decoration: InputDecoration(
-              isDense: true,
-              prefixIcon: const Icon(Icons.search_rounded, size: 20),
-              hintText: context.l10n.bankImportSearchHint,
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              contentPadding: const EdgeInsets.symmetric(vertical: 10),
-              suffixIcon: _query.isEmpty
-                  ? null
-                  : IconButton(
-                      icon: const Icon(Icons.close_rounded, size: 18),
-                      onPressed: () => setState(() {
-                        _query = '';
-                        _rawQuery = '';
-                        _searchController.clear();
-                      }),
-                    ),
+          if (_searchOpen || _query.isNotEmpty) ...[
+            TextField(
+              controller: _searchController,
+              focusNode: _searchFocus,
+              // Büyüteçle açıldı: kullanıcı yazmak istiyor.
+              autofocus: true,
+              // Dışarı dokununca odak bırakılır. Bırakılmazsa klavye kapansa da
+              // alan odakta kalıyor ve her diyalog/menü kapanışında Flutter
+              // odağı ona iade edip klavyeyi yeniden açıyordu (cihazda ölçüldü).
+              // `FocusScope.of(context).unfocus()` YETMEZ: kapsam, son odaklanan
+              // çocuğunu (bu alanı) hatırlamaya devam ediyor ve rota kapanınca
+              // yine ona dönüyor — alanın KENDİ düğümü bırakılmalı.
+              onTapOutside: (_) => _searchFocus.unfocus(),
+              // Sorgu tuş başına BİR kez katlanır, aday satır başına değil.
+              onChanged: (v) => setState(() {
+                _query = foldTr(v);
+                _rawQuery = v;
+              }),
+              decoration: InputDecoration(
+                isDense: true,
+                prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                hintText: context.l10n.bankImportSearchHint,
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                // Çarpı HER ZAMAN var: sorguyu siler ve satırı kapatır.
+                suffixIcon: IconButton(
+                  tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                  icon: const Icon(Icons.close_rounded, size: 18),
+                  onPressed: () {
+                    _searchFocus.unfocus();
+                    setState(() {
+                      _query = '';
+                      _rawQuery = '';
+                      _searchController.clear();
+                      _searchOpen = false;
+                    });
+                  },
+                ),
+              ),
             ),
+            const SizedBox(height: 4),
+          ],
+          Row(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _filterChip(context, _ReviewFilter.all,
+                          context.l10n.bankImportFilterAll),
+                      const SizedBox(width: 6),
+                      if (_s.uncategorizedCount > 0)
+                        _filterChip(context, _ReviewFilter.uncategorized,
+                            '${context.l10n.bankImportFilterUncategorized} (${_s.uncategorizedCount})'),
+                      if (_s.uncategorizedCount > 0) const SizedBox(width: 6),
+                      if (_s.toCheckCount > 0) ...[
+                        _filterChip(context, _ReviewFilter.toCheck,
+                            '${context.l10n.bankImportFilterToCheck} (${_s.toCheckCount})'),
+                        const SizedBox(width: 6),
+                      ],
+                      if (_s.duplicateCount > 0)
+                        _filterChip(context, _ReviewFilter.duplicates,
+                            '${context.l10n.bankImportFilterDuplicates} (${_s.duplicateCount})'),
+                      if (_s.leftovers.isNotEmpty) ...[
+                        const SizedBox(width: 6),
+                        _filterChip(context, _ReviewFilter.leftoverCandidates,
+                            '${context.l10n.bankImportFilterLeftover} (${_s.leftoverCandidateIndexes.length})'),
+                      ],
+                      if (_hasBothTypes) ...[
+                        const SizedBox(width: 6),
+                        _filterChip(context, _ReviewFilter.expenses,
+                            context.l10n.detailLabelGider),
+                        const SizedBox(width: 6),
+                        _filterChip(context, _ReviewFilter.incomes,
+                            context.l10n.detailLabelGelir),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              if (!_searchOpen && _query.isEmpty)
+                IconButton(
+                  key: const ValueKey('review-search-open'),
+                  tooltip: context.l10n.bankImportSearchHint,
+                  icon: const Icon(Icons.search_rounded, size: 20),
+                  onPressed: () => setState(() => _searchOpen = true),
+                ),
+            ],
           ),
-          const SizedBox(height: 8),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _filterChip(context, _ReviewFilter.all,
-                    context.l10n.bankImportFilterAll),
-                const SizedBox(width: 6),
-                if (_s.uncategorizedCount > 0)
-                  _filterChip(context, _ReviewFilter.uncategorized,
-                      '${context.l10n.bankImportFilterUncategorized} (${_s.uncategorizedCount})'),
-                if (_s.uncategorizedCount > 0) const SizedBox(width: 6),
-                if (_s.toCheckCount > 0) ...[
-                  _filterChip(context, _ReviewFilter.toCheck,
-                      '${context.l10n.bankImportFilterToCheck} (${_s.toCheckCount})'),
-                  const SizedBox(width: 6),
-                ],
-                if (_s.duplicateCount > 0)
-                  _filterChip(context, _ReviewFilter.duplicates,
-                      '${context.l10n.bankImportFilterDuplicates} (${_s.duplicateCount})'),
-                if (_s.leftovers.isNotEmpty) ...[
-                  const SizedBox(width: 6),
-                  _filterChip(context, _ReviewFilter.leftoverCandidates,
-                      '${context.l10n.bankImportFilterLeftover} (${_s.leftoverCandidateIndexes.length})'),
-                ],
-                if (_hasBothTypes) ...[
-                  const SizedBox(width: 6),
-                  _filterChip(context, _ReviewFilter.expenses,
-                      context.l10n.detailLabelGider),
-                  const SizedBox(width: 6),
-                  _filterChip(context, _ReviewFilter.incomes,
-                      context.l10n.detailLabelGelir),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: 4),
           Row(
             children: [
               Expanded(
@@ -1448,8 +1559,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                     children: [
                       Expanded(
                         child: InkWell(
-                          onTap: () =>
-                              _editDescriptionDialog(context, i, d.description),
+                          onTap: () => _editRow(i, d),
                           borderRadius: BorderRadius.circular(4),
                           child: Text(
                             d.description.isEmpty ? '—' : d.description,
@@ -1462,7 +1572,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                       ),
                       const SizedBox(width: 8),
                       InkWell(
-                        onTap: () => _editAmountDialog(context, i, d.amount),
+                        onTap: () => _editRow(i, d, focusAmount: true),
                         borderRadius: BorderRadius.circular(4),
                         child: Text(
                           '${d.isIncome ? '+' : '−'}${_money(d.amount)}',
@@ -1489,24 +1599,22 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                           child: _categoryControl(context, i, d),
                         ),
                       ),
+                      // Görünür düzenleme kolu: açıklama, tutar ve tür TEK
+                      // sayfada. Eskiden burada 20dp'lik bir ok vardı ve
+                      // dokununca türü onaysız çevirip kategoriyi sıfırlıyordu.
                       IconButton(
                         visualDensity: VisualDensity.compact,
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        tooltip: d.isIncome
-                            ? context.l10n.detailLabelGelir
-                            : context.l10n.detailLabelGider,
-                        icon: Icon(
-                            d.isIncome
-                                ? Icons.trending_up_rounded
-                                : Icons.trending_down_rounded,
-                            color: accent,
-                            size: 20),
-                        onPressed: () => _cubit.setDraftType(
-                            i,
-                            d.isIncome
-                                ? TransactionTypeModel.expense
-                                : TransactionTypeModel.income),
+                        // 40×32: satırın ikinci çizgisini kategori düğmesiyle
+                        // aynı yükseklikte tutar (48dp her satırı ~%25 uzatır
+                        // ve listeden bir satır götürürdü). Açıklama ve tutar
+                        // da aynı sayfayı açar; bu yalnız GÖRÜNEN koldur.
+                        constraints:
+                            const BoxConstraints(minWidth: 40, minHeight: 32),
+                        tooltip: context.l10n.bankImportEditRowTitle,
+                        icon: Icon(Icons.edit_outlined,
+                            size: 18, color: cs.onSurfaceVariant),
+                        onPressed: () => _editRow(i, d),
                       ),
                     ],
                   ),
@@ -1562,7 +1670,9 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     return InkWell(
       onTap: () => _pickCategoryForRow(context, i, d),
       borderRadius: BorderRadius.circular(8),
-      child: Padding(
+      child: Container(
+        // Bu ekranın en çok dokunulan kolu; eskiden ~24dp yüksekliğindeydi.
+        constraints: const BoxConstraints(minHeight: 32),
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1691,40 +1801,73 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
   /// (elle girişte de kategori zorunlu). Şerit doğrudan o satırlara götürür.
   Widget _uncategorizedBanner(BuildContext context, int count) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    final compact = TextButton.styleFrom(
+      foregroundColor: cs.error,
+      visualDensity: VisualDensity.compact,
+      minimumSize: const Size(0, 40),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+    );
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: InkWell(
-        onTap: () => setState(() {
-          _stepper = false;
-          _filter = _ReviewFilter.uncategorized;
-        }),
-        borderRadius: BorderRadius.circular(10),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: cs.error.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.error_outline_rounded, size: 16, color: cs.error),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  context.l10n.bankImportUncategorizedBlocked(count),
-                  style: const TextStyle(fontSize: 12),
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(10, 8, 2, 0),
+        decoration: BoxDecoration(
+          color: cs.error.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.error_outline_rounded, size: 16, color: cs.error),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.bankImportUncategorizedBlockedShort(count),
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Engelin iki çıkışı da burada: satırlara git ya da hepsine tek
+            // seferde kategori ver. Toplu atama eskiden yalnız ⋮ menüsündeydi;
+            // kullanıcı şeride dokunup satırları TEK TEK kategorize ediyordu.
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  style: compact,
+                  onPressed: () => setState(() {
+                    _stepper = false;
+                    _filter = _ReviewFilter.uncategorized;
+                  }),
+                  child: Text(l10n.bankImportShowUncategorized),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                context.l10n.bankImportShowUncategorized,
-                style: TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w800, color: cs.error),
-              ),
-            ],
-          ),
+                TextButton(
+                  key: const ValueKey('review-assign-blocked'),
+                  style: compact,
+                  onPressed: () {
+                    setState(() => _stepper = false);
+                    _assignCategoryTo([
+                      for (var i = 0; i < _s.drafts.length; i++)
+                        if (_s.drafts[i].selected &&
+                            _s.drafts[i].categoryId == null)
+                          i,
+                    ]);
+                  },
+                  child: Text(l10n.bankImportAssignBlocked),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -1957,6 +2100,24 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
       return;
     }
     _cubit.commit();
+  }
+
+  /// Liste satırını düzenler; yalnız DEĞİŞEN alanlar cubit'e yazılır (her
+  /// yazım tekrar eşleşmesini yeniden kurar).
+  Future<void> _editRow(int i, ImportDraft d,
+      {bool focusAmount = false}) async {
+    final edit = await showDraftEditSheet(
+      context,
+      draft: d,
+      currency: _currency,
+      focusAmount: focusAmount,
+    );
+    if (edit == null || !mounted) return;
+    if (edit.description != d.description) {
+      _cubit.setDraftDescription(i, edit.description);
+    }
+    if (edit.amount != d.amount) _cubit.setDraftAmount(i, edit.amount);
+    if (edit.type != d.type) _cubit.setDraftType(i, edit.type);
   }
 
   Future<void> _editDescriptionDialog(

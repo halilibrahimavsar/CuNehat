@@ -6215,4 +6215,28 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get borcEtkiSecin => 'Bu borç karşılığında ne aldığını seç';
+
+  @override
+  String get bankImportReviewWarningShort =>
+      'Veriler otomatik algılandı; eklemeden önce kontrol et.';
+
+  @override
+  String bankImportUncategorizedBlockedShort(int count) {
+    return 'Seçili $count satırın kategorisi yok; kategori seçilmeden eklenemez.';
+  }
+
+  @override
+  String get bankImportAssignBlocked => 'Kategori ata';
+
+  @override
+  String bankImportGroupTile(int count) {
+    return 'Benzer $count grubu tek seferde kategorile';
+  }
+
+  @override
+  String get bankImportEditRowTitle => 'Satırı düzenle';
+
+  @override
+  String get bankImportEditTypeNote =>
+      'Tür değişince kategori yeniden tahmin edilir.';
 }

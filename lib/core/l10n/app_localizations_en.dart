@@ -6262,4 +6262,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get borcEtkiSecin => 'Choose what you received for this debt';
+
+  @override
+  String get bankImportReviewWarningShort =>
+      'Data was detected automatically; check before adding.';
+
+  @override
+  String bankImportUncategorizedBlockedShort(int count) {
+    return '$count selected rows have no category; they can\'t be added without one.';
+  }
+
+  @override
+  String get bankImportAssignBlocked => 'Assign category';
+
+  @override
+  String bankImportGroupTile(int count) {
+    return 'Categorize $count similar groups at once';
+  }
+
+  @override
+  String get bankImportEditRowTitle => 'Edit row';
+
+  @override
+  String get bankImportEditTypeNote =>
+      'Changing the type re-guesses the category.';
 }
