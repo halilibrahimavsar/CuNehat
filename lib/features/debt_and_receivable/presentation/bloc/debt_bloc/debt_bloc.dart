@@ -1,3 +1,4 @@
+import 'package:cunehat/core/l10n/app_strings.dart';
 import 'dart:async';
 
 import 'package:cunehat/core/blocs/cash_coupling_mixin.dart';
@@ -118,7 +119,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
         expectAmount: source.transaction.amount,
       );
       if (adopted == null) {
-        emit(const DebtError(_adoptFailedMessage));
+        emit(DebtError(_adoptFailedMessage));
         return;
       }
     }
@@ -160,7 +161,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
         await _safeSyncDebt(debt.walletId);
 
         emit(DebtOperationSuccess(
-            'Borç başarıyla eklendi.${cashOk ? '' : CashCouplingMixin.cashWarning}'));
+            '${appStrings.blocMsgDebtAdded}${cashOk ? '' : CashCouplingMixin.cashWarning}'));
         // Listeyi güncellemek için tekrar çekiyoruz
         add(GetDebtsEvent(debt.walletId));
       },
@@ -214,7 +215,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
               expectAmount: source.transaction.amount,
             );
       if (adopted == null) {
-        emit(const DebtError(_adoptFailedMessage));
+        emit(DebtError(_adoptFailedMessage));
         return;
       }
     }
@@ -255,7 +256,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
         await _safeSyncDebt(event.debt.walletId);
 
         emit(DebtOperationSuccess(
-            'Ödeme kaydedildi.${cashOk ? '' : CashCouplingMixin.cashWarning}'));
+            '${appStrings.blocMsgDebtPaymentSaved}${cashOk ? '' : CashCouplingMixin.cashWarning}'));
         add(GetDebtsEvent(event.debt.walletId));
       },
     );
@@ -276,7 +277,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
         recordIds: {paymentId},
       );
       if (adopted.isNotEmpty) {
-        emit(const DebtError(_adoptedPaymentLockedMessage));
+        emit(DebtError(_adoptedPaymentLockedMessage));
         add(GetDebtsEvent(event.debt.walletId));
         return;
       }
@@ -345,7 +346,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
         await _safeSyncDebt(debt.walletId);
 
         emit(DebtOperationSuccess(
-            'Ödeme güncellendi.${cashOk ? '' : CashCouplingMixin.cashWarning}'));
+            '${appStrings.blocMsgDebtPaymentUpdated}${cashOk ? '' : CashCouplingMixin.cashWarning}'));
         add(GetDebtsEvent(debt.walletId));
       },
     );
@@ -391,7 +392,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
         await _safeSyncDebt(debt.walletId);
 
         emit(DebtOperationSuccess(
-            'Ödeme silindi.${cashOk ? '' : CashCouplingMixin.cashWarning}'));
+            '${appStrings.blocMsgDebtPaymentDeleted}${cashOk ? '' : CashCouplingMixin.cashWarning}'));
         add(GetDebtsEvent(debt.walletId));
       },
     );
@@ -414,7 +415,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
         recordIds: {debtId},
       );
       if (adopted.isNotEmpty) {
-        emit(const DebtError(_adoptedPrincipalLockedMessage));
+        emit(DebtError(_adoptedPrincipalLockedMessage));
         add(GetDebtsEvent(event.debt.walletId));
         return;
       }
@@ -492,7 +493,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
         await _safeSyncDebt(event.debt.walletId);
 
         emit(DebtOperationSuccess(
-            'Borç güncellendi.${cashOk ? '' : CashCouplingMixin.cashWarning}'));
+            '${appStrings.blocMsgDebtUpdated}${cashOk ? '' : CashCouplingMixin.cashWarning}'));
         add(GetDebtsEvent(event.debt.walletId));
       },
     );
@@ -574,7 +575,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
         await _safeSyncDebt(event.walletId);
 
         emit(DebtOperationSuccess(
-          'Borç silindi.${cashResult.ok ? '' : CashCouplingMixin.cashWarning}',
+          '${appStrings.blocMsgDebtDeleted}${cashResult.ok ? '' : CashCouplingMixin.cashWarning}',
           undo: snapshot == null
               ? null
               : DebtDeletionUndo(
@@ -592,16 +593,11 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
 
   /// Borç bloc'u hazır cümle yayınlıyor (bkz. yatırım modülünün
   /// `InvestmentNotice` deseni — borç tarafı henüz taşınmadı).
-  static const _adoptFailedMessage =
-      'Seçilen işlem bağlanamadı: bu arada değişmiş, silinmiş ya da başka bir '
-      'kayda bağlanmış olabilir. Kayıt eklenmedi.';
-  static const _adoptedPaymentLockedMessage =
-      'Bu ödeme ekstredeki bir satıra bağlı: tutarı ve tarihi o satırdan '
-      'gelir. Yanlış satırsa ödemeyi silip doğru satırla yeniden ekle.';
-  static const _adoptedPrincipalLockedMessage =
-      'Bu borcun anaparası ekstredeki bir satıra bağlı: tutarı ve başlangıç '
-      'tarihi o satırdan gelir. Diğer bilgiler kaydedilmedi; yanlış satırsa '
-      'borcu silip doğru satırla yeniden ekle.';
+  static String get _adoptFailedMessage => appStrings.blocMsgDebtAdoptFailed;
+  static String get _adoptedPaymentLockedMessage =>
+      appStrings.blocMsgDebtAdoptedPaymentLocked;
+  static String get _adoptedPrincipalLockedMessage =>
+      appStrings.blocMsgDebtAdoptedPrincipalLocked;
 
   Future<void> _safeSyncDebt(String walletId) =>
       safeSyncMetric(() => walletMetricsService.syncDebt(walletId), 'debt');

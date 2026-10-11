@@ -1,3 +1,4 @@
+import 'package:cunehat/core/l10n/app_strings.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -214,7 +215,7 @@ class BankImportCubit extends Cubit<BankImportState>
     } catch (e) {
       // Sağlayıcı ya da izin hatası eklentiden istisna olarak gelir.
       // Yakalanmadığında "dosya seç" düğmesi sessizce hiçbir şey yapmıyordu.
-      emit(BankImportError('Dosya seçilemedi: $e'));
+      emit(BankImportError(appStrings.blocMsgImportPickFailed('$e')));
       return;
     }
     final path = picked?.files.single.path;
@@ -255,7 +256,7 @@ class BankImportCubit extends Cubit<BankImportState>
     try {
       detected = detectStatementFormat(path: path, head: await _readHead(path));
     } catch (e) {
-      emit(BankImportError('Dosya okunamadı: $e'));
+      emit(BankImportError(appStrings.blocMsgImportReadFailed('$e')));
       return;
     }
     if (detected == DetectedStatementFormat.unknown) {
@@ -337,7 +338,7 @@ class BankImportCubit extends Cubit<BankImportState>
           throw StateError('unreachable');
       }
       if (table.isEmpty) {
-        emit(const BankImportError('Dosya boş veya okunamadı.'));
+        emit(BankImportError(appStrings.blocMsgImportEmptyFile));
         return;
       }
       final guess = _mapper.guess(table);
@@ -360,7 +361,7 @@ class BankImportCubit extends Cubit<BankImportState>
         emit(BankImportMapping(table: table, assessment: assessment));
       }
     } catch (e) {
-      emit(BankImportError('Dosya okunamadı: $e'));
+      emit(BankImportError(appStrings.blocMsgImportReadFailed('$e')));
     }
   }
 
@@ -598,7 +599,7 @@ class BankImportCubit extends Cubit<BankImportState>
       );
       await _afterParse(result.drafts, result.skippedRows);
     } catch (e) {
-      emit(BankImportError('Eşleme uygulanamadı: $e'));
+      emit(BankImportError(appStrings.blocMsgImportMappingFailed('$e')));
     }
   }
 
@@ -654,7 +655,7 @@ class BankImportCubit extends Cubit<BankImportState>
     } catch (e) {
       // Kategori deposu `Either` DEĞİL, EXCEPTION fırlatır. Yakalanmadığında
       // öneri adımında kalınıyor, "devam" düğmesi hiçbir şey yapmıyordu.
-      emit(BankImportError('Kategoriler okunamadı: $e'));
+      emit(BankImportError(appStrings.blocMsgImportCategoriesFailed('$e')));
       return;
     }
 
@@ -1002,7 +1003,7 @@ class BankImportCubit extends Cubit<BankImportState>
       );
       await _toReview(_rawDrafts, _rawSkipped);
     } catch (e) {
-      emit(BankImportError('Cüzdan değiştirilemedi: $e'));
+      emit(BankImportError(appStrings.blocMsgImportWalletSwitchFailed('$e')));
     }
   }
 

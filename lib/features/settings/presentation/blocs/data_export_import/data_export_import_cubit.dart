@@ -1,3 +1,4 @@
+import 'package:cunehat/core/l10n/app_strings.dart';
 import 'package:bloc/bloc.dart';
 import 'package:cunehat/core/blocs/safe_emit.dart';
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
@@ -180,7 +181,7 @@ class DataExportImportCubit extends Cubit<DataExportImportState>
         return;
       case LocalBackupStatus.failure:
         emit(DataExportImportError(
-            result.error?.toString() ?? 'Yedekleme işlemi tamamlanamadı.'));
+            result.error?.toString() ?? appStrings.blocMsgBackupFailed));
         return;
     }
   }

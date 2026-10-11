@@ -10954,6 +10954,276 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Seçimi kapat'**
   String get secimiKapat;
+
+  /// No description provided for @blocMsgTxLoadFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlemler yüklenirken hata oluştu: {hata}'**
+  String blocMsgTxLoadFailed(String hata);
+
+  /// No description provided for @blocMsgTxAddFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem eklenirken hata oluştu: {hata}'**
+  String blocMsgTxAddFailed(String hata);
+
+  /// No description provided for @blocMsgTxAdded.
+  ///
+  /// In tr, this message translates to:
+  /// **'{baslik} başarıyla eklendi'**
+  String blocMsgTxAdded(String baslik);
+
+  /// No description provided for @blocMsgTxSystemLocked.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sistem işlemi; ilgili kayıttan yönetilir'**
+  String get blocMsgTxSystemLocked;
+
+  /// No description provided for @blocMsgTxMoveBlocked.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu kayıt başka bir kayda bağlı; cüzdanı değiştirilemez'**
+  String get blocMsgTxMoveBlocked;
+
+  /// No description provided for @blocMsgTxUpdateFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem güncellenirken hata oluştu: {hata}'**
+  String blocMsgTxUpdateFailed(String hata);
+
+  /// No description provided for @blocMsgTxMoved.
+  ///
+  /// In tr, this message translates to:
+  /// **'{baslik} diğer cüzdana taşındı'**
+  String blocMsgTxMoved(String baslik);
+
+  /// No description provided for @blocMsgTxUpdated.
+  ///
+  /// In tr, this message translates to:
+  /// **'{baslik} başarıyla güncellendi'**
+  String blocMsgTxUpdated(String baslik);
+
+  /// No description provided for @blocMsgTxCategoryChanged.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} işlemin kategorisi değiştirildi'**
+  String blocMsgTxCategoryChanged(int count);
+
+  /// No description provided for @blocMsgTxCategoryChangePartial.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bazı işlemlerin kategorisi değiştirilemedi: {hata}'**
+  String blocMsgTxCategoryChangePartial(String hata);
+
+  /// No description provided for @blocMsgTxNotFound.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem bulunamadı: {hata}'**
+  String blocMsgTxNotFound(String hata);
+
+  /// No description provided for @blocMsgTxDeleteFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem silinirken hata oluştu: {hata}'**
+  String blocMsgTxDeleteFailed(String hata);
+
+  /// No description provided for @blocMsgTxDeleted.
+  ///
+  /// In tr, this message translates to:
+  /// **'{baslik} silindi'**
+  String blocMsgTxDeleted(String baslik);
+
+  /// No description provided for @blocMsgTxBulkDeleteFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlemler silinemedi'**
+  String get blocMsgTxBulkDeleteFailed;
+
+  /// No description provided for @blocMsgTxBulkDeleteFailedDetail.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlemler silinemedi: {hata}'**
+  String blocMsgTxBulkDeleteFailedDetail(String hata);
+
+  /// No description provided for @blocMsgTxBulkDeleted.
+  ///
+  /// In tr, this message translates to:
+  /// **'{etiket}: {count} işlem silindi'**
+  String blocMsgTxBulkDeleted(String etiket, int count);
+
+  /// No description provided for @blocMsgTxBulkDeletePartial.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bazı işlemler silinemedi: {hata}'**
+  String blocMsgTxBulkDeletePartial(String hata);
+
+  /// No description provided for @blocMsgTxSyncWarning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye senkronizasyonu başarısız; cüzdan ekranına dönüp tekrar deneyin.'**
+  String get blocMsgTxSyncWarning;
+
+  /// No description provided for @blocMsgWalletCreateFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan oluşturulamadı: {hata}'**
+  String blocMsgWalletCreateFailed(String hata);
+
+  /// No description provided for @blocMsgWalletSetActiveFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aktif cüzdan ayarlanamadı: {hata}'**
+  String blocMsgWalletSetActiveFailed(String hata);
+
+  /// No description provided for @blocMsgWalletUpdateFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan güncellenemedi: {hata}'**
+  String blocMsgWalletUpdateFailed(String hata);
+
+  /// No description provided for @blocMsgWalletCleanupFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan verileri temizlenemedi, silme iptal edildi'**
+  String get blocMsgWalletCleanupFailed;
+
+  /// No description provided for @blocMsgWalletDeleteFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan silinemedi: {hata}'**
+  String blocMsgWalletDeleteFailed(String hata);
+
+  /// No description provided for @blocMsgWalletSwitchFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aktif cüzdan değiştirilemedi: {hata}'**
+  String blocMsgWalletSwitchFailed(String hata);
+
+  /// No description provided for @blocMsgCashWarningSuffix.
+  ///
+  /// In tr, this message translates to:
+  /// **' (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'**
+  String get blocMsgCashWarningSuffix;
+
+  /// No description provided for @blocMsgDebtAdded.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç başarıyla eklendi.'**
+  String get blocMsgDebtAdded;
+
+  /// No description provided for @blocMsgDebtPaymentSaved.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme kaydedildi.'**
+  String get blocMsgDebtPaymentSaved;
+
+  /// No description provided for @blocMsgDebtPaymentUpdated.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme güncellendi.'**
+  String get blocMsgDebtPaymentUpdated;
+
+  /// No description provided for @blocMsgDebtPaymentDeleted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme silindi.'**
+  String get blocMsgDebtPaymentDeleted;
+
+  /// No description provided for @blocMsgDebtUpdated.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç güncellendi.'**
+  String get blocMsgDebtUpdated;
+
+  /// No description provided for @blocMsgDebtDeleted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç silindi.'**
+  String get blocMsgDebtDeleted;
+
+  /// No description provided for @blocMsgDebtAdoptFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçilen işlem bağlanamadı: bu arada değişmiş, silinmiş ya da başka bir kayda bağlanmış olabilir. Kayıt eklenmedi.'**
+  String get blocMsgDebtAdoptFailed;
+
+  /// No description provided for @blocMsgDebtAdoptedPaymentLocked.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu ödeme ekstredeki bir satıra bağlı: tutarı ve tarihi o satırdan gelir. Yanlış satırsa ödemeyi silip doğru satırla yeniden ekle.'**
+  String get blocMsgDebtAdoptedPaymentLocked;
+
+  /// No description provided for @blocMsgDebtAdoptedPrincipalLocked.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu borcun anaparası ekstredeki bir satıra bağlı: tutarı ve başlangıç tarihi o satırdan gelir. Diğer bilgiler kaydedilmedi; yanlış satırsa borcu silip doğru satırla yeniden ekle.'**
+  String get blocMsgDebtAdoptedPrincipalLocked;
+
+  /// No description provided for @blocMsgReceivableAdded.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alacak başarıyla eklendi.'**
+  String get blocMsgReceivableAdded;
+
+  /// No description provided for @blocMsgReceivableUpdated.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alacak güncellendi.'**
+  String get blocMsgReceivableUpdated;
+
+  /// No description provided for @blocMsgReceivableDeleted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alacak silindi.'**
+  String get blocMsgReceivableDeleted;
+
+  /// No description provided for @blocMsgReceivableMarkedPaid.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alacak ödendi olarak işaretlendi.'**
+  String get blocMsgReceivableMarkedPaid;
+
+  /// No description provided for @blocMsgImportPickFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosya seçilemedi: {hata}'**
+  String blocMsgImportPickFailed(String hata);
+
+  /// No description provided for @blocMsgImportReadFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosya okunamadı: {hata}'**
+  String blocMsgImportReadFailed(String hata);
+
+  /// No description provided for @blocMsgImportEmptyFile.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosya boş veya okunamadı.'**
+  String get blocMsgImportEmptyFile;
+
+  /// No description provided for @blocMsgImportMappingFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eşleme uygulanamadı: {hata}'**
+  String blocMsgImportMappingFailed(String hata);
+
+  /// No description provided for @blocMsgImportCategoriesFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategoriler okunamadı: {hata}'**
+  String blocMsgImportCategoriesFailed(String hata);
+
+  /// No description provided for @blocMsgImportWalletSwitchFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan değiştirilemedi: {hata}'**
+  String blocMsgImportWalletSwitchFailed(String hata);
+
+  /// No description provided for @blocMsgBackupFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedekleme işlemi tamamlanamadı.'**
+  String get blocMsgBackupFailed;
 }
 
 class _AppLocalizationsDelegate

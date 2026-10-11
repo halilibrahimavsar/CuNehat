@@ -1,5 +1,6 @@
 // lib/features/debt_and_receivable/presentation/bloc/receivable_bloc/receivable_bloc.dart
 
+import 'package:cunehat/core/l10n/app_strings.dart';
 import 'dart:async';
 
 import 'package:cunehat/core/blocs/cash_coupling_mixin.dart';
@@ -95,7 +96,7 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState>
         await _safeSyncCredit(event.receivable.walletId);
 
         emit(ReceivableOperationSuccess(
-            'Alacak başarıyla eklendi.${cashOk ? '' : CashCouplingMixin.cashWarning}'));
+            '${appStrings.blocMsgReceivableAdded}${cashOk ? '' : CashCouplingMixin.cashWarning}'));
         add(GetReceivablesEvent(event.receivable.walletId));
       },
     );
@@ -167,7 +168,7 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState>
         await _safeSyncCredit(event.receivable.walletId);
 
         emit(ReceivableOperationSuccess(
-            'Alacak güncellendi.${cashOk ? '' : CashCouplingMixin.cashWarning}'));
+            '${appStrings.blocMsgReceivableUpdated}${cashOk ? '' : CashCouplingMixin.cashWarning}'));
         add(GetReceivablesEvent(event.receivable.walletId));
       },
     );
@@ -209,7 +210,7 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState>
         await _safeSyncCredit(event.walletId);
 
         emit(ReceivableOperationSuccess(
-          'Alacak silindi.'
+          '${appStrings.blocMsgReceivableDeleted}'
           '${cashResult.ok ? '' : CashCouplingMixin.cashWarning}',
           undo: snapshot == null
               ? null
@@ -259,7 +260,7 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState>
         await _safeSyncCredit(event.receivable.walletId);
 
         emit(ReceivableOperationSuccess(
-            'Alacak ödendi olarak işaretlendi.${cashOk ? '' : CashCouplingMixin.cashWarning}'));
+            '${appStrings.blocMsgReceivableMarkedPaid}${cashOk ? '' : CashCouplingMixin.cashWarning}'));
         add(GetReceivablesEvent(event.receivable.walletId));
       },
     );

@@ -1,3 +1,4 @@
+import 'package:cunehat/core/l10n/app_strings.dart';
 import 'dart:async';
 
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
@@ -78,7 +79,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
     result.fold(
       (failure) => emit(TransactionError(
-        'İşlemler yüklenirken hata oluştu: ${failure.message}',
+        appStrings.blocMsgTxLoadFailed(failure.message),
         transactions: state.currentTransactions,
       )),
       (transactions) {
@@ -104,14 +105,14 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
     await result.fold(
       (failure) async => emit(TransactionError(
-        'İşlem eklenirken hata oluştu: ${failure.message}',
+        appStrings.blocMsgTxAddFailed(failure.message),
         transactions: currentData,
       )),
       (newId) async {
         final synced = await _safeSyncBalance(event.transaction.walletId);
 
         emit(TransactionActionSuccess(
-          '${event.transaction.title} başarıyla eklendi',
+          appStrings.blocMsgTxAdded(event.transaction.title),
           transactions: [
             ...currentData,
             event.transaction.copyWith(id: newId),
@@ -150,7 +151,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       final synced = await _safeSyncBalance(first.walletId);
       if (failure == null) {
         emit(TransactionActionSuccess(
-          '${first.title} başarıyla eklendi',
+          appStrings.blocMsgTxAdded(first.title),
           transactions: [...currentData, ...added],
           warning: synced ? null : _syncWarning,
         ));
@@ -162,7 +163,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     }
     if (failure != null) {
       emit(TransactionError(
-        'İşlem eklenirken hata oluştu: $failure',
+        appStrings.blocMsgTxAddFailed('$failure'),
         transactions: [...currentData, ...added],
       ));
     }
@@ -178,7 +179,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     // değiştirilemez; defterle desync olmasın.
     if (event.newTransaction.isSystem || event.previousTransaction.isSystem) {
       emit(TransactionError(
-        'Sistem işlemi; ilgili kayıttan yönetilir',
+        appStrings.blocMsgTxSystemLocked,
         transactions: currentData,
       ));
       return;
@@ -193,7 +194,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     final moved = previous.walletId != updated.walletId;
     if (moved && !previous.canMoveWallet) {
       emit(TransactionError(
-        'Bu kayıt başka bir kayda bağlı; cüzdanı değiştirilemez',
+        appStrings.blocMsgTxMoveBlocked,
         transactions: currentData,
       ));
       return;
@@ -203,7 +204,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
     await result.fold(
       (failure) async => emit(TransactionError(
-        'İşlem güncellenirken hata oluştu: ${failure.message}',
+        appStrings.blocMsgTxUpdateFailed(failure.message),
         transactions: currentData,
       )),
       (_) async {
@@ -214,8 +215,8 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
         emit(TransactionActionSuccess(
           moved
-              ? '${updated.title} diğer cüzdana taşındı'
-              : '${updated.title} başarıyla güncellendi',
+              ? appStrings.blocMsgTxMoved(updated.title)
+              : appStrings.blocMsgTxUpdated(updated.title),
           transactions: [
             for (final t in currentData)
               // Taşınan satır bu defterin (eski cüzdanın) listesinden düşer.
@@ -269,7 +270,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     final after = [for (final t in currentData) changed[t.id] ?? t];
     if (changed.isNotEmpty) {
       emit(TransactionActionSuccess(
-        '${changed.length} işlemin kategorisi değiştirildi',
+        appStrings.blocMsgTxCategoryChanged(changed.length),
         transactions: after,
       ));
       final wallets = <String>{};
@@ -284,7 +285,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     }
     if (failure != null) {
       emit(TransactionError(
-        'Bazı işlemlerin kategorisi değiştirilemedi: $failure',
+        appStrings.blocMsgTxCategoryChangePartial('$failure'),
         transactions: after,
       ));
     }
@@ -301,14 +302,14 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
     await getResult.fold(
       (failure) async => emit(TransactionError(
-        'İşlem bulunamadı: ${failure.message}',
+        appStrings.blocMsgTxNotFound(failure.message),
         transactions: currentData,
       )),
       (transaction) async {
         // Savunma: sistem işlemi silinemez (kuplaj kayıtla yönetilir).
         if (transaction.isSystem) {
           emit(TransactionError(
-            'Sistem işlemi; ilgili kayıttan yönetilir',
+            appStrings.blocMsgTxSystemLocked,
             transactions: currentData,
           ));
           return;
@@ -326,7 +327,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
         await deleteResult.fold(
           (failure) async => emit(TransactionError(
-            'İşlem silinirken hata oluştu: ${failure.message}',
+            appStrings.blocMsgTxDeleteFailed(failure.message),
             transactions: currentData,
           )),
           (_) async {
@@ -334,7 +335,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
             // 3 Başarılı
             emit(TransactionActionSuccess(
-              "${transaction.title} silindi",
+              appStrings.blocMsgTxDeleted(transaction.title),
               transactions: currentData
                   .where((t) => t.id != event.transactionId)
                   .toList(),
@@ -374,7 +375,9 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     }
     if (deleted.isEmpty) {
       emit(TransactionError(
-        'İşlemler silinemedi${failure == null ? '' : ': $failure'}',
+        failure == null
+            ? appStrings.blocMsgTxBulkDeleteFailed
+            : appStrings.blocMsgTxBulkDeleteFailedDetail('$failure'),
         transactions: currentData,
       ));
       return;
@@ -383,10 +386,11 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     final synced = await _safeSyncBalance(first.walletId);
     final ids = {for (final t in deleted) t.id};
     emit(TransactionActionSuccess(
-      '${event.label ?? first.title}: ${deleted.length} işlem silindi',
+      appStrings.blocMsgTxBulkDeleted(
+          event.label ?? first.title, deleted.length),
       transactions: currentData.where((t) => !ids.contains(t.id)).toList(),
       warning: failure != null
-          ? 'Bazı işlemler silinemedi: $failure'
+          ? appStrings.blocMsgTxBulkDeletePartial('$failure')
           : (synced ? null : _syncWarning),
       undo: TransactionDeletionUndo(
         transaction: first,
@@ -401,8 +405,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     );
   }
 
-  static const _syncWarning =
-      'Bakiye senkronizasyonu başarısız; cüzdan ekranına dönüp tekrar deneyin.';
+  static String get _syncWarning => appStrings.blocMsgTxSyncWarning;
 
   /// Bakiyeyi defterden yeniden hesaplar; asla fırlatmaz.
   /// `false` → işlem kaydedildi ama bakiye güncellenemedi (kullanıcı uyarılmalı).

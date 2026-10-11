@@ -1,3 +1,4 @@
+import 'package:cunehat/core/l10n/app_strings.dart';
 import 'package:bloc/bloc.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
@@ -123,8 +124,8 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     on<CreateWalletEvent>((event, emit) async {
       final result = await createWalletUseCase.call(event.wallet);
       await result.fold(
-        (failure) async =>
-            _emitError(emit, 'Cüzdan oluşturulamadı: ${failure.message}'),
+        (failure) async => _emitError(
+            emit, appStrings.blocMsgWalletCreateFailed(failure.message)),
         (newWalletId) async {
           final created = event.wallet.isCreditCard
               ? WalletMessageType.cardCreated
@@ -138,7 +139,8 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
             walletId: newWalletId,
           );
           activeResult.fold(
-            (f) => _emitError(emit, 'Aktif cüzdan ayarlanamadı: ${f.message}'),
+            (f) => _emitError(
+                emit, appStrings.blocMsgWalletSetActiveFailed(f.message)),
             (_) => _emitSuccess(emit, created),
           );
         },
@@ -189,8 +191,8 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       }
       final result = await updateWalletUseCase.call(toWrite);
       result.fold(
-        (failure) =>
-            _emitError(emit, 'Cüzdan güncellenemedi: ${failure.message}'),
+        (failure) => _emitError(
+            emit, appStrings.blocMsgWalletUpdateFailed(failure.message)),
         (_) => _emitSuccess(emit, WalletMessageType.updated),
       );
     });
@@ -208,7 +210,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       if (!purged) {
         // Yarım temizlik + silinmiş cüzdan = geri dönüşü olmayan yetim veri.
         // Cüzdan yerinde bırakılır ki kullanıcı tekrar deneyebilsin.
-        _emitError(emit, 'Cüzdan verileri temizlenemedi, silme iptal edildi');
+        _emitError(emit, appStrings.blocMsgWalletCleanupFailed);
         return;
       }
       // Cüzdanın bütçeleri ve düzenli işlem şablonları da gitsin;
@@ -217,7 +219,8 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       await deleteRecurringTemplatesForWalletUsecase(event.walletId);
       final result = await deleteWalletUseCase.call(event.walletId);
       result.fold(
-        (failure) => _emitError(emit, 'Cüzdan silinemedi: ${failure.message}'),
+        (failure) => _emitError(
+            emit, appStrings.blocMsgWalletDeleteFailed(failure.message)),
         (_) => _emitSuccess(emit, WalletMessageType.deleted),
       );
     });
@@ -230,7 +233,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       );
       result.fold(
         (failure) => _emitError(
-            emit, 'Aktif cüzdan değiştirilemedi: ${failure.message}'),
+            emit, appStrings.blocMsgWalletSwitchFailed(failure.message)),
         (_) {
           if (event.announce) _emitSuccess(emit, WalletMessageType.selected);
         },

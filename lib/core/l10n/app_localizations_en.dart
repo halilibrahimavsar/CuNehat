@@ -6360,4 +6360,195 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get secimiKapat => 'Close selection';
+
+  @override
+  String blocMsgTxLoadFailed(String hata) {
+    return 'Couldn\'t load transactions: $hata';
+  }
+
+  @override
+  String blocMsgTxAddFailed(String hata) {
+    return 'Couldn\'t add the transaction: $hata';
+  }
+
+  @override
+  String blocMsgTxAdded(String baslik) {
+    return '$baslik added';
+  }
+
+  @override
+  String get blocMsgTxSystemLocked =>
+      'System transaction; manage it from its own record';
+
+  @override
+  String get blocMsgTxMoveBlocked =>
+      'This entry is linked to another record; its wallet can\'t be changed';
+
+  @override
+  String blocMsgTxUpdateFailed(String hata) {
+    return 'Couldn\'t update the transaction: $hata';
+  }
+
+  @override
+  String blocMsgTxMoved(String baslik) {
+    return '$baslik moved to the other wallet';
+  }
+
+  @override
+  String blocMsgTxUpdated(String baslik) {
+    return '$baslik updated';
+  }
+
+  @override
+  String blocMsgTxCategoryChanged(int count) {
+    return 'Category changed for $count transactions';
+  }
+
+  @override
+  String blocMsgTxCategoryChangePartial(String hata) {
+    return 'Some transactions couldn\'t be recategorized: $hata';
+  }
+
+  @override
+  String blocMsgTxNotFound(String hata) {
+    return 'Transaction not found: $hata';
+  }
+
+  @override
+  String blocMsgTxDeleteFailed(String hata) {
+    return 'Couldn\'t delete the transaction: $hata';
+  }
+
+  @override
+  String blocMsgTxDeleted(String baslik) {
+    return '$baslik deleted';
+  }
+
+  @override
+  String get blocMsgTxBulkDeleteFailed => 'Couldn\'t delete the transactions';
+
+  @override
+  String blocMsgTxBulkDeleteFailedDetail(String hata) {
+    return 'Couldn\'t delete the transactions: $hata';
+  }
+
+  @override
+  String blocMsgTxBulkDeleted(String etiket, int count) {
+    return '$etiket: $count transactions deleted';
+  }
+
+  @override
+  String blocMsgTxBulkDeletePartial(String hata) {
+    return 'Some transactions couldn\'t be deleted: $hata';
+  }
+
+  @override
+  String get blocMsgTxSyncWarning =>
+      'Balance sync failed; go back to the wallet screen and try again.';
+
+  @override
+  String blocMsgWalletCreateFailed(String hata) {
+    return 'Couldn\'t create the wallet: $hata';
+  }
+
+  @override
+  String blocMsgWalletSetActiveFailed(String hata) {
+    return 'Couldn\'t set the active wallet: $hata';
+  }
+
+  @override
+  String blocMsgWalletUpdateFailed(String hata) {
+    return 'Couldn\'t update the wallet: $hata';
+  }
+
+  @override
+  String get blocMsgWalletCleanupFailed =>
+      'Couldn\'t clear the wallet\'s data; deletion cancelled';
+
+  @override
+  String blocMsgWalletDeleteFailed(String hata) {
+    return 'Couldn\'t delete the wallet: $hata';
+  }
+
+  @override
+  String blocMsgWalletSwitchFailed(String hata) {
+    return 'Couldn\'t switch the active wallet: $hata';
+  }
+
+  @override
+  String get blocMsgCashWarningSuffix =>
+      ' (Warning: the balance couldn\'t be updated; refresh the wallet.)';
+
+  @override
+  String get blocMsgDebtAdded => 'Debt added.';
+
+  @override
+  String get blocMsgDebtPaymentSaved => 'Payment saved.';
+
+  @override
+  String get blocMsgDebtPaymentUpdated => 'Payment updated.';
+
+  @override
+  String get blocMsgDebtPaymentDeleted => 'Payment deleted.';
+
+  @override
+  String get blocMsgDebtUpdated => 'Debt updated.';
+
+  @override
+  String get blocMsgDebtDeleted => 'Debt deleted.';
+
+  @override
+  String get blocMsgDebtAdoptFailed =>
+      'The selected transaction couldn\'t be linked: it may have been changed, deleted or linked to another record in the meantime. Nothing was added.';
+
+  @override
+  String get blocMsgDebtAdoptedPaymentLocked =>
+      'This payment is linked to a statement line: its amount and date come from that line. If it\'s the wrong line, delete the payment and add it again with the right one.';
+
+  @override
+  String get blocMsgDebtAdoptedPrincipalLocked =>
+      'This debt\'s principal is linked to a statement line: its amount and start date come from that line. The other details weren\'t saved; if it\'s the wrong line, delete the debt and add it again with the right one.';
+
+  @override
+  String get blocMsgReceivableAdded => 'Receivable added.';
+
+  @override
+  String get blocMsgReceivableUpdated => 'Receivable updated.';
+
+  @override
+  String get blocMsgReceivableDeleted => 'Receivable deleted.';
+
+  @override
+  String get blocMsgReceivableMarkedPaid => 'Receivable marked as paid.';
+
+  @override
+  String blocMsgImportPickFailed(String hata) {
+    return 'Couldn\'t pick the file: $hata';
+  }
+
+  @override
+  String blocMsgImportReadFailed(String hata) {
+    return 'Couldn\'t read the file: $hata';
+  }
+
+  @override
+  String get blocMsgImportEmptyFile => 'The file is empty or unreadable.';
+
+  @override
+  String blocMsgImportMappingFailed(String hata) {
+    return 'Couldn\'t apply the mapping: $hata';
+  }
+
+  @override
+  String blocMsgImportCategoriesFailed(String hata) {
+    return 'Couldn\'t load categories: $hata';
+  }
+
+  @override
+  String blocMsgImportWalletSwitchFailed(String hata) {
+    return 'Couldn\'t switch the wallet: $hata';
+  }
+
+  @override
+  String get blocMsgBackupFailed => 'The backup couldn\'t be completed.';
 }

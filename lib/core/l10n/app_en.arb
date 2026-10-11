@@ -3498,5 +3498,221 @@
       }
     }
   },
-  "secimiKapat": "Close selection"
+  "secimiKapat": "Close selection",
+  "blocMsgTxLoadFailed": "Couldn't load transactions: {hata}",
+  "@blocMsgTxLoadFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxAddFailed": "Couldn't add the transaction: {hata}",
+  "@blocMsgTxAddFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxAdded": "{baslik} added",
+  "@blocMsgTxAdded": {
+    "placeholders": {
+      "baslik": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxSystemLocked": "System transaction; manage it from its own record",
+  "blocMsgTxMoveBlocked": "This entry is linked to another record; its wallet can't be changed",
+  "blocMsgTxUpdateFailed": "Couldn't update the transaction: {hata}",
+  "@blocMsgTxUpdateFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxMoved": "{baslik} moved to the other wallet",
+  "@blocMsgTxMoved": {
+    "placeholders": {
+      "baslik": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxUpdated": "{baslik} updated",
+  "@blocMsgTxUpdated": {
+    "placeholders": {
+      "baslik": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxCategoryChanged": "Category changed for {count} transactions",
+  "@blocMsgTxCategoryChanged": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "blocMsgTxCategoryChangePartial": "Some transactions couldn't be recategorized: {hata}",
+  "@blocMsgTxCategoryChangePartial": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxNotFound": "Transaction not found: {hata}",
+  "@blocMsgTxNotFound": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxDeleteFailed": "Couldn't delete the transaction: {hata}",
+  "@blocMsgTxDeleteFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxDeleted": "{baslik} deleted",
+  "@blocMsgTxDeleted": {
+    "placeholders": {
+      "baslik": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxBulkDeleteFailed": "Couldn't delete the transactions",
+  "blocMsgTxBulkDeleteFailedDetail": "Couldn't delete the transactions: {hata}",
+  "@blocMsgTxBulkDeleteFailedDetail": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxBulkDeleted": "{etiket}: {count} transactions deleted",
+  "@blocMsgTxBulkDeleted": {
+    "placeholders": {
+      "etiket": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "blocMsgTxBulkDeletePartial": "Some transactions couldn't be deleted: {hata}",
+  "@blocMsgTxBulkDeletePartial": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxSyncWarning": "Balance sync failed; go back to the wallet screen and try again.",
+  "blocMsgWalletCreateFailed": "Couldn't create the wallet: {hata}",
+  "@blocMsgWalletCreateFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgWalletSetActiveFailed": "Couldn't set the active wallet: {hata}",
+  "@blocMsgWalletSetActiveFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgWalletUpdateFailed": "Couldn't update the wallet: {hata}",
+  "@blocMsgWalletUpdateFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgWalletCleanupFailed": "Couldn't clear the wallet's data; deletion cancelled",
+  "blocMsgWalletDeleteFailed": "Couldn't delete the wallet: {hata}",
+  "@blocMsgWalletDeleteFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgWalletSwitchFailed": "Couldn't switch the active wallet: {hata}",
+  "@blocMsgWalletSwitchFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgCashWarningSuffix": " (Warning: the balance couldn't be updated; refresh the wallet.)",
+  "blocMsgDebtAdded": "Debt added.",
+  "blocMsgDebtPaymentSaved": "Payment saved.",
+  "blocMsgDebtPaymentUpdated": "Payment updated.",
+  "blocMsgDebtPaymentDeleted": "Payment deleted.",
+  "blocMsgDebtUpdated": "Debt updated.",
+  "blocMsgDebtDeleted": "Debt deleted.",
+  "blocMsgDebtAdoptFailed": "The selected transaction couldn't be linked: it may have been changed, deleted or linked to another record in the meantime. Nothing was added.",
+  "blocMsgDebtAdoptedPaymentLocked": "This payment is linked to a statement line: its amount and date come from that line. If it's the wrong line, delete the payment and add it again with the right one.",
+  "blocMsgDebtAdoptedPrincipalLocked": "This debt's principal is linked to a statement line: its amount and start date come from that line. The other details weren't saved; if it's the wrong line, delete the debt and add it again with the right one.",
+  "blocMsgReceivableAdded": "Receivable added.",
+  "blocMsgReceivableUpdated": "Receivable updated.",
+  "blocMsgReceivableDeleted": "Receivable deleted.",
+  "blocMsgReceivableMarkedPaid": "Receivable marked as paid.",
+  "blocMsgImportPickFailed": "Couldn't pick the file: {hata}",
+  "@blocMsgImportPickFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgImportReadFailed": "Couldn't read the file: {hata}",
+  "@blocMsgImportReadFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgImportEmptyFile": "The file is empty or unreadable.",
+  "blocMsgImportMappingFailed": "Couldn't apply the mapping: {hata}",
+  "@blocMsgImportMappingFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgImportCategoriesFailed": "Couldn't load categories: {hata}",
+  "@blocMsgImportCategoriesFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgImportWalletSwitchFailed": "Couldn't switch the wallet: {hata}",
+  "@blocMsgImportWalletSwitchFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgBackupFailed": "The backup couldn't be completed."
 }

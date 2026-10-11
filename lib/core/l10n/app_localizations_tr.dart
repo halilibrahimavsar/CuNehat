@@ -6313,4 +6313,195 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get secimiKapat => 'Seçimi kapat';
+
+  @override
+  String blocMsgTxLoadFailed(String hata) {
+    return 'İşlemler yüklenirken hata oluştu: $hata';
+  }
+
+  @override
+  String blocMsgTxAddFailed(String hata) {
+    return 'İşlem eklenirken hata oluştu: $hata';
+  }
+
+  @override
+  String blocMsgTxAdded(String baslik) {
+    return '$baslik başarıyla eklendi';
+  }
+
+  @override
+  String get blocMsgTxSystemLocked =>
+      'Sistem işlemi; ilgili kayıttan yönetilir';
+
+  @override
+  String get blocMsgTxMoveBlocked =>
+      'Bu kayıt başka bir kayda bağlı; cüzdanı değiştirilemez';
+
+  @override
+  String blocMsgTxUpdateFailed(String hata) {
+    return 'İşlem güncellenirken hata oluştu: $hata';
+  }
+
+  @override
+  String blocMsgTxMoved(String baslik) {
+    return '$baslik diğer cüzdana taşındı';
+  }
+
+  @override
+  String blocMsgTxUpdated(String baslik) {
+    return '$baslik başarıyla güncellendi';
+  }
+
+  @override
+  String blocMsgTxCategoryChanged(int count) {
+    return '$count işlemin kategorisi değiştirildi';
+  }
+
+  @override
+  String blocMsgTxCategoryChangePartial(String hata) {
+    return 'Bazı işlemlerin kategorisi değiştirilemedi: $hata';
+  }
+
+  @override
+  String blocMsgTxNotFound(String hata) {
+    return 'İşlem bulunamadı: $hata';
+  }
+
+  @override
+  String blocMsgTxDeleteFailed(String hata) {
+    return 'İşlem silinirken hata oluştu: $hata';
+  }
+
+  @override
+  String blocMsgTxDeleted(String baslik) {
+    return '$baslik silindi';
+  }
+
+  @override
+  String get blocMsgTxBulkDeleteFailed => 'İşlemler silinemedi';
+
+  @override
+  String blocMsgTxBulkDeleteFailedDetail(String hata) {
+    return 'İşlemler silinemedi: $hata';
+  }
+
+  @override
+  String blocMsgTxBulkDeleted(String etiket, int count) {
+    return '$etiket: $count işlem silindi';
+  }
+
+  @override
+  String blocMsgTxBulkDeletePartial(String hata) {
+    return 'Bazı işlemler silinemedi: $hata';
+  }
+
+  @override
+  String get blocMsgTxSyncWarning =>
+      'Bakiye senkronizasyonu başarısız; cüzdan ekranına dönüp tekrar deneyin.';
+
+  @override
+  String blocMsgWalletCreateFailed(String hata) {
+    return 'Cüzdan oluşturulamadı: $hata';
+  }
+
+  @override
+  String blocMsgWalletSetActiveFailed(String hata) {
+    return 'Aktif cüzdan ayarlanamadı: $hata';
+  }
+
+  @override
+  String blocMsgWalletUpdateFailed(String hata) {
+    return 'Cüzdan güncellenemedi: $hata';
+  }
+
+  @override
+  String get blocMsgWalletCleanupFailed =>
+      'Cüzdan verileri temizlenemedi, silme iptal edildi';
+
+  @override
+  String blocMsgWalletDeleteFailed(String hata) {
+    return 'Cüzdan silinemedi: $hata';
+  }
+
+  @override
+  String blocMsgWalletSwitchFailed(String hata) {
+    return 'Aktif cüzdan değiştirilemedi: $hata';
+  }
+
+  @override
+  String get blocMsgCashWarningSuffix =>
+      ' (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)';
+
+  @override
+  String get blocMsgDebtAdded => 'Borç başarıyla eklendi.';
+
+  @override
+  String get blocMsgDebtPaymentSaved => 'Ödeme kaydedildi.';
+
+  @override
+  String get blocMsgDebtPaymentUpdated => 'Ödeme güncellendi.';
+
+  @override
+  String get blocMsgDebtPaymentDeleted => 'Ödeme silindi.';
+
+  @override
+  String get blocMsgDebtUpdated => 'Borç güncellendi.';
+
+  @override
+  String get blocMsgDebtDeleted => 'Borç silindi.';
+
+  @override
+  String get blocMsgDebtAdoptFailed =>
+      'Seçilen işlem bağlanamadı: bu arada değişmiş, silinmiş ya da başka bir kayda bağlanmış olabilir. Kayıt eklenmedi.';
+
+  @override
+  String get blocMsgDebtAdoptedPaymentLocked =>
+      'Bu ödeme ekstredeki bir satıra bağlı: tutarı ve tarihi o satırdan gelir. Yanlış satırsa ödemeyi silip doğru satırla yeniden ekle.';
+
+  @override
+  String get blocMsgDebtAdoptedPrincipalLocked =>
+      'Bu borcun anaparası ekstredeki bir satıra bağlı: tutarı ve başlangıç tarihi o satırdan gelir. Diğer bilgiler kaydedilmedi; yanlış satırsa borcu silip doğru satırla yeniden ekle.';
+
+  @override
+  String get blocMsgReceivableAdded => 'Alacak başarıyla eklendi.';
+
+  @override
+  String get blocMsgReceivableUpdated => 'Alacak güncellendi.';
+
+  @override
+  String get blocMsgReceivableDeleted => 'Alacak silindi.';
+
+  @override
+  String get blocMsgReceivableMarkedPaid => 'Alacak ödendi olarak işaretlendi.';
+
+  @override
+  String blocMsgImportPickFailed(String hata) {
+    return 'Dosya seçilemedi: $hata';
+  }
+
+  @override
+  String blocMsgImportReadFailed(String hata) {
+    return 'Dosya okunamadı: $hata';
+  }
+
+  @override
+  String get blocMsgImportEmptyFile => 'Dosya boş veya okunamadı.';
+
+  @override
+  String blocMsgImportMappingFailed(String hata) {
+    return 'Eşleme uygulanamadı: $hata';
+  }
+
+  @override
+  String blocMsgImportCategoriesFailed(String hata) {
+    return 'Kategoriler okunamadı: $hata';
+  }
+
+  @override
+  String blocMsgImportWalletSwitchFailed(String hata) {
+    return 'Cüzdan değiştirilemedi: $hata';
+  }
+
+  @override
+  String get blocMsgBackupFailed => 'Yedekleme işlemi tamamlanamadı.';
 }

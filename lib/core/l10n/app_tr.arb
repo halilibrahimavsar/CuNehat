@@ -3732,5 +3732,221 @@
       }
     }
   },
-  "secimiKapat": "Seçimi kapat"
+  "secimiKapat": "Seçimi kapat",
+  "blocMsgTxLoadFailed": "İşlemler yüklenirken hata oluştu: {hata}",
+  "@blocMsgTxLoadFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxAddFailed": "İşlem eklenirken hata oluştu: {hata}",
+  "@blocMsgTxAddFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxAdded": "{baslik} başarıyla eklendi",
+  "@blocMsgTxAdded": {
+    "placeholders": {
+      "baslik": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxSystemLocked": "Sistem işlemi; ilgili kayıttan yönetilir",
+  "blocMsgTxMoveBlocked": "Bu kayıt başka bir kayda bağlı; cüzdanı değiştirilemez",
+  "blocMsgTxUpdateFailed": "İşlem güncellenirken hata oluştu: {hata}",
+  "@blocMsgTxUpdateFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxMoved": "{baslik} diğer cüzdana taşındı",
+  "@blocMsgTxMoved": {
+    "placeholders": {
+      "baslik": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxUpdated": "{baslik} başarıyla güncellendi",
+  "@blocMsgTxUpdated": {
+    "placeholders": {
+      "baslik": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxCategoryChanged": "{count} işlemin kategorisi değiştirildi",
+  "@blocMsgTxCategoryChanged": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "blocMsgTxCategoryChangePartial": "Bazı işlemlerin kategorisi değiştirilemedi: {hata}",
+  "@blocMsgTxCategoryChangePartial": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxNotFound": "İşlem bulunamadı: {hata}",
+  "@blocMsgTxNotFound": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxDeleteFailed": "İşlem silinirken hata oluştu: {hata}",
+  "@blocMsgTxDeleteFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxDeleted": "{baslik} silindi",
+  "@blocMsgTxDeleted": {
+    "placeholders": {
+      "baslik": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxBulkDeleteFailed": "İşlemler silinemedi",
+  "blocMsgTxBulkDeleteFailedDetail": "İşlemler silinemedi: {hata}",
+  "@blocMsgTxBulkDeleteFailedDetail": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxBulkDeleted": "{etiket}: {count} işlem silindi",
+  "@blocMsgTxBulkDeleted": {
+    "placeholders": {
+      "etiket": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "blocMsgTxBulkDeletePartial": "Bazı işlemler silinemedi: {hata}",
+  "@blocMsgTxBulkDeletePartial": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgTxSyncWarning": "Bakiye senkronizasyonu başarısız; cüzdan ekranına dönüp tekrar deneyin.",
+  "blocMsgWalletCreateFailed": "Cüzdan oluşturulamadı: {hata}",
+  "@blocMsgWalletCreateFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgWalletSetActiveFailed": "Aktif cüzdan ayarlanamadı: {hata}",
+  "@blocMsgWalletSetActiveFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgWalletUpdateFailed": "Cüzdan güncellenemedi: {hata}",
+  "@blocMsgWalletUpdateFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgWalletCleanupFailed": "Cüzdan verileri temizlenemedi, silme iptal edildi",
+  "blocMsgWalletDeleteFailed": "Cüzdan silinemedi: {hata}",
+  "@blocMsgWalletDeleteFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgWalletSwitchFailed": "Aktif cüzdan değiştirilemedi: {hata}",
+  "@blocMsgWalletSwitchFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgCashWarningSuffix": " (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)",
+  "blocMsgDebtAdded": "Borç başarıyla eklendi.",
+  "blocMsgDebtPaymentSaved": "Ödeme kaydedildi.",
+  "blocMsgDebtPaymentUpdated": "Ödeme güncellendi.",
+  "blocMsgDebtPaymentDeleted": "Ödeme silindi.",
+  "blocMsgDebtUpdated": "Borç güncellendi.",
+  "blocMsgDebtDeleted": "Borç silindi.",
+  "blocMsgDebtAdoptFailed": "Seçilen işlem bağlanamadı: bu arada değişmiş, silinmiş ya da başka bir kayda bağlanmış olabilir. Kayıt eklenmedi.",
+  "blocMsgDebtAdoptedPaymentLocked": "Bu ödeme ekstredeki bir satıra bağlı: tutarı ve tarihi o satırdan gelir. Yanlış satırsa ödemeyi silip doğru satırla yeniden ekle.",
+  "blocMsgDebtAdoptedPrincipalLocked": "Bu borcun anaparası ekstredeki bir satıra bağlı: tutarı ve başlangıç tarihi o satırdan gelir. Diğer bilgiler kaydedilmedi; yanlış satırsa borcu silip doğru satırla yeniden ekle.",
+  "blocMsgReceivableAdded": "Alacak başarıyla eklendi.",
+  "blocMsgReceivableUpdated": "Alacak güncellendi.",
+  "blocMsgReceivableDeleted": "Alacak silindi.",
+  "blocMsgReceivableMarkedPaid": "Alacak ödendi olarak işaretlendi.",
+  "blocMsgImportPickFailed": "Dosya seçilemedi: {hata}",
+  "@blocMsgImportPickFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgImportReadFailed": "Dosya okunamadı: {hata}",
+  "@blocMsgImportReadFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgImportEmptyFile": "Dosya boş veya okunamadı.",
+  "blocMsgImportMappingFailed": "Eşleme uygulanamadı: {hata}",
+  "@blocMsgImportMappingFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgImportCategoriesFailed": "Kategoriler okunamadı: {hata}",
+  "@blocMsgImportCategoriesFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgImportWalletSwitchFailed": "Cüzdan değiştirilemedi: {hata}",
+  "@blocMsgImportWalletSwitchFailed": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "blocMsgBackupFailed": "Yedekleme işlemi tamamlanamadı."
 }
