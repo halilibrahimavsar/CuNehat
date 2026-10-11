@@ -724,6 +724,16 @@ class _DoneState extends State<_Done> {
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
+            if (state.linkedTransfers > 0) ...[
+              const SizedBox(height: 6),
+              Text(
+                context.l10n
+                    .bankImportDoneLinkedTransfers(state.linkedTransfers),
+                key: const ValueKey('import-done-linked-transfers'),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
             if (state.corrected > 0) ...[
               const SizedBox(height: 6),
               Text(

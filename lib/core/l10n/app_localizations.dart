@@ -11260,6 +11260,48 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kendi hesabına aktarım mı? Değilse gider kalır'**
   String get linkHintOwnTransfer;
+
+  /// No description provided for @bankImportTransferAskCard.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart ödemesi mi?'**
+  String get bankImportTransferAskCard;
+
+  /// No description provided for @bankImportTransferAskOwnPayment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kendi hesabından ödeme mi?'**
+  String get bankImportTransferAskOwnPayment;
+
+  /// No description provided for @bankImportTransferAskOwnTransfer.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kendi hesabına aktarım mı?'**
+  String get bankImportTransferAskOwnTransfer;
+
+  /// No description provided for @bankImportTransferLinkTo.
+  ///
+  /// In tr, this message translates to:
+  /// **'{cuzdan} ile bağla'**
+  String bankImportTransferLinkTo(String cuzdan);
+
+  /// No description provided for @bankImportTransferChip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transfer · {cuzdan}'**
+  String bankImportTransferChip(String cuzdan);
+
+  /// No description provided for @bankImportTransferUnmark.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlamayı kaldır'**
+  String get bankImportTransferUnmark;
+
+  /// No description provided for @bankImportDoneLinkedTransfers.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} satır transfer olarak bağlandı.'**
+  String bankImportDoneLinkedTransfers(int count);
 }
 
 class _AppLocalizationsDelegate

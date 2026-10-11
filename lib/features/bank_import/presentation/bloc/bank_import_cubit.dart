@@ -14,7 +14,9 @@ import 'package:cunehat/core/blocs/safe_emit.dart';
 import 'package:cunehat/core/constants/prefs_keys.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/core/services/system_activity_guard.dart';
+import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
+import 'package:cunehat/core/services/transfer_service.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/bank_import/data/balance_reconciler.dart';
 import 'package:cunehat/features/bank_import/data/card_statement_parser.dart';
@@ -83,8 +85,23 @@ class BankImportCubit extends Cubit<BankImportState>
     this._txRepo,
     this._metrics,
     this._notifier,
-    this._systemActivity,
-  ) : super(const BankImportInitial());
+    this._systemActivity, {
+    TransferService? transferService,
+  })  : _transferServiceOverride = transferService,
+        super(const BankImportInitial());
+
+  /// Transfer olarak işaretlenen satırları bağlayan servis. Kurucudan
+  /// verilmediyse (üretim) DI'dan tembel çözülür; kayıtlı değilse bağlama
+  /// yapılmaz ve satır bitiş ekranında "Bağla" önerisi olarak kalır.
+  final TransferService? _transferServiceOverride;
+  TransferService? get _transfers =>
+      _transferServiceOverride ??
+      (getIt.isRegistered<TransferService>() ? getIt<TransferService>() : null);
+
+  /// Son içe aktarımın kurduğu transfer çiftleri ve dokunduğu KARŞI
+  /// cüzdanlar — "geri al" önce bunları çözer.
+  List<String> _lastTransferPairs = const [];
+  Set<String> _lastTransferWallets = const {};
 
   String _userId = '';
   String _walletId = '';
@@ -1192,6 +1209,16 @@ class BankImportCubit extends Cubit<BankImportState>
             x,
       ]);
 
+  /// Satırı kendi cüzdanların arasındaki bir transfer olarak işaretler
+  /// ([walletId] karşı cüzdan) ya da işareti kaldırır (`null`). İşaretli
+  /// satırda kategori aranmaz; yazılınca bağlanır (bkz. [commit]).
+  void setDraftTransfer(int i, String? walletId) => _mutate(
+        (d) => [
+          for (var k = 0; k < d.length; k++)
+            k == i ? d[k].withTransfer(walletId) : d[k],
+        ],
+      );
+
   // Tür, tutar, açıklama ve kategori tekrar tespitinin girdileridir: her biri
   // değişince o satır defterle YENİDEN eşleştirilir (bkz. [_rematch]).
 
@@ -1432,6 +1459,9 @@ class BankImportCubit extends Cubit<BankImportState>
     var futureInstallments = 0;
     final importedIds = <String>[];
     final linkable = <LinkSuggestion>[];
+    // İnceleme ekranında transfer olarak işaretlenen satırlar: yazıldıktan
+    // SONRA bağlanır (bağlama deftere yazılmış bir satır ister).
+    final toLink = <(TransactionEntity, String, LinkHint)>[];
     final investmentCategories = _investmentCategoryIds();
     for (var i = 0; i < selected.length; i++) {
       final id = UidGenerator.generateV7();
@@ -1460,7 +1490,11 @@ class BankImportCubit extends Cubit<BankImportState>
               investmentCategories.contains(draft.categoryId),
           onCard: _targetIsCard,
         );
-        if (hint != null) linkable.add(LinkSuggestion(entity, hint));
+        if (draft.transferWalletId case final other?) {
+          toLink.add((entity, other, hint ?? LinkHint.cardPayment));
+        } else if (hint != null) {
+          linkable.add(LinkSuggestion(entity, hint));
+        }
       });
       // Kalan taksitler ileri tarihe yazılır (kullanıcı kararı, 11 Eki 2026):
       // kartın toplam borcu ve kullanılabilir limiti bankanınkiyle tutsun.
@@ -1516,12 +1550,36 @@ class BankImportCubit extends Cubit<BankImportState>
     }
     _lastCorrectedOriginals = originals;
 
+    // Transfer olarak işaretlenenler bağlanır. Bağlanamayan satır düz
+    // hâliyle kalır ve bitiş ekranında "Bağla" önerisi olarak sunulur.
+    var linkedTransfers = 0;
+    final pairs = <String>[];
+    final touched = <String>{};
+    for (final (row, otherId, hint) in toLink) {
+      final outcome = await _linkAsTransfer(row, otherId);
+      final pairId = outcome?.pairId;
+      if (outcome != null && outcome.isSuccess && pairId != null) {
+        linkedTransfers++;
+        pairs.add(pairId);
+        touched.add(otherId);
+      } else {
+        linkable.add(LinkSuggestion(row, hint));
+      }
+    }
+    _lastTransferPairs = pairs;
+    _lastTransferWallets = touched;
+
     // Künye bakiye senkronundan ÖNCE yazılır: senkron cüzdanı taze okuyup
     // yazdığı için kart bilgisini ezmez; defter bildirimi de kart
     // hatırlatmasını yeni son ödeme tarihiyle kurar.
     final cardSaved = await _saveCardStatement();
     await _metrics.syncBalance(_walletId);
     _notifier.notify(userId: _userId, walletId: _walletId);
+    // Bağlama karşı cüzdanın defterini de değiştirdi (yeni bacak ya da
+    // benimsenen satır): o cüzdanı izleyen ekranlar da tazelensin.
+    for (final other in touched) {
+      _notifier.notify(userId: _userId, walletId: other);
+    }
     await _rememberTarget();
 
     emit(await _buildDone(
@@ -1533,7 +1591,96 @@ class BankImportCubit extends Cubit<BankImportState>
       linkSuggestions: linkable,
       cardStatementSaved: cardSaved,
       futureInstallments: futureInstallments,
+      linkedTransfers: linkedTransfers,
     ));
+  }
+
+  /// [row]'u [otherWalletId] ile arasındaki transferin bir bacağı yapar.
+  ///
+  /// Karşı cüzdanda bu taşımanın öbür bacağı ZATEN duruyorsa (o hesabın
+  /// ekstresi daha önce aktarılmış: ters yön, aynı tutar, en çok
+  /// [_maxTransferDayDistance] gün uzak) iki satır eşlenir — hiçbir şey
+  /// yazılmaz. Yoksa karşı bacak yazılır. Bağlanamazsa `null` ya da başarısız
+  /// sonuç döner; satır düz hâliyle kalır.
+  Future<TransferOutcome?> _linkAsTransfer(
+    TransactionEntity row,
+    String otherWalletId,
+  ) async {
+    final service = _transfers;
+    if (service == null) return null;
+    final wallets = await _wallets();
+    WalletEntity? byId(String id) {
+      for (final w in wallets) {
+        if (w.id == id) return w;
+      }
+      return null;
+    }
+
+    final own = byId(_walletId);
+    final other = byId(otherWalletId);
+    if (own == null || other == null) return null;
+
+    final ledger = (await _txRepo.getTransactions(
+      userId: _userId,
+      walletId: otherWalletId,
+    ))
+        .fold((_) => const <TransactionEntity>[], (list) => list);
+    final existing = _counterpartRow(
+      ledger,
+      row,
+      sameCurrency: own.currency == other.currency,
+    );
+    if (existing == null) {
+      return service.adoptAsTransfer(
+        transaction: row,
+        wallet: own,
+        counterpart: other,
+      );
+    }
+    return row.isExpense
+        ? service.adoptPair(
+            outgoing: row,
+            from: own,
+            incoming: existing,
+            to: other,
+          )
+        : service.adoptPair(
+            outgoing: existing,
+            from: other,
+            incoming: row,
+            to: own,
+          );
+  }
+
+  /// Transferin iki bacağı en çok bu kadar gün ayrı düşebilir (bkz.
+  /// `kMaxTransferDayDistance` — elle bağlama akışıyla aynı kural).
+  static const int _maxTransferDayDistance = 3;
+
+  /// [ledger]'da [row]'un öbür bacağı olabilecek DÜZ satır: ters yön, (aynı
+  /// birimde) kuruşu kuruşuna aynı tutar, en yakın günlüsü. Sistem
+  /// hareketleri ve başka bir kayda bağlı satırlar aday değildir.
+  static TransactionEntity? _counterpartRow(
+    List<TransactionEntity> ledger,
+    TransactionEntity row, {
+    required bool sameCurrency,
+  }) {
+    int day(DateTime d) =>
+        DateTime.utc(d.year, d.month, d.day).millisecondsSinceEpoch ~/
+        Duration.millisecondsPerDay;
+    final rowDay = day(row.date);
+    TransactionEntity? best;
+    var bestDistance = _maxTransferDayDistance + 1;
+    for (final t in ledger) {
+      if (t.id == null || t.isSystem || t.linkedRecordId != null) continue;
+      if (t.isIncome == row.isIncome) continue;
+      if (sameCurrency && !moneyEquals(t.amount, row.amount)) continue;
+      final distance = (day(t.date) - rowDay).abs();
+      if (distance < bestDistance) {
+        best = t;
+        bestDistance = distance;
+      }
+    }
+    return best;
   }
 
   /// [draft] taksitinin alışverişine ait, defterde ZATEN duran başka bir
@@ -1677,6 +1824,19 @@ class BankImportCubit extends Cubit<BankImportState>
     }
     _lastImportedIds = const [];
     _lastCorrectedOriginals = const [];
+    // Bu içe aktarımın kurduğu transferler ÖNCE çözülür: benimsenen bacaklar
+    // düz hâllerine döner (karşı cüzdandaki satır yerinde kalır), yazılan
+    // karşı bacak silinir. Çözülmeden satırlar "bağlı" sayılıp atlanırdı.
+    final pairs = _lastTransferPairs;
+    final touched = _lastTransferWallets;
+    _lastTransferPairs = const [];
+    _lastTransferWallets = const {};
+    final transfers = _transfers;
+    if (transfers != null) {
+      for (final pairId in pairs) {
+        await transfers.unlinkTransfer(pairId);
+      }
+    }
     var kept = 0;
     var removed = 0;
     var reverted = 0;
@@ -1702,6 +1862,9 @@ class BankImportCubit extends Cubit<BankImportState>
     final cardReverted = await _revertCardStatement();
     await _metrics.syncBalance(_walletId);
     _notifier.notify(userId: _userId, walletId: _walletId);
+    for (final other in touched) {
+      _notifier.notify(userId: _userId, walletId: other);
+    }
     emit(const BankImportInitial());
     return ImportUndoResult(
       removed: removed,
@@ -1808,6 +1971,7 @@ class BankImportCubit extends Cubit<BankImportState>
     List<LinkSuggestion> linkSuggestions = const [],
     bool cardStatementSaved = false,
     int futureInstallments = 0,
+    int linkedTransfers = 0,
   }) async {
     final walletRes = await _metrics.walletRepository.getWalletById(_walletId);
     final balance = walletRes.fold((_) => 0.0, (w) => w?.balance ?? 0.0);
@@ -1847,6 +2011,7 @@ class BankImportCubit extends Cubit<BankImportState>
       linkSuggestions: linkSuggestions,
       cardStatementSaved: cardStatementSaved,
       futureInstallments: futureInstallments,
+      linkedTransfers: linkedTransfers,
       firstDate: first,
       lastDate: last,
       closing: closing,

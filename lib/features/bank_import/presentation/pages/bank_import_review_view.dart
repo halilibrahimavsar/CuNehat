@@ -7,11 +7,13 @@ import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
+import 'package:cunehat/core/shared/widgets/row_action_sheet.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/text_search.dart';
 import 'package:cunehat/features/bank_import/data/balance_reconciler.dart';
 import 'package:cunehat/features/bank_import/data/description_grouper.dart';
+import 'package:cunehat/features/bank_import/data/link_hint.dart';
 import 'package:cunehat/features/bank_import/data/card_statement_parser.dart';
 import 'package:cunehat/core/config/feature_flags.dart';
 import 'package:cunehat/features/bank_import/data/statement_verification.dart';
@@ -28,6 +30,8 @@ import 'package:cunehat/features/bank_import/presentation/widgets/similar_group_
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_picker_sheet.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
+import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 
 /// İnceleme listesinde hangi taslakların gösterileceği.
 enum _ReviewFilter {
@@ -125,7 +129,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
       _groupKey = _s.drafts;
       final scope = [
         for (var i = 0; i < _s.drafts.length; i++)
-          if (_s.drafts[i].categoryId == null) i,
+          if (_s.drafts[i].needsCategory) i,
       ];
       _groupCount = scope.length < kMinGroupSize
           ? 0
@@ -194,7 +198,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
       final d = _s.drafts[i];
       final passesFilter = switch (filter) {
         _ReviewFilter.all => true,
-        _ReviewFilter.uncategorized => d.categoryId == null,
+        _ReviewFilter.uncategorized => d.needsCategory,
         _ReviewFilter.toCheck =>
           d.categoryId != null && d.categorySource == CategorySource.bankTag,
         _ReviewFilter.duplicates => d.isDuplicate,
@@ -1279,7 +1283,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     final visible = _visible;
     final blank = [
       for (final (index, draft) in visible)
-        if (draft.categoryId == null) index,
+        if (draft.needsCategory) index,
     ];
     final all = [for (final (index, _) in visible) index];
 
@@ -1448,7 +1452,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     if (state is! BankImportReview) return;
     final similar = [
       for (final i in similarDraftIndexes(state.drafts, index))
-        if (state.drafts[i].categoryId == null) (i, state.drafts[i]),
+        if (state.drafts[i].needsCategory) (i, state.drafts[i]),
     ];
     if (similar.isEmpty) return;
 
@@ -1469,7 +1473,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     if (fresh is! BankImportReview) return;
     final targets = [
       for (final i in chosen)
-        if (fresh.drafts[i].categoryId == null) i,
+        if (fresh.drafts[i].needsCategory) i,
     ];
     if (targets.isNotEmpty) _cubit.applyCategoryToIndexes(targets, categoryId);
   }
@@ -1596,7 +1600,10 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                       Expanded(
                         child: Align(
                           alignment: Alignment.centerRight,
-                          child: _categoryControl(context, i, d),
+                          // Transfer olarak işaretli satırın kategorisi olmaz.
+                          child: d.isTransfer
+                              ? _transferChip(context, i, d)
+                              : _categoryControl(context, i, d),
                         ),
                       ),
                       // Görünür düzenleme kolu: açıklama, tutar ve tür TEK
@@ -1619,6 +1626,12 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                     ],
                   ),
                 ),
+                // Kendi cüzdanların arasındaki para taşıması bir harcama ya
+                // da gelir değildir: kategori seçtirmek yerine BAĞLAMAK
+                // önerilir (yalnız öneri — karar kullanıcının).
+                if (d.selected && !d.isTransfer && !d.isDuplicate)
+                  if (_transferHintOf(d) case final hint?)
+                    _transferSuggestion(context, i, d, hint),
                 // Sürpriz olmasın: bu satır yazılınca kalan taksitler de
                 // ileri tarihe yazılır.
                 if (d.selected && (d.installment?.remaining ?? 0) > 0)
@@ -1678,6 +1691,198 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
   /// Tahmin edilemeyen taslaklar `categoryId: null` gelir (bkz. cubit); boş
   /// görünmek yerine kırmızı bir "Kategori seç" çağrısı basılır — kategorisiz
   /// satır zaten eklenemez.
+  // ------------------------------------------------- transfer olarak bağla
+
+  /// Satır kendi cüzdanların arasındaki bir para taşıması gibi mi görünüyor
+  /// (karta ödeme, kartın aldığı ödeme, karttan çıkan havale)? Diğer bağlama
+  /// ipuçları (birikim, borç) bu ekranda sorulmaz: onlar kayıt seçtirir ve
+  /// bitiş ekranında önerilir.
+  LinkHint? _transferHintOf(ImportDraft d) {
+    final hint = linkHintOf(
+      d.description,
+      isIncome: d.isIncome,
+      onCard: _s.targetIsCard,
+    );
+    return switch (hint) {
+      LinkHint.cardPayment ||
+      LinkHint.cardPaymentReceived ||
+      LinkHint.ownTransfer =>
+        hint,
+      _ => null,
+    };
+  }
+
+  List<WalletEntity> _wallets(BuildContext context) {
+    try {
+      final state = context.read<WalletBloc>().state;
+      return state is WalletLoadedSt ? state.wallets : const [];
+    } on ProviderNotFoundException {
+      return const [];
+    }
+  }
+
+  WalletEntity? _walletById(BuildContext context, String? id) {
+    if (id == null) return null;
+    for (final w in _wallets(context)) {
+      if (w.id == id) return w;
+    }
+    return null;
+  }
+
+  /// Karşı cüzdan belliyse o: banka satırında son 4 hanesi açıklamada geçen
+  /// TEK kart; kart dökümünde kartın ödendiği hesap. Belli değilse `null`
+  /// (kullanıcı seçer).
+  WalletEntity? _suggestedCounterpart(
+    BuildContext context,
+    ImportDraft d,
+    LinkHint hint,
+  ) {
+    final wallets = _wallets(context);
+    final targetId = _cubit.walletId;
+    final id = switch (hint) {
+      LinkHint.cardPayment => cardIdByLast4(d.description, [
+          for (final w in wallets)
+            if (w.id != null && w.creditCard?.last4 != null)
+              (id: w.id!, last4: w.creditCard!.last4!),
+        ]),
+      LinkHint.cardPaymentReceived =>
+        _walletById(context, targetId)?.creditCard?.paymentWalletId,
+      _ => null,
+    };
+    return id == targetId ? null : _walletById(context, id);
+  }
+
+  Future<void> _markTransfer(
+    BuildContext context,
+    int i,
+    ImportDraft d,
+    LinkHint hint,
+  ) async {
+    var counterpart = _suggestedCounterpart(context, d, hint);
+    if (counterpart == null) {
+      final others = [
+        for (final w in _wallets(context))
+          if (w.id != null && w.id != _cubit.walletId) w,
+      ];
+      if (others.isEmpty) return;
+      final picked = await RowActionSheet.show<String>(
+        context,
+        title: context.l10n.baglaCuzdanSec,
+        icon: Icons.swap_horiz_rounded,
+        accent: Theme.of(context).colorScheme.primary,
+        keyPrefix: 'review-transfer-wallet',
+        actions: [
+          for (final w in others)
+            RowAction(
+              value: w.id!,
+              icon: w.isCreditCard
+                  ? Icons.credit_card_rounded
+                  : Icons.account_balance_wallet_rounded,
+              title: w.name,
+              subtitle: formatMoney(w.balance, currency: w.currency),
+            ),
+        ],
+      );
+      if (picked == null || !context.mounted) return;
+      counterpart = _walletById(context, picked);
+    }
+    final id = counterpart?.id;
+    if (id != null) _cubit.setDraftTransfer(i, id);
+  }
+
+  /// "Kart ödemesi mi? Bonus ile bağla" — tek dokunuşla satır transfer olur
+  /// ve kategori aranmaz.
+  Widget _transferSuggestion(
+    BuildContext context,
+    int i,
+    ImportDraft d,
+    LinkHint hint,
+  ) {
+    final l10n = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final question = switch (hint) {
+      LinkHint.cardPaymentReceived => l10n.bankImportTransferAskOwnPayment,
+      LinkHint.ownTransfer => l10n.bankImportTransferAskOwnTransfer,
+      _ => l10n.bankImportTransferAskCard,
+    };
+    final counterpart = _suggestedCounterpart(context, d, hint);
+    final action = counterpart == null
+        ? l10n.bankImportLinkButton
+        : l10n.bankImportTransferLinkTo(counterpart.name);
+    return InkWell(
+      key: ValueKey('review-transfer-suggest-$i'),
+      onTap: () => _markTransfer(context, i, d, hint),
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          children: [
+            Icon(Icons.swap_horiz_rounded, size: 16, color: cs.primary),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text.rich(
+                TextSpan(
+                  text: '$question ',
+                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                  children: [
+                    TextSpan(
+                      text: action,
+                      style: TextStyle(
+                        color: cs.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// İşaretli satırda kategori kolunun yerini alır; dokununca işaret kalkar
+  /// (satır yeniden kategori ister).
+  Widget _transferChip(BuildContext context, int i, ImportDraft d) {
+    final cs = Theme.of(context).colorScheme;
+    final name = _walletById(context, d.transferWalletId)?.name ?? '—';
+    return Tooltip(
+      message: context.l10n.bankImportTransferUnmark,
+      child: InkWell(
+        key: ValueKey('review-transfer-chip-$i'),
+        onTap: () => _cubit.setDraftTransfer(i, null),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 32),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.swap_horiz_rounded, size: 14, color: cs.primary),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  context.l10n.bankImportTransferChip(name),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: cs.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Icon(Icons.close_rounded, size: 14, color: cs.onSurfaceVariant),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _categoryControl(BuildContext context, int i, ImportDraft d) {
     final cs = Theme.of(context).colorScheme;
     final cat = _categoryById(_catsFor(d.isIncome), d.categoryId);
@@ -1874,7 +2079,11 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                     _assignCategoryTo([
                       for (var i = 0; i < _s.drafts.length; i++)
                         if (_s.drafts[i].selected &&
-                            _s.drafts[i].categoryId == null)
+                            _s.drafts[i].needsCategory &&
+                            // Kart ödemesi gibi görünen satıra toplu
+                            // kategori basılmaz: o satır bağlanmalı, karar
+                            // satırın kendi önerisinden verilir.
+                            _transferHintOf(_s.drafts[i]) == null)
                           i,
                     ]);
                   },
@@ -2018,9 +2227,8 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                     Expanded(
                       child: OutlinedButton(
                         // Kategorisiz satır eklenemez (bkz. [_uncategorizedBanner]).
-                        onPressed: d.categoryId == null
-                            ? null
-                            : () => _stepDecide(true),
+                        onPressed:
+                            d.needsCategory ? null : () => _stepDecide(true),
                         child: Text(context.l10n.bankImportStepAddAnyway),
                       ),
                     ),
@@ -2046,9 +2254,8 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                     Expanded(
                       child: FilledButton(
                         // Kategorisiz satır eklenemez (bkz. [_uncategorizedBanner]).
-                        onPressed: d.categoryId == null
-                            ? null
-                            : () => _stepDecide(true),
+                        onPressed:
+                            d.needsCategory ? null : () => _stepDecide(true),
                         child: Text(context.l10n.bankImportStepAdd),
                       ),
                     ),

@@ -15,6 +15,9 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/wallet_category_service.dart';
+import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
+import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -27,6 +30,9 @@ class MockBankImportCubit extends MockCubit<BankImportState>
     implements BankImportCubit {}
 
 class MockCategoryRepository extends Mock implements CategoryRepository {}
+
+class _MockWalletBloc extends MockBloc<WalletEvent, WalletState>
+    implements WalletBloc {}
 
 class MockWalletCategoryService extends Mock implements WalletCategoryService {}
 
@@ -185,9 +191,17 @@ void main() {
     WidgetTester tester,
     BankImportReview state, {
     bool fullscreen = false,
+    List<WalletEntity>? wallets,
   }) async {
     when(() => cubit.state).thenReturn(state);
-    await tester.pumpWidget(
+    Widget withWallets(Widget child) {
+      if (wallets == null) return child;
+      final bloc = _MockWalletBloc();
+      when(() => bloc.state).thenReturn(WalletLoadedSt(wallets, wallets.first));
+      return BlocProvider<WalletBloc>.value(value: bloc, child: child);
+    }
+
+    await tester.pumpWidget(withWallets(
       MaterialApp(
         // Öneri mesajı [AppMessenger] üzerinden gösteriliyor; anahtar üretimde
         // olduğu gibi burada da bağlanmalı, yoksa snackbar hiç doğmaz.
@@ -211,7 +225,7 @@ void main() {
           ),
         ),
       ),
-    );
+    ));
     await tester.pumpAndSettle();
   }
 
@@ -1775,6 +1789,149 @@ void main() {
   // ---------------------------------------------------------------------
   // UX Tur 2 (11 Eki 2026) — listeye kalan yer
   // ---------------------------------------------------------------------
+  group('kendi cüzdanların arasındaki para taşıması', () {
+    // Bankadan karta ödeme harcama değildir; karttaki "Ödeme - Teşekkür
+    // Ederiz" de gelir değildir. Eskiden bu satırlara da kategori ("Maaş"?)
+    // seçtiriliyor, bağlama ancak içe aktarmadan SONRA yapılabiliyordu.
+    WalletEntity wallet(String id, String name, {CreditCardInfo? card}) =>
+        WalletEntity(
+          id: id,
+          userId: 'u1',
+          name: name,
+          balance: 1000,
+          debt: 0,
+          credit: 0,
+          investment: 0,
+          colorHex: '0xFF000000',
+          iconName: 'money',
+          createdAt: DateTime(2026, 1, 1),
+          openingBalance: 0,
+          creditCard: card,
+        );
+    final bank = wallet('w1', 'Banka');
+    final card = wallet('c1', 'Bonus',
+        card: const CreditCardInfo(closingDay: 25, dueDay: 5, last4: '4321'));
+    final other = wallet('w2', 'Nakit');
+
+    ImportDraft payment({String? transferTo}) => ImportDraft(
+          date: DateTime(2026, 9, 30),
+          description: 'Kart İşlemleri - 4321 nolu kart ödemesi',
+          amount: 1303.03,
+          type: TransactionTypeModel.expense,
+          transferWalletId: transferTo,
+        );
+
+    setUp(() {
+      when(() => cubit.setDraftTransfer(any(), any())).thenReturn(null);
+    });
+
+    testWidgets(
+        'kart ödemesi satırında kategori yerine BAĞLAMAK önerilir; tek '
+        'dokunuş satırı o karta bağlar', (tester) async {
+      await pump(tester, review(drafts: [payment()]),
+          wallets: [bank, card, other]);
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+
+      final suggestion =
+          find.byKey(const ValueKey('review-transfer-suggest-0'));
+      expect(suggestion, findsOneWidget);
+      // Son 4 hanesi açıklamada geçen TEK kart önceden bulunur.
+      expect(
+        find.textContaining(l10n.bankImportTransferLinkTo('Bonus'),
+            findRichText: true),
+        findsOneWidget,
+      );
+
+      await tester.tap(suggestion);
+      await tester.pumpAndSettle();
+
+      verify(() => cubit.setDraftTransfer(0, 'c1')).called(1);
+    });
+
+    testWidgets(
+        'işaretli satırda kategori kolu yok, çip var; engel şeridi çıkmaz; '
+        'çipe dokunmak işareti kaldırır', (tester) async {
+      await pump(tester, review(drafts: [payment(transferTo: 'c1')]),
+          wallets: [bank, card, other]);
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+
+      expect(find.text(l10n.bankImportTransferChip('Bonus')), findsOneWidget);
+      expect(find.text(l10n.bankImportPickCategoryHint), findsNothing);
+      expect(find.byKey(const ValueKey('review-transfer-suggest-0')),
+          findsNothing);
+      // Kategorisi yok ama içe aktarmayı ENGELLEMEZ.
+      expect(find.byKey(const ValueKey('review-assign-blocked')), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('review-transfer-chip-0')));
+      await tester.pumpAndSettle();
+
+      verify(() => cubit.setDraftTransfer(0, null)).called(1);
+    });
+
+    testWidgets('karşı cüzdan belli değilse hangi cüzdan olduğu SORULUR',
+        (tester) async {
+      // Kartın son 4 hanesi kayıtlı değil: hangi kart olduğu bilinemez.
+      final unknownCard = wallet('c1', 'Bonus',
+          card: const CreditCardInfo(closingDay: 25, dueDay: 5));
+      await pump(tester, review(drafts: [payment()]),
+          wallets: [bank, unknownCard, other]);
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+
+      await tester.tap(find.byKey(const ValueKey('review-transfer-suggest-0')));
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.baglaCuzdanSec), findsOneWidget);
+      // Hedef cüzdanın kendisi listede yok.
+      expect(find.byKey(const ValueKey('review-transfer-wallet-w1')),
+          findsNothing);
+      await tester.tap(find.byKey(const ValueKey('review-transfer-wallet-c1')));
+      await tester.pumpAndSettle();
+
+      verify(() => cubit.setDraftTransfer(0, 'c1')).called(1);
+    });
+
+    testWidgets('sıradan harcama satırında bağlama önerisi yok',
+        (tester) async {
+      await pump(
+        tester,
+        review(
+            drafts: [_draft(description: 'ORNEK BUFE', categoryId: 'Market')]),
+        wallets: [bank, card],
+      );
+
+      expect(find.byKey(const ValueKey('review-transfer-suggest-0')),
+          findsNothing);
+    });
+
+    testWidgets(
+        'engel şeridindeki toplu "Kategori ata", kart ödemesi satırına '
+        'kategori BASMAZ', (tester) async {
+      await pump(
+        tester,
+        review(drafts: [
+          payment(),
+          _draft(description: 'ORNEK BUFE'),
+        ]),
+        wallets: [bank, card],
+      );
+
+      await tester.tap(find.byKey(const ValueKey('review-assign-blocked')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Fatura').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('1 satıra uygula'));
+      await tester.pumpAndSettle();
+
+      // Yalnız sıradan satır (1) kategorilendi; ödeme satırı (0) kendi
+      // önerisinden karar bekliyor.
+      final indexes =
+          verify(() => cubit.applyCategoryToIndexes(captureAny(), any()))
+              .captured
+              .single as List<int>;
+      expect(indexes, [1]);
+    });
+  });
+
   group('taksitli satır', () {
     ImportDraft installment({bool selected = true}) {
       final info = DraftInstallment(

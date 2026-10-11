@@ -163,6 +163,24 @@ void main() {
     expect(find.text('11 kalan taksit ileri tarihe yazıldı.'), findsOneWidget);
   });
 
+  testWidgets('incelemede işaretlenip bağlanan transferler bildirilir',
+      (tester) async {
+    doneState(const BankImportDone(
+      added: 3,
+      skipped: 0,
+      walletId: 'w1',
+      userId: 'u1',
+      balance: 1500,
+      hasPastMonthRows: false,
+      linkedTransfers: 2,
+    ));
+    await pump(tester);
+
+    expect(find.byKey(const ValueKey('import-done-linked-transfers')),
+        findsOneWidget);
+    expect(find.text('2 satır transfer olarak bağlandı.'), findsOneWidget);
+  });
+
   testWidgets('taksit yazılmadıysa o satır hiç görünmez', (tester) async {
     doneState(_done);
     await pump(tester);

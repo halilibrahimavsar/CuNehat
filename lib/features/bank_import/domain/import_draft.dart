@@ -327,6 +327,19 @@ class ImportDraft extends Equatable {
   /// (bkz. `BankImportCubit.commit`).
   final DraftInstallment? installment;
 
+  /// Bu satır kullanıcının KENDİ cüzdanları arasındaki bir para taşımasıdır
+  /// (karta ödeme, hesaplar arası aktarım) ve karşı tarafı bu cüzdandır;
+  /// değilse `null`.
+  ///
+  /// **Neden:** inceleme ekranı her satıra kategori ister. Bankadan karta
+  /// yapılan ödeme bir harcama değildir (harcamalar kartta zaten sayılır),
+  /// karttaki "Ödeme - Teşekkür Ederiz" de gelir değildir; kullanıcı bu
+  /// satıra anlamsız bir kategori ("Maaş"?) seçmek zorunda kalıyor, bağlamayı
+  /// ancak içe aktarmadan SONRA yapabiliyordu. İşaretli satırda kategori
+  /// aranmaz; satır yazılınca transferin bir bacağı olarak bağlanır
+  /// (bkz. `BankImportCubit.commit`).
+  final String? transferWalletId;
+
   /// Defterde ya da dosyada bulunan olası eşi; yoksa `null`.
   final DuplicateMatch? duplicateOf;
 
@@ -349,6 +362,7 @@ class ImportDraft extends Equatable {
     this.sourceTag,
     this.reference,
     this.installment,
+    this.transferWalletId,
     this.duplicateOf,
     this.selected = true,
     this.correctExisting = false,
@@ -356,6 +370,32 @@ class ImportDraft extends Equatable {
 
   bool get isIncome => type == TransactionTypeModel.income;
   bool get isDuplicate => duplicateOf != null;
+
+  /// Kendi cüzdanları arası transfer olarak işaretli mi (bkz.
+  /// [transferWalletId]).
+  bool get isTransfer => transferWalletId != null;
+
+  /// İçe aktarılabilmesi için hâlâ bir karar bekliyor mu: ne kategorisi var
+  /// ne de transfer olarak işaretli.
+  bool get needsCategory => categoryId == null && !isTransfer;
+
+  /// Transfer işareti konmuş ([walletId]) ya da kaldırılmış (`null`) kopya.
+  /// `copyWith` işareti kaldıramaz (`??` deseni).
+  ImportDraft withTransfer(String? walletId) => ImportDraft(
+        date: date,
+        description: description,
+        amount: amount,
+        type: type,
+        categoryId: categoryId,
+        categorySource: categorySource,
+        sourceTag: sourceTag,
+        reference: reference,
+        installment: installment,
+        transferWalletId: walletId,
+        duplicateOf: duplicateOf,
+        selected: selected,
+        correctExisting: correctExisting,
+      );
 
   /// [duplicateOf] `copyWith` ile TEMİZLENEMEZ (`??` deseni); eşleşmeyi
   /// düşürmek için [withoutDuplicate] kullanılır. Kategori değiştirilirken
@@ -383,6 +423,7 @@ class ImportDraft extends Equatable {
       sourceTag: sourceTag ?? this.sourceTag,
       reference: reference ?? this.reference,
       installment: installment,
+      transferWalletId: transferWalletId,
       duplicateOf: duplicateOf ?? this.duplicateOf,
       selected: selected ?? this.selected,
       correctExisting: correctExisting ?? this.correctExisting,
@@ -401,6 +442,7 @@ class ImportDraft extends Equatable {
         sourceTag: sourceTag,
         reference: reference,
         installment: installment,
+        transferWalletId: transferWalletId,
         duplicateOf: duplicateOf,
         selected: selected,
         correctExisting: correctExisting,
@@ -417,6 +459,7 @@ class ImportDraft extends Equatable {
         sourceTag: sourceTag,
         reference: reference,
         installment: installment,
+        transferWalletId: transferWalletId,
         selected: selected,
       );
 
@@ -506,6 +549,7 @@ class ImportDraft extends Equatable {
         sourceTag,
         reference,
         installment,
+        transferWalletId,
         duplicateOf,
         selected,
         correctExisting,

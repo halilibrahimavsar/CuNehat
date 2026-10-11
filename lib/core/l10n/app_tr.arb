@@ -3971,5 +3971,33 @@
     }
   },
   "linkHintCardPaymentIn": "Kendi hesabından ödeme olabilir",
-  "linkHintOwnTransfer": "Kendi hesabına aktarım mı? Değilse gider kalır"
+  "linkHintOwnTransfer": "Kendi hesabına aktarım mı? Değilse gider kalır",
+  "bankImportTransferAskCard": "Kart ödemesi mi?",
+  "bankImportTransferAskOwnPayment": "Kendi hesabından ödeme mi?",
+  "bankImportTransferAskOwnTransfer": "Kendi hesabına aktarım mı?",
+  "bankImportTransferLinkTo": "{cuzdan} ile bağla",
+  "@bankImportTransferLinkTo": {
+    "placeholders": {
+      "cuzdan": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportTransferChip": "Transfer · {cuzdan}",
+  "@bankImportTransferChip": {
+    "placeholders": {
+      "cuzdan": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportTransferUnmark": "Bağlamayı kaldır",
+  "bankImportDoneLinkedTransfers": "{count} satır transfer olarak bağlandı.",
+  "@bankImportDoneLinkedTransfers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

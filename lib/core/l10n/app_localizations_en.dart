@@ -6574,4 +6574,33 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get linkHintOwnTransfer =>
       'A transfer to your own account? Otherwise it stays an expense';
+
+  @override
+  String get bankImportTransferAskCard => 'A card payment?';
+
+  @override
+  String get bankImportTransferAskOwnPayment =>
+      'A payment from your own account?';
+
+  @override
+  String get bankImportTransferAskOwnTransfer =>
+      'A transfer to your own account?';
+
+  @override
+  String bankImportTransferLinkTo(String cuzdan) {
+    return 'Link with $cuzdan';
+  }
+
+  @override
+  String bankImportTransferChip(String cuzdan) {
+    return 'Transfer · $cuzdan';
+  }
+
+  @override
+  String get bankImportTransferUnmark => 'Remove the link';
+
+  @override
+  String bankImportDoneLinkedTransfers(int count) {
+    return '$count rows were linked as transfers.';
+  }
 }

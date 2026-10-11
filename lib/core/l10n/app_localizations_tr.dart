@@ -6527,4 +6527,31 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get linkHintOwnTransfer =>
       'Kendi hesabına aktarım mı? Değilse gider kalır';
+
+  @override
+  String get bankImportTransferAskCard => 'Kart ödemesi mi?';
+
+  @override
+  String get bankImportTransferAskOwnPayment => 'Kendi hesabından ödeme mi?';
+
+  @override
+  String get bankImportTransferAskOwnTransfer => 'Kendi hesabına aktarım mı?';
+
+  @override
+  String bankImportTransferLinkTo(String cuzdan) {
+    return '$cuzdan ile bağla';
+  }
+
+  @override
+  String bankImportTransferChip(String cuzdan) {
+    return 'Transfer · $cuzdan';
+  }
+
+  @override
+  String get bankImportTransferUnmark => 'Bağlamayı kaldır';
+
+  @override
+  String bankImportDoneLinkedTransfers(int count) {
+    return '$count satır transfer olarak bağlandı.';
+  }
 }

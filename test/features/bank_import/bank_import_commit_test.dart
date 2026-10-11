@@ -1,5 +1,6 @@
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
+import 'package:cunehat/core/services/transfer_service.dart';
 import 'package:cunehat/core/services/system_activity_guard.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/bank_import/data/link_hint.dart';
@@ -63,6 +64,8 @@ _MockWalletCategories _walletCategoriesStub(CategoryRepository repo) {
 
 class _MockTxRepo extends Mock implements TransactionsRepository {}
 
+class _MockTransfers extends Mock implements TransferService {}
+
 class _MockMetrics extends Mock implements WalletMetricsService {}
 
 class _MockWalletRepo extends Mock implements WalletRepository {}
@@ -115,7 +118,7 @@ void main() {
     );
   });
 
-  BankImportCubit build() {
+  BankImportCubit build({TransferService? transfers}) {
     txRepo = _MockTxRepo();
     metrics = _MockMetrics();
     walletRepo = _MockWalletRepo();
@@ -150,6 +153,7 @@ void main() {
       metrics,
       notifier,
       SystemActivityGuard(),
+      transferService: transfers,
     );
   }
 
@@ -253,6 +257,199 @@ void main() {
       verifyNever(() => txRepo.addTransaction(any()));
       final done = cubit.state as BankImportDone;
       expect(done.added, 0);
+    });
+  });
+
+  group('transfer olarak işaretli satır', () {
+    // Bankadan karta yapılan ödeme harcama değildir (harcamalar kartta zaten
+    // sayılır). Eskiden inceleme ekranı bu satıra da kategori seçtiriyor,
+    // bağlama ancak içe aktarmadan SONRA yapılabiliyordu.
+    late _MockTransfers transfers;
+
+    WalletEntity card() => _wallet(0).copyWith(
+          id: 'c1',
+          name: 'Kart',
+          creditCard:
+              const CreditCardInfo(closingDay: 25, dueDay: 5, last4: '4321'),
+        );
+
+    ImportDraft payment() => ImportDraft(
+          date: DateTime(2026, 9, 30),
+          description: 'Kart İşlemleri - 4321 nolu kart ödemesi',
+          amount: 1303.03,
+          type: TransactionTypeModel.expense,
+          transferWalletId: 'c1',
+        );
+
+    TransactionEntity cardSideRow({required DateTime date}) =>
+        TransactionEntity(
+          id: 'card-pay',
+          userId: 'u1',
+          walletId: 'c1',
+          title: 'Ödeme - Teşekkür Ederiz',
+          tag: 'cat',
+          amount: 1303.03,
+          date: date,
+          type: TransactionTypeModel.income,
+          origin: TransactionOrigin.bankImport,
+        );
+
+    BankImportCubit seeded({List<TransactionEntity> cardLedger = const []}) {
+      transfers = _MockTransfers();
+      final cubit = build(transfers: transfers);
+      when(() => walletRepo.getWallets(any()))
+          .thenAnswer((_) async => Right([_wallet(1500), card()]));
+      when(() => txRepo.getTransactions(
+                userId: any(named: 'userId'),
+                walletId: any(named: 'walletId'),
+              ))
+          .thenAnswer((inv) async => Right(
+              inv.namedArguments[#walletId] == 'c1' ? cardLedger : const []));
+      when(() => transfers.adoptAsTransfer(
+            transaction: any(named: 'transaction'),
+            wallet: any(named: 'wallet'),
+            counterpart: any(named: 'counterpart'),
+          )).thenAnswer((_) async => const TransferOutcome(
+            result: TransferResult.success,
+            transactionIds: ['leg'],
+            fromWalletId: 'w1',
+            toWalletId: 'c1',
+            pairId: 'pair-1',
+            adoptedLegs: 1,
+          ));
+      when(() => transfers.adoptPair(
+            outgoing: any(named: 'outgoing'),
+            from: any(named: 'from'),
+            incoming: any(named: 'incoming'),
+            to: any(named: 'to'),
+          )).thenAnswer((_) async => const TransferOutcome(
+            result: TransferResult.success,
+            fromWalletId: 'w1',
+            toWalletId: 'c1',
+            pairId: 'pair-2',
+            adoptedLegs: 2,
+          ));
+      when(() => transfers.unlinkTransfer(any())).thenAnswer((_) async => true);
+      cubit.debugSeedReview(userId: 'u1', walletId: 'w1', drafts: [payment()]);
+      return cubit;
+    }
+
+    test('kategorisi olmasa da içe aktarılabilir', () {
+      final cubit = seeded();
+      final review = cubit.state as BankImportReview;
+
+      expect(review.drafts.single.categoryId, isNull);
+      expect(review.selectedUncategorizedCount, 0);
+      expect(review.canCommit, isTrue);
+    });
+
+    test(
+        'karşı cüzdanda eşi YOKSA: satır yazılır, transferin bir bacağı olur ve '
+        'karşı bacak yazdırılır', () async {
+      final cubit = seeded();
+
+      await cubit.commit();
+
+      final written = verify(() => txRepo.addTransaction(captureAny()))
+          .captured
+          .single as TransactionEntity;
+      final call = verify(() => transfers.adoptAsTransfer(
+            transaction: captureAny(named: 'transaction'),
+            wallet: captureAny(named: 'wallet'),
+            counterpart: captureAny(named: 'counterpart'),
+          )).captured;
+      expect((call[0] as TransactionEntity).id, written.id);
+      expect((call[1] as WalletEntity).id, 'w1');
+      expect((call[2] as WalletEntity).id, 'c1');
+      verifyNever(() => transfers.adoptPair(
+            outgoing: any(named: 'outgoing'),
+            from: any(named: 'from'),
+            incoming: any(named: 'incoming'),
+            to: any(named: 'to'),
+          ));
+
+      final done = cubit.state as BankImportDone;
+      expect(done.added, 1);
+      expect(done.linkedTransfers, 1);
+      // Bağlandı: bitiş ekranında ayrıca "Bağla" diye sorulmaz.
+      expect(done.linkSuggestions, isEmpty);
+      // Karşı cüzdanı izleyen ekranlar da tazelenir.
+      verify(() => notifier.notify(userId: 'u1', walletId: 'c1')).called(1);
+      verify(() => notifier.notify(userId: 'u1', walletId: 'w1')).called(1);
+    });
+
+    test(
+        'karşı cüzdanda eşi VARSA (o ekstre önce aktarılmış): iki satır '
+        'eşlenir, yeni satır yazdırılmaz', () async {
+      final existing = cardSideRow(date: DateTime(2026, 10, 1));
+      final cubit = seeded(cardLedger: [existing]);
+
+      await cubit.commit();
+
+      final call = verify(() => transfers.adoptPair(
+            outgoing: captureAny(named: 'outgoing'),
+            from: captureAny(named: 'from'),
+            incoming: captureAny(named: 'incoming'),
+            to: captureAny(named: 'to'),
+          )).captured;
+      expect((call[0] as TransactionEntity).walletId, 'w1');
+      expect((call[1] as WalletEntity).id, 'w1');
+      expect((call[2] as TransactionEntity).id, 'card-pay');
+      expect((call[3] as WalletEntity).id, 'c1');
+      verifyNever(() => transfers.adoptAsTransfer(
+            transaction: any(named: 'transaction'),
+            wallet: any(named: 'wallet'),
+            counterpart: any(named: 'counterpart'),
+          ));
+      expect((cubit.state as BankImportDone).linkedTransfers, 1);
+    });
+
+    test('uzak tarihli ya da başka tutarlı satır eş SAYILMAZ', () async {
+      final cubit = seeded(cardLedger: [
+        cardSideRow(date: DateTime(2026, 10, 9)),
+        cardSideRow(date: DateTime(2026, 9, 30)).copyWith(amount: 1300),
+      ]);
+
+      await cubit.commit();
+
+      verify(() => transfers.adoptAsTransfer(
+            transaction: any(named: 'transaction'),
+            wallet: any(named: 'wallet'),
+            counterpart: any(named: 'counterpart'),
+          )).called(1);
+    });
+
+    test('bağlanamazsa satır yazılı kalır ve bitiş ekranında "Bağla" önerilir',
+        () async {
+      final cubit = seeded();
+      when(() => transfers.adoptAsTransfer(
+                transaction: any(named: 'transaction'),
+                wallet: any(named: 'wallet'),
+                counterpart: any(named: 'counterpart'),
+              ))
+          .thenAnswer((_) async =>
+              const TransferOutcome.failure(TransferResult.adoptionFailed));
+
+      await cubit.commit();
+
+      final done = cubit.state as BankImportDone;
+      expect(done.added, 1);
+      expect(done.linkedTransfers, 0);
+      expect(done.linkSuggestions.single.hint, LinkHint.cardPayment);
+    });
+
+    test('geri al: önce transfer çözülür, sonra satır silinir', () async {
+      final cubit = seeded();
+      await cubit.commit();
+
+      await cubit.undoImport();
+
+      verifyInOrder([
+        () => transfers.unlinkTransfer('pair-1'),
+        () => txRepo.deleteTransaction(any()),
+      ]);
+      // Karşı cüzdan da bildirilir (bacağı silindi).
+      verify(() => notifier.notify(userId: 'u1', walletId: 'c1')).called(2);
     });
   });
 

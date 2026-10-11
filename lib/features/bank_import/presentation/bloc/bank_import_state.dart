@@ -211,8 +211,7 @@ class BankImportReview extends BankImportState {
   /// seçmesi gereken) taslak sayısı — bkz. `CategoryGuesser.guess`: yanlış
   /// bir varsayılana (ör. hep ilk kategoriye) sessizce düşmek yerine
   /// tahmin yoksa `categoryId` bilerek `null` bırakılır.
-  int get uncategorizedCount =>
-      drafts.where((d) => d.categoryId == null).length;
+  int get uncategorizedCount => drafts.where((d) => d.needsCategory).length;
 
   /// Kategorisi yalnız bankanın genel etiketinden tahmin edilen satırlar —
   /// en zayıf kanıt (bkz. [CategorySource.bankTag]); "Kontrol et" süzgeci.
@@ -247,8 +246,11 @@ class BankImportReview extends BankImportState {
   /// `tag` ile yazılır ve bütçe/rapor hiçbir kategoriye saymaz — yani sessizce
   /// kaybolur. Bu yüzden [canCommit] bunu bir kapı olarak kullanır: sayı sıfır
   /// olmadan ekleme yapılmaz.
+  ///
+  /// Transfer olarak işaretli satır sayılmaz: o bir harcama/gelir değildir,
+  /// kategorisi olmaz (bkz. [ImportDraft.transferWalletId]).
   int get selectedUncategorizedCount =>
-      drafts.where((d) => d.selected && d.categoryId == null).length;
+      drafts.where((d) => d.selected && d.needsCategory).length;
 
   /// Toplu yazım yapılabilir mi: eklenecek ya da düzeltilecek en az bir satır
   /// var ve eklenecek satırların hepsi kategorili (düzeltilen kayıt zaten
@@ -327,6 +329,10 @@ class BankImportDone extends BankImportState {
   /// ([added]'e dahil DEĞİL: ekstrede satır olarak yoklardı).
   final int futureInstallments;
 
+  /// İnceleme ekranında transfer olarak işaretlenip yazılırken BAĞLANAN satır
+  /// sayısı ([added]'e dahildir).
+  final int linkedTransfers;
+
   /// Eklenen hareketlerin en eski ve en yeni tarihi ("Eklenenleri göster"
   /// işlem listesini bu aralıkla açar); hiçbir şey eklenmediyse `null`.
   final DateTime? firstDate;
@@ -353,6 +359,7 @@ class BankImportDone extends BankImportState {
     this.linkSuggestions = const [],
     this.cardStatementSaved = false,
     this.futureInstallments = 0,
+    this.linkedTransfers = 0,
     this.firstDate,
     this.lastDate,
     this.closing,

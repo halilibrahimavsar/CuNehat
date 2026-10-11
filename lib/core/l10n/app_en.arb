@@ -3737,5 +3737,33 @@
     }
   },
   "linkHintCardPaymentIn": "May be a payment from your own account",
-  "linkHintOwnTransfer": "A transfer to your own account? Otherwise it stays an expense"
+  "linkHintOwnTransfer": "A transfer to your own account? Otherwise it stays an expense",
+  "bankImportTransferAskCard": "A card payment?",
+  "bankImportTransferAskOwnPayment": "A payment from your own account?",
+  "bankImportTransferAskOwnTransfer": "A transfer to your own account?",
+  "bankImportTransferLinkTo": "Link with {cuzdan}",
+  "@bankImportTransferLinkTo": {
+    "placeholders": {
+      "cuzdan": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportTransferChip": "Transfer · {cuzdan}",
+  "@bankImportTransferChip": {
+    "placeholders": {
+      "cuzdan": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportTransferUnmark": "Remove the link",
+  "bankImportDoneLinkedTransfers": "{count} rows were linked as transfers.",
+  "@bankImportDoneLinkedTransfers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

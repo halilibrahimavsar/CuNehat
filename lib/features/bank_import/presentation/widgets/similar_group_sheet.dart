@@ -110,7 +110,7 @@ class _SimilarGroupSheetState extends State<SimilarGroupSheet> {
     final scope = onlyUncategorized
         ? [
             for (var i = 0; i < state.drafts.length; i++)
-              if (state.drafts[i].categoryId == null) i,
+              if (state.drafts[i].needsCategory) i,
           ]
         : null;
     final groups = groupSimilarDrafts(state.drafts, scope: scope);
@@ -232,7 +232,7 @@ class _SimilarGroupSheetState extends State<SimilarGroupSheet> {
     final labels = _labelsFor(state, group.isIncome);
     final summary = _categorySummary(context, rows, labels);
     final dominant = _dominantCategoryId(rows);
-    final missing = rows.where((d) => d.categoryId == null).length;
+    final missing = rows.where((d) => d.needsCategory).length;
     final currency = state.walletCurrency ?? kDefaultCurrency;
 
     return InkWell(
@@ -439,7 +439,7 @@ class _SimilarGroupSheetState extends State<SimilarGroupSheet> {
       BankImportReview state, DraftGroup group, String categoryId) {
     final targets = [
       for (final i in group.indexes)
-        if (state.drafts[i].categoryId == null) i,
+        if (state.drafts[i].needsCategory) i,
     ];
     return _confirmAndApply(targets, categoryId, isIncome: group.isIncome);
   }
