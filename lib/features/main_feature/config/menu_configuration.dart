@@ -105,6 +105,15 @@ class MenuConfigs {
           icon: Icons.arrow_circle_down,
           actionType: 'add_expense',
         ),
+        // Cüzdanlar arası transfer. Eskiden tek kapısı cüzdan sayfasıydı
+        // (başlığa dokun → Transfer); para taşımak gelir/gider kadar gündelik
+        // bir iş. Tek cüzdanı olan kullanıcıda gizlenir (bkz.
+        // `SliderButtonView._buildMiniButtons`).
+        MiniButtonConfig(
+          label: 'Transfer',
+          icon: Icons.swap_horiz_rounded,
+          actionType: 'transfer',
+        ),
       ],
       subMenus: [
         SubMenuConfig(
@@ -152,6 +161,19 @@ class MenuConfigs {
 
   static Map<SliderState, MenuConfiguration> get configs => allConfigs;
 }
+
+/// [config]'in o an gösterilecek mini düğmeleri.
+///
+/// Transfer iki uç ister: tek cüzdanı olan kullanıcıda düğme hiçbir yere
+/// götürmezdi, bu yüzden [walletCount] 2'den azken listeden düşer.
+List<MiniButtonConfig> visibleMiniButtons(
+  MenuConfiguration config, {
+  required int walletCount,
+}) =>
+    [
+      for (final button in config.miniButtons)
+        if (button.actionType != 'transfer' || walletCount >= 2) button,
+    ];
 
 /// [SubMenuConfig.label] anahtarını ekrana yazılacak metne çevirir.
 ///

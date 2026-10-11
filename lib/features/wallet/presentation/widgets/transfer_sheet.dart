@@ -151,26 +151,29 @@ class _TransferSheetState extends State<TransferSheet> {
 
     final amount = parseMoneyInput(_amountController.text)!;
 
-    // Her transferden önce tek onay. Bakiye aşımı sert engel değil (eksi
-    // bakiye tasarım gereği serbest, ama büyük olasılıkla yazım hatasıdır) —
-    // ayrı bir ikinci popup açmak yerine aynı onay mesajına eklenir.
-    var message = context.l10n.transferOnayMesaji(
-      formatMoney(amount, currency: _from.currency),
-      _from.name,
-      _to.name,
-    );
+    // Onay YALNIZ bakiye aşımında. Eskiden her transferde soruluyordu: form
+    // tutarı, kaynağı ve hedefi zaten gösteriyor, başarı mesajında da "Geri
+    // al" var — üçüncü bir "emin misiniz" yalnız sürtünmeydi. Aşım ise sert
+    // engel değil (eksi bakiye tasarım gereği serbest) ama büyük olasılıkla
+    // yazım hatasıdır; orada durup sormaya değer.
     if (moneyGreaterThan(amount, _from.balance)) {
-      message = '$message\n\n${context.l10n.transferBakiyeAsimiMesaj(
+      final l10n = context.l10n;
+      final summary = l10n.transferOnayMesaji(
+        formatMoney(amount, currency: _from.currency),
+        _from.name,
+        _to.name,
+      );
+      final overrun = l10n.transferBakiyeAsimiMesaj(
         formatMoney(_from.balance, currency: _from.currency),
-      )}';
+      );
+      final confirmed = await ConfirmDialog.show(
+        context,
+        title: l10n.transferOnayBasligi,
+        message: '$summary\n\n$overrun',
+        confirmText: l10n.transferEt,
+      );
+      if (!confirmed || !mounted) return;
     }
-    final confirmed = await ConfirmDialog.show(
-      context,
-      title: context.l10n.transferOnayBasligi,
-      message: message,
-      confirmText: context.l10n.transferEt,
-    );
-    if (!confirmed || !mounted) return;
 
     setState(() => _submitting = true);
     final service = getIt<TransferService>();

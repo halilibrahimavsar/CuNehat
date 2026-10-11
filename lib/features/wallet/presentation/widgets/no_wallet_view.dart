@@ -105,6 +105,8 @@ class NoWalletView extends StatelessWidget {
                       WalletSheetContent(
                         scrollController: ScrollController(),
                         userId: userId,
+                        // Düğme "İlk Cüzdanı Oluştur" diyor: formu da aç.
+                        createOnOpen: true,
                       ),
                     );
                   },

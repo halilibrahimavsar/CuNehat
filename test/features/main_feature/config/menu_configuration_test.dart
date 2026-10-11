@@ -5,6 +5,36 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:unified_flutter_features/features/slider_2d_navigation/models/slider_models.dart';
 
 void main() {
+  // UX Tur 3c: transferin tek kapısı cüzdan sayfasıydı.
+  group('visibleMiniButtons', () {
+    final transactions = MenuConfigs.configs[SliderState.transactions]!;
+
+    List<String> actions(int walletCount) => [
+          for (final b
+              in visibleMiniButtons(transactions, walletCount: walletCount))
+            b.actionType,
+        ];
+
+    test('iki cüzdanla İşlemler\'de Transfer düğmesi var', () {
+      expect(actions(2), ['add_income', 'add_expense', 'transfer']);
+    });
+
+    test('tek cüzdanda Transfer gizlenir (iki uç gerekir)', () {
+      expect(actions(1), ['add_income', 'add_expense']);
+      expect(actions(0), ['add_income', 'add_expense']);
+    });
+
+    test('diğer sekmelerin düğmeleri cüzdan sayısından etkilenmez', () {
+      for (final state in [SliderState.savedMoney, SliderState.debt]) {
+        final config = MenuConfigs.configs[state]!;
+        expect(
+          visibleMiniButtons(config, walletCount: 1).length,
+          config.miniButtons.length,
+        );
+      }
+    });
+  });
+
   group('MenuConfigs', () {
     test('contains configuration for savedMoney', () {
       final config = MenuConfigs.configs[SliderState.savedMoney];
@@ -41,7 +71,7 @@ void main() {
       expect(config!.sliderState, SliderState.transactions);
 
       // Verify mini buttons
-      expect(config.miniButtons.length, 2);
+      expect(config.miniButtons.length, 3);
       expect(config.miniButtons[0].label, 'Gelir');
       expect(config.miniButtons[0].actionType, 'add_income');
       expect(config.miniButtons[0].icon, Icons.arrow_circle_up);
@@ -49,6 +79,9 @@ void main() {
       expect(config.miniButtons[1].label, 'Gider');
       expect(config.miniButtons[1].actionType, 'add_expense');
       expect(config.miniButtons[1].icon, Icons.arrow_circle_down);
+
+      expect(config.miniButtons[2].actionType, 'transfer');
+      expect(config.miniButtons[2].icon, Icons.swap_horiz_rounded);
 
       // Verify submenus
       expect(config.subMenus.length, 2);

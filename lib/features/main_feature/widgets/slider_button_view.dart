@@ -17,6 +17,7 @@ import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/features/main_feature/utils/slider_peek_store.dart';
 import 'package:cunehat/features/wallet/domain/card_family.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
+import 'package:cunehat/features/wallet/presentation/widgets/transfer_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unified_flutter_features/features/slider_2d_navigation/dynamic_slider.dart';
@@ -113,7 +114,10 @@ class _SliderButtonViewState extends State<SliderButtonView> {
 
     return {
       for (final entry in MenuConfigs.configs.entries)
-        entry.key: entry.value.miniButtons
+        entry.key: visibleMiniButtons(
+          entry.value,
+          walletCount: walletState.wallets.length,
+        )
             .map((config) => _createMiniButton(
                   config,
                   context,
@@ -124,7 +128,9 @@ class _SliderButtonViewState extends State<SliderButtonView> {
   }
 
   static bool _isLedgerAction(String actionType) =>
-      actionType == 'add_income' || actionType == 'add_expense';
+      actionType == 'add_income' ||
+      actionType == 'add_expense' ||
+      actionType == 'transfer';
 
   MiniButtonData _createMiniButton(
     MiniButtonConfig config,
@@ -161,6 +167,8 @@ class _SliderButtonViewState extends State<SliderButtonView> {
         return context.l10n.menuDebt;
       case 'add_receivable':
         return context.l10n.menuReceivable;
+      case 'transfer':
+        return context.l10n.transferKisa;
       default:
         return defaultLabel;
     }
@@ -176,6 +184,7 @@ class _SliderButtonViewState extends State<SliderButtonView> {
       'add_stock_investment' => Colors.blue,
       'add_custom_investment' => Colors.purple,
       'add_cash_pot' => kCashPotColor,
+      'transfer' => Colors.blue,
       _ => Colors.green,
     };
   }
@@ -250,6 +259,13 @@ class _SliderButtonViewState extends State<SliderButtonView> {
         break;
       case 'add_receivable':
         _showDebtEntrySheet(context, activeWallet, isDebt: false);
+        break;
+      case 'transfer':
+        TransferSheet.show(
+          context,
+          wallets: walletState.wallets,
+          initialFrom: activeWallet,
+        );
         break;
     }
   }
