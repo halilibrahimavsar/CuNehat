@@ -1,5 +1,6 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
 import 'package:cunehat/core/shared/widgets/labeled_segment.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
@@ -89,8 +90,7 @@ class _DraftEditSheetState extends State<_DraftEditSheet> {
     final l10n = context.l10n;
     final cs = Theme.of(context).colorScheme;
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-          20, 0, 20, 16 + MediaQuery.viewInsetsOf(context).bottom),
+      padding: EdgeInsets.fromLTRB(20, 0, 20, 16 + sheetBottomInset(context)),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,

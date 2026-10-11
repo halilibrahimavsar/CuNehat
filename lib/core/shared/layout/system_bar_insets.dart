@@ -40,6 +40,17 @@ extension SystemBarInsets on EdgeInsets {
   }
 }
 
+/// Alt sayfa (bottom sheet) FORMUNUN alt payı: klavye açıkken klavyenin,
+/// kapalıyken gezinme çubuğunun yüksekliği.
+///
+/// Yalnız `viewInsets` (klavye) eklemek yetmez: klavye kapalıyken sayfanın
+/// son satırı — çoğunlukla Kaydet/İptal düğmeleri — gezinme çubuğunun ALTINDA
+/// kalır (cihazda görüldü: 3 tuşlu gezinmede düğmeler tuşların arkasındaydı).
+/// İkisi toplanabilir, çünkü klavye açılınca `padding.bottom` 0'a düşer.
+double sheetBottomInset(BuildContext context) =>
+    MediaQuery.viewInsetsOf(context).bottom +
+    MediaQuery.paddingOf(context).bottom;
+
 /// Alta serbestçe duran `FloatingActionButton`'ın kapladığı yükseklik.
 ///
 /// **Neden gerekli.** Scaffold FAB'ı sistem payının ÜSTÜNE koyar

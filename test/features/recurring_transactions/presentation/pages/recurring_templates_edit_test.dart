@@ -267,6 +267,22 @@ void main() {
     expect(t.isActive, isTrue);
   });
 
+  // Cihazda görüldü: klavye kapalıyken formun İptal/Kaydet düğmeleri sistem
+  // gezinme çubuğunun (48dp) ALTINDA kalıyordu — sayfa yalnız klavye payını
+  // sayıyordu. Test yüzeyinin sistem payı varsayılan SIFIRDIR; açıkça verilir.
+  testWidgets('form düğmeleri gezinme çubuğunun altında kalmaz',
+      (tester) async {
+    tester.view.padding = const FakeViewPadding(bottom: 48);
+    tester.view.viewPadding = const FakeViewPadding(bottom: 48);
+    final l10n = await pumpPage(tester);
+
+    await tester.tap(find.byKey(const ValueKey('template-add')));
+    await tester.pumpAndSettle();
+
+    final save = tester.getRect(find.widgetWithText(FilledButton, l10n.kaydet));
+    expect(save.bottom, lessThanOrEqualTo(1600 - 48));
+  });
+
   testWidgets('hiç şablon yokken de "+" var (boş durumdan kurulabilir)',
       (tester) async {
     store = [];

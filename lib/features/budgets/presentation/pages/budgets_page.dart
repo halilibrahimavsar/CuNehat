@@ -731,8 +731,7 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-          20, 0, 20, 16 + MediaQuery.viewInsetsOf(context).bottom),
+      padding: EdgeInsets.fromLTRB(20, 0, 20, 16 + sheetBottomInset(context)),
       child: SingleChildScrollView(
         child: Form(
           key: _formKey,

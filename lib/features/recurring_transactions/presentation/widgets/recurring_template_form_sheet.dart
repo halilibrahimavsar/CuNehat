@@ -5,6 +5,7 @@ import 'package:cunehat/core/error/error_handling.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
+import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
 import 'package:cunehat/core/shared/widgets/labeled_segment.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
@@ -252,8 +253,7 @@ class _RecurringTemplateFormSheetState
     final categoryId = _categoryId;
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-          20, 0, 20, 16 + MediaQuery.viewInsetsOf(context).bottom),
+      padding: EdgeInsets.fromLTRB(20, 0, 20, 16 + sheetBottomInset(context)),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
