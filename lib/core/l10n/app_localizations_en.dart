@@ -2400,7 +2400,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingWalletListDesc =>
-      'Each wallet has its own currency and balance. Tap a card to make it active, or use the icons on it to edit or delete.';
+      'Each wallet has its own currency and balance. Swipe the cards sideways to browse your wallets; tap the centered card to switch to it. Edit and delete are right below the card.';
 
   @override
   String get onboardingWalletManagementTitle => 'Add a New Wallet';
@@ -6286,4 +6286,26 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bankImportEditTypeNote =>
       'Changing the type re-guesses the category.';
+
+  @override
+  String get cuzdanaGec => 'Switch to this wallet';
+
+  @override
+  String get kartaGec => 'Switch to this card';
+
+  @override
+  String get aktifCuzdan => 'Active wallet';
+
+  @override
+  String get aktifCuzdanSilinemez =>
+      'The active wallet can\'t be deleted — switch to another one first';
+
+  @override
+  String get transferKisa => 'Transfer';
+
+  @override
+  String get ekstreAktarKisa => 'Import statement';
+
+  @override
+  String get yeniCuzdanKisa => 'New wallet';
 }

@@ -2401,7 +2401,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get onboardingWalletListDesc =>
-      'Her cüzdanın kendi para birimi ve bakiyesi vardır. Bir karta dokunarak aktif cüzdanı değiştirir, karttaki simgelerle düzenler veya silersiniz.';
+      'Her cüzdanın kendi para birimi ve bakiyesi vardır. Kartları yana kaydırarak cüzdanlarınıza bakın; ortadaki karta dokununca o cüzdana geçilir. Düzenleme ve silme kartın hemen altındadır.';
 
   @override
   String get onboardingWalletManagementTitle => 'Yeni Cüzdan Ekle';
@@ -6239,4 +6239,26 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get bankImportEditTypeNote =>
       'Tür değişince kategori yeniden tahmin edilir.';
+
+  @override
+  String get cuzdanaGec => 'Bu cüzdana geç';
+
+  @override
+  String get kartaGec => 'Bu karta geç';
+
+  @override
+  String get aktifCuzdan => 'Aktif cüzdan';
+
+  @override
+  String get aktifCuzdanSilinemez =>
+      'Aktif cüzdan silinemez — önce başka bir cüzdana geç';
+
+  @override
+  String get transferKisa => 'Transfer';
+
+  @override
+  String get ekstreAktarKisa => 'Ekstre aktar';
+
+  @override
+  String get yeniCuzdanKisa => 'Yeni cüzdan';
 }

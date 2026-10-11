@@ -1113,7 +1113,7 @@
   "onboardingAppBarWalletTitle": "Aktif Cüzdanınız",
   "onboardingAppBarWalletDesc": "Her gelir, gider, borç ve yatırım kaydı SEÇİLİ cüzdana işlenir. Başlığı yana kaydırarak cüzdan değiştirebilir, dokunarak tüm cüzdanlarınızı görebilir veya yenisini ekleyebilirsiniz.",
   "onboardingWalletListTitle": "Cüzdanlarınız",
-  "onboardingWalletListDesc": "Her cüzdanın kendi para birimi ve bakiyesi vardır. Bir karta dokunarak aktif cüzdanı değiştirir, karttaki simgelerle düzenler veya silersiniz.",
+  "onboardingWalletListDesc": "Her cüzdanın kendi para birimi ve bakiyesi vardır. Kartları yana kaydırarak cüzdanlarınıza bakın; ortadaki karta dokununca o cüzdana geçilir. Düzenleme ve silme kartın hemen altındadır.",
   "onboardingWalletManagementTitle": "Yeni Cüzdan Ekle",
   "onboardingWalletManagementDesc": "Nakit, banka hesabı ya da döviz için ayrı cüzdan açın — raporlar, bütçeler ve borçlar cüzdan bazlı çalışır.",
   "onboardingTransactionsAddTitle": "Tutarı Girin",
@@ -3686,5 +3686,12 @@
     }
   },
   "bankImportEditRowTitle": "Satırı düzenle",
-  "bankImportEditTypeNote": "Tür değişince kategori yeniden tahmin edilir."
+  "bankImportEditTypeNote": "Tür değişince kategori yeniden tahmin edilir.",
+  "cuzdanaGec": "Bu cüzdana geç",
+  "kartaGec": "Bu karta geç",
+  "aktifCuzdan": "Aktif cüzdan",
+  "aktifCuzdanSilinemez": "Aktif cüzdan silinemez — önce başka bir cüzdana geç",
+  "transferKisa": "Transfer",
+  "ekstreAktarKisa": "Ekstre aktar",
+  "yeniCuzdanKisa": "Yeni cüzdan"
 }

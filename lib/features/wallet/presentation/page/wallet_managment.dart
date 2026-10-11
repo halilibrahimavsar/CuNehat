@@ -5,8 +5,6 @@ import 'package:cunehat/core/config/feature_flags.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/credit_card/presentation/credit_card_setup_sheet.dart';
 import 'package:cunehat/features/credit_card/presentation/credit_card_tile.dart';
-import 'package:cunehat/features/credit_card/presentation/mini_credit_card.dart';
-import 'package:cunehat/features/credit_card/presentation/wallet_card_stack.dart';
 import 'package:cunehat/features/wallet/domain/card_family.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
@@ -31,7 +29,7 @@ import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_form_dialog.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/no_wallet_view.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/transfer_sheet.dart';
-import 'package:cunehat/features/wallet/presentation/widgets/wallet_card_widget.dart';
+import 'package:cunehat/features/wallet/presentation/widgets/wallet_deck.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/wallet_info_dialog.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/wallet_quick_start_sheet.dart';
 import 'package:flutter/material.dart';
@@ -45,10 +43,18 @@ class WalletSheetContent extends StatefulWidget {
   final String userId;
   final ScrollController scrollController;
 
+  /// Sayfa açılır açılmaz "yeni cüzdan" formunu da aç. İlk cüzdanını kuracak
+  /// kullanıcı için: eskiden "İlk Cüzdanı Oluştur" düğmesi BOŞ bir yönetim
+  /// sayfası açıyor, kullanıcı orada bir de "Yeni Cüzdan Oluştur"a basıyordu.
+  /// Form yine bu sayfanın üstünde açılır ki oluşturma sonrası zincir
+  /// (kategori paketi → hızlı başlangıç) aynen işlesin.
+  final bool createOnOpen;
+
   const WalletSheetContent({
     super.key,
     required this.userId,
     required this.scrollController,
+    this.createOnOpen = false,
   });
 
   @override
@@ -86,6 +92,11 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
     unawaited(getIt<ExchangeRateService>().rateToTry('USD').then((_) {
       if (mounted) setState(() {});
     }));
+    if (widget.createOnOpen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _createWallet(context);
+      });
+    }
   }
 
   /// Tüm cüzdanların TL karşılığı toplamı; herhangi bir döviz cüzdanının
@@ -132,6 +143,9 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
     return OnboardingTour(
       flow: OnboardingFlow.walletManagement,
       keys: _tourKeys,
+      // Form açıkken tur oynamaz (overlay formun üstüne binerdi); bayrağı da
+      // yazılmaz, sayfa bir sonraki açılışta — cüzdanlar varken — tanıtılır.
+      enabled: !widget.createOnOpen,
       child: _buildContent(context),
     );
   }
@@ -195,7 +209,7 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
                 Divider(
                   height: 1,
                   thickness: 1,
-                  color: Colors.grey.shade200,
+                  color: Theme.of(context).colorScheme.outlineVariant,
                 ),
 
                 // ========== BODY CONTENT ==========
@@ -203,8 +217,8 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
                   child: _buildBody(state),
                 ),
 
-                // ========== FLOATING ADD BUTTON ==========
-                _buildFloatingAddButton(context),
+                // ========== GENEL EYLEMLER ==========
+                _buildBottomBar(context, state),
               ],
             ),
           ),
@@ -220,155 +234,90 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
       width: 40,
       height: 4,
       decoration: BoxDecoration(
-        color: Colors.grey.shade300,
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(2),
       ),
     );
   }
 
-  /// Header with title and actions
+  /// Başlık: ad + net kırılım + bilgi/kapat. Genel eylemler (transfer,
+  /// ekstre, yeni cüzdan) alttaki çubuktadır — başlık ne kadar kısaysa
+  /// desteye o kadar yer kalır.
   Widget _buildHeader(BuildContext context, WalletState state) {
+    final cs = Theme.of(context).colorScheme;
+    final subtitleStyle = TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w600,
+      color: cs.onSurfaceVariant,
+    );
     return Showcase(
       key: OnboardingKeys.walletManagementHeader,
       title: context.l10n.onboardingWalletListTitle,
       description: context.l10n.onboardingWalletListDesc,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 8, 16, 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.fromLTRB(20, 4, 8, 10),
+        child: Row(
           children: [
-            Row(
-              children: [
-                // Simge + başlık
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color:
-                        Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.account_balance_wallet,
-                    color: Theme.of(context).primaryColor,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.l10n.cuzdanlarim,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      // NET kırılım (hesaplar − kart borcu − krediler +
-                      // alacaklar); döviz cüzdanı varsa ve tüm kurlar
-                      // biliniyorsa TL toplamı; aksi halde standart alt başlık.
-                      if (_netLine(context, state) case final line?)
-                        Text(
-                          line,
-                          key: const ValueKey('wallet-net-breakdown'),
-                          maxLines: 3,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade600,
-                          ),
-                        )
-                      else if (state is WalletLoadedSt &&
-                          state.wallets
-                              .any((w) => w.currency != kDefaultCurrency) &&
-                          _tlTotal(state.wallets) != null)
-                        Text(
-                          context.l10n.toplamTlKarsilikFormat(
-                              formatMoney(_tlTotal(state.wallets)!)),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade600,
-                          ),
-                        )
-                      else
-                        Text(
-                          context.l10n.cuzdanlariniziYonetin,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                // Kapatma eylemi
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.red.shade50,
-                    foregroundColor: Colors.red.shade700,
-                  ),
-                ),
-              ],
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: cs.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.account_balance_wallet,
+                color: cs.primary,
+                size: 22,
+              ),
             ),
-            const SizedBox(height: 16),
-            // Eylem satırı
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _openTransferSheet(context, state),
-                    icon: const Icon(Icons.swap_horiz_rounded, size: 20),
-                    label: Text(
-                      context.l10n.cuzdanlarArasiTransfer,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade100,
-                      foregroundColor: Colors.grey.shade800,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 12, horizontal: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.l10n.cuzdanlarim,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.account_balance, size: 22),
-                  tooltip: context.l10n.bankImportSettingsEntry,
-                  onPressed: () => _openBankImport(context),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    foregroundColor: Colors.white,
-                    elevation: 4,
-                    shadowColor:
-                        Theme.of(context).primaryColor.withValues(alpha: 0.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  // NET kırılım (hesaplar − kart borcu − krediler +
+                  // alacaklar); döviz cüzdanı varsa ve tüm kurlar
+                  // biliniyorsa TL toplamı; aksi halde standart alt başlık.
+                  if (_netLine(context, state) case final line?)
+                    Text(
+                      line,
+                      key: const ValueKey('wallet-net-breakdown'),
+                      maxLines: 3,
+                      style: subtitleStyle,
+                    )
+                  else if (state is WalletLoadedSt &&
+                      state.wallets
+                          .any((w) => w.currency != kDefaultCurrency) &&
+                      _tlTotal(state.wallets) != null)
+                    Text(
+                      context.l10n.toplamTlKarsilikFormat(
+                          formatMoney(_tlTotal(state.wallets)!)),
+                      style: subtitleStyle,
+                    )
+                  else
+                    Text(
+                      context.l10n.cuzdanlariniziYonetin,
+                      style:
+                          subtitleStyle.copyWith(fontWeight: FontWeight.w400),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.info_outline),
-                  onPressed: () => WalletInfoDialog.show(context),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.grey.shade100,
-                    foregroundColor: Colors.grey.shade700,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.info_outline),
+              onPressed: () => WalletInfoDialog.show(context),
+            ),
+            IconButton(
+              icon: const Icon(Icons.close),
+              tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+              onPressed: () => Navigator.pop(context),
             ),
           ],
         ),
@@ -398,130 +347,103 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
     };
   }
 
-  /// Wallet list
-  ///
-  /// Kredi kartları ayrı satır DEĞİLDİR: bağlı oldukları cüzdanın kutusunda
-  /// deste olarak durur (bkz. `card_family.dart`). Yalnız sahibi olmayan
-  /// (yetim) kart üst düzeyde, "bir cüzdana bağla" önerisiyle görünür.
+  /// Cüzdan destesi (bkz. [WalletDeck]).
   Widget _buildWalletList(WalletLoadedSt state) {
     final wallets = state.wallets;
-    final top = FeatureFlags.creditCards ? topLevelWallets(wallets) : wallets;
-    final active = state.activeWallet;
-    final activeAccountId =
-        active == null ? null : accountOf(active, wallets).id;
-    return ListView.builder(
-      controller: widget.scrollController,
-      padding:
-          const EdgeInsets.fromLTRB(16, 16, 16, 100), // Bottom padding for FAB
-      itemCount: top.length,
-      itemBuilder: (context, index) {
-        final wallet = top[index];
-        final Widget item;
-        if (FeatureFlags.creditCards && wallet.isCreditCard) {
-          item = _OrphanCardTile(
-            card: wallet,
-            active: wallet.id == active?.id,
-            onTap: () => _activate(wallet),
-            onAttach: () => CreditCardSetupSheet.show(
-              context,
-              userId: widget.userId,
-              wallets: wallets,
-              wallet: wallet,
-              defaultCurrency: wallet.currency,
-            ),
-          );
-        } else {
-          item = WalletCardWidget(
-            wallet: wallet,
-            contextActive: wallet.id == activeAccountId,
-            onTap: () => _activate(wallet),
-            onEdit: () => _editWallet(context, wallet),
-            onDelete: () => _deleteWallet(context, wallet),
-            footer: FeatureFlags.creditCards
-                ? WalletCardStack(
-                    key: ValueKey('cards-${wallet.id}'),
-                    cards: cardsOf(wallet.id, wallets),
-                    activeId: active?.id,
-                    onCardTap: _activate,
-                    onCardLongPress: (card) =>
-                        CardDetailsSheet.show(context, card: card),
-                    onAdd: () => CreditCardSetupSheet.show(
-                      context,
-                      userId: widget.userId,
-                      wallets: wallets,
-                      defaultCurrency: wallet.currency,
-                      ownerWalletId: wallet.id,
-                    ),
-                  )
-                : null,
-          );
-        }
-        return AnimatedScale(
-          scale: 1.0,
-          duration: Duration(milliseconds: 200 + (index * 50)),
-          curve: Curves.easeOutCubic,
-          child: item,
-        );
-      },
+    return WalletDeck(
+      wallets: wallets,
+      active: state.activeWallet,
+      scrollController: widget.scrollController,
+      showCards: FeatureFlags.creditCards,
+      onSelect: _select,
+      onEdit: (wallet) => _editWallet(context, wallet),
+      onDelete: (wallet) => _deleteWallet(context, wallet),
+      onAddCard: (owner) => CreditCardSetupSheet.show(
+        context,
+        userId: widget.userId,
+        wallets: wallets,
+        defaultCurrency: owner.currency,
+        ownerWalletId: owner.id,
+      ),
+      onAttachCard: (card) => CreditCardSetupSheet.show(
+        context,
+        userId: widget.userId,
+        wallets: wallets,
+        wallet: card,
+        defaultCurrency: card.currency,
+      ),
+      onCardDetails: (card) => CardDetailsSheet.show(context, card: card),
     );
   }
 
-  void _activate(WalletEntity wallet) => context.read<WalletBloc>().add(
-        SetActiveWalletEvent(
-          userId: widget.userId,
-          walletId: wallet.id!,
-        ),
-      );
+  /// Cüzdana (ya da karta) geç ve sayfayı kapat.
+  ///
+  /// Eskiden seçim sayfayı AÇIK bırakıyordu: kullanıcı cüzdanı seçtikten
+  /// sonra bir de sayfayı kapatmak zorundaydı. Bildirim de yok
+  /// (`announce: false`) — sayfa kapanınca üst çubuk zaten yeni cüzdanı
+  /// gösterir.
+  void _select(WalletEntity wallet) {
+    final bloc = context.read<WalletBloc>();
+    final state = bloc.state;
+    final alreadyActive =
+        state is WalletLoadedSt && state.activeWallet?.id == wallet.id;
+    if (!alreadyActive && wallet.id != null) {
+      bloc.add(SetActiveWalletEvent(
+        userId: widget.userId,
+        walletId: wallet.id!,
+        announce: false,
+      ));
+    }
+    Navigator.pop(context);
+  }
 
-  /// Floating add button (fixed at bottom)
-  Widget _buildFloatingAddButton(BuildContext context) {
+  /// Sayfanın altındaki genel eylemler: bir cüzdana değil hepsine ait olanlar.
+  Widget _buildBottomBar(BuildContext context, WalletState state) {
+    final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
-        border: Border(
-          top: BorderSide(
-            color: Colors.grey.shade200,
-            width: 1,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
+        border: Border(top: BorderSide(color: cs.outlineVariant)),
       ),
       child: SafeArea(
         top: false,
-        child: SizedBox(
-          width: double.infinity,
-          height: 54,
-          child: Showcase(
-            key: OnboardingKeys.walletManagementAddButton,
-            title: context.l10n.onboardingWalletManagementTitle,
-            description: context.l10n.onboardingWalletManagementDesc,
-            child: ElevatedButton.icon(
-              onPressed: () => _createWallet(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
-                foregroundColor: Colors.white,
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+        child: Row(
+          children: [
+            Expanded(
+              child: _SheetAction(
+                key: const ValueKey('wallet-sheet-transfer'),
+                icon: Icons.swap_horiz_rounded,
+                label: l10n.transferKisa,
+                onTap: () => _openTransferSheet(context, state),
               ),
-              icon: const Icon(Icons.add, size: 22),
-              label: Text(
-                context.l10n.yeniCuzdanOlustur,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _SheetAction(
+                key: const ValueKey('wallet-sheet-import'),
+                icon: Icons.account_balance_rounded,
+                label: l10n.ekstreAktarKisa,
+                onTap: () => _openBankImport(context),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Showcase(
+                key: OnboardingKeys.walletManagementAddButton,
+                title: l10n.onboardingWalletManagementTitle,
+                description: l10n.onboardingWalletManagementDesc,
+                child: _SheetAction(
+                  key: const ValueKey('wallet-sheet-create'),
+                  icon: Icons.add_rounded,
+                  label: l10n.yeniCuzdanKisa,
+                  primary: true,
+                  onTap: () => _createWallet(context),
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -723,34 +645,58 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
   }
 }
 
-/// Bir cüzdana bağlı olmayan kart: üst düzeyde, bağlama önerisiyle.
-class _OrphanCardTile extends StatelessWidget {
-  final WalletEntity card;
-  final bool active;
+/// Alt çubuktaki tek bir eylem: ikon üstte, etiket altta.
+class _SheetAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
   final VoidCallback onTap;
-  final VoidCallback onAttach;
 
-  const _OrphanCardTile({
-    required this.card,
-    required this.active,
+  /// Sayfanın birincil eylemi (yeni cüzdan).
+  final bool primary;
+
+  const _SheetAction({
+    super.key,
+    required this.icon,
+    required this.label,
     required this.onTap,
-    required this.onAttach,
+    this.primary = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          MiniCreditCard(card: card, active: active, onTap: onTap),
-          TextButton.icon(
-            onPressed: onAttach,
-            icon: const Icon(Icons.link_rounded, size: 18),
-            label: Text(context.l10n.kkCuzdanaBagla),
+    final cs = Theme.of(context).colorScheme;
+    final fg = primary ? cs.onPrimary : cs.onSurface;
+    return Material(
+      color: primary ? cs.primary : cs.onSurface.withValues(alpha: 0.06),
+      borderRadius: BorderRadius.circular(14),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: SizedBox(
+          height: 56,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 20, color: fg),
+              const SizedBox(height: 3),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: fg,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

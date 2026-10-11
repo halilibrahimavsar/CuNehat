@@ -1092,7 +1092,7 @@
   "onboardingAppBarWalletTitle": "Your Active Wallet",
   "onboardingAppBarWalletDesc": "Every income, expense, debt, and investment record goes into the SELECTED wallet. Swipe the title sideways to switch wallets, or tap it to see all your wallets and add a new one.",
   "onboardingWalletListTitle": "Your Wallets",
-  "onboardingWalletListDesc": "Each wallet has its own currency and balance. Tap a card to make it active, or use the icons on it to edit or delete.",
+  "onboardingWalletListDesc": "Each wallet has its own currency and balance. Swipe the cards sideways to browse your wallets; tap the centered card to switch to it. Edit and delete are right below the card.",
   "onboardingWalletManagementTitle": "Add a New Wallet",
   "onboardingWalletManagementDesc": "Create separate wallets for cash, a bank account, or a foreign currency — reports, budgets, and debts are all wallet-scoped.",
   "onboardingTransactionsAddTitle": "Enter the Amount",
@@ -3452,5 +3452,12 @@
     }
   },
   "bankImportEditRowTitle": "Edit row",
-  "bankImportEditTypeNote": "Changing the type re-guesses the category."
+  "bankImportEditTypeNote": "Changing the type re-guesses the category.",
+  "cuzdanaGec": "Switch to this wallet",
+  "kartaGec": "Switch to this card",
+  "aktifCuzdan": "Active wallet",
+  "aktifCuzdanSilinemez": "The active wallet can't be deleted — switch to another one first",
+  "transferKisa": "Transfer",
+  "ekstreAktarKisa": "Import statement",
+  "yeniCuzdanKisa": "New wallet"
 }

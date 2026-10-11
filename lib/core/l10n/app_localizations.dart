@@ -4382,7 +4382,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingWalletListDesc.
   ///
   /// In tr, this message translates to:
-  /// **'Her cüzdanın kendi para birimi ve bakiyesi vardır. Bir karta dokunarak aktif cüzdanı değiştirir, karttaki simgelerle düzenler veya silersiniz.'**
+  /// **'Her cüzdanın kendi para birimi ve bakiyesi vardır. Kartları yana kaydırarak cüzdanlarınıza bakın; ortadaki karta dokununca o cüzdana geçilir. Düzenleme ve silme kartın hemen altındadır.'**
   String get onboardingWalletListDesc;
 
   /// No description provided for @onboardingWalletManagementTitle.
@@ -10822,6 +10822,48 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Tür değişince kategori yeniden tahmin edilir.'**
   String get bankImportEditTypeNote;
+
+  /// No description provided for @cuzdanaGec.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu cüzdana geç'**
+  String get cuzdanaGec;
+
+  /// No description provided for @kartaGec.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu karta geç'**
+  String get kartaGec;
+
+  /// No description provided for @aktifCuzdan.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aktif cüzdan'**
+  String get aktifCuzdan;
+
+  /// No description provided for @aktifCuzdanSilinemez.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aktif cüzdan silinemez — önce başka bir cüzdana geç'**
+  String get aktifCuzdanSilinemez;
+
+  /// No description provided for @transferKisa.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transfer'**
+  String get transferKisa;
+
+  /// No description provided for @ekstreAktarKisa.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekstre aktar'**
+  String get ekstreAktarKisa;
+
+  /// No description provided for @yeniCuzdanKisa.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni cüzdan'**
+  String get yeniCuzdanKisa;
 }
 
 class _AppLocalizationsDelegate
