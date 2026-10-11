@@ -79,7 +79,7 @@ class BudgetsPage extends StatelessWidget {
                 ),
               ),
             ),
-            const _BudgetsBody(),
+            _BudgetsBody(walletId: walletId),
           ],
         ),
         floatingActionButton: _AddBudgetButton(walletId: walletId),
@@ -89,7 +89,11 @@ class BudgetsPage extends StatelessWidget {
 }
 
 class _BudgetsBody extends StatefulWidget {
-  const _BudgetsBody();
+  /// Bütçelerin ait olduğu cüzdan; düzenleme formu kategori kapsamını
+  /// buradan alır.
+  final String walletId;
+
+  const _BudgetsBody({required this.walletId});
 
   @override
   State<_BudgetsBody> createState() => _BudgetsBodyState();
@@ -169,8 +173,11 @@ class _BudgetsBodyState extends State<_BudgetsBody> {
               delegate: SliverChildListDelegate([
                 _BudgetSummaryCard(budgets: state.budgets),
                 const SizedBox(height: 16),
-                ...state.budgets.map((budget) =>
-                    _BudgetListItem(budget: budget, categoryLabels: _labels)),
+                ...state.budgets.map((budget) => _BudgetListItem(
+                      budget: budget,
+                      categoryLabels: _labels,
+                      walletId: widget.walletId,
+                    )),
               ]),
             ),
           );
@@ -331,11 +338,26 @@ class _BudgetListItem extends StatelessWidget {
   final Map<String, String> categoryLabels;
 
   final BudgetEntity budget;
+  final String walletId;
 
   const _BudgetListItem({
     required this.budget,
+    required this.walletId,
     this.categoryLabels = const {},
   });
+
+  /// Karta (ya da limit satırına) dokununca: bu bütçenin limitini düzenle.
+  ///
+  /// Eskiden karta dokunmak BOŞTU. Limiti değiştirmenin tek yolu "+" ile
+  /// yeni bütçe formunu açıp AYNI kategoriyi yeniden seçmekti — form o zaman
+  /// sessizce "Güncelle"ye dönüyordu; bunu bilen kullanıcı azdı.
+  void _edit(BuildContext context) => _showBudgetForm(
+        context,
+        walletId: walletId,
+        editing: budget,
+        editingLabel: context.categoryLabelForTag(budget.categoryId,
+            labels: categoryLabels),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -372,8 +394,10 @@ class _BudgetListItem extends StatelessWidget {
     final percent = '$percentValue';
 
     return AppCard(
+      key: ValueKey('budget-card-${budget.categoryId}'),
       accent: statusColor,
       margin: const EdgeInsets.only(bottom: 12),
+      onTap: () => _edit(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -462,12 +486,22 @@ class _BudgetListItem extends StatelessWidget {
                       : FontWeight.w600,
                 ),
               ),
-              Text(
-                context.l10n.limitAppformattersCurrencyFormat(formatMoney(
-                    budget.limitAmount,
-                    currency: context.activeWalletCurrency)),
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: scheme.onSurfaceVariant),
+              // Düzenlenebilir olduğunu gösteren işaret, düzenlenen değerin
+              // yanında: kartın tamamı da aynı formu açar.
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    context.l10n.limitAppformattersCurrencyFormat(formatMoney(
+                        budget.limitAmount,
+                        currency: context.activeWalletCurrency)),
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(color: scheme.onSurfaceVariant),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(Icons.edit_outlined,
+                      size: 14, color: scheme.onSurfaceVariant),
+                ],
               ),
             ],
           ),
@@ -485,41 +519,68 @@ class _AddBudgetButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton(
-      onPressed: () {
-        final bloc = context.read<BudgetsBloc>();
-        final state = bloc.state;
-        showDialog(
-          context: context,
-          builder: (ctx) => _AddBudgetDialog(
-            bloc: bloc,
-            walletId: walletId,
-            existingBudgets: state is BudgetsLoaded ? state.budgets : const [],
-          ),
-        );
-      },
+      onPressed: () => _showBudgetForm(context, walletId: walletId),
       child: const Icon(Icons.add),
     );
   }
 }
 
-class _AddBudgetDialog extends StatefulWidget {
+/// Bütçe formunu alt sayfa olarak açar: yeni bütçe, ya da [editing] verilirse
+/// o bütçenin limiti.
+///
+/// Eskiden ham bir `AlertDialog`'du; uygulamanın diğer bütün formları alt
+/// sayfa. Alt sayfa klavyeyle birlikte yükselir ve tek elle erişilir.
+void _showBudgetForm(
+  BuildContext context, {
+  required String walletId,
+  BudgetEntity? editing,
+  String? editingLabel,
+}) {
+  final bloc = context.read<BudgetsBloc>();
+  final state = bloc.state;
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    useSafeArea: true,
+    builder: (_) => _BudgetFormSheet(
+      bloc: bloc,
+      walletId: walletId,
+      existingBudgets: state is BudgetsLoaded ? state.budgets : const [],
+      editing: editing,
+      editingLabel: editingLabel,
+    ),
+  );
+}
+
+class _BudgetFormSheet extends StatefulWidget {
   final BudgetsBloc bloc;
 
   /// Bütçe zaten cüzdan bazlı (`walletId::categoryId`); kategori seçeneği de
   /// o cüzdanda görünür kalemlerle sınırlanır.
   final String walletId;
   final List<BudgetEntity> existingBudgets;
-  const _AddBudgetDialog({
+
+  /// Düzenlenen bütçe. Verilirse kategori KİLİTLİDİR (bütçenin kimliği odur;
+  /// başka kategoriye taşımak = sil + yeniden kur) ve yalnız limit değişir.
+  final BudgetEntity? editing;
+
+  /// [editing]'in görünen kategori adı.
+  final String? editingLabel;
+
+  const _BudgetFormSheet({
     required this.bloc,
     required this.walletId,
     required this.existingBudgets,
+    this.editing,
+    this.editingLabel,
   });
 
   @override
-  State<_AddBudgetDialog> createState() => _AddBudgetDialogState();
+  State<_BudgetFormSheet> createState() => _BudgetFormSheetState();
 }
 
-class _AddBudgetDialogState extends State<_AddBudgetDialog> {
+class _BudgetFormSheetState extends State<_BudgetFormSheet> {
   final _formKey = GlobalKey<FormState>();
   final _limitController = TextEditingController();
 
@@ -531,7 +592,14 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
   @override
   void initState() {
     super.initState();
-    _loadCategories();
+    final editing = widget.editing;
+    if (editing != null) {
+      // Düzenleme: kategori belli, liste yüklenmez.
+      _selectedCategory = editing.categoryId;
+      _limitController.text = formatAmountForInput(editing.limitAmount);
+    } else {
+      _loadCategories();
+    }
   }
 
   Future<void> _loadCategories() async {
@@ -562,7 +630,10 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
     super.dispose();
   }
 
+  bool get _isEdit => widget.editing != null;
+
   bool get _isUpdate =>
+      _isEdit ||
       widget.existingBudgets.any((b) => b.categoryId == _selectedCategory);
 
   /// TEK SEVİYE KİLİDİ: bir kategoriye bütçe konduysa atasına ya da
@@ -657,64 +728,98 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(context.l10n.yeniButceEkle),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            DropdownButtonFormField<String>(
-              initialValue: _selectedCategory,
-              decoration: InputDecoration(
-                labelText: context.l10n.labelKategori,
-                border: const OutlineInputBorder(),
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+          20, 0, 20, 16 + MediaQuery.viewInsetsOf(context).bottom),
+      child: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _isEdit ? l10n.butceyiDuzenle : l10n.yeniButceEkle,
+                style: theme.textTheme.titleMedium,
               ),
-              isExpanded: true,
-              items: [
-                for (final c in _categories)
-                  DropdownMenuItem(
-                    value: c.id,
-                    enabled: _lockReasonFor(c) == null,
-                    child: _categoryItem(c),
+              const SizedBox(height: 16),
+              if (_isEdit)
+                InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: l10n.labelKategori,
+                    border: const OutlineInputBorder(),
+                    enabled: false,
                   ),
-              ],
-              onChanged: _onCategorySelected,
-              validator: (value) => value == null ? 'Bir kategori seçin' : null,
-            ),
-            if (_isUpdate)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  context.l10n.buKategorininButcesiVar,
-                  style: const TextStyle(fontSize: 12, color: Colors.orange),
+                  child: Text(widget.editingLabel ?? ''),
+                )
+              else
+                DropdownButtonFormField<String>(
+                  initialValue: _selectedCategory,
+                  decoration: InputDecoration(
+                    labelText: l10n.labelKategori,
+                    border: const OutlineInputBorder(),
+                  ),
+                  isExpanded: true,
+                  items: [
+                    for (final c in _categories)
+                      DropdownMenuItem(
+                        value: c.id,
+                        enabled: _lockReasonFor(c) == null,
+                        child: _categoryItem(c),
+                      ),
+                  ],
+                  onChanged: _onCategorySelected,
+                  validator: (value) =>
+                      value == null ? l10n.kategoriSecmeUyarisi : null,
                 ),
+              if (!_isEdit && _isUpdate)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    l10n.buKategorininButcesiVar,
+                    style: const TextStyle(fontSize: 12, color: Colors.orange),
+                  ),
+                ),
+              const SizedBox(height: 16),
+              TextFormField(
+                key: const ValueKey('budget-limit-field'),
+                controller: _limitController,
+                // Düzenlemede değişecek tek şey limit.
+                autofocus: _isEdit,
+                decoration: InputDecoration(
+                  labelText: l10n.labelAylikLimit,
+                  border: const OutlineInputBorder(),
+                ),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [AmountInputFormatter()],
+                validator: (value) => validateAmountInput(value ?? ''),
+                onFieldSubmitted: (_) => _save(),
               ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _limitController,
-              decoration: InputDecoration(
-                labelText: context.l10n.labelAylikLimit,
-                border: const OutlineInputBorder(),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(l10n.iptal),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: _save,
+                      child: Text(_isUpdate ? l10n.guncelle : l10n.kaydet),
+                    ),
+                  ),
+                ],
               ),
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [AmountInputFormatter()],
-              validator: (value) => validateAmountInput(value ?? ''),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(context.l10n.iptal),
-        ),
-        FilledButton(
-          onPressed: _save,
-          child: Text(_isUpdate ? 'Güncelle' : 'Kaydet'),
-        ),
-      ],
     );
   }
 }

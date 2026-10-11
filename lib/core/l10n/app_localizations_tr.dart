@@ -6261,4 +6261,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get yeniCuzdanKisa => 'Yeni cüzdan';
+
+  @override
+  String get butceyiDuzenle => 'Bütçeyi düzenle';
 }

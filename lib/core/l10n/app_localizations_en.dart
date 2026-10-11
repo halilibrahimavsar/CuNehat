@@ -6308,4 +6308,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get yeniCuzdanKisa => 'New wallet';
+
+  @override
+  String get butceyiDuzenle => 'Edit budget';
 }

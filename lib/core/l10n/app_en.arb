@@ -3459,5 +3459,6 @@
   "aktifCuzdanSilinemez": "The active wallet can't be deleted — switch to another one first",
   "transferKisa": "Transfer",
   "ekstreAktarKisa": "Import statement",
-  "yeniCuzdanKisa": "New wallet"
+  "yeniCuzdanKisa": "New wallet",
+  "butceyiDuzenle": "Edit budget"
 }

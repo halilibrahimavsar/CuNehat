@@ -10864,6 +10864,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Yeni cüzdan'**
   String get yeniCuzdanKisa;
+
+  /// No description provided for @butceyiDuzenle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçeyi düzenle'**
+  String get butceyiDuzenle;
 }
 
 class _AppLocalizationsDelegate
