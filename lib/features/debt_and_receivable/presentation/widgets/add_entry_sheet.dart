@@ -1,3 +1,4 @@
+import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -17,9 +18,10 @@ import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_
 import 'package:cunehat/features/debt_and_receivable/domain/services/debt_repayment_calculator.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivable_bloc/receivable_bloc.dart';
+import 'package:cunehat/features/debt_and_receivable/presentation/debt_form_preferences.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry/add_entry_amount_card.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry/bank_loan_info_dialog.dart';
-import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry/debt_cash_impact_dialog.dart';
+import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry/debt_cash_impact_selector.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry/debt_dynamic_fields.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry/debt_form_widgets.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
@@ -29,6 +31,7 @@ import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 /// Borç / alacak ekleme & düzenleme için sıfırdan tasarlanmış modern sayfa.
@@ -106,8 +109,19 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
   final _overdueController = TextEditingController();
   final _installmentController = TextEditingController();
 
-  DebtType _selectedDebtType = DebtType.bankLoan;
+  DebtType _selectedDebtType = DebtFormPreferences.fallbackType;
   DateTime _selectedDate = DateTime.now();
+
+  /// "Gelişmiş" bölümü (hesap yöntemi, KKDF/BSMV, gecikme faizi) açık mı.
+  /// Yeni kayıtta kapalı başlar; düzenlemede kaydın varsayılan DIŞI bir ayarı
+  /// varsa açık gelir — görünmeyen bir ayar hesabı sessizce belirlemesin.
+  bool _advancedOpen = false;
+
+  /// "Ne aldın?" seçimi. Yeni borçta zorunlu, ön seçimsiz (bkz.
+  /// [DebtCashImpactSelector]).
+  DebtCashImpact? _cashImpact;
+  bool _cashImpactMissing = false;
+  final _cashImpactKey = GlobalKey();
 
   /// Kişisel borçta kullanıcının seçtiği vade — opsiyoneldir. Taksitli
   /// türlerde vade planın sonundan türer, burası kullanılmaz.
@@ -153,6 +167,9 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
             _fmt(d.expectedTotalAmount / d.termMonths);
         _prefilledInstallmentText = _installmentController.text;
       }
+      _advancedOpen = d.overdueInterestRate != 0 ||
+          (d.type == DebtType.bankLoan && !_isBankLoanMonthly) ||
+          (d.type == DebtType.installmentDebt && !_isInstallmentAmortized);
     } else if (widget.receivableToEdit != null) {
       _isEditing = true;
       _isDebt = false;
@@ -161,11 +178,14 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
       _amountController.text = _fmt(r.amount);
       _selectedDate = r.dueDate;
       _originalAmount = r.amount;
-    } else if (widget.initialPrincipalTransaction != null) {
-      final tx = widget.initialPrincipalTransaction!;
-      _isDebt = true;
-      _amountController.text = _fmt(tx.amount);
-      _selectedDate = DateTime(tx.date.year, tx.date.month, tx.date.day);
+    } else {
+      _selectedDebtType =
+          _preferences?.lastType() ?? DebtFormPreferences.fallbackType;
+      if (widget.initialPrincipalTransaction case final tx?) {
+        _isDebt = true;
+        _amountController.text = _fmt(tx.amount);
+        _selectedDate = DateTime(tx.date.year, tx.date.month, tx.date.day);
+      }
     }
 
     // Düzenlemede yüklenen taksit değerini koru; yalnız yeni kayıtta öner.
@@ -174,6 +194,18 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     _termController.addListener(_maybeAutoFillInstallment);
     _installmentController.addListener(_onInstallmentChanged);
   }
+
+  /// Son kullanılan türün saklandığı yer. Kayıtlı değilse (widget testleri)
+  /// form varsayılanla açılır ve hiçbir şey yazmaz.
+  DebtFormPreferences? get _preferences =>
+      getIt.isRegistered<SharedPreferences>()
+          ? DebtFormPreferences(getIt<SharedPreferences>())
+          : null;
+
+  /// "Ne aldın?" yalnız YENİ borçta sorulur. "Bağla…" akışında cevap belli
+  /// (anapara o satır); düzenlemede kuplaj kayıtla birlikte kurulmuştur.
+  bool get _asksCashImpact =>
+      _isDebt && !_isEditing && widget.initialPrincipalTransaction == null;
 
   /// Kartla taksitli alışverişin borç olarak İKİNCİ kez girilmesi riski:
   /// YENİ kayıt, taksitli borç türü ve hesabın kartı var. Kart döner (gider
@@ -272,13 +304,15 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
   }
 
   String? _validate() {
-    if (_titleController.text.trim().isEmpty) {
-      return _isDebt
-          ? context.l10n.baslikGirin
-          : context.l10n.borcluKisiAdiGirin;
-    }
-    if (_isDebt && _counterpartyController.text.trim().isEmpty) {
-      return context.l10n.kurumKisiGirin;
+    // Borçta zorunlu olan KİME borçlu olunduğu; başlık isteğe bağlıdır ve boşsa
+    // o ada düşer. Eskiden ikisi de zorunluydu: "Ahmet'e 500" yazan kullanıcı
+    // aynı adı iki alana giriyordu.
+    if (_isDebt) {
+      if (_counterpartyController.text.trim().isEmpty) {
+        return context.l10n.kurumKisiGirin;
+      }
+    } else if (_titleController.text.trim().isEmpty) {
+      return context.l10n.borcluKisiAdiGirin;
     }
     final amountError = validateAmountInput(_amountController.text);
     if (amountError != null) return amountError;
@@ -297,6 +331,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
       }
       final overdueRate = parseAmountInput(_overdueController.text) ?? 0;
       if (overdueRate < 0 || overdueRate > kMaxInterestRatePercent) {
+        // Hatalı alan kapalı bölümdeyse hata mesajı havada kalır.
+        _advancedOpen = true;
         return context.l10n.oranAraligi(kMaxInterestRatePercent.toInt());
       }
       if (_selectedDebtType == DebtType.bankLoan && _isBankLoanMonthly) {
@@ -322,13 +358,33 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
         }
       }
     }
+    if (_asksCashImpact && _cashImpact == null) {
+      _cashImpactMissing = true;
+      return context.l10n.borcEtkiSecin;
+    }
     return null;
+  }
+
+  /// Borcun başlığı: kullanıcı yazmadıysa kurum/kişi adı.
+  String get _effectiveTitle {
+    final title = _titleController.text.trim();
+    return title.isEmpty ? _counterpartyController.text.trim() : title;
   }
 
   Future<void> _save() async {
     final err = _validate();
     if (err != null) {
       setState(() => _error = err);
+      if (_cashImpactMissing) {
+        final target = _cashImpactKey.currentContext;
+        if (target != null) {
+          Scrollable.ensureVisible(
+            target,
+            alignment: 0.5,
+            duration: const Duration(milliseconds: 200),
+          );
+        }
+      }
       return;
     }
     FocusScope.of(context).unfocus();
@@ -395,7 +451,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
 
       if (_isEditing && widget.debtToEdit != null) {
         final updated = widget.debtToEdit!.copyWith(
-          title: _titleController.text.trim(),
+          title: _effectiveTitle,
           counterparty: _counterpartyController.text.trim(),
           type: _selectedDebtType,
           calcMode: mode,
@@ -416,7 +472,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
         final debt = DebtEntity(
           userId: userId,
           walletId: widget.walletId,
-          title: _titleController.text.trim(),
+          title: _effectiveTitle,
           counterparty: _counterpartyController.text.trim(),
           type: _selectedDebtType,
           calcMode: mode,
@@ -429,18 +485,12 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           expectedTotalAmount: expectedTotal,
         );
         // Borç karşılığı nakit mi ürün mü alındığı bakiye kuplajını belirler;
-        // kullanıcıya iki seçeneğin etkisi açıklanarak sorulur. "Bağla…"
-        // akışından gelindiyse cevap belli: anapara o satır.
+        // seçim formun içinde yapılır (bkz. DebtCashImpactSelector) ve
+        // `_validate` boş geçilmesine izin vermez. "Bağla…" akışından
+        // gelindiyse cevap belli: anapara o satır.
         final linkedRow = widget.initialPrincipalTransaction;
-        final impact = linkedRow != null
-            ? DebtCashImpact.ledger
-            : await DebtCashImpactDialog.show(
-                context,
-                amount: amount,
-                accent: _accent,
-                currency: widget.currency,
-              );
-        if (!mounted || impact == null) return;
+        final impact = linkedRow != null ? DebtCashImpact.ledger : _cashImpact;
+        if (impact == null) return;
         CashSource principalSource = const NewCashMovement();
         if (impact == DebtCashImpact.ledger) {
           // Anapara defterde zaten duruyor: giriş satırı seçilir ve
@@ -472,6 +522,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
               ),
               principalSource: principalSource,
             ));
+        _preferences?.rememberType(_selectedDebtType);
         Navigator.pop(context, true);
         return;
       }
@@ -572,58 +623,12 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                           currency: widget.currency,
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
                       if (_isDebt) ...[
-                        // Vade ve Detaylar: borç türüne göre değişen tür-özel
-                        // alanlar. Tutar kartının canlı geri ödeme özeti zaten
-                        // tür-bağımlı olduğundan bu bölüm de tür seçiminin
-                        // üstünde tutarlı durur; personalDebt'te gizlenir.
-                        if (_selectedDebtType != DebtType.personalDebt) ...[
-                          _vadeDetaylarLabel(cs),
-                          const SizedBox(height: 10),
-                          if (_selectedDebtType == DebtType.bankLoan) ...[
-                            BankLoanModeToggle(
-                              isMonthly: _isBankLoanMonthly,
-                              accent: _accent,
-                              onChanged: (v) {
-                                setState(() => _isBankLoanMonthly = v);
-                                _maybeAutoFillInstallment();
-                              },
-                            ),
-                            const SizedBox(height: 10),
-                            if (!_isBankLoanMonthly) ...[
-                              BankTaxSwitch(
-                                value: _includeBankTaxes,
-                                accent: _accent,
-                                onChanged: (v) =>
-                                    setState(() => _includeBankTaxes = v),
-                              ),
-                              const SizedBox(height: 10),
-                            ],
-                          ],
-                          if (_selectedDebtType ==
-                              DebtType.installmentDebt) ...[
-                            InstallmentTypeToggle(
-                              isAmortized: _isInstallmentAmortized,
-                              accent: _accent,
-                              onChanged: (v) =>
-                                  setState(() => _isInstallmentAmortized = v),
-                            ),
-                            const SizedBox(height: 10),
-                          ],
-                          DebtDynamicFields(
-                            selectedDebtType: _selectedDebtType,
-                            isBankLoanMonthly: _isBankLoanMonthly,
-                            isInstallmentAmortized: _isInstallmentAmortized,
-                            termController: _termController,
-                            installmentController: _installmentController,
-                            interestController: _interestController,
-                            overdueController: _overdueController,
-                            accent: _accent,
-                            onChanged: _clearError,
-                          ),
-                          const SizedBox(height: 20),
-                        ],
+                        // Tür ÖNCE: aşağıdaki alanları o belirler. Eskiden
+                        // çipler belirledikleri alanların ALTINDAYDI; kullanıcı
+                        // kredi alanlarını görüp aşağı kayınca türü buluyor,
+                        // değiştirince yukarıdaki alanlar kayboluyordu.
                         _sectionLabel(context.l10n.borcTuruLabel, cs),
                         const SizedBox(height: 10),
                         DebtTypeChips(
@@ -643,14 +648,25 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                           ),
                         ],
                         const SizedBox(height: 20),
-                        FilledEntryField(
-                          controller: _titleController,
-                          hint: context.l10n.borcBaslikHint,
-                          icon: Icons.title_rounded,
-                          accent: _accent,
-                          onChanged: _clearError,
-                        ),
-                        const SizedBox(height: 14),
+                        // Vade ve Detaylar: türe özel alanlar; kişisel borçta
+                        // hiç yok.
+                        if (_selectedDebtType != DebtType.personalDebt) ...[
+                          _vadeDetaylarLabel(cs),
+                          const SizedBox(height: 10),
+                          DebtDynamicFields(
+                            selectedDebtType: _selectedDebtType,
+                            isBankLoanMonthly: _isBankLoanMonthly,
+                            isInstallmentAmortized: _isInstallmentAmortized,
+                            termController: _termController,
+                            installmentController: _installmentController,
+                            interestController: _interestController,
+                            accent: _accent,
+                            onChanged: _clearError,
+                          ),
+                          const SizedBox(height: 10),
+                          _buildAdvanced(context),
+                          const SizedBox(height: 20),
+                        ],
                         FilledEntryField(
                           controller: _counterpartyController,
                           hint: _selectedDebtType != DebtType.personalDebt
@@ -659,6 +675,14 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                           icon: _selectedDebtType != DebtType.personalDebt
                               ? Icons.account_balance_rounded
                               : Icons.person_rounded,
+                          accent: _accent,
+                          onChanged: _clearError,
+                        ),
+                        const SizedBox(height: 14),
+                        FilledEntryField(
+                          controller: _titleController,
+                          hint: context.l10n.borcBaslikHint,
+                          icon: Icons.title_rounded,
                           accent: _accent,
                           onChanged: _clearError,
                         ),
@@ -672,6 +696,29 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                             onTap: _pickPersonalDueDate,
                             onClear: () =>
                                 setState(() => _personalDueDate = null),
+                          ),
+                        ],
+                        if (_asksCashImpact) ...[
+                          const SizedBox(height: 20),
+                          // Etki metni girilen tutarı taşır: tutar değiştikçe
+                          // yeniden kurulur.
+                          ListenableBuilder(
+                            key: _cashImpactKey,
+                            listenable: _amountController,
+                            builder: (context, _) => DebtCashImpactSelector(
+                              selected: _cashImpact,
+                              amount: _parsedAmount,
+                              accent: _accent,
+                              currency: widget.currency,
+                              missing: _cashImpactMissing,
+                              onChanged: (impact) {
+                                setState(() {
+                                  _cashImpact = impact;
+                                  _cashImpactMissing = false;
+                                  _error = null;
+                                });
+                              },
+                            ),
                           ),
                         ],
                       ] else ...[
@@ -699,6 +746,51 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           ),
         ),
       ),
+    );
+  }
+
+  /// Kapalı açılan "Gelişmiş" bölümü; içeriği türe göre değişir.
+  Widget _buildAdvanced(BuildContext context) {
+    final l10n = context.l10n;
+    final isBank = _selectedDebtType == DebtType.bankLoan;
+    final isInstallment = _selectedDebtType == DebtType.installmentDebt;
+    return DebtAdvancedSection(
+      expanded: _advancedOpen,
+      onToggle: () => setState(() => _advancedOpen = !_advancedOpen),
+      summary: isBank
+          ? l10n.borcGelismisOzetBanka
+          : (isInstallment
+              ? l10n.borcGelismisOzetTaksitli
+              : l10n.borcGelismisOzetDiger),
+      accent: _accent,
+      children: [
+        if (isBank)
+          BankLoanModeToggle(
+            isMonthly: _isBankLoanMonthly,
+            accent: _accent,
+            onChanged: (v) {
+              setState(() => _isBankLoanMonthly = v);
+              _maybeAutoFillInstallment();
+            },
+          ),
+        if (isBank && !_isBankLoanMonthly)
+          BankTaxSwitch(
+            value: _includeBankTaxes,
+            accent: _accent,
+            onChanged: (v) => setState(() => _includeBankTaxes = v),
+          ),
+        if (isInstallment)
+          InstallmentTypeToggle(
+            isAmortized: _isInstallmentAmortized,
+            accent: _accent,
+            onChanged: (v) => setState(() => _isInstallmentAmortized = v),
+          ),
+        DebtOverdueField(
+          controller: _overdueController,
+          accent: _accent,
+          onChanged: _clearError,
+        ),
+      ],
     );
   }
 

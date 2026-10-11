@@ -725,7 +725,7 @@
   "krediHesaplamaInfoBaslik": "Banka kredisi hesaplaması",
   "krediHesaplamaInfoGovde": "• Aylık taksiti biliyorum: Bankanın söylediği aylık taksiti yazın. Toplam geri ödeme = aylık taksit × vade. Kolaylık için alan, faizsiz bir başlangıç olarak kredi tutarı ÷ vade değerini önerir; kendi taksitinize göre değiştirin.\n\n• Faiz oranı ile: Bankanın aylık faiz oranını yazın. Taksit ve toplam, eşit taksitli kredi (amortisman) yöntemiyle hesaplanır.",
   "borcTuruLabel": "Borç türü",
-  "borcBaslikHint": "Başlık · örn. Konut Kredisi",
+  "borcBaslikHint": "Başlık (isteğe bağlı)",
   "kurumKisiHint": "Kurum / Kişi · örn. Ziraat Bankası",
   "kisiAdiHint": "Kişi Adı",
   "vadeVeDetaylarLabel": "Vade & detaylar",
@@ -1123,7 +1123,7 @@
   "onboardingTransactionsAddRecurringTitle": "Tekrar Sıklığı",
   "onboardingTransactionsAddRecurringDesc": "Kira, maaş, abonelik gibi düzenli işlemleri bir kez tanımlayın; uygulama zamanı gelince hatırlatır.",
   "onboardingDebtAddTitle": "Tutar ve Geri Ödeme",
-  "onboardingDebtAddDesc": "Tutarı girin. Borç türüne göre taksit, faiz ve vade alanları aşağıda açılır; kartın altındaki özet toplam geri ödemeyi anında hesaplar.",
+  "onboardingDebtAddDesc": "Tutarı girin, hemen altından borç türünü seçin. Türe göre vade ve taksit alanları açılır; kartın altındaki özet toplam geri ödemeyi anında hesaplar.",
   "onboardingDebtAddDueDateTitle": "Vade Tarihi",
   "onboardingDebtAddDueDateDesc": "Alacağını beklediğin tarih. O gün yaklaştığında hatırlatma bildirimi alırsın.",
   "onboardingInvestmentAddTitle": "Bugünkü Değer",
@@ -3659,5 +3659,12 @@
   "yenidenEkle": "Yeniden ekle",
   "yenidenEkleAciklama": "Aynı içerikle, bugünün tarihiyle yeni kayıt",
   "giderEkle": "Gider ekle",
-  "gelirEkle": "Gelir ekle"
+  "gelirEkle": "Gelir ekle",
+  "gelismisLabel": "Gelişmiş",
+  "borcGelismisOzetBanka": "Faiz oranıyla hesapla · KKDF/BSMV · gecikme faizi",
+  "borcGelismisOzetTaksitli": "Vade farkı yöntemi · gecikme faizi",
+  "borcGelismisOzetDiger": "Gecikme faizi",
+  "borcEtkiDefterKisa": "Defterde var",
+  "borcEtkiUrunKisa": "Ürün / hizmet",
+  "borcEtkiSecin": "Bu borç karşılığında ne aldığını seç"
 }

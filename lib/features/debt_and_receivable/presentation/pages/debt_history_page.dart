@@ -236,7 +236,9 @@ class _DebtHistoryTab extends StatelessWidget {
                 child: _HistoryCard(
                   icon: Icons.receipt_long_rounded,
                   title: debt.title,
-                  subtitle: debt.counterparty,
+                  // Başlık yazılmadıysa kurum/kişi adına düşer; yinelemeyelim.
+                  subtitle:
+                      debt.counterparty == debt.title ? '' : debt.counterparty,
                   amount: debt.totalPaidAmount,
                   currency: currency,
                   badge: context.l10n.badgeOdendi,
@@ -486,13 +488,15 @@ class _HistoryCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  subtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                if (subtitle.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),

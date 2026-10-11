@@ -725,7 +725,7 @@
   "krediHesaplamaInfoBaslik": "Bank loan calculation",
   "krediHesaplamaInfoGovde": "• I know the monthly installment: Enter the installment your bank quoted. Total repayment = monthly installment × term. For convenience the field suggests loan amount ÷ term as an interest-free starting point; change it to your own installment.\n\n• With interest rate: Enter your bank's monthly interest rate. The installment and total are computed with the equal-installment (amortization) method.",
   "borcTuruLabel": "Debt type",
-  "borcBaslikHint": "Title · e.g. Housing Loan",
+  "borcBaslikHint": "Title (optional)",
   "kurumKisiHint": "Institution / Person · e.g. Ziraat Bank",
   "kisiAdiHint": "Person Name",
   "vadeVeDetaylarLabel": "Maturity & details",
@@ -1102,7 +1102,7 @@
   "onboardingTransactionsAddRecurringTitle": "Repeat Frequency",
   "onboardingTransactionsAddRecurringDesc": "Define rent, salary, or subscriptions once; the app reminds you when they're due.",
   "onboardingDebtAddTitle": "Amount and Repayment",
-  "onboardingDebtAddDesc": "Enter the amount. Depending on the debt type, installment, interest, and term fields appear below; the summary under the card computes total repayment live.",
+  "onboardingDebtAddDesc": "Enter the amount, then pick the debt type right below. The term and installment fields follow the type; the summary under the card calculates the total repayment instantly.",
   "onboardingDebtAddDueDateTitle": "Due Date",
   "onboardingDebtAddDueDateDesc": "The date you expect to collect. You get a reminder as it approaches.",
   "onboardingInvestmentAddTitle": "Today's Value",
@@ -3425,5 +3425,12 @@
   "yenidenEkle": "Add again",
   "yenidenEkleAciklama": "New entry with the same details, dated today",
   "giderEkle": "Add expense",
-  "gelirEkle": "Add income"
+  "gelirEkle": "Add income",
+  "gelismisLabel": "Advanced",
+  "borcGelismisOzetBanka": "Calculate by interest rate · taxes · overdue interest",
+  "borcGelismisOzetTaksitli": "Surcharge method · overdue interest",
+  "borcGelismisOzetDiger": "Overdue interest",
+  "borcEtkiDefterKisa": "In ledger",
+  "borcEtkiUrunKisa": "Product / service",
+  "borcEtkiSecin": "Choose what you received for this debt"
 }

@@ -352,16 +352,22 @@ class DebtListSection extends StatelessWidget {
                                   fontSize: 18,
                                 ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        debt.counterparty,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                              fontWeight: FontWeight.w500,
-                            ),
-                      ),
+                      // Başlık yazılmadıysa kurum/kişi adına düşer (bkz.
+                      // AddEntrySheet); aynı adı iki satırda göstermeyelim.
+                      if (debt.counterparty.isNotEmpty &&
+                          debt.counterparty != debt.title) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          debt.counterparty,
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                        ),
+                      ],
                       if (isOverdue) ...[
                         const SizedBox(height: 6),
                         Container(

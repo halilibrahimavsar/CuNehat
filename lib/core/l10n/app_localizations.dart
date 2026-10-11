@@ -2936,7 +2936,7 @@ abstract class AppLocalizations {
   /// No description provided for @borcBaslikHint.
   ///
   /// In tr, this message translates to:
-  /// **'Başlık · örn. Konut Kredisi'**
+  /// **'Başlık (isteğe bağlı)'**
   String get borcBaslikHint;
 
   /// No description provided for @kurumKisiHint.
@@ -4442,7 +4442,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingDebtAddDesc.
   ///
   /// In tr, this message translates to:
-  /// **'Tutarı girin. Borç türüne göre taksit, faiz ve vade alanları aşağıda açılır; kartın altındaki özet toplam geri ödemeyi anında hesaplar.'**
+  /// **'Tutarı girin, hemen altından borç türünü seçin. Türe göre vade ve taksit alanları açılır; kartın altındaki özet toplam geri ödemeyi anında hesaplar.'**
   String get onboardingDebtAddDesc;
 
   /// No description provided for @onboardingDebtAddDueDateTitle.
@@ -10744,6 +10744,48 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Gelir ekle'**
   String get gelirEkle;
+
+  /// No description provided for @gelismisLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelişmiş'**
+  String get gelismisLabel;
+
+  /// No description provided for @borcGelismisOzetBanka.
+  ///
+  /// In tr, this message translates to:
+  /// **'Faiz oranıyla hesapla · KKDF/BSMV · gecikme faizi'**
+  String get borcGelismisOzetBanka;
+
+  /// No description provided for @borcGelismisOzetTaksitli.
+  ///
+  /// In tr, this message translates to:
+  /// **'Vade farkı yöntemi · gecikme faizi'**
+  String get borcGelismisOzetTaksitli;
+
+  /// No description provided for @borcGelismisOzetDiger.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gecikme faizi'**
+  String get borcGelismisOzetDiger;
+
+  /// No description provided for @borcEtkiDefterKisa.
+  ///
+  /// In tr, this message translates to:
+  /// **'Defterde var'**
+  String get borcEtkiDefterKisa;
+
+  /// No description provided for @borcEtkiUrunKisa.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ürün / hizmet'**
+  String get borcEtkiUrunKisa;
+
+  /// No description provided for @borcEtkiSecin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu borç karşılığında ne aldığını seç'**
+  String get borcEtkiSecin;
 }
 
 class _AppLocalizationsDelegate

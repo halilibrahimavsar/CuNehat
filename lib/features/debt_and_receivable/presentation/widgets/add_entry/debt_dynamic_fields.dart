@@ -4,7 +4,9 @@ import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Borç türüne göre dinamik gösterilen detay alanları (Vade, Taksit, Faiz, Gecikme Faizi).
+/// Borç türüne göre dinamik gösterilen detay alanları (Vade + Taksit ya da
+/// Faiz). Gecikme faizi buradan çıktı: formun kapalı açılan "Gelişmiş"
+/// bölümünde, [DebtOverdueField] olarak durur.
 class DebtDynamicFields extends StatelessWidget {
   final DebtType selectedDebtType;
   final bool isBankLoanMonthly;
@@ -12,7 +14,6 @@ class DebtDynamicFields extends StatelessWidget {
   final TextEditingController termController;
   final TextEditingController installmentController;
   final TextEditingController interestController;
-  final TextEditingController overdueController;
   final Color accent;
   final VoidCallback onChanged;
 
@@ -24,7 +25,6 @@ class DebtDynamicFields extends StatelessWidget {
     required this.termController,
     required this.installmentController,
     required this.interestController,
-    required this.overdueController,
     required this.accent,
     required this.onChanged,
   });
@@ -39,83 +39,92 @@ class DebtDynamicFields extends StatelessWidget {
         color: cs.onSurface.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(18),
       ),
-      child: Column(
+      child: Row(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: FilledEntryField(
-                  controller: termController,
-                  label: context.l10n.vadeAyHint,
-                  hint: '',
-                  icon: Icons.event_repeat_rounded,
-                  accent: accent,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  dense: true,
-                  onChanged: onChanged,
-                ),
-              ),
-              if (selectedDebtType == DebtType.bankLoan &&
-                  isBankLoanMonthly) ...[
-                const SizedBox(width: 10),
-                Expanded(
-                  child: FilledEntryField(
-                    controller: installmentController,
-                    label: context.l10n.aylikTaksitHint,
-                    hint: '',
-                    icon: Icons.payments_rounded,
-                    accent: accent,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [AmountInputFormatter()],
-                    dense: true,
-                    onChanged: onChanged,
-                  ),
-                ),
-              ] else if (selectedDebtType != DebtType.personalDebt) ...[
-                const SizedBox(width: 10),
-                Expanded(
-                  child: FilledEntryField(
-                    controller: interestController,
-                    label: selectedDebtType == DebtType.installmentDebt &&
-                            !isInstallmentAmortized
-                        ? context.l10n.vadeFarkiYuzdeHint
-                        : context.l10n.aylikFaizYuzdeHint,
-                    hint: '',
-                    icon: Icons.percent_rounded,
-                    accent: accent,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [AmountInputFormatter(decimalDigits: 4)],
-                    dense: true,
-                    onChanged: onChanged,
-                  ),
-                ),
-              ],
-            ],
-          ),
-          // Gecikme faizi kişisel borç dışında HER türde sorulur. Eskiden
-          // banka kredisinin taksit modunda ve taksitli borçta gizliydi;
-          // alan gizliyken kaydetme onu 0 yazdığı için, modu değişen bir
-          // kaydın gecikme faizi düzenlemede sessizce siliniyordu.
-          if (selectedDebtType != DebtType.personalDebt) ...[
-            const SizedBox(height: 10),
-            FilledEntryField(
-              controller: overdueController,
-              label: context.l10n.gecikmeFaiziYuzdeHint,
+          Expanded(
+            child: FilledEntryField(
+              controller: termController,
+              label: context.l10n.vadeAyHint,
               hint: '',
-              icon: Icons.running_with_errors_rounded,
+              icon: Icons.event_repeat_rounded,
               accent: accent,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [AmountInputFormatter(decimalDigits: 4)],
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               dense: true,
               onChanged: onChanged,
+            ),
+          ),
+          if (selectedDebtType == DebtType.bankLoan && isBankLoanMonthly) ...[
+            const SizedBox(width: 10),
+            Expanded(
+              child: FilledEntryField(
+                controller: installmentController,
+                label: context.l10n.aylikTaksitHint,
+                hint: '',
+                icon: Icons.payments_rounded,
+                accent: accent,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [AmountInputFormatter()],
+                dense: true,
+                onChanged: onChanged,
+              ),
+            ),
+          ] else if (selectedDebtType != DebtType.personalDebt) ...[
+            const SizedBox(width: 10),
+            Expanded(
+              child: FilledEntryField(
+                controller: interestController,
+                label: selectedDebtType == DebtType.installmentDebt &&
+                        !isInstallmentAmortized
+                    ? context.l10n.vadeFarkiYuzdeHint
+                    : context.l10n.aylikFaizYuzdeHint,
+                hint: '',
+                icon: Icons.percent_rounded,
+                accent: accent,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [AmountInputFormatter(decimalDigits: 4)],
+                dense: true,
+                onChanged: onChanged,
+              ),
             ),
           ],
         ],
       ),
+    );
+  }
+}
+
+/// Gecikme faizi (%) — kişisel borç dışında her türde girilebilir.
+///
+/// Alan görünmese de değeri formun denetleyicisinde YAŞAR ve kayda yazılır:
+/// eskiden bazı modlarda gizliydi ve gizliyken kaydetme onu 0 yazdığı için
+/// modu değişen bir kaydın gecikme faizi düzenlemede sessizce siliniyordu.
+class DebtOverdueField extends StatelessWidget {
+  final TextEditingController controller;
+  final Color accent;
+  final VoidCallback onChanged;
+
+  const DebtOverdueField({
+    super.key,
+    required this.controller,
+    required this.accent,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledEntryField(
+      controller: controller,
+      label: context.l10n.gecikmeFaiziYuzdeHint,
+      hint: '',
+      icon: Icons.running_with_errors_rounded,
+      accent: accent,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      inputFormatters: [AmountInputFormatter(decimalDigits: 4)],
+      dense: true,
+      onChanged: onChanged,
     );
   }
 }

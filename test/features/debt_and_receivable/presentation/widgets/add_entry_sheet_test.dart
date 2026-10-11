@@ -8,6 +8,7 @@ import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivable_bloc/receivable_bloc.dart';
+import 'package:cunehat/features/debt_and_receivable/presentation/debt_form_preferences.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry_sheet.dart';
 import 'package:cunehat/core/services/cash_source.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
@@ -19,6 +20,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MockDebtBloc extends Mock implements DebtBloc {}
 
@@ -66,7 +68,40 @@ void main() {
     if (GetIt.I.isRegistered<OnboardingCoordinator>()) {
       GetIt.I.unregister<OnboardingCoordinator>();
     }
+    if (GetIt.I.isRegistered<SharedPreferences>()) {
+      GetIt.I.unregister<SharedPreferences>();
+    }
   });
+
+  /// Form artık Kişisel ile açılır; kredi alanlarını ölçen testler türü
+  /// kullanıcının yapacağı gibi çipten seçer.
+  Future<void> selectType(WidgetTester tester, String label) async {
+    await tester.ensureVisible(find.text(label));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(label));
+    await tester.pumpAndSettle();
+  }
+
+  /// "Ne aldın?" seçicisinden bir seçenek işaretler.
+  Future<void> chooseImpact(WidgetTester tester, String label) async {
+    final option = find.descendant(
+      of: find.byKey(const ValueKey('debt-cash-impact')),
+      matching: find.text(label),
+    );
+    await tester.ensureVisible(option);
+    await tester.pumpAndSettle();
+    await tester.tap(option);
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> tapSave(WidgetTester tester, String label) async {
+    // Kaydet form uzunluğu yüzünden görünür alanın altında kalabilir;
+    // kaydırılmadan yapılan tap sessizce ıskalar ve test hiçbir şey ölçmez.
+    await tester.ensureVisible(find.text(label));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(label));
+    await tester.pumpAndSettle();
+  }
 
   Widget buildTestableWidget(Widget child) {
     return MultiBlocProvider(
@@ -157,10 +192,12 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    // Varsayılan tür bankLoan; özet kartı tutar girilmeden "—" gösterir.
+    final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+    await selectType(tester, l10n.debtTypeBankLoan);
+
+    // Özet kartı tutar girilmeden "—" gösterir.
     expect(find.text('—'), findsWidgets);
 
-    final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
     final amountField = find.byType(TextField).first;
     await tester.enterText(amountField, '12000');
     await tester.pumpAndSettle();
@@ -185,11 +222,12 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
+    await selectType(tester, l10n.debtTypeBankLoan);
+
     // bankLoan modunda vade alanı görünür.
     expect(find.text(l10n.vadeAyHint), findsOneWidget);
 
-    await tester.tap(find.text(l10n.debtTypePersonal));
-    await tester.pumpAndSettle();
+    await selectType(tester, l10n.debtTypePersonal);
 
     // personalDebt'te tür-özel alanlar ve geri ödeme özeti kaldırılır.
     expect(find.text(l10n.vadeAyHint), findsNothing);
@@ -229,6 +267,8 @@ void main() {
     expect(find.text('€'), findsOneWidget);
     expect(find.text('₺'), findsNothing);
 
+    await selectType(tester, l10n.debtTypeBankLoan);
+
     await tester.enterText(find.byType(TextField).first, '12000');
     await tester.enterText(
       find.ancestor(
@@ -255,6 +295,7 @@ void main() {
           walletId: 'w1', userId: 'u1', currency: 'TRY', initialIsDebt: true),
     ));
     await tester.pumpAndSettle();
+    await selectType(tester, l10n.debtTypeBankLoan);
 
     // 999.998,64 / 360 = 2.777,774 → öneri 2.777,77 (aşağı yuvarlar).
     await tester.enterText(find.byType(TextField).first, '999998,64');
@@ -278,16 +319,18 @@ void main() {
     expect(find.text('2.777,77'), findsOneWidget,
         reason: 'otomatik öneri kuruşa yuvarlanmış olmalı');
 
-    // Kaydet butonu form uzunluğu yüzünden görünür alanın altında kalır;
-    // kaydırılmadan yapılan tap sessizce ıskalar ve test hiçbir şey ölçmez.
-    await tester.ensureVisible(find.text(l10n.kaydet));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text(l10n.kaydet));
-    await tester.pumpAndSettle();
+    await chooseImpact(tester, l10n.borcNakitSecenekBaslik);
+    await tapSave(tester, l10n.kaydet);
 
     expect(find.text(l10n.aylikTaksitKrediTutarindanKucuk), findsNothing);
-    // Doğrulama gerçekten koştu: hata yoksa nakit etki diyaloğu açılır.
-    expect(find.text(l10n.borcNakitEtkiBaslik), findsOneWidget);
+    // Doğrulama gerçekten koştu: hata yoksa kayıt bloc'a gider.
+    final added = verify(() => mockDebtBloc.add(captureAny()))
+        .captured
+        .whereType<AddDebtEvent>()
+        .single
+        .debt;
+    expect(added.calcMode, DebtCalcMode.fixedInstallment);
+    expect(added.expectedTotalAmount, closeTo(2777.77 * 360, 0.01));
   });
 
   // ---------------------------------------------------------------------
@@ -411,6 +454,7 @@ void main() {
           walletId: 'w1', userId: 'u1', currency: 'TRY', initialIsDebt: true),
     ));
     await tester.pumpAndSettle();
+    await selectType(tester, l10n.debtTypeBankLoan);
 
     await tester.enterText(find.byType(TextField).first, '100000');
     await tester.enterText(
@@ -430,14 +474,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.text(l10n.kaydet));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text(l10n.kaydet), warnIfMissed: false);
-    await tester.pumpAndSettle();
+    await chooseImpact(tester, l10n.borcNakitSecenekBaslik);
+    await tapSave(tester, l10n.kaydet);
 
     expect(find.text(l10n.vadeAraligi(kMaxTermMonths)), findsOneWidget);
-    // Doğrulama hatası varken nakit etki diyaloğu hiç açılmaz → kayıt yok.
-    expect(find.text(l10n.borcNakitEtkiBaslik), findsNothing);
+    // Doğrulama hatası varken kayıt yazılmaz.
+    verifyNever(() => mockDebtBloc.add(any(that: isA<AddDebtEvent>())));
   });
 
   testWidgets('kişisel borçta vade opsiyoneldir; boş bırakılırsa yazılmaz',
@@ -468,14 +510,8 @@ void main() {
       'Ahmet',
     );
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text(l10n.kaydet));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text(l10n.kaydet), warnIfMissed: false);
-    await tester.pumpAndSettle();
-
-    // Nakit etki diyaloğu açıldı → doğrulama geçti. "Nakit aldım" seçilir.
-    await tester.tap(find.text(l10n.borcNakitSecenekBaslik));
-    await tester.pumpAndSettle();
+    await chooseImpact(tester, l10n.borcNakitSecenekBaslik);
+    await tapSave(tester, l10n.kaydet);
 
     final captured = verify(() => mockDebtBloc.add(captureAny())).captured;
     final added = captured.whereType<AddDebtEvent>().single.debt;
@@ -542,5 +578,286 @@ void main() {
     expect(added.principalSource, isA<AdoptedCashMovement>());
     expect(
         (added.principalSource as AdoptedCashMovement).transaction.id, 'row-k');
+  });
+
+  // ---------------------------------------------------------------------
+  // UX Tur 2 (11 Eki 2026) — formun kullanıcıdan istediği emek
+  //
+  // ÖNCE: form Banka Kredisi ile açılıyordu → ilk ekranda 6 metin alanı
+  // (tutar, vade, taksit, gecikme faizi, başlık, kurum) + hesap modu seçici;
+  // tür çipleri belirledikleri alanların altındaydı; başlık VE kurum zorunluydu;
+  // Kaydet'ten sonra "ne aldın?" diyaloğu çıkıyordu.
+  // ---------------------------------------------------------------------
+  group('yeni borç formu sade açılır', () {
+    const newDebt = AddEntrySheet(
+        walletId: 'w1', userId: 'u1', currency: 'TRY', initialIsDebt: true);
+
+    Future<AppLocalizations> pumpNew(WidgetTester tester) async {
+      // Uzun yüzey: bölümlerin SIRASI ölçülür, kaydırma değil. Geniş, çünkü
+      // test fontu (~1,5× geniş) dar yüzeyde tarih haplarını yapay taşırır.
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(buildTestableWidget(newDebt));
+      await tester.pumpAndSettle();
+      return AppLocalizations.delegate.load(const Locale('tr'));
+    }
+
+    Future<SharedPreferences> registerPrefs(Map<String, Object> values) async {
+      SharedPreferences.setMockInitialValues(values);
+      final prefs = await SharedPreferences.getInstance();
+      GetIt.I.registerSingleton<SharedPreferences>(prefs);
+      return prefs;
+    }
+
+    DebtEntity addedDebt() => verify(() => mockDebtBloc.add(captureAny()))
+        .captured
+        .whereType<AddDebtEvent>()
+        .single
+        .debt;
+
+    testWidgets('ilk açılış Kişisel: 3 metin alanı, kredi alanı yok',
+        (tester) async {
+      final l10n = await pumpNew(tester);
+
+      expect(find.text(l10n.kisiAdiHint), findsOneWidget);
+      expect(find.text(l10n.vadeAyHint), findsNothing);
+      expect(find.text(l10n.gelismisLabel), findsNothing);
+      // Tutar + kişi + (isteğe bağlı) başlık.
+      expect(find.byType(TextField), findsNWidgets(3));
+    });
+
+    testWidgets(
+        'son kaydedilen tür hatırlanır ve bir sonraki form onunla açılır',
+        (tester) async {
+      final prefs = await registerPrefs({});
+      final l10n = await pumpNew(tester);
+
+      await selectType(tester, l10n.debtTypeOther);
+      await tester.enterText(find.byType(TextField).first, '1200');
+      await tester.enterText(
+        find.ancestor(
+            of: find.text(l10n.vadeAyHint), matching: find.byType(TextField)),
+        '6',
+      );
+      await tester.enterText(
+        find.ancestor(
+            of: find.text(l10n.kurumKisiHint),
+            matching: find.byType(TextField)),
+        'Esnaf',
+      );
+      await tester.pumpAndSettle();
+      await chooseImpact(tester, l10n.borcEtkiUrunKisa);
+      await tapSave(tester, l10n.kaydet);
+
+      expect(addedDebt().type, DebtType.otherDebt);
+      expect(DebtFormPreferences(prefs).lastType(), DebtType.otherDebt);
+
+      // Yeni bir form: artık Diğer ile açılır (vade alanı hazır).
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(buildTestableWidget(newDebt));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.vadeAyHint), findsOneWidget);
+    });
+
+    testWidgets('tanınmayan kayıtlı tür Kişisel\'e düşer', (tester) async {
+      await registerPrefs({DebtFormPreferences.lastTypeKey: 'silinmisTur'});
+      final l10n = await pumpNew(tester);
+      expect(find.text(l10n.kisiAdiHint), findsOneWidget);
+    });
+
+    testWidgets('düzenlemede kaydın kendi türü, hatırlanan değil',
+        (tester) async {
+      await registerPrefs({DebtFormPreferences.lastTypeKey: 'personalDebt'});
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      await tester.pumpWidget(buildTestableWidget(
+        AddEntrySheet(
+          walletId: 'w1',
+          userId: 'u1',
+          currency: 'TRY',
+          debtToEdit: DebtEntity(
+            id: 'd9',
+            userId: 'u1',
+            walletId: 'w1',
+            title: 'Kredi',
+            counterparty: 'Banka',
+            type: DebtType.bankLoan,
+            calcMode: DebtCalcMode.fixedInstallment,
+            principalAmount: 12000,
+            interestRate: 0,
+            termMonths: 12,
+            startDate: DateTime(2026, 1, 1),
+            expectedTotalAmount: 12000,
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.vadeAyHint), findsOneWidget);
+      // Düzenlemede "ne aldın?" sorulmaz: kuplaj kayıtla kurulmuştur.
+      expect(find.byKey(const ValueKey('debt-cash-impact')), findsNothing);
+    });
+
+    testWidgets('tür çipleri belirledikleri alanların ÜSTÜNDE', (tester) async {
+      final l10n = await pumpNew(tester);
+      await selectType(tester, l10n.debtTypeBankLoan);
+
+      final chips = tester.getRect(find.text(l10n.debtTypeBankLoan));
+      final term = tester.getRect(find.text(l10n.vadeAyHint));
+      final person = tester.getRect(find.text(l10n.kurumKisiHint));
+      debugPrint('çipler y=${chips.top} · vade y=${term.top} · '
+          'kurum y=${person.top}');
+      expect(chips.bottom, lessThan(term.top));
+      expect(term.bottom, lessThan(person.top));
+    });
+
+    testWidgets('kredide ileri seviye alanlar kapalı "Gelişmiş" bölümünde',
+        (tester) async {
+      final l10n = await pumpNew(tester);
+      await selectType(tester, l10n.debtTypeBankLoan);
+
+      // Görünen: vade + aylık taksit. Jargon kapalı.
+      expect(find.text(l10n.vadeAyHint), findsOneWidget);
+      expect(find.text(l10n.aylikTaksitHint), findsOneWidget);
+      expect(find.text(l10n.gecikmeFaiziYuzdeHint), findsNothing);
+      expect(find.text(l10n.faizOraniIle), findsNothing);
+      // Kapalıyken içeride ne olduğu yazar.
+      expect(find.text(l10n.borcGelismisOzetBanka), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('debt-advanced-toggle')));
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.gecikmeFaiziYuzdeHint), findsOneWidget);
+      expect(find.text(l10n.faizOraniIle), findsOneWidget);
+      expect(find.text(l10n.kKDFVeBsmvVergilerini), findsNothing);
+
+      // Faiz moduna geçince vergi anahtarı da açılır, üstteki alan değişir.
+      await tester.tap(find.text(l10n.faizOraniIle));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.kKDFVeBsmvVergilerini), findsOneWidget);
+      expect(find.text(l10n.aylikFaizYuzdeHint), findsOneWidget);
+      expect(find.text(l10n.aylikTaksitHint), findsNothing);
+    });
+
+    testWidgets(
+        'varsayılan dışı ayarı olan kayıt düzenlenirken "Gelişmiş" AÇIK gelir',
+        (tester) async {
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      await tester.pumpWidget(buildTestableWidget(
+        AddEntrySheet(
+          walletId: 'w1',
+          userId: 'u1',
+          currency: 'TRY',
+          debtToEdit: DebtEntity(
+            id: 'd8',
+            userId: 'u1',
+            walletId: 'w1',
+            title: 'Kredi',
+            counterparty: 'Banka',
+            type: DebtType.bankLoan,
+            calcMode: DebtCalcMode.fixedInstallment,
+            principalAmount: 12000,
+            interestRate: 0,
+            termMonths: 12,
+            overdueInterestRate: 4,
+            startDate: DateTime(2026, 1, 1),
+            expectedTotalAmount: 12000,
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.gecikmeFaiziYuzdeHint), findsOneWidget);
+    });
+
+    testWidgets('başlık isteğe bağlı: boşsa kişi adına düşer', (tester) async {
+      final l10n = await pumpNew(tester);
+
+      await tester.enterText(find.byType(TextField).first, '500');
+      await tester.enterText(
+        find.ancestor(
+            of: find.text(l10n.kisiAdiHint), matching: find.byType(TextField)),
+        'Ahmet',
+      );
+      await tester.pumpAndSettle();
+      await chooseImpact(tester, l10n.borcNakitSecenekBaslik);
+      await tapSave(tester, l10n.kaydet);
+
+      final debt = addedDebt();
+      expect(debt.title, 'Ahmet');
+      expect(debt.counterparty, 'Ahmet');
+    });
+
+    testWidgets('kişi/kurum boşsa kayıt yapılmaz', (tester) async {
+      final l10n = await pumpNew(tester);
+
+      await tester.enterText(find.byType(TextField).first, '500');
+      await tester.enterText(
+        find.ancestor(
+            of: find.text(l10n.borcBaslikHint),
+            matching: find.byType(TextField)),
+        'Yalnız başlık',
+      );
+      await tester.pumpAndSettle();
+      await chooseImpact(tester, l10n.borcNakitSecenekBaslik);
+      await tapSave(tester, l10n.kaydet);
+
+      expect(find.text(l10n.kurumKisiGirin), findsOneWidget);
+      verifyNever(() => mockDebtBloc.add(any(that: isA<AddDebtEvent>())));
+    });
+
+    testWidgets('"ne aldın?" formun içinde ve seçilmeden kaydedilmez',
+        (tester) async {
+      final l10n = await pumpNew(tester);
+
+      // Soru Kaydet'e basmadan ÖNCE görünür.
+      expect(find.text(l10n.borcNakitEtkiBaslik), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField).first, '750');
+      await tester.enterText(
+        find.ancestor(
+            of: find.text(l10n.kisiAdiHint), matching: find.byType(TextField)),
+        'Ayşe',
+      );
+      await tester.pumpAndSettle();
+      await tapSave(tester, l10n.kaydet);
+
+      // Ön seçim yok: bakiyeyi değiştirecek karar sessizce verilmez.
+      expect(find.text(l10n.borcEtkiSecin), findsOneWidget);
+      verifyNever(() => mockDebtBloc.add(any(that: isA<AddDebtEvent>())));
+
+      // Seçince sonuç, girilen tutarla yazılır.
+      await chooseImpact(tester, l10n.borcNakitSecenekBaslik);
+      expect(find.text(l10n.borcEtkiSecin), findsNothing);
+      expect(find.text(l10n.borcNakitSecenekGovde('750,00 ₺')), findsOneWidget);
+
+      await tapSave(tester, l10n.kaydet);
+      final added = verify(() => mockDebtBloc.add(captureAny()))
+          .captured
+          .whereType<AddDebtEvent>()
+          .single;
+      expect(added.debt.principalToWallet, isTrue);
+      expect(added.principalSource, isA<NewCashMovement>());
+      // Kaydet'ten sonra diyalog YOK.
+      expect(find.byType(AlertDialog), findsNothing);
+    });
+
+    testWidgets('"Ürün / hizmet" seçilirse anapara cüzdana yazılmaz',
+        (tester) async {
+      final l10n = await pumpNew(tester);
+
+      await tester.enterText(find.byType(TextField).first, '750');
+      await tester.enterText(
+        find.ancestor(
+            of: find.text(l10n.kisiAdiHint), matching: find.byType(TextField)),
+        'Ayşe',
+      );
+      await tester.pumpAndSettle();
+      await chooseImpact(tester, l10n.borcEtkiUrunKisa);
+      expect(find.text(l10n.borcUrunSecenekGovde), findsOneWidget);
+      await tapSave(tester, l10n.kaydet);
+
+      expect(addedDebt().principalToWallet, isFalse);
+    });
   });
 }

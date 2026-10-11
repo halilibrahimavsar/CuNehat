@@ -1585,7 +1585,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get borcTuruLabel => 'Debt type';
 
   @override
-  String get borcBaslikHint => 'Title · e.g. Housing Loan';
+  String get borcBaslikHint => 'Title (optional)';
 
   @override
   String get kurumKisiHint => 'Institution / Person · e.g. Ziraat Bank';
@@ -2435,7 +2435,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingDebtAddDesc =>
-      'Enter the amount. Depending on the debt type, installment, interest, and term fields appear below; the summary under the card computes total repayment live.';
+      'Enter the amount, then pick the debt type right below. The term and installment fields follow the type; the summary under the card calculates the total repayment instantly.';
 
   @override
   String get onboardingDebtAddDueDateTitle => 'Due Date';
@@ -6240,4 +6240,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gelirEkle => 'Add income';
+
+  @override
+  String get gelismisLabel => 'Advanced';
+
+  @override
+  String get borcGelismisOzetBanka =>
+      'Calculate by interest rate · taxes · overdue interest';
+
+  @override
+  String get borcGelismisOzetTaksitli => 'Surcharge method · overdue interest';
+
+  @override
+  String get borcGelismisOzetDiger => 'Overdue interest';
+
+  @override
+  String get borcEtkiDefterKisa => 'In ledger';
+
+  @override
+  String get borcEtkiUrunKisa => 'Product / service';
+
+  @override
+  String get borcEtkiSecin => 'Choose what you received for this debt';
 }

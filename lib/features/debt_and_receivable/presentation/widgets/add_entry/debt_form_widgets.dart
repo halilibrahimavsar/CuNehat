@@ -257,6 +257,119 @@ class BankTaxSwitch extends StatelessWidget {
   }
 }
 
+/// Formun kapalı açılan "Gelişmiş" bölümü: hesap yöntemi seçicileri,
+/// KKDF/BSMV anahtarı ve gecikme faizi.
+///
+/// Bunlar eskiden hep açıktı; kredi ekleyen kullanıcı vade ve taksiti yazmadan
+/// önce "amortisman", "basit vade farkı", "KKDF/BSMV" ile karşılaşıyordu.
+/// Kapalıyken başlığın altındaki [summary] içeride ne olduğunu söyler — ayar
+/// gizlenir, varlığı gizlenmez.
+class DebtAdvancedSection extends StatelessWidget {
+  final bool expanded;
+  final VoidCallback onToggle;
+  final String summary;
+  final Color accent;
+  final List<Widget> children;
+
+  const DebtAdvancedSection({
+    super.key,
+    required this.expanded,
+    required this.onToggle,
+    required this.summary,
+    required this.accent,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.onSurface.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              key: const ValueKey('debt-advanced-toggle'),
+              onTap: onToggle,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 48),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  child: Row(
+                    children: [
+                      Icon(Icons.tune_rounded,
+                          size: 18, color: expanded ? accent : cs.onSurface),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              context.l10n.gelismisLabel,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: expanded ? accent : cs.onSurface,
+                              ),
+                            ),
+                            if (!expanded)
+                              Text(
+                                summary,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      AnimatedRotation(
+                        turns: expanded ? 0.5 : 0,
+                        duration: const Duration(milliseconds: 150),
+                        child: Icon(Icons.expand_more_rounded,
+                            color: cs.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
+            alignment: Alignment.topCenter,
+            child: expanded
+                ? Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 2, 12, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (var i = 0; i < children.length; i++) ...[
+                          if (i > 0) const SizedBox(height: 10),
+                          children[i],
+                        ],
+                      ],
+                    ),
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Kişisel borçta OPSİYONEL vade hapı.
 ///
 /// Kişisel borcun taksit planı yoktur; eskiden vade sorulmadan "başlangıç + 1

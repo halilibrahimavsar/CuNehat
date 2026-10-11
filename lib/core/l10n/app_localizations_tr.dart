@@ -1588,7 +1588,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get borcTuruLabel => 'Borç türü';
 
   @override
-  String get borcBaslikHint => 'Başlık · örn. Konut Kredisi';
+  String get borcBaslikHint => 'Başlık (isteğe bağlı)';
 
   @override
   String get kurumKisiHint => 'Kurum / Kişi · örn. Ziraat Bankası';
@@ -2436,7 +2436,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get onboardingDebtAddDesc =>
-      'Tutarı girin. Borç türüne göre taksit, faiz ve vade alanları aşağıda açılır; kartın altındaki özet toplam geri ödemeyi anında hesaplar.';
+      'Tutarı girin, hemen altından borç türünü seçin. Türe göre vade ve taksit alanları açılır; kartın altındaki özet toplam geri ödemeyi anında hesaplar.';
 
   @override
   String get onboardingDebtAddDueDateTitle => 'Vade Tarihi';
@@ -6193,4 +6193,26 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get gelirEkle => 'Gelir ekle';
+
+  @override
+  String get gelismisLabel => 'Gelişmiş';
+
+  @override
+  String get borcGelismisOzetBanka =>
+      'Faiz oranıyla hesapla · KKDF/BSMV · gecikme faizi';
+
+  @override
+  String get borcGelismisOzetTaksitli => 'Vade farkı yöntemi · gecikme faizi';
+
+  @override
+  String get borcGelismisOzetDiger => 'Gecikme faizi';
+
+  @override
+  String get borcEtkiDefterKisa => 'Defterde var';
+
+  @override
+  String get borcEtkiUrunKisa => 'Ürün / hizmet';
+
+  @override
+  String get borcEtkiSecin => 'Bu borç karşılığında ne aldığını seç';
 }
