@@ -1,3 +1,4 @@
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/core/l10n/app_strings.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -1140,6 +1141,8 @@ class BankImportCubit extends Cubit<BankImportState>
       categorySource: guess.source,
       sourceTag: d.sourceTag,
       reference: d.reference,
+      // Taksit yalnız harcamadır; gelire çevrilen satır taksit olamaz.
+      installment: type == TransactionTypeModel.expense ? d.installment : null,
       duplicateOf: keepMatch ? match : null,
       selected: dropsLedgerMatch ? true : d.selected,
     );
@@ -1426,18 +1429,25 @@ class BankImportCubit extends Cubit<BankImportState>
     // buna dayanır. UUIDv7: yazıldığı an kimliğin içinde.
     final batchId = UidGenerator.generateV7();
     var added = 0;
+    var futureInstallments = 0;
     final importedIds = <String>[];
     final linkable = <LinkSuggestion>[];
     final investmentCategories = _investmentCategoryIds();
     for (var i = 0; i < selected.length; i++) {
       final id = UidGenerator.generateV7();
       final draft = selected[i];
+      // Taksit satırı: süren bir grubun parçasıysa ona katılır (aynı
+      // alışverişin başka taksiti daha önce yazılmış), değilse yeni grup.
+      final groupId = draft.installment == null
+          ? null
+          : (_siblingGroupOf(draft) ?? UidGenerator.generateV7());
       final entity = draft.toEntity(
         id: id,
         userId: _userId,
         walletId: _walletId,
         categoryName: _categoryNameOf(draft.categoryId, draft.isIncome),
         importBatchId: batchId,
+        installmentGroupId: groupId,
       );
       final res = await _txRepo.addTransaction(entity);
       res.fold((_) {}, (_) {
@@ -1448,9 +1458,26 @@ class BankImportCubit extends Cubit<BankImportState>
           isIncome: draft.isIncome,
           inInvestmentCategory: !draft.isIncome &&
               investmentCategories.contains(draft.categoryId),
+          onCard: _targetIsCard,
         );
         if (hint != null) linkable.add(LinkSuggestion(entity, hint));
       });
+      // Kalan taksitler ileri tarihe yazılır (kullanıcı kararı, 11 Eki 2026):
+      // kartın toplam borcu ve kullanılabilir limiti bankanınkiyle tutsun.
+      // Aynı içe aktarım kimliğini taşırlar; "geri al" onları da kaldırır.
+      if (res.isRight()) {
+        for (final next in draft.remainingInstallments(
+          entity,
+          newId: UidGenerator.generateV7,
+        )) {
+          if (_installmentExists(next)) continue;
+          final r = await _txRepo.addTransaction(next);
+          r.fold((_) {}, (_) {
+            futureInstallments++;
+            importedIds.add(next.id!);
+          });
+        }
+      }
       if (i % 10 == 0 || i == selected.length - 1) {
         emit(BankImportCommitting(done: i + 1, total: total));
       }
@@ -1470,6 +1497,22 @@ class BankImportCubit extends Cubit<BankImportState>
       );
       final res = await _txRepo.updateTransaction(corrected);
       res.fold((_) {}, (_) => originals.add(original));
+      // Düzeltilen satır önceden yazılmış bir TAHMİNİ taksitse (bkz.
+      // `ImportDraft.remainingInstallments`), aynı alışverişin SONRAKİ
+      // taksitleri de bankanın tutarına çekilir: banka kuruş farkını tek
+      // taksite yazar, kalanlar birbirine eşittir.
+      final group = original.installmentGroupId;
+      final no = original.installmentNo;
+      if (res.isRight() && group != null && no != null) {
+        for (final later in _ledgerById.values.toList()) {
+          if (later.installmentGroupId != group) continue;
+          if ((later.installmentNo ?? 0) <= no) continue;
+          if (!moneyEquals(later.amount, original.amount)) continue;
+          final r = await _txRepo
+              .updateTransaction(later.copyWith(amount: draft.amount));
+          r.fold((_) {}, (_) => originals.add(later));
+        }
+      }
     }
     _lastCorrectedOriginals = originals;
 
@@ -1489,8 +1532,44 @@ class BankImportCubit extends Cubit<BankImportState>
       unresolvedLeftovers: s.leftovers.length,
       linkSuggestions: linkable,
       cardStatementSaved: cardSaved,
+      futureInstallments: futureInstallments,
     ));
   }
+
+  /// [draft] taksitinin alışverişine ait, defterde ZATEN duran başka bir
+  /// taksitin grubu (aynı taksit sayısı, alışveriş gününe çapalı tarih,
+  /// yakın tutar); yoksa `null`.
+  String? _siblingGroupOf(ImportDraft draft) {
+    final inst = draft.installment;
+    if (inst == null) return null;
+    for (final t in _ledgerById.values) {
+      final no = t.installmentNo;
+      if (t.installmentGroupId == null || no == null) continue;
+      if (t.installmentCount != inst.count || no == inst.no) continue;
+      if (t.isIncome != draft.isIncome) continue;
+      if (!_sameDay(t.date, inst.dateOf(no))) continue;
+      if ((t.amount - draft.amount).abs() > inst.count) continue;
+      return t.installmentGroupId;
+    }
+    return null;
+  }
+
+  /// [next] taksiti defterde zaten var mı (elle bölünmüş ya da önceki bir
+  /// içe aktarımın yazdığı): aynı k/N, aynı gün, yakın tutar.
+  bool _installmentExists(TransactionEntity next) {
+    final count = next.installmentCount;
+    if (count == null) return false;
+    for (final t in _ledgerById.values) {
+      if (t.installmentNo != next.installmentNo) continue;
+      if (t.installmentCount != count || t.isIncome != next.isIncome) continue;
+      if (!_sameDay(t.date, next.date)) continue;
+      if ((t.amount - next.amount).abs() <= count) return true;
+    }
+    return false;
+  }
+
+  static bool _sameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
 
   /// Kapanmış kart ekstresinin künyesini hedef KART cüzdanının son ekstresi
   /// olarak yazar (kesim, son ödeme, dönem borcu, asgari; limit ve eksikse son
@@ -1728,6 +1807,7 @@ class BankImportCubit extends Cubit<BankImportState>
     int unresolvedLeftovers = 0,
     List<LinkSuggestion> linkSuggestions = const [],
     bool cardStatementSaved = false,
+    int futureInstallments = 0,
   }) async {
     final walletRes = await _metrics.walletRepository.getWalletById(_walletId);
     final balance = walletRes.fold((_) => 0.0, (w) => w?.balance ?? 0.0);
@@ -1766,6 +1846,7 @@ class BankImportCubit extends Cubit<BankImportState>
       unresolvedLeftovers: unresolvedLeftovers,
       linkSuggestions: linkSuggestions,
       cardStatementSaved: cardStatementSaved,
+      futureInstallments: futureInstallments,
       firstDate: first,
       lastDate: last,
       closing: closing,

@@ -1619,6 +1619,21 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                     ],
                   ),
                 ),
+                // Sürpriz olmasın: bu satır yazılınca kalan taksitler de
+                // ileri tarihe yazılır.
+                if (d.selected && (d.installment?.remaining ?? 0) > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2, bottom: 2),
+                    child: Text(
+                      context.l10n.bankImportInstallmentNote(
+                        d.installment!.remaining,
+                        AppFormatters.dateShort.format(
+                            d.installment!.dateOf(d.installment!.count)),
+                      ),
+                      key: ValueKey('review-installment-note-$i'),
+                      style: TextStyle(fontSize: 12, color: cs.primary),
+                    ),
+                  ),
                 if (d.isDuplicate) _duplicatePanel(i, d),
               ],
             ),

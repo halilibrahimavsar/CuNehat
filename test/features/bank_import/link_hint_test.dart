@@ -52,6 +52,51 @@ void main() {
     });
   });
 
+  group('kart dökümünde (onCard) yön terstir', () {
+    test('karta yapılan ödeme gelir DEĞİL, kendi hesabından gelen paradır', () {
+      expect(
+        linkHintOf('Ödeme - Teşekkür Ederiz', isIncome: true, onCard: true),
+        LinkHint.cardPaymentReceived,
+      );
+    });
+
+    test('iade satırı ödeme sayılmaz', () {
+      expect(
+        linkHintOf('E/OTOKOC AVIS', isIncome: true, onCard: true),
+        isNull,
+      );
+    });
+
+    test('karttan başka hesaba havale: kendi hesabına mı diye SORULUR', () {
+      expect(
+        linkHintOf('ALICI : ORNEK BANK A.S. SORGU NO: 238',
+            isIncome: false, onCard: true),
+        LinkHint.ownTransfer,
+      );
+      // Havalenin ücret satırları düz giderdir.
+      expect(
+        linkHintOf('Kredi Kartı EFT İşlem Ücreti',
+            isIncome: false, onCard: true),
+        isNull,
+      );
+    });
+
+    test('hesap ekstresinde aynı metinler bu önerileri ÜRETMEZ', () {
+      expect(linkHintOf('Ödeme - Teşekkür Ederiz', isIncome: true), isNull);
+      expect(
+        linkHintOf('ALICI : ORNEK BANK A.S. SORGU NO: 238', isIncome: false),
+        isNull,
+      );
+    });
+
+    test('kart harcaması öneri değildir', () {
+      expect(
+        linkHintOf('ORNEK MARKET (2/3)', isIncome: false, onCard: true),
+        isNull,
+      );
+    });
+  });
+
   group('cardIdByLast4', () {
     const cards = [
       (id: 'bonus', last4: '5690'),

@@ -126,6 +126,8 @@ class _LinkSuggestionsCardState extends State<LinkSuggestionsCard> {
       LinkHint.debtPayment => l10n.linkHintDebtPayment,
       LinkHint.loanDisbursement => l10n.linkHintLoan,
       LinkHint.cardPayment => l10n.linkHintCardPayment,
+      LinkHint.cardPaymentReceived => l10n.linkHintCardPaymentIn,
+      LinkHint.ownTransfer => l10n.linkHintOwnTransfer,
     };
     final linked = t.isSystem;
     return Padding(
@@ -168,26 +170,59 @@ class _LinkSuggestionsCardState extends State<LinkSuggestionsCard> {
             )
           else
             TextButton(
-              onPressed: () => hint == LinkHint.cardPayment
-                  // Kart ödemesi doğrudan transfere gider; son 4 hanesi
-                  // açıklamada geçen TEK kart varsa o kart önceden seçilir.
-                  ? startLinkTransactionFlow(
-                      context,
-                      transaction: t,
-                      currency: widget.currency,
-                      target: LinkTarget.transfer,
-                      counterpartWalletId: _cardFor(context, t.title),
-                    )
-                  : startLinkTransactionFlow(
-                      context,
-                      transaction: t,
-                      currency: widget.currency,
-                    ),
+              onPressed: () => switch (hint) {
+                // Kart ödemesi doğrudan transfere gider; son 4 hanesi
+                // açıklamada geçen TEK kart varsa o kart önceden seçilir.
+                LinkHint.cardPayment => startLinkTransactionFlow(
+                    context,
+                    transaction: t,
+                    currency: widget.currency,
+                    target: LinkTarget.transfer,
+                    counterpartWalletId: _cardFor(context, t.title),
+                  ),
+                // Kartın kendi dökümündeki ödeme: karşı taraf kartın
+                // ödendiği hesap (biliniyorsa önceden seçilir).
+                LinkHint.cardPaymentReceived => startLinkTransactionFlow(
+                    context,
+                    transaction: t,
+                    currency: widget.currency,
+                    target: LinkTarget.transfer,
+                    counterpartWalletId: _paymentWalletOf(context, t.walletId),
+                  ),
+                // Karttan çıkan havale: hangi hesabına gittiğini kullanıcı
+                // seçer; kendi hesabı değilse satır gider olarak kalır.
+                LinkHint.ownTransfer => startLinkTransactionFlow(
+                    context,
+                    transaction: t,
+                    currency: widget.currency,
+                    target: LinkTarget.transfer,
+                  ),
+                _ => startLinkTransactionFlow(
+                    context,
+                    transaction: t,
+                    currency: widget.currency,
+                  ),
+              },
               child: Text(l10n.bankImportLinkButton),
             ),
         ],
       ),
     );
+  }
+
+  /// [cardWalletId] kartının genellikle ödendiği hesap; bilinmiyorsa `null`
+  /// (akış cüzdanı sorar).
+  String? _paymentWalletOf(BuildContext context, String cardWalletId) {
+    try {
+      final state = context.read<WalletBloc>().state;
+      if (state is! WalletLoadedSt) return null;
+      for (final w in state.wallets) {
+        if (w.id == cardWalletId) return w.creditCard?.paymentWalletId;
+      }
+    } on ProviderNotFoundException {
+      return null;
+    }
+    return null;
   }
 
   /// Açıklamada son 4 hanesi geçen kart cüzdanı (bkz. [cardIdByLast4]).

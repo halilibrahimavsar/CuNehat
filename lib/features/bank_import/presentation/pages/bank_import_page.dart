@@ -714,6 +714,16 @@ class _DoneState extends State<_Done> {
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
+            if (state.futureInstallments > 0) ...[
+              const SizedBox(height: 6),
+              Text(
+                context.l10n
+                    .bankImportDoneFutureInstallments(state.futureInstallments),
+                key: const ValueKey('import-done-future-installments'),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
             if (state.corrected > 0) ...[
               const SizedBox(height: 6),
               Text(

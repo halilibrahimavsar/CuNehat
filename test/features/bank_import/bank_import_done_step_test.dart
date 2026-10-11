@@ -145,6 +145,32 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  testWidgets('ileri tarihe yazılan kalan taksitler ayrıca bildirilir',
+      (tester) async {
+    doneState(const BankImportDone(
+      added: 8,
+      skipped: 0,
+      walletId: 'w1',
+      userId: 'u1',
+      balance: 1500,
+      hasPastMonthRows: false,
+      futureInstallments: 11,
+    ));
+    await pump(tester);
+
+    expect(find.byKey(const ValueKey('import-done-future-installments')),
+        findsOneWidget);
+    expect(find.text('11 kalan taksit ileri tarihe yazıldı.'), findsOneWidget);
+  });
+
+  testWidgets('taksit yazılmadıysa o satır hiç görünmez', (tester) async {
+    doneState(_done);
+    await pump(tester);
+
+    expect(find.byKey(const ValueKey('import-done-future-installments')),
+        findsNothing);
+  });
+
   group('geri alma diyaloğu', () {
     testWidgets('önce neyin silineceğini söyler; iptal hiçbir şey yapmaz',
         (tester) async {

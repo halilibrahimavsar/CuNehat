@@ -6,6 +6,7 @@ import 'package:cunehat/features/bank_import/data/balance_reconciler.dart';
 import 'package:cunehat/features/bank_import/data/card_statement_parser.dart';
 import 'package:cunehat/features/bank_import/data/category_guesser.dart';
 import 'package:cunehat/features/bank_import/data/column_mapper.dart';
+import 'package:cunehat/features/bank_import/data/link_hint.dart';
 import 'package:cunehat/features/bank_import/data/pdf_rasterizer.dart';
 import 'package:cunehat/features/bank_import/data/pdf_statement_parser.dart';
 import 'package:cunehat/features/bank_import/data/raw_table_reader.dart';
@@ -19,6 +20,7 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/wallet_category_service.dart';
+import 'package:cunehat/features/wallet/domain/card_cycle.dart';
 import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
@@ -523,6 +525,190 @@ void main() {
       verifyNever(() => txRepo.deleteTransaction('b'));
       verifyNever(() => txRepo.deleteTransaction('m'));
       verify(() => metrics.syncBalance('w1')).called(1);
+    });
+  });
+
+  group('kart ekstresi: taksit uçtan uca (sentetik QNB metni)', () {
+    // Gerçek dökümlerle ölçülen akışın sentetik kopyası (11 Eki 2026):
+    // Eylül'ün kapanmış ekstresi "1/3 · 503,03" getirir; Ekim'in dönem içi
+    // dökümü aynı alışverişin 2. taksitini ÖZGÜN tarihle (11/09) ve 503,00
+    // olarak getirir, yanında yeni 6 taksitli bir alışveriş vardır.
+    const september = '''
+QNB Kredi Kartı
+Kredi Kartı Numarası:1234 56** **** 4321 Son 3 deme Tarihi: 05 Ekim 2026, Pazartesi
+Hesap Kesim Tarihi : 25/09/2026
+D2 nem Borcu : 1,303.03 TL
+Asgari 3 deme Tutarı : 520.00 TL
+Kredi Kartı Limiti:50,000.00 TL
+3 nceki D2 nem Bakiyeniz 0.00
+01/09/2026 ORNEK BUFE 800.00
+11/09/2026 ORNEK MAGAZA 503.03 1/3
+Genel Toplam - TL Hesap Ekstresi 1,303.03
+''';
+    const october = '''
+07/10/2026 tarihli son 4 hanesi 4321 olan kartınıza ait Dönem İçi Hareketler
+30/09/2026 Ödeme - Tesekkür Ederiz - -1303,03 TRY 0/0,0 0,0
+11/09/2026 20260911 ORNEK MAGAZA 2. Taksit 503,0 TRY 2/3,0 0,0
+05/10/2026 ALICI : ORNEK BANK A.S. SORGU NO: 238 4560,0 TRY 0/0,0 0,0
+06/10/2026 20261006 ORNEK MOTOR 1. Taksit 1200,5 TRY 1/6,0 0,0
+''';
+
+    late BankImportCubit cubit;
+
+    /// Defter gerçekten yazılır/güncellenir: ikinci içe aktarım birincinin
+    /// satırlarını görmeli.
+    void wireLedger() {
+      when(() => txRepo.addTransaction(any())).thenAnswer((inv) async {
+        final t = inv.positionalArguments.first as TransactionEntity;
+        (ledgers[t.walletId] ??= []).add(t);
+        return Right(t.id!);
+      });
+      when(() => txRepo.updateTransaction(any())).thenAnswer((inv) async {
+        final t = inv.positionalArguments.first as TransactionEntity;
+        final list = ledgers[t.walletId]!;
+        list[list.indexWhere((e) => e.id == t.id)] = t;
+        return const Right(null);
+      });
+      when(() => walletRepo.updateWallet(any())).thenAnswer((inv) async {
+        final w = inv.positionalArguments.first as WalletEntity;
+        wallets = [for (final e in wallets) e.id == w.id ? w : e];
+        return const Right(null);
+      });
+    }
+
+    Future<BankImportDone> import(String text) async {
+      final parsed = parseCardStatement(text)!;
+      await cubit.debugParsed(
+        userId: 'u1',
+        walletId: 'c1',
+        raw: parsed.drafts,
+        verification: parsed.verification,
+        cardFacts: parsed.facts,
+      );
+      await cubit.commit();
+      return cubit.state as BankImportDone;
+    }
+
+    List<TransactionEntity> plan(String title) => [
+          for (final t in ledgers['c1']!)
+            if (t.title.startsWith(title)) t,
+        ]..sort((a, b) => a.installmentNo!.compareTo(b.installmentNo!));
+
+    setUp(() {
+      cubit = build();
+      wallets = [
+        _wallet('c1',
+            name: 'Kart',
+            card:
+                const CreditCardInfo(closingDay: 25, dueDay: 5, last4: '4321')),
+      ];
+      wireLedger();
+    });
+
+    test('Eylül ekstresi: 1/3 yazılır, 2/3 ve 3/3 ileri tarihe konur',
+        () async {
+      final done = await import(september);
+
+      expect(done.added, 2);
+      expect(done.futureInstallments, 2);
+      final rows = plan('ORNEK MAGAZA');
+      expect(rows.map((t) => t.title), [
+        'ORNEK MAGAZA (1/3)',
+        'ORNEK MAGAZA (2/3)',
+        'ORNEK MAGAZA (3/3)',
+      ]);
+      expect(rows.map((t) => t.date), [
+        DateTime(2026, 9, 11),
+        DateTime(2026, 10, 11),
+        DateTime(2026, 11, 11),
+      ]);
+      expect(rows.map((t) => t.installmentGroupId).toSet(), hasLength(1));
+    });
+
+    test(
+        'ardından Ekim dönem içi: 2. taksit ikinci kez EKLENMEZ, tutarı '
+        'bankanınkiyle düzelir; yeni alışverişin 5 taksiti yazılır', () async {
+      await import(september);
+
+      final parsed = parseCardStatement(october)!;
+      await cubit.debugParsed(
+        userId: 'u1',
+        walletId: 'c1',
+        raw: parsed.drafts,
+        cardFacts: parsed.facts,
+      );
+      final second = review(cubit)
+          .drafts
+          .firstWhere((d) => d.description == 'ORNEK MAGAZA (2/3)');
+      // Özgün tarih 11 Eylül'dü; satır taksitin kendi ayına yazıldı.
+      expect(second.date, DateTime(2026, 10, 11));
+      expect(second.selected, isFalse);
+      expect(second.correctExisting, isTrue);
+
+      await cubit.commit();
+      final done = cubit.state as BankImportDone;
+
+      final magaza = plan('ORNEK MAGAZA');
+      expect(magaza, hasLength(3), reason: 'tekrar eklenmedi');
+      // Kuruş farkı ilk taksitteydi: kalanlar bankanın tutarına çekildi.
+      expect(magaza.map((t) => t.amount), [503.03, 503.0, 503.0]);
+
+      final motor = plan('ORNEK MOTOR');
+      expect(motor.map((t) => t.installmentNo), [1, 2, 3, 4, 5, 6]);
+      expect(motor.first.date, DateTime(2026, 10, 6));
+      expect(motor.last.date, DateTime(2027, 3, 6));
+      expect(done.futureInstallments, 5);
+
+      // Ödeme ve karttan çıkan havale için SORULUR (kendiliğinden bağlanmaz).
+      expect(
+        done.linkSuggestions.map((s) => s.hint),
+        containsAll([LinkHint.cardPaymentReceived, LinkHint.ownTransfer]),
+      );
+      final eft = ledgers['c1']!.firstWhere((t) => t.title.startsWith('ALICI'));
+      expect(eft.isExpense, isTrue);
+      expect(eft.isSystem, isFalse, reason: 'bağlanana dek gider olarak kalır');
+    });
+
+    test('kart dönemi: her taksit KENDİ ekstresine düşer', () async {
+      await import(september);
+      await import(october);
+
+      final card = wallets.single.creditCard!;
+      // Eylül ekstresinin künyesi karta yazıldı.
+      expect(card.lastStatement?.closingDate, DateTime(2026, 9, 25));
+      final ledger = ledgers['c1']!;
+      final status = computeCardStatus(
+        card: card,
+        openingBalance: 0,
+        walletCreatedAt: DateTime(2026, 1, 1),
+        ledger: ledger,
+        today: DateTime(2026, 10, 7),
+      );
+      // Eylül kesimine yalnız 1. taksit girdi: defter bankanın dönem
+      // borcuyla birebir tutuyor (eskiden 2. taksit de buraya düşüyordu).
+      expect(status.derivedStatementDebt, 1303.03);
+      expect(status.reconciliationGap, isNull);
+      // Son ödeme kuralı bankanın beyanından: 25 Eki → 4 Kas.
+      expect(CardCycle(card).dueFor(DateTime(2026, 10, 25)),
+          DateTime(2026, 11, 4));
+      final secondInstallment =
+          ledger.firstWhere((t) => t.title == 'ORNEK MAGAZA (2/3)');
+      expect(cardPaymentDate(secondInstallment, card), DateTime(2026, 11, 4));
+      // Kalan taksitler kartın borcunda: 3/3 + motorun 5 taksiti.
+      expect(status.futureInstallments, 503.0 + 503.0 + 1200.5 * 5);
+    });
+
+    test('aynı dönem içi dökümü ikinci kez: hiçbir satır yeniden eklenmez',
+        () async {
+      await import(september);
+      await import(october);
+      final before = ledgers['c1']!.length;
+
+      final done = await import(october);
+
+      expect(done.added, 0);
+      expect(done.futureInstallments, 0);
+      expect(ledgers['c1'], hasLength(before));
     });
   });
 }

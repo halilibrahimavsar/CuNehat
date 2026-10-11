@@ -11236,6 +11236,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Alacak ekle'**
   String get alacakEkle;
+
+  /// No description provided for @bankImportInstallmentNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalan {count} taksit de ileri tarihe yazılacak (son: {son})'**
+  String bankImportInstallmentNote(int count, String son);
+
+  /// No description provided for @bankImportDoneFutureInstallments.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kalan taksit ileri tarihe yazıldı.'**
+  String bankImportDoneFutureInstallments(int count);
+
+  /// No description provided for @linkHintCardPaymentIn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kendi hesabından ödeme olabilir'**
+  String get linkHintCardPaymentIn;
+
+  /// No description provided for @linkHintOwnTransfer.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kendi hesabına aktarım mı? Değilse gider kalır'**
+  String get linkHintOwnTransfer;
 }
 
 class _AppLocalizationsDelegate

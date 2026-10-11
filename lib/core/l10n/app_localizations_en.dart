@@ -6557,4 +6557,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get alacakEkle => 'Add receivable';
+
+  @override
+  String bankImportInstallmentNote(int count, String son) {
+    return '$count remaining installments will be added on their own dates (last: $son)';
+  }
+
+  @override
+  String bankImportDoneFutureInstallments(int count) {
+    return '$count remaining installments were added on their future dates.';
+  }
+
+  @override
+  String get linkHintCardPaymentIn => 'May be a payment from your own account';
+
+  @override
+  String get linkHintOwnTransfer =>
+      'A transfer to your own account? Otherwise it stays an expense';
 }

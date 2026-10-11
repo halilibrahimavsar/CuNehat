@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 
+import 'package:cunehat/core/utils/date_math.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/installments.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 
 /// Bir taslağın neyin tekrarı sanıldığı.
@@ -254,6 +256,42 @@ enum CategorySource {
   user,
 }
 
+/// Taksitli alışverişin ekstredeki satırı ("Güncel / Toplam" sütunu: `2/3`).
+///
+/// **Neden ayrı taşınıyor:** bankalar taksit satırına alışverişin ÖZGÜN
+/// tarihini yazar. 11 Eylül'de 3 taksitle yapılan alışverişin 2. taksiti Ekim
+/// ekstresinde yine "11/09" tarihiyle görünür; tarihi olduğu gibi yazmak
+/// satırı bir önceki ekstreye (ve bir ay erkenki ödeme gününe) düşürüyordu
+/// (gerçek QNB dökümüyle ölçüldü, 11 Eki 2026). Taslağın [ImportDraft.date]'i
+/// bu yüzden taksitin KENDİ ayına taşınmış tarihtir; özgün tarih burada durur.
+class DraftInstallment extends Equatable {
+  /// Kaçıncı taksit (1 tabanlı).
+  final int no;
+
+  /// Toplam taksit sayısı.
+  final int count;
+
+  /// Alışverişin özgün günü. Kalan taksitlerin tarihi buna ÇAPALI ilerler
+  /// (31 Oca → 28 Şub → 31 Mar).
+  final DateTime purchaseDate;
+
+  const DraftInstallment({
+    required this.no,
+    required this.count,
+    required this.purchaseDate,
+  });
+
+  /// Bu satırdan SONRA kalan taksit sayısı.
+  int get remaining => count - no;
+
+  /// [k]. taksitin tarihi (saat [purchaseDate]'inki).
+  DateTime dateOf(int k) =>
+      addMonthsAnchored(purchaseDate, k - 1, purchaseDate.day);
+
+  @override
+  List<Object?> get props => [no, count, purchaseDate];
+}
+
 /// Banka ekstresinden çıkarılan tek bir hareket taslağı. Format-bağımsız ortak
 /// birim: CSV/Excel (kolon eşleme) ve PDF (satır-sezgisel) yolları hep bunu üretir.
 ///
@@ -284,6 +322,11 @@ class ImportDraft extends Equatable {
   /// ARASI tekrar tespiti buna dayanır (bkz. `markDuplicateDrafts`).
   final String? reference;
 
+  /// Taksitli alışverişin satırıysa taksit bilgisi; değilse `null`. Yazılırken
+  /// satır taksit grubuna girer ve KALAN taksitler de ileri tarihe yazılır
+  /// (bkz. `BankImportCubit.commit`).
+  final DraftInstallment? installment;
+
   /// Defterde ya da dosyada bulunan olası eşi; yoksa `null`.
   final DuplicateMatch? duplicateOf;
 
@@ -305,6 +348,7 @@ class ImportDraft extends Equatable {
     this.categorySource,
     this.sourceTag,
     this.reference,
+    this.installment,
     this.duplicateOf,
     this.selected = true,
     this.correctExisting = false,
@@ -338,6 +382,7 @@ class ImportDraft extends Equatable {
       categorySource: categorySource ?? this.categorySource,
       sourceTag: sourceTag ?? this.sourceTag,
       reference: reference ?? this.reference,
+      installment: installment,
       duplicateOf: duplicateOf ?? this.duplicateOf,
       selected: selected ?? this.selected,
       correctExisting: correctExisting ?? this.correctExisting,
@@ -355,6 +400,7 @@ class ImportDraft extends Equatable {
         categorySource: id == null ? null : source,
         sourceTag: sourceTag,
         reference: reference,
+        installment: installment,
         duplicateOf: duplicateOf,
         selected: selected,
         correctExisting: correctExisting,
@@ -370,6 +416,7 @@ class ImportDraft extends Equatable {
         categorySource: categorySource,
         sourceTag: sourceTag,
         reference: reference,
+        installment: installment,
         selected: selected,
       );
 
@@ -384,10 +431,12 @@ class ImportDraft extends Equatable {
     required String walletId,
     String? categoryName,
     String? importBatchId,
+    String? installmentGroupId,
   }) {
     final title = description.trim().isEmpty
         ? (categoryName ?? 'İşlem')
         : description.trim();
+    final inGroup = installment != null && installmentGroupId != null;
     return TransactionEntity(
       id: id,
       userId: userId,
@@ -401,7 +450,49 @@ class ImportDraft extends Equatable {
       reference: reference,
       origin: TransactionOrigin.bankImport,
       importBatchId: importBatchId,
+      installmentGroupId: inGroup ? installmentGroupId : null,
+      installmentNo: inGroup ? installment!.no : null,
+      installmentCount: inGroup ? installment!.count : null,
     );
+  }
+
+  /// Bu taksit satırından SONRA kalan taksitler, ileri tarihli gider
+  /// satırları olarak ([written] bu taslağın deftere yazılmış hâli).
+  ///
+  /// Kullanıcı kararı (11 Eki 2026): ekstrede "1/6" görülen alışverişin kalan
+  /// beş taksiti de yazılsın — yoksa kartın toplam borcu ve kullanılabilir
+  /// limiti o kadar eksik görünür.
+  ///
+  /// Tutar bu satırın tutarıdır ve bir TAHMİNDİR: banka kuruş farkını tek
+  /// bir taksite yazar (ölçüldü: 503,03 · 503,00 · 503,00). Gerçek satır
+  /// sonraki ekstreyle geldiğinde taksit kimliğinden bulunur ve tutarı
+  /// bankanınkiyle düzeltilir (bkz. `markDuplicateDrafts`).
+  List<TransactionEntity> remainingInstallments(
+    TransactionEntity written, {
+    required String Function() newId,
+  }) {
+    final info = installment;
+    final groupId = written.installmentGroupId;
+    if (info == null || groupId == null) return const [];
+    final base = installmentBaseTitle(written.title);
+    return [
+      for (var k = info.no + 1; k <= info.count; k++)
+        TransactionEntity(
+          id: newId(),
+          userId: written.userId,
+          walletId: written.walletId,
+          title: '$base ($k/${info.count})',
+          tag: written.tag,
+          amount: written.amount,
+          date: info.dateOf(k),
+          type: written.type,
+          origin: TransactionOrigin.bankImport,
+          importBatchId: written.importBatchId,
+          installmentGroupId: groupId,
+          installmentNo: k,
+          installmentCount: info.count,
+        ),
+    ];
   }
 
   @override
@@ -414,6 +505,7 @@ class ImportDraft extends Equatable {
         categorySource,
         sourceTag,
         reference,
+        installment,
         duplicateOf,
         selected,
         correctExisting,

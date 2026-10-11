@@ -256,6 +256,168 @@ void main() {
     });
   });
 
+  group('taksitli satır', () {
+    // Kullanıcı kararı (11 Eki 2026): ekstrede "1/3" görülen alışverişin
+    // kalan taksitleri de ileri tarihe yazılır; yoksa kartın borcu ve
+    // kullanılabilir limiti o kadar eksik görünür.
+    ImportDraft installmentDraft({
+      int no = 1,
+      double amount = 503.03,
+      DuplicateMatch? duplicateOf,
+      bool selected = true,
+      bool correctExisting = false,
+    }) {
+      final info = DraftInstallment(
+          no: no, count: 3, purchaseDate: DateTime(2026, 9, 11));
+      return ImportDraft(
+        date: info.dateOf(no),
+        description: 'ORNEK MAGAZA ($no/3)',
+        amount: amount,
+        type: TransactionTypeModel.expense,
+        categoryId: 'cat',
+        installment: info,
+        duplicateOf: duplicateOf,
+        selected: selected,
+        correctExisting: correctExisting,
+      );
+    }
+
+    TransactionEntity planRow(String id, int no, double amount) =>
+        TransactionEntity(
+          id: id,
+          userId: 'u1',
+          walletId: 'w1',
+          title: 'ORNEK MAGAZA ($no/3)',
+          tag: 'cat',
+          amount: amount,
+          date: DateTime(2026, 9 + no - 1, 11),
+          type: TransactionTypeModel.expense,
+          origin: TransactionOrigin.bankImport,
+          installmentGroupId: 'g-old',
+          installmentNo: no,
+          installmentCount: 3,
+        );
+
+    test(
+        'satırla birlikte KALAN taksitler de yazılır: aynı grup, aynı içe '
+        'aktarım; bitiş ekranı ayrı sayar', () async {
+      final cubit = build();
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [installmentDraft(), _draft(DateTime(2026, 9, 12), 10)],
+      );
+
+      await cubit.commit();
+
+      final written = verify(() => txRepo.addTransaction(captureAny()))
+          .captured
+          .cast<TransactionEntity>();
+      expect(written, hasLength(4), reason: '1/3 + 2/3 + 3/3 + düz satır');
+      final plan = written.where((t) => t.installmentGroupId != null).toList();
+      expect(plan.map((t) => t.installmentNo), [1, 2, 3]);
+      expect(plan.map((t) => t.installmentCount).toSet(), {3});
+      expect(plan.map((t) => t.installmentGroupId).toSet(), hasLength(1));
+      expect(plan.map((t) => t.date), [
+        DateTime(2026, 9, 11),
+        DateTime(2026, 10, 11),
+        DateTime(2026, 11, 11),
+      ]);
+      // Hepsi tek içe aktarımın parçası: "geri al" birlikte kaldırır.
+      expect(written.map((t) => t.importBatchId).toSet(), hasLength(1));
+
+      final done = cubit.state as BankImportDone;
+      expect(done.added, 2, reason: 'ekstrede iki satır vardı');
+      expect(done.futureInstallments, 2);
+      // Para zinciri: yine TEK senkron + TEK bildirim.
+      verify(() => metrics.syncBalance('w1')).called(1);
+      verify(() => notifier.notify(userId: 'u1', walletId: 'w1')).called(1);
+    });
+
+    test('geri al, ileri yazılan taksitleri de kaldırır', () async {
+      final cubit = build();
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [installmentDraft()],
+      );
+      await cubit.commit();
+
+      await cubit.undoImport();
+
+      verify(() => txRepo.deleteTransaction(any())).called(3);
+    });
+
+    test(
+        'kalan taksitler defterde ZATEN varsa ikinci kez yazılmaz; yeni satır '
+        'o gruba katılır', () async {
+      // Dönem içi dökümü daha önce 2/3 ve 3/3'ü yazmış; şimdi bir önceki
+      // ayın kapanmış ekstresi 1/3'ü getiriyor.
+      final cubit = build();
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [installmentDraft()],
+        ledger: [planRow('n2', 2, 503), planRow('n3', 3, 503)],
+      );
+
+      await cubit.commit();
+
+      final written = verify(() => txRepo.addTransaction(captureAny()))
+          .captured
+          .cast<TransactionEntity>();
+      expect(written.single.installmentNo, 1);
+      expect(written.single.installmentGroupId, 'g-old');
+      expect((cubit.state as BankImportDone).futureInstallments, 0);
+    });
+
+    test(
+        'tahmini taksit bankanın tutarıyla düzeltilince SONRAKİ taksitler de '
+        'düzelir; yeni kayıt açılmaz', () async {
+      // 1/3 = 503,03 ile yazıldı, 2/3 ve 3/3 aynı tutarla TAHMİN edildi.
+      // Banka 2/3'ü 503,00 olarak getiriyor (kuruş farkı ilk taksitteydi).
+      final cubit = build();
+      when(() => txRepo.updateTransaction(any()))
+          .thenAnswer((_) async => const Right(null));
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [
+          installmentDraft(
+            no: 2,
+            amount: 503,
+            selected: false,
+            correctExisting: true,
+            duplicateOf: DuplicateMatch(
+              kind: DuplicateKind.exact,
+              existingId: 'n2',
+              existingTitle: 'ORNEK MAGAZA (2/3)',
+              existingAmount: 503.03,
+              existingDate: DateTime(2026, 10, 11),
+              amountDelta: -0.03,
+            ),
+          ),
+        ],
+        ledger: [
+          planRow('n1', 1, 503.03),
+          planRow('n2', 2, 503.03),
+          planRow('n3', 3, 503.03),
+        ],
+      );
+
+      await cubit.commit();
+
+      verifyNever(() => txRepo.addTransaction(any()));
+      final updated = verify(() => txRepo.updateTransaction(captureAny()))
+          .captured
+          .cast<TransactionEntity>();
+      expect(updated.map((t) => t.id), ['n2', 'n3']);
+      expect(updated.map((t) => t.amount), [503.0, 503.0]);
+      // İlk taksit kuruş farkını taşıyan gerçek satırdır: dokunulmaz.
+      expect(updated.any((t) => t.id == 'n1'), isFalse);
+    });
+  });
+
   group('yaklaşık eşleşmede "tutarı düzelt"', () {
     // Kullanıcı BİM alışverişini elle 910 TL girmiş; banka 913,15 diyor.
     final manual = TransactionEntity(

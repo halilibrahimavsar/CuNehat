@@ -3716,5 +3716,26 @@
   },
   "blocMsgBackupFailed": "The backup couldn't be completed.",
   "borcEkle": "Add debt",
-  "alacakEkle": "Add receivable"
+  "alacakEkle": "Add receivable",
+  "bankImportInstallmentNote": "{count} remaining installments will be added on their own dates (last: {son})",
+  "@bankImportInstallmentNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "son": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportDoneFutureInstallments": "{count} remaining installments were added on their future dates.",
+  "@bankImportDoneFutureInstallments": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "linkHintCardPaymentIn": "May be a payment from your own account",
+  "linkHintOwnTransfer": "A transfer to your own account? Otherwise it stays an expense"
 }

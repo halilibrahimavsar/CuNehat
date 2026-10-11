@@ -3950,5 +3950,26 @@
   },
   "blocMsgBackupFailed": "Yedekleme işlemi tamamlanamadı.",
   "borcEkle": "Borç ekle",
-  "alacakEkle": "Alacak ekle"
+  "alacakEkle": "Alacak ekle",
+  "bankImportInstallmentNote": "Kalan {count} taksit de ileri tarihe yazılacak (son: {son})",
+  "@bankImportInstallmentNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "son": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportDoneFutureInstallments": "{count} kalan taksit ileri tarihe yazıldı.",
+  "@bankImportDoneFutureInstallments": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "linkHintCardPaymentIn": "Kendi hesabından ödeme olabilir",
+  "linkHintOwnTransfer": "Kendi hesabına aktarım mı? Değilse gider kalır"
 }

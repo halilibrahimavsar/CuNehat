@@ -89,6 +89,33 @@ void main() {
     expect(find.text(l10n.bankImportLinkButton), findsOneWidget);
   });
 
+  testWidgets(
+      'kart dökümü: ödeme ve karttan çıkan havale için SORULUR, kendiliğinden '
+      'bağlanmaz', (tester) async {
+    final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+
+    await tester.pumpWidget(app(LinkSuggestionsCard(
+      currency: 'TRY',
+      suggestions: [
+        LinkSuggestion(
+          _row('a', 'Ödeme - Teşekkür Ederiz'),
+          LinkHint.cardPaymentReceived,
+        ),
+        LinkSuggestion(
+          _row('b', 'ALICI : ORNEK BANK A.S. SORGU NO: 238'),
+          LinkHint.ownTransfer,
+        ),
+      ],
+    )));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining(l10n.linkHintCardPaymentIn), findsOneWidget);
+    expect(find.textContaining(l10n.linkHintOwnTransfer), findsOneWidget);
+    // Karar kullanıcının: iki satır da "Bağla" bekler, hiçbiri bağlı değil.
+    expect(find.text(l10n.bankImportLinkButton), findsNWidgets(2));
+    expect(find.text(l10n.bankImportLinked), findsNothing);
+  });
+
   testWidgets('geri alınan (silinmiş) satırlar listeden düşer, kart kapanır',
       (tester) async {
     final l10n = await AppLocalizations.delegate.load(const Locale('tr'));

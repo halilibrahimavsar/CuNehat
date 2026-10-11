@@ -1775,6 +1775,54 @@ void main() {
   // ---------------------------------------------------------------------
   // UX Tur 2 (11 Eki 2026) — listeye kalan yer
   // ---------------------------------------------------------------------
+  group('taksitli satır', () {
+    ImportDraft installment({bool selected = true}) {
+      final info = DraftInstallment(
+          no: 1, count: 6, purchaseDate: DateTime(2026, 10, 6));
+      return ImportDraft(
+        date: info.dateOf(1),
+        description: 'ORNEK MOTOR (1/6)',
+        amount: 1200.5,
+        type: TransactionTypeModel.expense,
+        categoryId: 'Market',
+        installment: info,
+        selected: selected,
+      );
+    }
+
+    testWidgets('kalan taksitlerin de yazılacağı satırda SÖYLENİR',
+        (tester) async {
+      // Yazınca beş satır daha oluşacak: sürpriz olmamalı.
+      await pump(tester, review(drafts: [installment()]));
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+
+      expect(find.byKey(const ValueKey('review-installment-note-0')),
+          findsOneWidget);
+      expect(
+        find.text(l10n.bankImportInstallmentNote(5, '06.03.27')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('satır eklenmeyecekse not da yok', (tester) async {
+      await pump(tester, review(drafts: [installment(selected: false)]));
+
+      expect(find.byKey(const ValueKey('review-installment-note-0')),
+          findsNothing);
+    });
+
+    testWidgets('taksitsiz satırda not yok', (tester) async {
+      await pump(
+        tester,
+        review(
+            drafts: [_draft(description: 'ORNEK BUFE', categoryId: 'Market')]),
+      );
+
+      expect(find.byKey(const ValueKey('review-installment-note-0')),
+          findsNothing);
+    });
+  });
+
   group('listeye kalan yer (360×800)', () {
     /// Uygulamadaki gövde: 800 − durum çubuğu 24 − AppBar 56 = 720dp.
     Future<({double listHeight, int rows})> measure(

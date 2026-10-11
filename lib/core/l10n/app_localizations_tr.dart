@@ -6510,4 +6510,21 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get alacakEkle => 'Alacak ekle';
+
+  @override
+  String bankImportInstallmentNote(int count, String son) {
+    return 'Kalan $count taksit de ileri tarihe yazılacak (son: $son)';
+  }
+
+  @override
+  String bankImportDoneFutureInstallments(int count) {
+    return '$count kalan taksit ileri tarihe yazıldı.';
+  }
+
+  @override
+  String get linkHintCardPaymentIn => 'Kendi hesabından ödeme olabilir';
+
+  @override
+  String get linkHintOwnTransfer =>
+      'Kendi hesabına aktarım mı? Değilse gider kalır';
 }

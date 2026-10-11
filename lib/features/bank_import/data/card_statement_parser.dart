@@ -21,6 +21,7 @@
 /// okuyucu devam eder.
 library;
 
+import 'package:cunehat/core/utils/date_math.dart';
 import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/bank_import/data/category_guesser.dart';
 import 'package:cunehat/features/bank_import/data/statement_amount_parser.dart';
@@ -75,12 +76,16 @@ CardStatementParseResult? parseCardStatement(String rawText) {
   final isPeriod = folded.contains('kartiniza ait donem ici hareketler');
   if (!isClosed && !isPeriod) return null;
 
+  // Künye ÖNCE: taksit satırları kapanmış ekstrede kesim tarihine göre
+  // dönemine oturtulur (bkz. [_installmentOf]).
+  final facts = isClosed ? _facts(rawText) : _periodFacts(rawText);
   final drafts = <ImportDraft>[];
   var skipped = 0;
   for (final raw in rawText.split('\n')) {
     final line = raw.trim();
     if (!_startsWithDate.hasMatch(line)) continue;
-    final row = isPeriod ? _periodRow(line) : _closedRow(line);
+    final row =
+        isPeriod ? _periodRow(line) : _closedRow(line, facts.closingDate);
     if (row == null) {
       // Tarihle başlayan başlık ("23/09/2026 tarihli … Dönem İçi Hareketler")
       // hareket değildir; yalnız tutar taşıyan okunamamış satır sayılır.
@@ -90,7 +95,6 @@ CardStatementParseResult? parseCardStatement(String rawText) {
     drafts.add(row);
   }
 
-  final facts = isClosed ? _facts(rawText) : _periodFacts(rawText);
   return CardStatementParseResult(
     drafts: drafts,
     skippedLines: skipped,
@@ -117,7 +121,7 @@ final _periodRowRe = RegExp(
   r'\s+(?:TRY|TL)\s+(\d{1,2})/(\d{1,2})(?:,\d+)?(?:\s+\S+)?\s*$',
 );
 
-ImportDraft? _closedRow(String line) {
+ImportDraft? _closedRow(String line, DateTime? closingDate) {
   final m = _closedRowRe.firstMatch(line);
   if (m == null) return null;
   final amount = parseSignedMoney(m.group(3)!);
@@ -127,6 +131,7 @@ ImportDraft? _closedRow(String line) {
     signed: amount,
     current: int.tryParse(m.group(4) ?? ''),
     total: int.tryParse(m.group(5) ?? ''),
+    closingDate: closingDate,
   );
 }
 
@@ -149,9 +154,10 @@ ImportDraft? _draft({
   required double? signed,
   int? current,
   int? total,
+  DateTime? closingDate,
 }) {
   final parts = date.split('/');
-  final day = DateTime(
+  var day = DateTime(
     int.parse(parts[2]),
     int.parse(parts[1]),
     int.parse(parts[0]),
@@ -164,10 +170,23 @@ ImportDraft? _draft({
   if (signed < 0 && _ascii(text).contains('tesekk')) {
     text = 'Ödeme - Teşekkür Ederiz';
   }
-  // Taksit numarası kimliğin PARÇASIDIR: 2/6, 1/6'nın tekrarı sanılmasın.
-  if (total != null && total > 1 && current != null && current > 0) {
+  DraftInstallment? installment;
+  if (signed > 0 &&
+      total != null &&
+      total > 1 &&
+      current != null &&
+      current > 0 &&
+      current <= total) {
+    installment = _installmentOf(day, current, total, closingDate);
+    // Satır TAKSİTİN ayına yazılır (bkz. [DraftInstallment]).
+    day = installment.dateOf(current);
+    // İki döküm aynı alışverişi farklı yazar ("20260911 TRENDYOL.COM 2.
+    // Taksit" / "TRENDYOL.COM"); ortak ada indirilir ki biri ötekinin
+    // tekrarı olarak bulunabilsin.
+    text = _installmentTitle(text);
+    // Taksit numarası kimliğin PARÇASIDIR: 2/6, 1/6'nın tekrarı sanılmasın.
     final marker = '($current/$total)';
-    if (!text.contains(marker)) text = '$text $marker';
+    if (!text.contains(marker)) text = '$text $marker'.trim();
   }
   return ImportDraft(
     date: day,
@@ -176,8 +195,50 @@ ImportDraft? _draft({
     // Kart kuralı: ARTI harcama, EKSİ ödeme/iade.
     type:
         signed > 0 ? TransactionTypeModel.expense : TransactionTypeModel.income,
+    installment: installment,
   );
 }
+
+/// Taksit satırının hangi alışverişe ve hangi aya ait olduğu.
+///
+/// Banka satıra alışverişin ÖZGÜN tarihini yazar; [no]. taksit o tarihten
+/// `no − 1` ay sonradır. Kapanmış ekstrede ([closingDate] biliniyor) daha
+/// sağlam bir kanıt var: satır BU ekstrededir, yani taksit bu ekstrenin
+/// dönemine düşer — alışveriş günü o döneme oturtulur. Ertelemeli taksit ya
+/// da geç yansıyan işlemde de satır doğru ekstrede kalır.
+DraftInstallment _installmentOf(
+  DateTime rowDay,
+  int no,
+  int count,
+  DateTime? closingDate,
+) {
+  if (closingDate == null) {
+    return DraftInstallment(no: no, count: count, purchaseDate: rowDay);
+  }
+  // Dönem: önceki kesimin ertesi günü … kesim günü. Alışveriş günü kesim
+  // gününden büyükse dönemin İLK ayına, değilse kesim ayına düşer.
+  var inPeriod = addMonthsAnchored(
+    DateTime(closingDate.year, closingDate.month),
+    0,
+    rowDay.day,
+  );
+  if (inPeriod.isAfter(closingDate)) {
+    inPeriod = addMonthsAnchored(inPeriod, -1, rowDay.day);
+  }
+  return DraftInstallment(
+    no: no,
+    count: count,
+    purchaseDate: addMonthsAnchored(inPeriod, -(no - 1), rowDay.day),
+  );
+}
+
+/// "20260911 TRENDYOL.COM 2. Taksit" → "TRENDYOL.COM": dönem içi dökümünün
+/// başa yazdığı alışveriş tarihi ve sona yazdığı taksit sırası atılır.
+String _installmentTitle(String text) => text
+    .replaceFirst(RegExp(r'^\d{8}\s+'), '')
+    .replaceFirst(
+        RegExp(r'\s+\d{1,2}\.\s*taksit\s*$', caseSensitive: false), '')
+    .trim();
 
 CardStatementFacts _facts(String raw) {
   double? money(RegExp re) {

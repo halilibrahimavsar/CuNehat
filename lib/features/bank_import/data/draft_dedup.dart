@@ -98,11 +98,21 @@ List<ImportDraft> markDuplicateDrafts(
   final byStrong = <String, List<_Existing>>{};
   final byReference = <String, List<_Existing>>{};
   final byWeak = <String, List<_Existing>>{};
+  final byInstallment = <String, List<_Existing>>{};
   for (final t in existing) {
     final money = _money(t.date, t.amount, t.isExpense);
     final reference = _norm(t.reference);
     final entry = _Existing(t, hasReference: reference != null);
     pool.add(entry);
+    if (t.installmentNo != null && t.installmentCount != null) {
+      (byInstallment[_installmentKey(
+        t.date,
+        t.isExpense,
+        t.installmentNo!,
+        t.installmentCount!,
+      )] ??= [])
+          .add(entry);
+    }
     if (reference != null) {
       (byStrong['$money|$reference'] ??= []).add(entry);
       (byReference['${_signedCents(t.amount, t.isExpense)}|$reference'] ??= [])
@@ -138,6 +148,39 @@ List<ImportDraft> markDuplicateDrafts(
         continue;
       }
       withinFile[fileKey] = d;
+    }
+
+    // Taksit kimliği: (taksitin günü, yön, k, N). Başlıktan BAĞIMSIZ — aynı
+    // alışverişi dönem içi dökümü ve kapanmış ekstre farklı yazar — ve kuruş
+    // farkına DAYANIKLI: deftere önceden yazılmış kalan taksitin tutarı bir
+    // tahmindir (bkz. `ImportDraft.remainingInstallments`), bankanınki esas.
+    if (d.installment case final inst?) {
+      final hit = _consumeInstallment(
+            byInstallment[
+                _installmentKey(d.date, !d.isIncome, inst.no, inst.count)],
+            amount: d.amount,
+            tolerance: inst.count.toDouble(),
+          ) ??
+          _consumeLegacyInstallment(pool, d, inst);
+      if (hit != null) {
+        final t = hit.tx;
+        final delta = ((d.amount - t.amount) * 100).round() / 100;
+        result[i] = d.copyWith(
+          duplicateOf: DuplicateMatch(
+            kind: DuplicateKind.exact,
+            existingId: t.id,
+            existingTitle: t.title,
+            existingTag: t.tag,
+            existingAmount: t.amount,
+            existingDate: t.date,
+            existingIsSystem: t.isSystem,
+            amountDelta: delta,
+          ),
+          selected: false,
+          correctExisting: delta.abs() >= 0.005 && !t.isSystem && t.id != null,
+        );
+        continue;
+      }
     }
 
     final matched = (reference != null
@@ -759,6 +802,54 @@ _Existing? _consume(List<_Existing>? candidates,
   for (final c in candidates) {
     if (c.consumed) continue;
     if (skipReferenced && c.hasReference) continue;
+    c.consumed = true;
+    return c;
+  }
+  return null;
+}
+
+String _installmentKey(DateTime date, bool isExpense, int no, int count) =>
+    '${_dayNumber(date)}|${isExpense ? '-' : '+'}|$no/$count';
+
+/// Aynı taksit kimliğindeki tüketilmemiş kayıtlardan tutarı [amount]'a en
+/// yakın olanı ([tolerance] içinde) tüketir.
+_Existing? _consumeInstallment(
+  List<_Existing>? candidates, {
+  required double amount,
+  required double tolerance,
+}) {
+  if (candidates == null) return null;
+  _Existing? best;
+  var bestGap = tolerance + 0.005;
+  for (final c in candidates) {
+    if (c.consumed) continue;
+    final gap = (c.tx.amount - amount).abs();
+    if (gap < bestGap) {
+      best = c;
+      bestGap = gap;
+    }
+  }
+  best?.consumed = true;
+  return best;
+}
+
+/// Taksit bilgisi taşımayan ESKİ içe aktarımların satırı: taksit ayına
+/// taşınmadan, alışverişin özgün gününe ve başlığında "(k/N)" ile yazılmıştı.
+/// Aynı döküm yeniden aktarılınca ikinci kez eklenmesin diye tanınır.
+_Existing? _consumeLegacyInstallment(
+  List<_Existing> pool,
+  ImportDraft d,
+  DraftInstallment inst,
+) {
+  final day = _dayNumber(inst.purchaseDate);
+  final cents = _signedCents(d.amount, !d.isIncome);
+  final marker = '(${inst.no}/${inst.count})';
+  for (final c in pool) {
+    final t = c.tx;
+    if (c.consumed || t.installmentNo != null) continue;
+    if (_dayNumber(t.date) != day) continue;
+    if (_signedCents(t.amount, t.isExpense) != cents) continue;
+    if (!t.title.contains(marker)) continue;
     c.consumed = true;
     return c;
   }

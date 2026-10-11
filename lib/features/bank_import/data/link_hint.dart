@@ -22,6 +22,17 @@ enum LinkHint {
   /// Gider: bankadan KREDİ KARTINA ödeme — kart cüzdanına transferdir
   /// (harcama değil; kartın harcamaları kart cüzdanında zaten sayılır).
   cardPayment,
+
+  /// KART dökümündeki gelir: karta yapılan ödeme ("Ödeme - Teşekkür
+  /// Ederiz"). Gelir değildir — kullanıcının kendi hesabından gelen paradır;
+  /// bağlanmazsa aynı para bankada gider, kartta gelir olarak iki kez sayılır.
+  cardPaymentReceived,
+
+  /// KART dökümündeki gider: karttan başka bir hesaba gönderilen para
+  /// ("ALICI : … BANK … SORGU NO"). Kullanıcının KENDİ hesabına gittiyse
+  /// transferdir, başkasına gittiyse gider — yalnız kullanıcı bilir, bu
+  /// yüzden sorulur (kullanıcı kararı, 11 Eki 2026).
+  ownTransfer,
 }
 
 /// [description]'dan bağlama ipucu. [inInvestmentCategory]: satırın
@@ -32,13 +43,27 @@ enum LinkHint {
 /// (23 Eyl 2026, 5 dosya): kart ÖDEMESİ satırları ("... NOLU KART ODEMESI",
 /// "... ILE BITEN KREDI KARTI ODEMESI", 10+ satır) borç ödemesi DEĞİLDİR —
 /// kart cüzdanına transferdir ([LinkHint.cardPayment]).
+///
+/// [onCard]: satır bir KART cüzdanına yazıldı. Kartta yön terstir: gelir
+/// karta ödemedir (ya da iade), "ALICI : …" gideri karttan çıkan havaledir.
 LinkHint? linkHintOf(
   String description, {
   required bool isIncome,
   bool inInvestmentCategory = false,
+  bool onCard = false,
 }) {
   final text = ' ${CategoryGuesser.normalized(description)} ';
   bool any(List<String> words) => words.any(text.contains);
+  if (onCard) {
+    if (isIncome) {
+      // İade satırları ("E/OTOKOC AVIS −5.000") ödeme DEĞİLDİR: yalnız
+      // bankanın sabit ödeme metni.
+      return text.contains(' tesekkur ') || text.startsWith(' odeme ')
+          ? LinkHint.cardPaymentReceived
+          : null;
+    }
+    if (text.startsWith(' alici ')) return LinkHint.ownTransfer;
+  }
   if (isIncome) {
     return any(_disbursementWords) ? LinkHint.loanDisbursement : null;
   }

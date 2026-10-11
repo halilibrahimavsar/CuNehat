@@ -323,6 +323,10 @@ class BankImportDone extends BankImportState {
   /// Kart ekstresinin künyesi hedef kartın "son ekstresi" olarak yazıldı mı.
   final bool cardStatementSaved;
 
+  /// Taksitli alışverişlerin İLERİ tarihe yazılan kalan taksit sayısı
+  /// ([added]'e dahil DEĞİL: ekstrede satır olarak yoklardı).
+  final int futureInstallments;
+
   /// Eklenen hareketlerin en eski ve en yeni tarihi ("Eklenenleri göster"
   /// işlem listesini bu aralıkla açar); hiçbir şey eklenmediyse `null`.
   final DateTime? firstDate;
@@ -348,6 +352,7 @@ class BankImportDone extends BankImportState {
     this.unresolvedLeftovers = 0,
     this.linkSuggestions = const [],
     this.cardStatementSaved = false,
+    this.futureInstallments = 0,
     this.firstDate,
     this.lastDate,
     this.closing,
