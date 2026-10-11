@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/app_dialog_surface.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
+import 'package:cunehat/core/shared/widgets/row_action_sheet.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/currencies.dart';
@@ -185,45 +186,42 @@ class _RowOverflowMenu extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
 
-    return PopupMenuButton<_RowAction>(
-      enabled: enabled,
-      tooltip: '',
-      icon: Icon(Icons.more_vert, color: scheme.onSurfaceVariant),
-      onSelected: (action) => _handle(context, action),
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          value: _RowAction.edit,
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.edit_outlined),
-            title: Text(l10n.islemiDuzenle),
-          ),
-        ),
-        if (backlog > 1)
-          PopupMenuItem(
-            value: _RowAction.approveAll,
-            child: ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.done_all),
-              title: Text(l10n.tumunuOnayla),
-            ),
-          ),
-        PopupMenuItem(
-          value: _RowAction.delete,
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: Icon(Icons.delete_outline, color: scheme.error),
-            title: Text(l10n.sablonuSil, style: TextStyle(color: scheme.error)),
-            subtitle: Text(
-              l10n.sablonuSilAciklama,
-              style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
-            ),
-          ),
-        ),
-      ],
+    // Bekleyen satırın menüsü de uygulamanın ortak eylem sayfasıdır.
+    return RowMenuButton(
+      onPressed: !enabled
+          ? null
+          : () async {
+              final action = await RowActionSheet.show<_RowAction>(
+                context,
+                title: template.title,
+                icon: Icons.event_repeat_rounded,
+                accent: scheme.primary,
+                actions: [
+                  RowAction(
+                    value: _RowAction.edit,
+                    icon: Icons.edit_rounded,
+                    color: Colors.blueGrey,
+                    title: l10n.islemiDuzenle,
+                  ),
+                  if (backlog > 1)
+                    RowAction(
+                      value: _RowAction.approveAll,
+                      icon: Icons.done_all_rounded,
+                      color: scheme.primary,
+                      title: l10n.tumunuOnayla,
+                    ),
+                  RowAction(
+                    value: _RowAction.delete,
+                    icon: Icons.delete_outline_rounded,
+                    title: l10n.sablonuSil,
+                    subtitle: l10n.sablonuSilAciklama,
+                    destructive: true,
+                  ),
+                ],
+              );
+              if (action == null || !context.mounted) return;
+              await _handle(context, action);
+            },
     );
   }
 

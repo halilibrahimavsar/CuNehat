@@ -4,6 +4,7 @@ import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/shared/widgets/money_text.dart';
+import 'package:cunehat/core/shared/widgets/row_action_sheet.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/credit_card/presentation/wallet_card_stack.dart';
@@ -218,6 +219,45 @@ class _WalletDeckState extends State<WalletDeck> {
     );
   }
 
+  Future<void> _showMore(
+    BuildContext context,
+    WalletEntity wallet, {
+    required bool isActive,
+  }) async {
+    final l10n = context.l10n;
+    final action = await RowActionSheet.show<RowEditDelete>(
+      context,
+      title: wallet.name,
+      icon: Icons.account_balance_wallet_rounded,
+      accent: WalletColors.hexToColor(wallet.colorHex),
+      actions: [
+        RowAction(
+          value: RowEditDelete.edit,
+          icon: Icons.edit_rounded,
+          color: Colors.blueGrey,
+          title: l10n.duzenle,
+        ),
+        RowAction(
+          value: RowEditDelete.delete,
+          icon: Icons.delete_outline_rounded,
+          title: l10n.sil,
+          // Etkin cüzdan silinemez; neden silinemediği satırda yazar
+          // (eskiden düğme sessizce kayboluyordu).
+          subtitle: isActive ? l10n.aktifCuzdanSilinemez : null,
+          destructive: true,
+          enabled: !isActive,
+        ),
+      ],
+    );
+    if (action == null) return;
+    switch (action) {
+      case RowEditDelete.edit:
+        widget.onEdit(wallet);
+      case RowEditDelete.delete:
+        widget.onDelete(wallet);
+    }
+  }
+
   /// Odaktaki cüzdanın eylemleri — her kutuda tekrarlanmak yerine bir kez.
   Widget _actions(
     BuildContext context,
@@ -261,33 +301,10 @@ class _WalletDeckState extends State<WalletDeck> {
             icon: const Icon(Icons.edit_outlined),
             onPressed: () => widget.onEdit(wallet),
           ),
-          PopupMenuButton<void>(
+          RowMenuButton(
             key: const ValueKey('wallet-deck-more'),
-            tooltip: MaterialLocalizations.of(context).showMenuTooltip,
-            icon: const Icon(Icons.more_vert_rounded),
-            itemBuilder: (_) => [
-              PopupMenuItem<void>(
-                // Etkin cüzdan silinemez; neden silinemediği satırda yazar
-                // (eskiden düğme sessizce kayboluyordu).
-                enabled: !isActive,
-                onTap: () => widget.onDelete(wallet),
-                child: Row(
-                  children: [
-                    Icon(Icons.delete_outline_rounded,
-                        size: 20,
-                        color: isActive
-                            ? Theme.of(context).disabledColor
-                            : Theme.of(context).colorScheme.error),
-                    const SizedBox(width: 10),
-                    Flexible(
-                      child: Text(
-                        isActive ? l10n.aktifCuzdanSilinemez : l10n.sil,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            iconSize: 24,
+            onPressed: () => _showMore(context, wallet, isActive: isActive),
           ),
         ],
       ],

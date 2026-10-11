@@ -16,6 +16,7 @@ import 'package:cunehat/features/budgets/presentation/bloc/budgets_state.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
+import 'package:cunehat/core/shared/widgets/row_action_sheet.dart';
 import 'package:cunehat/core/error/error_handling.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
 
@@ -363,13 +364,27 @@ class _BudgetListItem extends StatelessWidget {
     context.read<BudgetsBloc>().add(DeleteBudgetEvent(budget.categoryId));
   }
 
-  static Widget _menuRow(IconData icon, String label, Color color) => Row(
-        children: [
-          Icon(icon, size: 20, color: color),
-          const SizedBox(width: 10),
-          Text(label, style: TextStyle(color: color)),
-        ],
-      );
+  Future<void> _showActions(
+    BuildContext context, {
+    required IconData icon,
+    required Color accent,
+  }) async {
+    final action = await RowActionSheet.show<RowEditDelete>(
+      context,
+      title: context.categoryLabelForTag(budget.categoryId,
+          labels: categoryLabels),
+      icon: icon,
+      accent: accent,
+      actions: editDeleteActions(context),
+    );
+    if (action == null || !context.mounted) return;
+    switch (action) {
+      case RowEditDelete.edit:
+        _edit(context);
+      case RowEditDelete.delete:
+        await _delete(context);
+    }
+  }
 
   void _edit(BuildContext context) => _showBudgetForm(
         context,
@@ -459,26 +474,13 @@ class _BudgetListItem extends StatelessWidget {
                   ),
                 ),
               ),
-              // Satır eylemleri uygulamanın her yerinde aynı yerde: ⋮.
-              // (Eskiden burada çıplak bir çöp kutusu vardı; borç kartı ⋮,
-              // işlem satırı ⋮, bütçe ve şablon ise tek ikon kullanıyordu.)
-              PopupMenuButton<void>(
+              // Satır eylemleri uygulamanın her yerinde aynı yerde ve aynı
+              // biçimde: ⋮ → eylem sayfası (bkz. RowActionSheet). Eskiden
+              // burada çıplak bir çöp kutusu vardı.
+              RowMenuButton(
                 key: ValueKey('budget-menu-${budget.categoryId}'),
-                tooltip: context.l10n.txRowActions,
-                icon: Icon(Icons.more_vert_rounded,
-                    color: scheme.onSurfaceVariant),
-                itemBuilder: (_) => [
-                  PopupMenuItem<void>(
-                    onTap: () => _edit(context),
-                    child: _menuRow(Icons.edit_outlined, context.l10n.duzenle,
-                        scheme.onSurface),
-                  ),
-                  PopupMenuItem<void>(
-                    onTap: () => _delete(context),
-                    child: _menuRow(Icons.delete_outline_rounded,
-                        context.l10n.sil, scheme.error),
-                  ),
-                ],
+                onPressed: () => _showActions(context,
+                    icon: statusIcon, accent: statusColor),
               ),
             ],
           ),

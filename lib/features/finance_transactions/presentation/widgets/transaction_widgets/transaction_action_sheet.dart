@@ -1,4 +1,5 @@
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
+import 'package:cunehat/core/shared/widgets/row_action_sheet.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -49,13 +50,8 @@ class TransactionActionSheet extends StatelessWidget {
     required Color accent,
     bool canSelect = false,
   }) {
-    return showModalBottomSheet<TransactionAction>(
-      context: context,
-      // Yükseklik içeriğe göre: varsayılan sınır ekranın 9/16'sı ve dört
-      // eylem + başlık 600dp'lik ekranda 29px taşıyordu (ölçüldü). İçerik
-      // ayrıca kaydırılabilir — büyük yazı ölçeğinde de taşmaz.
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+    return showRowActionSheet<TransactionAction>(
+      context,
       builder: (context) => TransactionActionSheet(
         transaction: transaction,
         accent: accent,
@@ -67,131 +63,66 @@ class TransactionActionSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
 
-    // Material (Container değil): içerideki ListTile zeminini ve ink dalgasını
-    // en yakın Material'a boyar. Renkli bir DecoratedBox araya girerse dalga
-    // görünmez olur ve Flutter debug'da assertion atar.
-    return Material(
-      color: cs.surface,
-      clipBehavior: Clip.antiAlias,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                margin: const EdgeInsets.only(top: 12, bottom: 4),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: cs.onSurface.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.14),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        transaction.isIncome
-                            ? Icons.arrow_upward_rounded
-                            : Icons.arrow_downward_rounded,
-                        color: accent,
-                        size: 18,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        transaction.title,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: cs.onSurface,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (transaction.isSystem) ...[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
-                  child: _systemNotice(context, cs),
-                ),
-                if (isRemovableTransferLeg(transaction))
-                  _tile(
-                    context,
-                    icon: Icons.link_off_rounded,
-                    color: Colors.red,
-                    title: context.l10n.transferiKaldir,
-                    subtitle: context.l10n.transferiKaldirAciklama,
-                    action: TransactionAction.removeTransfer,
-                  ),
-              ] else ...[
-                _tile(
-                  context,
-                  icon: Icons.edit_rounded,
-                  color: Colors.blueGrey,
-                  title: context.l10n.duzenle,
-                  subtitle: context.l10n.duzenleSubtitle,
-                  action: TransactionAction.edit,
-                ),
-                _tile(
-                  context,
-                  icon: Icons.content_copy_rounded,
-                  color: Colors.blueGrey,
-                  title: context.l10n.yenidenEkle,
-                  subtitle: context.l10n.yenidenEkleAciklama,
-                  action: TransactionAction.duplicate,
-                ),
-                if (transaction.id != null)
-                  _tile(
-                    context,
-                    icon: Icons.link_rounded,
-                    color: cs.primary,
-                    title: context.l10n.baglaEylemi,
-                    subtitle: context.l10n.baglaEylemiAciklama,
-                    action: TransactionAction.link,
-                  ),
-                if (canSelect &&
-                    transaction.id != null &&
-                    !transaction.isAdopted)
-                  _tile(
-                    context,
-                    icon: Icons.checklist_rounded,
-                    color: cs.primary,
-                    title: context.l10n.birdenCokSec,
-                    subtitle: context.l10n.birdenCokSecAciklama,
-                    action: TransactionAction.select,
-                  ),
-                _tile(
-                  context,
-                  icon: Icons.delete_outline_rounded,
-                  color: Colors.red,
-                  title: context.l10n.islemiSil,
-                  subtitle: context.l10n.silSubtitle,
-                  action: TransactionAction.delete,
-                ),
-              ],
-              const SizedBox(height: 8),
-            ],
+    return RowActionSheet<TransactionAction>(
+      title: transaction.title,
+      icon: transaction.isIncome
+          ? Icons.arrow_upward_rounded
+          : Icons.arrow_downward_rounded,
+      accent: accent,
+      // Kilitli işlemde Düzenle/Sil yerine neden kilitli olduğu yazar.
+      notice: transaction.isSystem ? _systemNotice(context, cs) : null,
+      actions: [
+        if (transaction.isSystem) ...[
+          if (isRemovableTransferLeg(transaction))
+            RowAction(
+              value: TransactionAction.removeTransfer,
+              icon: Icons.link_off_rounded,
+              title: l10n.transferiKaldir,
+              subtitle: l10n.transferiKaldirAciklama,
+              destructive: true,
+            ),
+        ] else ...[
+          RowAction(
+            value: TransactionAction.edit,
+            icon: Icons.edit_rounded,
+            color: Colors.blueGrey,
+            title: l10n.duzenle,
+            subtitle: l10n.duzenleSubtitle,
           ),
-        ),
-      ),
+          RowAction(
+            value: TransactionAction.duplicate,
+            icon: Icons.content_copy_rounded,
+            color: Colors.blueGrey,
+            title: l10n.yenidenEkle,
+            subtitle: l10n.yenidenEkleAciklama,
+          ),
+          if (transaction.id != null)
+            RowAction(
+              value: TransactionAction.link,
+              icon: Icons.link_rounded,
+              color: cs.primary,
+              title: l10n.baglaEylemi,
+              subtitle: l10n.baglaEylemiAciklama,
+            ),
+          if (canSelect && transaction.id != null && !transaction.isAdopted)
+            RowAction(
+              value: TransactionAction.select,
+              icon: Icons.checklist_rounded,
+              color: cs.primary,
+              title: l10n.birdenCokSec,
+              subtitle: l10n.birdenCokSecAciklama,
+            ),
+          RowAction(
+            value: TransactionAction.delete,
+            icon: Icons.delete_outline_rounded,
+            title: l10n.islemiSil,
+            subtitle: l10n.silSubtitle,
+            destructive: true,
+          ),
+        ],
+      ],
     );
   }
 
@@ -222,36 +153,6 @@ class TransactionActionSheet extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _tile(
-    BuildContext context, {
-    required IconData icon,
-    required Color color,
-    required String title,
-    required String subtitle,
-    required TransactionAction action,
-  }) {
-    final cs = Theme.of(context).colorScheme;
-    return ListTile(
-      leading: Icon(icon, color: color),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontWeight: FontWeight.w700,
-          fontSize: 14.5,
-          color: action == TransactionAction.delete ||
-                  action == TransactionAction.removeTransfer
-              ? Colors.red
-              : cs.onSurface,
-        ),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
-      ),
-      onTap: () => Navigator.pop(context, action),
     );
   }
 }

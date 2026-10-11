@@ -3,6 +3,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'package:cunehat/core/services/recent_categories_service.dart';
+import 'package:cunehat/core/shared/widgets/row_action_sheet.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
@@ -222,7 +223,9 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('template-menu-r1')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(l10n.duzenle));
+    // Menü uygulamanın ortak eylem sayfası: başlıkta şablonun adı.
+    expect(find.byType(RowActionSheet<RowEditDelete>), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('row-action-edit')));
     await tester.pumpAndSettle();
     expect(find.text(l10n.sablonuDuzenle), findsOneWidget);
     await tester.tap(find.widgetWithText(OutlinedButton, l10n.iptal));
@@ -230,8 +233,11 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('template-menu-r1')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(l10n.sil));
+    // Silmenin sonucu satırın kendisinde yazar.
+    expect(find.text(l10n.sablonuSilAciklama), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('row-action-delete')));
     await tester.pumpAndSettle();
+    expect(find.byType(RowActionSheet<RowEditDelete>), findsNothing);
     expect(find.text(l10n.sablonuSil), findsOneWidget);
     verifyNever(() => pending.add(any(that: isA<DeleteTransactionEvent>())));
   });

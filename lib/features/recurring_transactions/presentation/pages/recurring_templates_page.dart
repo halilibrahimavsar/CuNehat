@@ -8,6 +8,7 @@ import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
+import 'package:cunehat/core/shared/widgets/row_action_sheet.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
@@ -656,6 +657,28 @@ class _TemplateCard extends StatelessWidget {
     return context.l10n.gunSonra(days);
   }
 
+  Future<void> _showActions(BuildContext context) async {
+    final isIncome = template.type == TransactionTypeModel.income;
+    final action = await RowActionSheet.show<RowEditDelete>(
+      context,
+      title: template.title,
+      icon: isIncome ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+      accent: isIncome ? Colors.green : Colors.red,
+      actions: editDeleteActions(
+        context,
+        deleteTitle: context.l10n.sablonuSil,
+        deleteSubtitle: context.l10n.sablonuSilAciklama,
+      ),
+    );
+    if (action == null) return;
+    switch (action) {
+      case RowEditDelete.edit:
+        onEdit(template);
+      case RowEditDelete.delete:
+        onDelete(template);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -795,36 +818,9 @@ class _TemplateCard extends StatelessWidget {
                 onChanged: (_) => onToggle(template),
               ),
               // Satır eylemleri her yerde ⋮'de (bkz. bütçe kartı).
-              PopupMenuButton<void>(
+              RowMenuButton(
                 key: ValueKey('template-menu-${template.id}'),
-                tooltip: context.l10n.txRowActions,
-                icon: Icon(Icons.more_vert_rounded,
-                    color: scheme.onSurfaceVariant, size: 22),
-                itemBuilder: (_) => [
-                  PopupMenuItem<void>(
-                    onTap: () => onEdit(template),
-                    child: Row(
-                      children: [
-                        Icon(Icons.edit_outlined,
-                            size: 20, color: scheme.onSurface),
-                        const SizedBox(width: 10),
-                        Text(context.l10n.duzenle),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem<void>(
-                    onTap: () => onDelete(template),
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete_outline_rounded,
-                            size: 20, color: scheme.error),
-                        const SizedBox(width: 10),
-                        Text(context.l10n.sil,
-                            style: TextStyle(color: scheme.error)),
-                      ],
-                    ),
-                  ),
-                ],
+                onPressed: () => _showActions(context),
               ),
             ],
           ),

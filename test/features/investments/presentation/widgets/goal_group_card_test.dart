@@ -160,6 +160,38 @@ void main() {
     expect(addTapped, isTrue);
   });
 
+  testWidgets('⋮ ortak eylem sayfasını açar: Hedefi düzenle · Hedefi sil',
+      (tester) async {
+    var edited = 0;
+    var deleted = 0;
+    await tester.pumpWidget(buildTestableWidget(GoalGroupCard(
+      progress: GoalProgress.from(goal, [member]),
+      currency: 'TRY',
+      expanded: false,
+      onToggle: () {},
+      onMemberTap: (_) {},
+      onAddAsset: () {},
+      onEdit: () => edited++,
+      onDelete: () => deleted++,
+    )));
+
+    await tester.tap(find.byKey(const ValueKey('goal-menu-g')));
+    await tester.pumpAndSettle();
+    expect(find.text('Hedefi düzenle'), findsOneWidget);
+    expect(find.text('Hedefi sil'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('row-action-delete')));
+    await tester.pumpAndSettle();
+    expect(deleted, 1);
+    expect(edited, 0);
+
+    await tester.tap(find.byKey(const ValueKey('goal-menu-g')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('row-action-edit')));
+    await tester.pumpAndSettle();
+    expect(edited, 1);
+  });
+
   group('kategori etiketi', () {
     /// Kategori uzun süre SADECE ikonu belirliyordu; adı hiçbir yerde
     /// görünmüyordu. Kullanıcı "Düğün" seçiyor, kartta bir kalp ikonu

@@ -4,11 +4,13 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/shared/widgets/row_action_sheet.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivable_bloc/receivable_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/pages/debt_and_receivable_page.dart';
+import 'package:cunehat/features/debt_and_receivable/presentation/widgets/debt_payment_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -169,6 +171,93 @@ void main() {
     // Diyalogdaki toplam/kalan satırları da $ ile: birim zincir boyunca akıyor.
     expect(find.text('1.200,00 \$'), findsWidgets);
     expect(find.textContaining('₺'), findsNothing);
+  });
+
+  group('kart eylemleri ortak eylem sayfasında', () {
+    testWidgets('borç kartına dokun → Ödeme Yap · Düzenle · Sil',
+        (tester) async {
+      when(() => mockDebtBloc.state).thenReturn(DebtLoaded([activeDebt]));
+      when(() => mockReceivableBloc.state)
+          .thenReturn(const ReceivableLoaded([]));
+
+      await tester.pumpWidget(buildTestableWidget(currency: 'TRY'));
+      await tester.pumpAndSettle();
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+
+      await tester.tap(find.text('Araba Kredisi'));
+      await tester.pumpAndSettle();
+
+      // Eskiden burada kartın üstüne açılan bir menü vardı; artık işlem ve
+      // birikim satırlarıyla AYNI sayfa: başlıkta kaydın adı ve kurumu.
+      expect(find.byType(RowActionSheet<String>), findsOneWidget);
+      expect(find.byType(PopupMenuItem<String>), findsNothing);
+      expect(find.text('Araba Kredisi'), findsNWidgets(2));
+      expect(find.text('Ziraat Bankası'), findsNWidgets(2));
+      expect(find.text(l10n.odemeYap), findsOneWidget);
+      expect(find.byKey(const ValueKey('row-action-edit')), findsOneWidget);
+      expect(find.byKey(const ValueKey('row-action-delete')), findsOneWidget);
+    });
+
+    testWidgets('Sil → onay ister; onaylanınca borç silinir', (tester) async {
+      when(() => mockDebtBloc.state).thenReturn(DebtLoaded([activeDebt]));
+      when(() => mockReceivableBloc.state)
+          .thenReturn(const ReceivableLoaded([]));
+
+      await tester.pumpWidget(buildTestableWidget(currency: 'TRY'));
+      await tester.pumpAndSettle();
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+
+      await tester.tap(find.text('Araba Kredisi'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('row-action-delete')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(RowActionSheet<String>), findsNothing);
+      expect(find.text(l10n.borcSilBaslik), findsOneWidget);
+      verifyNever(() => mockDebtBloc.add(any(that: isA<DeleteDebtEvent>())));
+
+      await tester.tap(find.text(l10n.sil));
+      await tester.pumpAndSettle();
+      verify(() => mockDebtBloc.add(any(that: isA<DeleteDebtEvent>())))
+          .called(1);
+    });
+
+    testWidgets('Ödeme Yap → ödeme diyaloğu açılır', (tester) async {
+      when(() => mockDebtBloc.state).thenReturn(DebtLoaded([activeDebt]));
+      when(() => mockReceivableBloc.state)
+          .thenReturn(const ReceivableLoaded([]));
+
+      await tester.pumpWidget(buildTestableWidget(currency: 'TRY'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Araba Kredisi'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('row-action-payment')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DebtPaymentDialog), findsOneWidget);
+    });
+
+    testWidgets('alacak kartı → Ödendi İşaretle olayı gönderir',
+        (tester) async {
+      when(() => mockDebtBloc.state).thenReturn(const DebtLoaded([]));
+      when(() => mockReceivableBloc.state)
+          .thenReturn(ReceivableLoaded([activeReceivable]));
+
+      await tester.pumpWidget(buildTestableWidget(currency: 'TRY'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Alacaklarım'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Ahmet Yılmaz'));
+      await tester.pumpAndSettle();
+      expect(find.byType(RowActionSheet<String>), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('row-action-mark_paid')));
+      await tester.pumpAndSettle();
+      verify(() => mockReceivableBloc
+          .add(any(that: isA<MarkReceivableAsPaidEvent>()))).called(1);
+    });
   });
 
   testWidgets('TL cüzdanda gösterim değişmez', (tester) async {

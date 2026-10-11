@@ -1,5 +1,6 @@
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/shared/widgets/row_action_sheet.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
@@ -247,21 +248,30 @@ class GoalGroupCard extends StatelessWidget {
   }
 
   Widget _menu(BuildContext context, ColorScheme cs) {
-    return PopupMenuButton<int>(
-      tooltip: context.l10n.hedefYonetimi,
-      padding: EdgeInsets.zero,
-      icon: Icon(Icons.more_vert_rounded, size: 20, color: cs.onSurfaceVariant),
-      onSelected: (value) => value == 0 ? onEdit() : onDelete(),
-      itemBuilder: (context) => [
-        PopupMenuItem(value: 0, child: Text(context.l10n.hedefiDuzenle)),
-        PopupMenuItem(
-          value: 1,
-          child: Text(
-            context.l10n.hedefiSil,
-            style: const TextStyle(color: Colors.red),
+    final goal = progress.goal;
+    return RowMenuButton(
+      key: ValueKey('goal-menu-${goal.id}'),
+      iconSize: 20,
+      onPressed: () async {
+        final action = await RowActionSheet.show<RowEditDelete>(
+          context,
+          title: goal.name,
+          icon: GoalCategory.iconFor(goal.category),
+          accent: goal.color,
+          actions: editDeleteActions(
+            context,
+            editTitle: context.l10n.hedefiDuzenle,
+            deleteTitle: context.l10n.hedefiSil,
           ),
-        ),
-      ],
+        );
+        if (action == null) return;
+        switch (action) {
+          case RowEditDelete.edit:
+            onEdit();
+          case RowEditDelete.delete:
+            onDelete();
+        }
+      },
     );
   }
 }

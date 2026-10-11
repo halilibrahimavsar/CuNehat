@@ -2,7 +2,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
-import 'package:cunehat/core/shared/widgets/info_action_menu.dart';
+import 'package:cunehat/core/shared/widgets/row_action_sheet.dart';
 import 'package:cunehat/core/shared/widgets/money_text.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
@@ -165,28 +165,26 @@ class _DebtHistoryTab extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             ...paidDebts.map(
-              (debt) => InfoActionMenu<String>(
-                items: [
-                  PopupMenuItem(
+              (debt) => RowActionTarget<String>(
+                title: debt.title,
+                subtitle: debt.counterparty.isNotEmpty &&
+                        debt.counterparty != debt.title
+                    ? debt.counterparty
+                    : null,
+                icon: Icons.receipt_long_rounded,
+                accent: Colors.green,
+                actions: [
+                  RowAction(
                     value: 'edit',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.edit, color: Colors.blueGrey),
-                        const SizedBox(width: 8),
-                        Text(context.l10n.duzenle),
-                      ],
-                    ),
+                    icon: Icons.edit_rounded,
+                    color: Colors.blueGrey,
+                    title: context.l10n.duzenle,
                   ),
-                  PopupMenuItem(
+                  RowAction(
                     value: 'delete',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.delete, color: Colors.red),
-                        const SizedBox(width: 8),
-                        Text(context.l10n.sil,
-                            style: const TextStyle(color: Colors.red)),
-                      ],
-                    ),
+                    icon: Icons.delete_outline_rounded,
+                    title: context.l10n.sil,
+                    destructive: true,
                   ),
                 ],
                 onSelected: (value) async {
@@ -312,28 +310,22 @@ class _ReceivableHistoryTab extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             ...paidReceivables.map(
-              (receivable) => InfoActionMenu<String>(
-                items: [
-                  PopupMenuItem(
+              (receivable) => RowActionTarget<String>(
+                title: receivable.debtorName,
+                icon: Icons.call_received_rounded,
+                accent: Colors.green,
+                actions: [
+                  RowAction(
                     value: 'edit',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.edit, color: Colors.blueGrey),
-                        const SizedBox(width: 8),
-                        Text(context.l10n.duzenle),
-                      ],
-                    ),
+                    icon: Icons.edit_rounded,
+                    color: Colors.blueGrey,
+                    title: context.l10n.duzenle,
                   ),
-                  PopupMenuItem(
+                  RowAction(
                     value: 'delete',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.delete, color: Colors.red),
-                        const SizedBox(width: 8),
-                        Text(context.l10n.sil,
-                            style: const TextStyle(color: Colors.red)),
-                      ],
-                    ),
+                    icon: Icons.delete_outline_rounded,
+                    title: context.l10n.sil,
+                    destructive: true,
                   ),
                 ],
                 onSelected: (value) async {

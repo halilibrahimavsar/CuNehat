@@ -3,6 +3,7 @@ import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/services/cash_source.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/shared/widgets/row_action_sheet.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/money_math.dart';
@@ -263,66 +264,55 @@ class CashPotActionSheet extends StatelessWidget {
     required InvestmentEntity pot,
     required String currency,
   }) {
-    return showModalBottomSheet<CashPotAction>(
-      context: context,
-      backgroundColor: Colors.transparent,
+    return showRowActionSheet<CashPotAction>(
+      context,
       builder: (_) => CashPotActionSheet(pot: pot, currency: currency),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final money =
         MoneyWriter(currency: currency, visible: context.amountsVisible);
-    Widget tile(CashPotAction action, IconData icon, String title,
-            {String? subtitle, Color? color, bool enabled = true}) =>
-        ListTile(
-          key: ValueKey('cash-pot-action-${action.name}'),
-          enabled: enabled,
-          leading: Icon(icon, color: enabled ? color : null),
-          title: Text(title),
-          subtitle: subtitle == null ? null : Text(subtitle),
-          onTap: () => Navigator.of(context).pop(action),
-        );
-    return Material(
-      color: cs.surface,
-      clipBehavior: Clip.antiAlias,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const _Handle(),
-            ListTile(
-              leading: const Icon(Icons.savings_rounded, color: kCashPotColor),
-              title: Text(pot.name,
-                  style: const TextStyle(fontWeight: FontWeight.w800)),
-              subtitle: Text(l10n.kasaBakiyeSade(money(pot.currentValue))),
-            ),
-            const Divider(height: 1),
-            tile(CashPotAction.deposit, Icons.add_circle_outline_rounded,
-                l10n.kasaParaEkle,
-                subtitle: l10n.kasaParaEkleAciklama, color: kCashPotColor),
-            tile(CashPotAction.withdraw, Icons.north_east_rounded,
-                l10n.kasaParaCek,
-                subtitle: l10n.kasaParaCekAciklama,
-                enabled: pot.currentValue > 0),
-            tile(CashPotAction.edit, Icons.edit_rounded, l10n.kasaDuzenle),
-            tile(CashPotAction.close, Icons.delete_outline_rounded,
-                l10n.kasayiKapat,
-                subtitle: pot.currentValue > 0
-                    ? l10n.kasayiKapatAciklama(money(pot.currentValue))
-                    : null,
-                color: cs.error),
-            const SizedBox(height: 8),
-          ],
+    final hasBalance = pot.currentValue > 0;
+
+    return RowActionSheet<CashPotAction>(
+      keyPrefix: 'cash-pot-action',
+      title: pot.name,
+      subtitle: l10n.kasaBakiyeSade(money(pot.currentValue)),
+      icon: Icons.savings_rounded,
+      accent: kCashPotColor,
+      actions: [
+        RowAction(
+          value: CashPotAction.deposit,
+          icon: Icons.add_circle_outline_rounded,
+          color: kCashPotColor,
+          title: l10n.kasaParaEkle,
+          subtitle: l10n.kasaParaEkleAciklama,
         ),
-      ),
+        RowAction(
+          value: CashPotAction.withdraw,
+          icon: Icons.north_east_rounded,
+          title: l10n.kasaParaCek,
+          subtitle: l10n.kasaParaCekAciklama,
+          enabled: hasBalance,
+        ),
+        RowAction(
+          value: CashPotAction.edit,
+          icon: Icons.edit_rounded,
+          title: l10n.kasaDuzenle,
+        ),
+        RowAction(
+          value: CashPotAction.close,
+          icon: Icons.delete_outline_rounded,
+          title: l10n.kasayiKapat,
+          subtitle: hasBalance
+              ? l10n.kasayiKapatAciklama(money(pot.currentValue))
+              : null,
+          destructive: true,
+        ),
+      ],
     );
   }
 }

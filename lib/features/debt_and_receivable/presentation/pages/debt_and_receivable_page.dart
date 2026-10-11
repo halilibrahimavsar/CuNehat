@@ -5,7 +5,7 @@ import 'package:cunehat/features/credit_card/presentation/card_debt_summary.dart
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
-import 'package:cunehat/core/shared/widgets/info_action_menu.dart';
+import 'package:cunehat/core/shared/widgets/row_action_sheet.dart';
 import 'package:cunehat/core/shared/widgets/money_text.dart';
 import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
@@ -243,38 +243,31 @@ class DebtListSection extends StatelessWidget {
     final isOverdue = hasOverdueInstallment(debt);
     final overdueInterest = outstandingOverdueInterest(debt);
 
-    return InfoActionMenu<String>(
-      items: [
-        PopupMenuItem(
+    return RowActionTarget<String>(
+      title: debt.title,
+      subtitle: debt.counterparty.isNotEmpty && debt.counterparty != debt.title
+          ? debt.counterparty
+          : null,
+      icon: Icons.account_balance_wallet,
+      accent: isOverdue ? Colors.red : Colors.blue,
+      actions: [
+        RowAction(
           value: 'payment',
-          child: Row(
-            children: [
-              const Icon(Icons.payment, color: Colors.green),
-              const SizedBox(width: 8),
-              Text(context.l10n.odemeYap,
-                  style: const TextStyle(color: Colors.green)),
-            ],
-          ),
+          icon: Icons.payment,
+          color: Colors.green,
+          title: context.l10n.odemeYap,
         ),
-        PopupMenuItem(
+        RowAction(
           value: 'edit',
-          child: Row(
-            children: [
-              const Icon(Icons.edit, color: Colors.blueGrey),
-              const SizedBox(width: 8),
-              Text(context.l10n.duzenle),
-            ],
-          ),
+          icon: Icons.edit_rounded,
+          color: Colors.blueGrey,
+          title: context.l10n.duzenle,
         ),
-        PopupMenuItem(
+        RowAction(
           value: 'delete',
-          child: Row(
-            children: [
-              const Icon(Icons.delete, color: Colors.red),
-              const SizedBox(width: 8),
-              Text(context.l10n.sil, style: const TextStyle(color: Colors.red)),
-            ],
-          ),
+          icon: Icons.delete_outline_rounded,
+          title: context.l10n.sil,
+          destructive: true,
         ),
       ],
       onSelected: (value) async {
@@ -584,39 +577,31 @@ class ReceivableListSection extends StatelessWidget {
     final isOverdue =
         receivable.dueDate.isBefore(DateTime.now()) && !receivable.isPaid;
 
-    return InfoActionMenu<String>(
-      items: [
+    return RowActionTarget<String>(
+      title: receivable.debtorName,
+      icon: receivable.isPaid ? Icons.check_circle : Icons.person,
+      accent: receivable.isPaid
+          ? Colors.green
+          : (isOverdue ? Colors.orange : Colors.blue),
+      actions: [
         if (!receivable.isPaid)
-          PopupMenuItem(
+          RowAction(
             value: 'mark_paid',
-            child: Row(
-              children: [
-                const Icon(Icons.check_circle, color: Colors.green),
-                const SizedBox(width: 8),
-                Text(context.l10n.odendiIsaretle,
-                    style: const TextStyle(color: Colors.green)),
-              ],
-            ),
+            icon: Icons.check_circle,
+            color: Colors.green,
+            title: context.l10n.odendiIsaretle,
           ),
-        PopupMenuItem(
+        RowAction(
           value: 'edit',
-          child: Row(
-            children: [
-              const Icon(Icons.edit, color: Colors.blueGrey),
-              const SizedBox(width: 8),
-              Text(context.l10n.duzenle),
-            ],
-          ),
+          icon: Icons.edit_rounded,
+          color: Colors.blueGrey,
+          title: context.l10n.duzenle,
         ),
-        PopupMenuItem(
+        RowAction(
           value: 'delete',
-          child: Row(
-            children: [
-              const Icon(Icons.delete, color: Colors.red),
-              const SizedBox(width: 8),
-              Text(context.l10n.sil, style: const TextStyle(color: Colors.red)),
-            ],
-          ),
+          icon: Icons.delete_outline_rounded,
+          title: context.l10n.sil,
+          destructive: true,
         ),
       ],
       onSelected: (value) async {
