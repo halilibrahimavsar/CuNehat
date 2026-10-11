@@ -39,15 +39,48 @@ class CardCycle {
   DateTime previousClosing(DateTime closing) =>
       closingIn(closing.year, closing.month - 1);
 
-  /// [closing] kesiminin son ödeme tarihi: kesimden SONRAKİ ilk `dueDay`
-  /// (kesim 15 / son ödeme 25 → aynı ay; kesim 25 / son ödeme 5 → ertesi ay).
+  /// [closing] kesiminin son ödeme tarihi.
+  ///
+  /// Banka o kesim için tarihi beyan ettiyse ([CreditCardInfo.lastStatement])
+  /// odur. Başka bir kesimin beyanı varsa bankanın KURALI ondan türetilir:
+  /// bankalar son ödemeyi sabit bir gün olarak değil "kesimden N gün sonra"
+  /// olarak verir (QNB ekstresinde ölçüldü: 25/08 → 04/09, 25/09 → 05/10,
+  /// 25/10 → 04/11 — hep 10 gün). Sabit [CreditCardInfo.dueDay] ile hesap,
+  /// 31 çeken aylardan sonra bir gün GEÇ gösteriyordu; son ödeme gününde
+  /// bir gün geç kalmak gecikme faizi demektir.
+  ///
+  /// Hiç beyan yoksa: kesimden SONRAKİ ilk `dueDay` (kesim 15 / son ödeme 25
+  /// → aynı ay; kesim 25 / son ödeme 5 → ertesi ay).
   DateTime dueFor(DateTime closing) {
     final c = dateOnly(closing);
+    final declared = card.lastStatement;
+    if (declared != null) {
+      if (dateOnly(declared.closingDate) == c) {
+        return dateOnly(declared.dueDate);
+      }
+      final offset = declaredDueOffsetDays;
+      if (offset != null) return DateTime(c.year, c.month, c.day + offset);
+    }
     final sameMonth =
         DateTime(c.year, c.month, _clampDay(c.year, c.month, card.dueDay));
     if (sameMonth.isAfter(c)) return sameMonth;
     final (y, m) = _normalize(c.year, c.month + 1);
     return DateTime(y, m, _clampDay(y, m, card.dueDay));
+  }
+
+  /// Son beyandan türetilen "kesimden kaç gün sonra" kuralı; beyan yoksa ya
+  /// da fark anlamsızsa (≤ 0, > 31) `null`.
+  ///
+  /// 11–12 günlük fark 10'a ÇEKİLİR: yasal alt sınır 10 gündür ve bankalar
+  /// hafta sonuna denk gelen son ödemeyi izleyen iş gününe kaydırır. Beyan
+  /// öyle bir aya aitse farkı olduğu gibi ileri taşımak sonraki ayları bir
+  /// iki gün GEÇ gösterirdi; erken göstermek zararsız, geç göstermek değil.
+  int? get declaredDueOffsetDays {
+    final declared = card.lastStatement;
+    if (declared == null) return null;
+    final days = daysBetween(declared.closingDate, declared.dueDate);
+    if (days <= 0 || days > 31) return null;
+    return days == 11 || days == 12 ? 10 : days;
   }
 
   /// [closing] kesiminin dönemi: önceki kesimin ERTESİ günü … kesim günü.

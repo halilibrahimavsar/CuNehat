@@ -77,6 +77,85 @@ void main() {
           DateTime(2027, 1, 7));
     });
 
+    group('son ödeme kuralı bankanın beyanından türetilir', () {
+      // Gerçek QNB ekstrelerinde ölçüldü (11 Eki 2026): 25/08 → 04/09,
+      // 25/09 → 05/10, 25/10 → 04/11. Son ödeme sabit bir GÜN değil,
+      // kesimden 10 gün sonrası. Sabit günle hesap (kesim 25 / son ödeme 5)
+      // 31 çeken aylardan sonra bir gün GEÇ gösteriyordu.
+      CardStatement statement(DateTime closing, DateTime due) => CardStatement(
+            closingDate: closing,
+            dueDate: due,
+            statementBalance: 100,
+            recordedAt: closing,
+          );
+      final september = _card(
+        closing: 25,
+        due: 5,
+        statement: statement(DateTime(2026, 9, 25), DateTime(2026, 10, 5)),
+      );
+
+      test('beyanı olan kesimde bankanın tarihi', () {
+        expect(CardCycle(september).dueFor(DateTime(2026, 9, 25)),
+            DateTime(2026, 10, 5));
+      });
+
+      test('sonraki ve önceki kesimlerde aynı gün farkı (10) uygulanır', () {
+        final cycle = CardCycle(september);
+        expect(cycle.declaredDueOffsetDays, 10);
+        // Sabit günle 5 Kasım çıkardı; banka 4 Kasım diyor.
+        expect(cycle.dueFor(DateTime(2026, 10, 25)), DateTime(2026, 11, 4));
+        expect(cycle.dueFor(DateTime(2026, 8, 25)), DateTime(2026, 9, 4));
+        // Şubat: 25 Şub + 10 = 7 Mart (sabit günle 5 Mart çıkardı).
+        expect(cycle.dueFor(DateTime(2027, 2, 25)), DateTime(2027, 3, 7));
+      });
+
+      test('kart harcamasının ödeme günü de aynı kuralı izler', () {
+        expect(cardPaymentDate(_tx(DateTime(2026, 10, 6, 14), 100), september),
+            DateTime(2026, 11, 4, 14));
+      });
+
+      test(
+          'hafta sonu kaydırması (11–12 gün) 10 güne çekilir: geç göstermek '
+          'zararlı, erken göstermek değil', () {
+        // Banka 11 gün sonrasını beyan etmiş: son ödeme hafta sonuna ya da
+        // tatile denk gelip izleyen iş gününe kaymış olabilir.
+        final shifted = _card(
+          closing: 25,
+          due: 5,
+          statement: statement(DateTime(2027, 7, 25), DateTime(2027, 8, 5)),
+        );
+        final cycle = CardCycle(shifted);
+        expect(cycle.declaredDueOffsetDays, 10);
+        expect(cycle.dueFor(DateTime(2027, 8, 25)), DateTime(2027, 9, 4));
+        // Beyanı olan kesimin KENDİ tarihi bankanınkidir.
+        expect(cycle.dueFor(DateTime(2027, 7, 25)), DateTime(2027, 8, 5));
+      });
+
+      test('başka gün farkları olduğu gibi kullanılır', () {
+        final fifteen = _card(
+          closing: 10,
+          due: 25,
+          statement: statement(DateTime(2026, 9, 10), DateTime(2026, 9, 25)),
+        );
+        expect(CardCycle(fifteen).declaredDueOffsetDays, 15);
+        expect(CardCycle(fifteen).dueFor(DateTime(2026, 10, 10)),
+            DateTime(2026, 10, 25));
+      });
+
+      test('beyan yoksa ya da fark anlamsızsa sabit güne düşer', () {
+        expect(CardCycle(_card(closing: 25, due: 5)).declaredDueOffsetDays,
+            isNull);
+        final broken = _card(
+          closing: 25,
+          due: 5,
+          statement: statement(DateTime(2026, 9, 25), DateTime(2026, 9, 25)),
+        );
+        expect(CardCycle(broken).declaredDueOffsetDays, isNull);
+        expect(CardCycle(broken).dueFor(DateTime(2026, 10, 25)),
+            DateTime(2026, 11, 5));
+      });
+    });
+
     test('dönem: önceki kesimin ERTESİ günü … kesim günü', () {
       final p = CardCycle(_card()).periodEndingAt(DateTime(2026, 9, 15));
       expect(p.start, DateTime(2026, 8, 16));
