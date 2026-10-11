@@ -1111,7 +1111,7 @@
   "onboardingAppBarMenuTitle": "Menü",
   "onboardingAppBarMenuDesc": "Bütçeler, düzenli işlemler, banka ekstresi içe aktarma ve ayarlar bu menüde.",
   "onboardingAppBarWalletTitle": "Aktif Cüzdanınız",
-  "onboardingAppBarWalletDesc": "Her gelir, gider, borç ve yatırım kaydı SEÇİLİ cüzdana işlenir. Buraya dokunarak cüzdan değiştirebilir veya yeni cüzdan ekleyebilirsiniz.",
+  "onboardingAppBarWalletDesc": "Her gelir, gider, borç ve yatırım kaydı SEÇİLİ cüzdana işlenir. Başlığı yana kaydırarak cüzdan değiştirebilir, dokunarak tüm cüzdanlarınızı görebilir veya yenisini ekleyebilirsiniz.",
   "onboardingWalletListTitle": "Cüzdanlarınız",
   "onboardingWalletListDesc": "Her cüzdanın kendi para birimi ve bakiyesi vardır. Bir karta dokunarak aktif cüzdanı değiştirir, karttaki simgelerle düzenler veya silersiniz.",
   "onboardingWalletManagementTitle": "Yeni Cüzdan Ekle",

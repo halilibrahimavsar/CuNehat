@@ -4370,7 +4370,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingAppBarWalletDesc.
   ///
   /// In tr, this message translates to:
-  /// **'Her gelir, gider, borç ve yatırım kaydı SEÇİLİ cüzdana işlenir. Buraya dokunarak cüzdan değiştirebilir veya yeni cüzdan ekleyebilirsiniz.'**
+  /// **'Her gelir, gider, borç ve yatırım kaydı SEÇİLİ cüzdana işlenir. Başlığı yana kaydırarak cüzdan değiştirebilir, dokunarak tüm cüzdanlarınızı görebilir veya yenisini ekleyebilirsiniz.'**
   String get onboardingAppBarWalletDesc;
 
   /// No description provided for @onboardingWalletListTitle.

@@ -2394,7 +2394,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get onboardingAppBarWalletDesc =>
-      'Her gelir, gider, borç ve yatırım kaydı SEÇİLİ cüzdana işlenir. Buraya dokunarak cüzdan değiştirebilir veya yeni cüzdan ekleyebilirsiniz.';
+      'Her gelir, gider, borç ve yatırım kaydı SEÇİLİ cüzdana işlenir. Başlığı yana kaydırarak cüzdan değiştirebilir, dokunarak tüm cüzdanlarınızı görebilir veya yenisini ekleyebilirsiniz.';
 
   @override
   String get onboardingWalletListTitle => 'Cüzdanlarınız';

@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
@@ -9,6 +12,8 @@ import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/core/utils/tr_case.dart';
 import 'package:cunehat/features/main_feature/utils/app_constants.dart';
+import 'package:cunehat/features/main_feature/utils/slider_peek_store.dart';
+import 'package:cunehat/features/main_feature/utils/wallet_carousel_hint_store.dart';
 import 'package:cunehat/features/main_feature/widgets/wallet_headline.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/core/config/feature_flags.dart';
@@ -22,6 +27,7 @@ import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/core/utils/money_math.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unified_flutter_features/features/amount_visibility/ibo_amount_display.dart';
 import 'package:unified_flutter_features/features/slider_2d_navigation/models/slider_models.dart';
 
@@ -65,8 +71,27 @@ class _AppBarContentState extends State<AppBarContent> {
   /// bırakıyordu.
   final ScrollController _walletSheetScrollController = ScrollController();
 
+  /// Cüzdan karuselinin denetleyicisi. İlk cüzdan listesiyle birlikte, etkin
+  /// hesabın sayfasında kurulur (bkz. [_buildWalletContent]).
+  PageController? _pages;
+
+  /// Kullanıcının kaydırarak seçtiği, bloc'un henüz onaylamadığı hesap (bkz.
+  /// [_syncPage]). Onay gelmezse [_pendingTimer] seçimi düşürür.
+  String? _pendingAccountId;
+  Timer? _pendingTimer;
+
+  Timer? _hintTimer;
+  bool _hintSettled = false;
+
+  /// Bloc'un seçimi onaylaması için tanınan süre; dolarsa başlık etkin
+  /// cüzdana geri döner (seçim yazılamadıysa yanlış cüzdanı göstermesin).
+  static const _confirmWindow = Duration(seconds: 2);
+
   @override
   void dispose() {
+    _pendingTimer?.cancel();
+    _hintTimer?.cancel();
+    _pages?.dispose();
     _walletSheetScrollController.dispose();
     super.dispose();
   }
@@ -200,12 +225,192 @@ class _AppBarContentState extends State<AppBarContent> {
     }
   }
 
+  /// Başlık alanı: üst düzey cüzdanlar arasında YANA KAYDIRILAN bir karusel.
+  ///
+  /// Eskiden ekranda yalnız etkin cüzdan vardı; ötekileri görmek için sayfa
+  /// açmak, listede aşağı inmek, dokunmak ve sayfayı kapatmak gerekiyordu.
+  /// Şimdi başlık parmakla kaydırılır: her sayfa bir cüzdanın başlığıdır,
+  /// bırakılınca o cüzdan etkinleşir. Dokunmak yine cüzdan sayfasını açar.
+  ///
+  /// Sayfalar üst düzey cüzdanlardır ([topLevelWallets]); kart bağlamı
+  /// SAHİBİNİN sayfasında yaşar ve bugünkü "HESAP › KART" başlığını gösterir.
   Widget _buildWalletContent(
       BuildContext context, WalletLoadedSt state, SliderState st) {
+    final active = state.activeWallet;
+    // Etkin cüzdan yokken (geçici durum) gösterilecek bir sayfa da yok:
+    // karuselsiz, genel başlık.
+    final tops = active == null
+        ? const <WalletEntity>[]
+        : topLevelWallets(state.wallets);
+    final accountId =
+        active == null ? null : accountOf(active, state.wallets).id;
+    final activeIndex = tops.indexWhere((w) => w.id == accountId);
+
+    final Widget content;
+    if (activeIndex < 0) {
+      content = _headlineFor(context, state: state, st: st, active: active);
+    } else {
+      final controller = _pages ??= PageController(initialPage: activeIndex);
+      _syncPage(activeIndex, accountId);
+      _maybeHint(tops.length);
+      content = SizedBox(
+        // `AppBar` başlığı sınırsız yükseklikte ölçer; yatay görünüm alanı
+        // sınırlı bir yükseklik ister.
+        height: AppSizes.appBarHeight,
+        child: NotificationListener<ScrollEndNotification>(
+          onNotification: (notification) {
+            if (notification.depth == 0) _onPageSettled(state, tops);
+            return false;
+          },
+          child: PageView.builder(
+            key: const ValueKey('wallet-carousel'),
+            controller: controller,
+            physics:
+                tops.length < 2 ? const NeverScrollableScrollPhysics() : null,
+            itemCount: tops.length,
+            itemBuilder: (context, i) => _headlineFor(
+              context,
+              state: state,
+              st: st,
+              // Etkin bağlam bu sayfanın hesabındaysa (hesabın kendisi ya da
+              // bağlı kartı) sayfa ONU gösterir; diğer sayfalar kendi
+              // cüzdanını, etkin olsaydı görüneceği gibi.
+              active: i == activeIndex ? active : tops[i],
+              pageIndex: i,
+              pageCount: tops.length,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Showcase(
+      key: OnboardingKeys.appBarWalletArea,
+      title: context.l10n.onboardingAppBarWalletTitle,
+      description: context.l10n.onboardingAppBarWalletDesc,
+      child: GestureDetector(
+        onTap: () {
+          final scaffoldState =
+              context.findAncestorStateOfType<AnimatedScaffoldWrapperState>();
+          final authState = context.read<AppAuthBloc>().state;
+          final userId = authState is AppAuthenticated
+              ? authState.user.uid
+              : (authState is AppAuthLocked
+                  ? authState.user.uid
+                  : 'local_user');
+
+          scaffoldState?.openWalletDialog(
+            WalletSheetContent(
+              scrollController: _walletSheetScrollController,
+              userId: userId,
+            ),
+          );
+        },
+        child: Container(color: AppColors.transparent, child: content),
+      ),
+    );
+  }
+
+  /// Karusel bir sayfada durdu: o sayfanın cüzdanı etkin değilse etkinleştir.
+  /// Sessizdir (`announce: false`) — başlığın kendisi zaten değişti.
+  void _onPageSettled(WalletLoadedSt state, List<WalletEntity> tops) {
+    final controller = _pages;
+    if (controller == null || !controller.hasClients || tops.isEmpty) return;
+    final index = (controller.page ?? 0).round().clamp(0, tops.length - 1);
+    final target = tops[index];
+    final active = state.activeWallet;
+    final currentId =
+        active == null ? null : accountOf(active, state.wallets).id;
+    if (target.id == null || target.id == currentId) return;
+    if (target.id == _pendingAccountId) return;
+
+    _pendingAccountId = target.id;
+    _pendingTimer?.cancel();
+    _pendingTimer = Timer(_confirmWindow, () {
+      if (mounted) setState(() => _pendingAccountId = null);
+    });
+    context.read<WalletBloc>().add(SetActiveWalletEvent(
+          userId: target.userId,
+          walletId: target.id!,
+          announce: false,
+        ));
+  }
+
+  /// Karuseli etkin hesabın sayfasında tutar: cüzdan başka bir yerden
+  /// değiştiğinde (cüzdan sayfası, kart şeridi, silme) başlık da oraya gider.
+  ///
+  /// Kullanıcının bıraktığı an ile bloc'un yeni durumu yaydığı an arasında
+  /// etkin hesap HÂLÂ eskisidir; o aralıkta eşitlemek sayfayı geri sektirirdi.
+  /// Bekleyen seçim onaylanana (ya da süresi dolana) kadar eşitleme durur.
+  void _syncPage(int activeIndex, String? accountId) {
+    if (_pendingAccountId != null) {
+      if (_pendingAccountId != accountId) return;
+      _pendingAccountId = null;
+      _pendingTimer?.cancel();
+    }
+    final controller = _pages;
+    if (controller == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !controller.hasClients) return;
+      if (controller.position.isScrollingNotifier.value) return;
+      if (controller.page?.round() != activeIndex) {
+        controller.jumpToPage(activeIndex);
+      }
+    });
+  }
+
+  /// Tek seferlik ipucu: ikinci cüzdan kurulduğunda başlık komşu cüzdana
+  /// doğru bir kez kıpırdar (bkz. [WalletCarouselHintStore]). Kabuk turu
+  /// sürerken oynamaz — overlay'in arkasında harcanırdı.
+  void _maybeHint(int count) {
+    if (_hintSettled || count < 2) return;
+    if (!getIt.isRegistered<SharedPreferences>() ||
+        !getIt.isRegistered<OnboardingCoordinator>()) {
+      return;
+    }
+    final store = WalletCarouselHintStore(getIt<SharedPreferences>());
+    if (store.seen) {
+      _hintSettled = true;
+      return;
+    }
+    if (!isSliderPeekAllowed(getIt<OnboardingCoordinator>())) return;
+    _hintSettled = true;
+    _hintTimer = Timer(const Duration(milliseconds: 1400), () async {
+      final controller = _pages;
+      if (!mounted || controller == null || !controller.hasClients) return;
+      final position = controller.position;
+      if (position.isScrollingNotifier.value) return;
+      final home = position.pixels;
+      // Komşu hangi yandaysa oraya doğru.
+      final nudge = home < position.maxScrollExtent ? 36.0 : -36.0;
+      await store.markSeen();
+      await controller.animateTo(
+        home + nudge,
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOut,
+      );
+      if (!mounted || !controller.hasClients) return;
+      if (controller.position.isScrollingNotifier.value) return;
+      await controller.animateTo(
+        home,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  /// [active] bağlamının başlığı — rozet, tutar ve ikincil satır.
+  Widget _headlineFor(
+    BuildContext context, {
+    required WalletLoadedSt state,
+    required SliderState st,
+    required WalletEntity? active,
+    int pageIndex = 0,
+    int pageCount = 1,
+  }) {
     double value = 0.0;
     String valueName = "";
-    final active = state.activeWallet;
-    // Aktif cüzdan bağlı bir KARTSA birikim/borç sahibinin verisidir (bkz.
+    // Bağlam bağlı bir KARTSA birikim/borç sahibinin verisidir (bkz.
     // `card_family.dart`); rozet de kartı sahibinin içinde gösterir.
     final account = active == null ? null : accountOf(active, state.wallets);
     final shown = st == SliderState.transactions ? active : account;
@@ -237,45 +442,20 @@ class _AppBarContentState extends State<AppBarContent> {
             ? '${upperTr(account!.name)} › ${upperTr(shown.name)}'
             : upperTr(shown.name);
 
-    return Showcase(
-      key: OnboardingKeys.appBarWalletArea,
-      title: context.l10n.onboardingAppBarWalletTitle,
-      description: context.l10n.onboardingAppBarWalletDesc,
-      child: GestureDetector(
-        onTap: () {
-          final scaffoldState =
-              context.findAncestorStateOfType<AnimatedScaffoldWrapperState>();
-          final authState = context.read<AppAuthBloc>().state;
-          final userId = authState is AppAuthenticated
-              ? authState.user.uid
-              : (authState is AppAuthLocked
-                  ? authState.user.uid
-                  : 'local_user');
-
-          scaffoldState?.openWalletDialog(
-            WalletSheetContent(
-              scrollController: _walletSheetScrollController,
-              userId: userId,
-            ),
-          );
-        },
-        child: Container(
-          color: AppColors.transparent,
-          child: _headline(
-            context,
-            state: state,
-            st: st,
-            shown: shown,
-            account: account,
-            badge: st == SliderState.transactions
-                ? (shown != null && shown.id != account?.id
-                    ? '$walletName • ${upperTr(context.l10n.drawerDebt)}'
-                    : walletName)
-                : "$walletName • $valueName",
-            value: value,
-          ),
-        ),
-      ),
+    return _headline(
+      context,
+      state: state,
+      st: st,
+      shown: shown,
+      account: account,
+      badge: st == SliderState.transactions
+          ? (shown != null && shown.id != account?.id
+              ? '$walletName • ${upperTr(context.l10n.drawerDebt)}'
+              : walletName)
+          : "$walletName • $valueName",
+      value: value,
+      pageIndex: pageIndex,
+      pageCount: pageCount,
     );
   }
 
@@ -292,6 +472,8 @@ class _AppBarContentState extends State<AppBarContent> {
     required WalletEntity? account,
     required String badge,
     required double value,
+    int pageIndex = 0,
+    int pageCount = 1,
   }) {
     Widget build(String? line) => WalletHeadline(
           badgeLabel: badge,
@@ -301,8 +483,10 @@ class _AppBarContentState extends State<AppBarContent> {
               ? Icons.credit_card_rounded
               : Icons.wallet,
           secondaryLine: line,
+          pageIndex: pageIndex,
+          pageCount: pageCount,
         );
-    final fxLine = _tryEquivalentLine(context, state, st, value);
+    final fxLine = _tryEquivalentLine(context, shown, st, value);
     // Borç sekmesinde toplamın kaynağı: "krediler X · kartlar Y". Yalnız
     // kart borcu varken; yoksa toplam zaten tek kaynaktır.
     if (st == SliderState.debt && account != null) {
@@ -344,10 +528,9 @@ class _AppBarContentState extends State<AppBarContent> {
 
   /// Döviz cüzdanında bakiyenin son bilinen kurla TL karşılığı; kur yoksa
   /// satır gizlenir.
-  String? _tryEquivalentLine(BuildContext context, WalletLoadedSt state,
+  String? _tryEquivalentLine(BuildContext context, WalletEntity? wallet,
       SliderState st, double value) {
     if (st != SliderState.transactions) return null;
-    final wallet = state.activeWallet;
     if (wallet == null || wallet.currency == kDefaultCurrency) return null;
     if (getIt<ExchangeRateService>().cachedRateToTry(wallet.currency)
         case final double rate) {

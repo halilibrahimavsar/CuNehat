@@ -2393,7 +2393,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingAppBarWalletDesc =>
-      'Every income, expense, debt, and investment record goes into the SELECTED wallet. Tap here to switch wallets or add a new one.';
+      'Every income, expense, debt, and investment record goes into the SELECTED wallet. Swipe the title sideways to switch wallets, or tap it to see all your wallets and add a new one.';
 
   @override
   String get onboardingWalletListTitle => 'Your Wallets';

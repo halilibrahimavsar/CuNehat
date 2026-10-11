@@ -1090,7 +1090,7 @@
   "onboardingAppBarMenuTitle": "Menu",
   "onboardingAppBarMenuDesc": "Budgets, recurring transactions, bank statement import, and settings live in this menu.",
   "onboardingAppBarWalletTitle": "Your Active Wallet",
-  "onboardingAppBarWalletDesc": "Every income, expense, debt, and investment record goes into the SELECTED wallet. Tap here to switch wallets or add a new one.",
+  "onboardingAppBarWalletDesc": "Every income, expense, debt, and investment record goes into the SELECTED wallet. Swipe the title sideways to switch wallets, or tap it to see all your wallets and add a new one.",
   "onboardingWalletListTitle": "Your Wallets",
   "onboardingWalletListDesc": "Each wallet has its own currency and balance. Tap a card to make it active, or use the icons on it to edit or delete.",
   "onboardingWalletManagementTitle": "Add a New Wallet",

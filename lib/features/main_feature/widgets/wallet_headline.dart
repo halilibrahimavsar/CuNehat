@@ -31,7 +31,18 @@ class WalletHeadline extends StatelessWidget {
     this.secondaryLine,
     this.maxHeight = AppSizes.appBarHeight,
     this.badgeIcon = Icons.wallet,
+    this.pageCount = 1,
+    this.pageIndex = 0,
   });
+
+  /// Üst çubuk karuselindeki konum: kaç cüzdan var, bu kaçıncısı. Noktalar
+  /// rozetin İÇİNE çizilir — ayrı bir satır yığını 70dp'nin dışına iterdi
+  /// (bkz. baştaki tuzak). Tek cüzdanda nokta yoktur.
+  final int pageCount;
+  final int pageIndex;
+
+  /// Bundan fazla cüzdanda noktalar rozeti doldurur; "3/9" yazılır.
+  static const int _maxDots = 6;
 
   /// Rozetin ikonu; kredi kartı bağlamında kart ikonu.
   final IconData badgeIcon;
@@ -115,8 +126,42 @@ class WalletHeadline extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
+          if (pageCount > 1) ...[
+            const SizedBox(width: 8),
+            _buildPager(),
+          ],
         ],
       ),
+    );
+  }
+
+  Widget _buildPager() {
+    if (pageCount > _maxDots) {
+      return Text(
+        '${pageIndex + 1}/$pageCount',
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          color: AppColors.white.withValues(alpha: 0.8),
+        ),
+      );
+    }
+    return Row(
+      key: const ValueKey('wallet-headline-dots'),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 0; i < pageCount; i++)
+          Container(
+            width: i == pageIndex ? 6 : 4,
+            height: i == pageIndex ? 6 : 4,
+            margin: EdgeInsets.only(left: i == 0 ? 0 : 3),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color:
+                  AppColors.white.withValues(alpha: i == pageIndex ? 1.0 : 0.4),
+            ),
+          ),
+      ],
     );
   }
 

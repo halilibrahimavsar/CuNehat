@@ -21,6 +21,8 @@ void main() {
     String? secondaryLine,
     String badgeLabel = 'DOVIZ HESABI',
     double textScale = 1.0,
+    int pageCount = 1,
+    int pageIndex = 0,
   }) async {
     // Varsayılan 800×600 test yüzeyi bu ölçümü YALANLIYOR: başlık orada
     // ölçeklendikten sonra genişliğe rahat sığıyor, telefonda sığmıyor.
@@ -53,6 +55,8 @@ void main() {
                           amount: 2277.71,
                           currency: 'USD',
                           secondaryLine: secondaryLine,
+                          pageCount: pageCount,
+                          pageIndex: pageIndex,
                         ),
                       ),
                       const SizedBox(width: 48, height: 48),
@@ -117,6 +121,30 @@ void main() {
 
     expect(ucSatir, lessThan(ikiSatir),
         reason: 'Sığdırma devrede değil: üç satır aynı boyda kalamaz');
+  });
+
+  // Karusel noktaları rozetin İÇİNDE: ayrı bir satır olsaydı yığın 70dp'nin
+  // dışına taşardı (bkz. bileşenin baş yorumu).
+  testWidgets('karusel noktaları yığını çubuğun dışına itmez', (tester) async {
+    await pump(tester, secondaryLine: '≈ 199.456,05 ₺');
+    final noktasiz = stackRect(tester).height;
+
+    await pump(tester,
+        secondaryLine: '≈ 199.456,05 ₺', pageCount: 4, pageIndex: 1);
+
+    expectFitsInToolbar(tester, reason: 'Noktalar yığını taşırdı');
+    expect(find.byKey(const ValueKey('wallet-headline-dots')), findsOneWidget);
+    expect(stackRect(tester).height, noktasiz,
+        reason: 'Noktalar yeni bir satır açmamalı');
+  });
+
+  testWidgets('altıdan fazla cüzdanda nokta yerine "3/9" yazar',
+      (tester) async {
+    await pump(tester, pageCount: 9, pageIndex: 2);
+
+    expect(find.text('3/9'), findsOneWidget);
+    expect(find.byKey(const ValueKey('wallet-headline-dots')), findsNothing);
+    expectFitsInToolbar(tester, reason: 'Sayaç yığını taşırdı');
   });
 
   testWidgets('yazı ölçeği büyütülünce de kırpılmaz', (tester) async {
