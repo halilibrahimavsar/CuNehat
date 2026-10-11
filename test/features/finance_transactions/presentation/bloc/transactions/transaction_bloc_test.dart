@@ -383,6 +383,131 @@ void main() {
     );
   });
 
+  // ---------------------------------------------------------------------
+  // UX Tur 4 · G3 — düzenlemede kaydı başka cüzdana taşıma.
+  //
+  // Bakiye her cüzdanın KENDİ defterinden türer: satır eski cüzdandan çıkıp
+  // yenisine girdiğinde İKİ bakiye de yeniden türetilmek zorunda. Yalnız
+  // yenisi eşitlenseydi eski cüzdanın bakiyesi taşınan tutar kadar yanlış
+  // kalırdı (bir sonraki kayda kadar, sessizce).
+  // ---------------------------------------------------------------------
+  group('UpdateTransactionEvent · cüzdan taşıma', () {
+    final other = TransactionEntity(
+      id: 'tx_other',
+      userId: 'user_123',
+      walletId: 'wallet_123',
+      title: 'Kira',
+      tag: 'Rent',
+      amount: 900,
+      date: DateTime(2026, 6, 12),
+      type: TransactionTypeModel.expense,
+    );
+    final movedTx = testTransaction.copyWith(walletId: 'wallet_456');
+
+    TransactionLoaded seed(List<TransactionEntity> list) => TransactionLoaded(
+          groupedTransactions: {DateTime(2026, 6, 13): list},
+          allTransactions: list,
+        );
+
+    blocTest<TransactionBloc, TransactionState>(
+      'iki cüzdanın bakiyesi de eşitlenir, satır bu defterden düşer, iki '
+      'cüzdan da uyarılır',
+      build: () {
+        when(() => mockMetricsService.syncBalance(any()))
+            .thenAnswer((_) async => true);
+        when(() => mockUpdateUseCase(movedTx))
+            .thenAnswer((_) async => const Right(null));
+        return transactionBloc;
+      },
+      seed: () => seed([testTransaction, other]),
+      act: (bloc) async {
+        final notified = <String?>[];
+        final sub =
+            changedNotifier.stream.listen((c) => notified.add(c.walletId));
+        bloc.add(UpdateTransactionEvent(
+          previousTransaction: testTransaction,
+          newTransaction: movedTx,
+        ));
+        await Future<void>.delayed(Duration.zero);
+        await Future<void>.delayed(Duration.zero);
+        await sub.cancel();
+        expect(notified, containsAll(['wallet_456', 'wallet_123']));
+      },
+      expect: () => [
+        TransactionActionSuccess(
+          'Grocery diğer cüzdana taşındı',
+          transactions: [other],
+        ),
+      ],
+      verify: (_) {
+        verify(() => mockUpdateUseCase(movedTx)).called(1);
+        verify(() => mockMetricsService.syncBalance('wallet_456')).called(1);
+        verify(() => mockMetricsService.syncBalance('wallet_123')).called(1);
+      },
+    );
+
+    blocTest<TransactionBloc, TransactionState>(
+      'eski cüzdanın eşitlemesi başarısızsa uyarı döner (sessiz kalmaz)',
+      build: () {
+        when(() => mockMetricsService.syncBalance('wallet_456'))
+            .thenAnswer((_) async => true);
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async => false);
+        when(() => mockUpdateUseCase(movedTx))
+            .thenAnswer((_) async => const Right(null));
+        return transactionBloc;
+      },
+      seed: () => seed([testTransaction]),
+      act: (bloc) => bloc.add(UpdateTransactionEvent(
+        previousTransaction: testTransaction,
+        newTransaction: movedTx,
+      )),
+      expect: () => [
+        const TransactionActionSuccess(
+          'Grocery diğer cüzdana taşındı',
+          transactions: [],
+          warning:
+              'Bakiye senkronizasyonu başarısız; cüzdan ekranına dönüp tekrar deneyin.',
+        ),
+      ],
+    );
+
+    for (final (name, locked) in [
+      (
+        'taksit satırı',
+        testTransaction.copyWith(
+            installmentGroupId: 'g1', installmentNo: 1, installmentCount: 3),
+      ),
+      ('bağlı satır', testTransaction.copyWith(linkedRecordId: 'debt_1')),
+      ('benimsenmiş satır', testTransaction.copyWith(adoptedFromTag: 'Food')),
+    ]) {
+      blocTest<TransactionBloc, TransactionState>(
+        '$name taşınamaz: hiçbir şey yazılmaz',
+        build: () => transactionBloc,
+        seed: () => seed([locked]),
+        act: (bloc) => bloc.add(UpdateTransactionEvent(
+          previousTransaction: locked,
+          newTransaction: locked.copyWith(walletId: 'wallet_456'),
+        )),
+        expect: () => [
+          TransactionError(
+            'Bu kayıt başka bir kayda bağlı; cüzdanı değiştirilemez',
+            transactions: [locked],
+          ),
+        ],
+        verify: (_) {
+          verifyZeroInteractions(mockUpdateUseCase);
+          verifyZeroInteractions(mockMetricsService);
+        },
+      );
+    }
+
+    test('canMoveWallet: düz kayıt taşınır', () {
+      expect(testTransaction.canMoveWallet, isTrue);
+      expect(testSystemTransaction.canMoveWallet, isFalse);
+    });
+  });
+
   group('DeleteTransactionEvent', () {
     blocTest<TransactionBloc, TransactionState>(
       'emits error when transaction lookup fails',

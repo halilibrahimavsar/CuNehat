@@ -92,6 +92,9 @@ class TransactionFormController {
     categoryId.value = t.tag;
     dateTime.value = t.date;
     receiptFileName.value = t.receiptFileName;
+    // Düzenleme kaydın KENDİ cüzdanından başlar; kullanıcı değiştirmedikçe
+    // kayıt yerinde kalır.
+    targetWalletId.value = t.walletId;
   }
 
   /// "Yeniden ekle": var olan bir işlemin içeriğiyle YENİ kayıt başlatır.

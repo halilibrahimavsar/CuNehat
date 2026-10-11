@@ -17,11 +17,16 @@ class PaymentMethodSelector extends StatelessWidget {
   final ValueNotifier<String> selected;
   final Color accent;
 
+  /// Başlık; verilmezse "Ödeme yöntemi". Düzenlemede aynı seçici "Cüzdan"
+  /// başlığıyla kaydı başka bir cüzdana taşımak için kullanılır.
+  final String? title;
+
   const PaymentMethodSelector({
     super.key,
     required this.options,
     required this.selected,
     required this.accent,
+    this.title,
   });
 
   @override
@@ -31,7 +36,7 @@ class PaymentMethodSelector extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          context.l10n.kkOdemeYontemi,
+          title ?? context.l10n.kkOdemeYontemi,
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w700,

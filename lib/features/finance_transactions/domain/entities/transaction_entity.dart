@@ -128,6 +128,18 @@ class TransactionEntity extends Equatable {
   /// Bir taksit grubunun üyesi mi (bkz. [installmentGroupId])?
   bool get isInstallment => installmentGroupId != null;
 
+  /// Başka bir cüzdana TAŞINABİLİR mi (düzenlemede cüzdan değiştirme).
+  ///
+  /// Taşınamayanlar başka bir kayda bağlı olanlardır: sistem işlemi (kuplajın
+  /// kendi bacağı), benimsenmiş ya da bağlı satır (borç/yatırım/transfer onu
+  /// kendi cüzdanında arar) ve taksit satırı (grup tek kartın defterinde
+  /// durur; tek taksiti taşımak grubu böler).
+  bool get canMoveWallet =>
+      !isSystem &&
+      !isInstallment &&
+      adoptedFromTag == null &&
+      linkedRecordId == null;
+
   /// Kullanıcının düz satırı bir alan kaydına benimsenmiş mi (bkz.
   /// [adoptedFromTag]).
   bool get isAdopted => adoptedFromTag != null;
@@ -215,11 +227,12 @@ class TransactionEntity extends Equatable {
     required DateTime date,
     required TransactionTypeModel type,
     required String? receiptFileName,
+    String? walletId,
   }) =>
       TransactionEntity(
         id: id,
         userId: userId,
-        walletId: walletId,
+        walletId: walletId ?? this.walletId,
         title: title,
         tag: tag,
         amount: amount,

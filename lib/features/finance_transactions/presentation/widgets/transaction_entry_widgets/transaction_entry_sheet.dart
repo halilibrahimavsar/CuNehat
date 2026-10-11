@@ -1,4 +1,8 @@
+import 'dart:async';
+
+import 'package:cunehat/core/error/error_handling.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/wallet_category_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
@@ -87,6 +91,19 @@ class TransactionSheetHandler {
             Navigator.pop(sheetContext);
 
             if (initialTransaction != null) {
+              // Kayıt başka cüzdana taşındıysa kategorisi orada da görünür
+              // olmalı: kürasyonlu cüzdanda gizli kalan bir kategori, kaydı
+              // süzgeçlerde ve bütçe seçicide "sahipsiz" bırakırdı.
+              if (transaction.walletId != initialTransaction.walletId &&
+                  getIt.isRegistered<WalletCategoryService>()) {
+                unawaited(getIt<WalletCategoryService>().include(
+                  walletId: transaction.walletId,
+                  categoryIds: [transaction.tag],
+                ).catchError((Object e, StackTrace st) {
+                  reportError('İşlem taşıma · kategori görünürlüğü', e, st);
+                  return 0;
+                }));
+              }
               txBloc().add(
                 UpdateTransactionEvent(
                   newTransaction: transaction,

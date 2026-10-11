@@ -203,6 +203,8 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
             date: when,
             type: type,
             receiptFileName: receiptFileName,
+            // Düzenlemede cüzdan değişmiş olabilir (bkz. [_moveOptions]).
+            walletId: _c.targetWalletId.value,
           )
         : TransactionEntity(
             id: null,
@@ -278,6 +280,31 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
       ...cardsOf(owner.id, all),
     ].where((w) => w.currency == start.currency).toList();
     return family.length > 1 ? family : const [];
+  }
+
+  /// DÜZENLEMEDE kaydın taşınabileceği cüzdanlar: aynı birimdekiler (tutar
+  /// çevrilmez, birim değişirse anlamı değişirdi), aile sırasında. Gelir
+  /// yalnız hesaplara taşınır — kart cüzdanına gelir yazmak kart ödemesi
+  /// demektir, o ayrı bir akış. Taşınamayan kayıtta ya da tek seçenekte boş.
+  ///
+  /// Eskiden yanlış cüzdana girilen kayıt taşınamıyordu: silinip doğru
+  /// cüzdanda baştan giriliyordu.
+  List<WalletEntity> _moveOptions(BuildContext context) {
+    final t = widget.initialTransaction;
+    if (t == null || !t.canMoveWallet) return const [];
+    final all = context.allWallets;
+    final current = all.where((w) => w.id == t.walletId).firstOrNull;
+    if (current == null) return const [];
+    final options = [
+      for (final w in walletsInFamilyOrder(all))
+        if (w.currency == current.currency &&
+            (w.id == current.id ||
+                (!w.isCreditCard
+                    ? true
+                    : FeatureFlags.creditCards && _isExpense)))
+          w,
+    ];
+    return options.length > 1 ? options : const [];
   }
 
   @override
@@ -399,6 +426,17 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
         if (_paymentOptions(context) case final options
             when options.isNotEmpty) ...[
           PaymentMethodSelector(
+            options: options,
+            selected: _c.targetWalletId,
+            accent: _accent,
+          ),
+          const SizedBox(height: 18),
+        ],
+        if (_moveOptions(context) case final options
+            when options.isNotEmpty) ...[
+          PaymentMethodSelector(
+            key: const ValueKey('tx-move-wallet'),
+            title: context.l10n.wallet,
             options: options,
             selected: _c.targetWalletId,
             accent: _accent,

@@ -183,7 +183,22 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       return;
     }
 
-    final result = await updateTransactionUseCase(event.newTransaction);
+    // Kayıt başka bir cüzdana TAŞINIYOR mu. Depolama tek kutudur (kimlikle
+    // yazılır), bakiye ise her cüzdanın kendi defterinden türer: satır eski
+    // cüzdanın defterinden çıkar, yenisine girer — İKİ bakiye de yeniden
+    // türetilmek zorunda.
+    final previous = event.previousTransaction;
+    final updated = event.newTransaction;
+    final moved = previous.walletId != updated.walletId;
+    if (moved && !previous.canMoveWallet) {
+      emit(TransactionError(
+        'Bu kayıt başka bir kayda bağlı; cüzdanı değiştirilemez',
+        transactions: currentData,
+      ));
+      return;
+    }
+
+    final result = await updateTransactionUseCase(updated);
 
     await result.fold(
       (failure) async => emit(TransactionError(
@@ -191,20 +206,32 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         transactions: currentData,
       )),
       (_) async {
-        final synced = await _safeSyncBalance(event.newTransaction.walletId);
+        var synced = await _safeSyncBalance(updated.walletId);
+        if (moved) {
+          synced = await _safeSyncBalance(previous.walletId) && synced;
+        }
 
         emit(TransactionActionSuccess(
-          '${event.newTransaction.title} başarıyla güncellendi',
+          moved
+              ? '${updated.title} diğer cüzdana taşındı'
+              : '${updated.title} başarıyla güncellendi',
           transactions: [
             for (final t in currentData)
-              if (t.id == event.newTransaction.id) event.newTransaction else t,
+              // Taşınan satır bu defterin (eski cüzdanın) listesinden düşer.
+              if (t.id != updated.id) t else if (!moved) updated,
           ],
           warning: synced ? null : _syncWarning,
         ));
         transactionsChangedNotifier.notify(
-          userId: event.newTransaction.userId,
-          walletId: event.newTransaction.walletId,
+          userId: updated.userId,
+          walletId: updated.walletId,
         );
+        if (moved) {
+          transactionsChangedNotifier.notify(
+            userId: previous.userId,
+            walletId: previous.walletId,
+          );
+        }
       },
     );
   }
