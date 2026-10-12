@@ -429,6 +429,127 @@ void main() {
     });
   });
 
+  group('eski sürüm yedeği (v15) migrasyonla geri yüklenir', () {
+    /// Sahadaki gerçek biçim (12 Eki 2026 öncesi): kartta `dueOffsetDays` /
+    /// `monthlyInterestRate` / `lateInterestRate`, yatırımda `isPrimary`
+    /// YOKTUR.
+    String v15Backup() {
+      final cardWallet = _wallet(id: 'card').copyWith(
+        creditCard: const CreditCardInfoModel(
+          bankName: 'QNB',
+          last4: '4321',
+          limit: 20000,
+          closingDay: 25,
+          dueDay: 5,
+          paymentWalletId: 'w1',
+        ),
+      );
+      final cardJson = cardWallet.toJson();
+      (cardJson['creditCard'] as Map)
+        ..remove('dueOffsetDays')
+        ..remove('monthlyInterestRate')
+        ..remove('lateInterestRate');
+      final pot = InvestmentModel(
+        id: 'pot',
+        userId: 'u1',
+        walletId: 'w1',
+        name: 'Acil durum',
+        amount: 1500,
+        currentValue: 1500,
+        type: InvestmentType.cash,
+        color: const Color(0xFF26A69A),
+        dateAdded: DateTime(2026, 9, 1),
+      );
+      return jsonEncode({
+        'version': 15,
+        'timestamp': '2026-10-10T10:00:00.000',
+        'wallets': [_wallet().toJson(), cardJson],
+        'transactions': [_transaction().toJson()],
+        'investments': [
+          _investment().toJson()..remove('isPrimary'),
+          pot.toJson()..remove('isPrimary'),
+        ],
+        'debts': [],
+        'receivables': [],
+        'budgets': [],
+        'recurringTransactions': [],
+        'users': {
+          'u1': {'activeWalletId': 'w1'}
+        },
+        'categories': [_category().toJson()],
+        'goals': [],
+      });
+    }
+
+    test('geri yükleme BAŞARILI; kart ayarlanmamış, hiçbir kasa ana değil',
+        () async {
+      final result = await service.importDataFromJson(v15Backup());
+
+      expect(result.status, DataRestoreStatus.success);
+      final card = Hive.box<WalletModel>('wallets').get('card')!.creditCard!;
+      expect(card.bankName, 'QNB');
+      expect(card.closingDay, 25);
+      expect(card.dueDay, 5);
+      expect(card.dueOffsetDays, isNull);
+      expect(card.monthlyInterestRate, isNull);
+      expect(card.lateInterestRate, isNull);
+
+      final investments =
+          Hive.box<InvestmentModel>('investments_box').values.toList();
+      expect(investments, hasLength(2));
+      expect(investments.every((i) => !i.isPrimary), isTrue);
+      expect(investments.firstWhere((i) => i.id == 'pot').amount, 1500);
+    });
+
+    test('önizleme de v15 dosyasını okunabilir sayar', () async {
+      final inspection = service.inspectBackup(v15Backup());
+      expect(inspection.status, BackupInspectionStatus.ok);
+      expect(inspection.summary?.walletCount, 2);
+      expect(inspection.summary?.investmentCount, 2);
+    });
+  });
+
+  test('şema 16 alanları export/import round-trip ile korunur', () async {
+    const card = CreditCardInfoModel(
+      closingDay: 25,
+      dueDay: 5,
+      dueOffsetDays: 10,
+      monthlyInterestRate: 4.25,
+      lateInterestRate: 4.55,
+    );
+    await Hive.box<WalletModel>('wallets')
+        .put('w1', _wallet().copyWith(creditCard: card));
+    await Hive.box<InvestmentModel>('investments_box').put(
+      'pot',
+      InvestmentModel(
+        id: 'pot',
+        userId: 'u1',
+        walletId: 'w1',
+        name: 'Ana kasa',
+        amount: 900,
+        currentValue: 900,
+        type: InvestmentType.cash,
+        color: const Color(0xFF26A69A),
+        dateAdded: DateTime(2026, 9, 1),
+        isPrimary: true,
+      ),
+    );
+
+    final jsonString = await service.exportDataToJson();
+    final data = jsonDecode(jsonString) as Map<String, dynamic>;
+    expect(data['version'], 16);
+    await service.clearAllLocalData();
+    final result = await service.importDataFromJson(jsonString);
+
+    expect(result.isSuccess, true);
+    final back = Hive.box<WalletModel>('wallets').get('w1')!.creditCard!;
+    expect(back.dueOffsetDays, 10);
+    expect(back.monthlyInterestRate, 4.25);
+    expect(back.lateInterestRate, 4.55);
+    expect(Hive.box<InvestmentModel>('investments_box').get('pot')!.isPrimary,
+        isTrue);
+  });
+
   test('kart cüzdanı export/import round-trip ile kart bilgisini korur',
       () async {
     final card = CreditCardInfoModel(

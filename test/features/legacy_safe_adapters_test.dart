@@ -93,6 +93,35 @@ void main() {
       expect(model.amount, 1000.0);
       expect(model.goalId, isNull);
       expect(model.currency, isNull);
+      // Alan 17 (isPrimary, v16) da yok → ana kasa DEĞİL.
+      expect(model.isPrimary, isFalse);
+    });
+
+    test('InvestmentModel — v15 kaydı (alan 17 isPrimary yok) → false', () {
+      // 12 Eki 2026 öncesinin TAM biçimi: 15 alan, 17 yok. Üretilen adapter
+      // burada `null as bool` ile fırlatır ve kutu hiç açılmaz.
+      final model = SafeInvestmentModelAdapter().read(legacyRecord({
+        0: 'pot',
+        1: 'u',
+        2: 'w',
+        3: 'Acil durum',
+        4: 1500.0,
+        5: 1500.0,
+        6: InvestmentType.cash,
+        7: const Color(0xFF26A69A),
+        8: created,
+        9: null,
+        10: null,
+        12: null,
+        14: null,
+        15: 250.0,
+        16: 'g1',
+      }));
+
+      expect(model.isPrimary, isFalse);
+      expect(model.unbookedCost, 250.0);
+      expect(model.goalId, 'g1');
+      expect(model.type, InvestmentType.cash);
     });
 
     test('ReceivableModel — alan 8 (createdAt, v4) yok', () {
@@ -240,6 +269,7 @@ void main() {
         goalId: 'g1',
         currency: 'USD',
         unbookedCost: 250.0,
+        isPrimary: true,
       );
 
       final back = await roundTrip('inv_rt', model);
@@ -259,6 +289,7 @@ void main() {
       expect(back.goalId, model.goalId);
       expect(back.currency, model.currency);
       expect(back.unbookedCost, model.unbookedCost);
+      expect(back.isPrimary, isTrue);
     });
 
     test('DebtModel + PaymentModel tüm alanlarıyla geri gelir', () async {

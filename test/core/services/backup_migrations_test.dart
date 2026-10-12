@@ -349,8 +349,7 @@ void main() {
     test('her işleme üç alan AÇIKÇA null yazılır; başlıktan tahmin YOK', () {
       final result = migrateBackup(v14Backup(), targetVersion: 15);
       expect(result['version'], 15);
-      final txs =
-          (result['transactions'] as List).cast<Map<String, dynamic>>();
+      final txs = (result['transactions'] as List).cast<Map<String, dynamic>>();
       for (final t in txs) {
         expect(t, containsPair('installmentGroupId', null));
         expect(t, containsPair('installmentNo', null));
@@ -381,6 +380,104 @@ void main() {
       expect(result['version'], 15);
       final tx = (result['transactions'] as List).first as Map;
       expect(tx, containsPair('importBatchId', null));
+      expect(tx, containsPair('installmentGroupId', null));
+    });
+  });
+
+  group('v15 → v16 (kart: gün farkı + faiz; yatırım: ana kasa)', () {
+    Map<String, dynamic> v15Backup() => {
+          'version': 15,
+          'timestamp': '2026-10-10T10:00:00.000',
+          'wallets': [
+            {'id': 'w1', 'name': 'Maaş', 'creditCard': null},
+            {
+              'id': 'card',
+              'name': 'Bonus',
+              'creditCard': {
+                'bankName': 'QNB',
+                'closingDay': 25,
+                'dueDay': 5,
+                'lastStatement': null,
+              },
+            },
+          ],
+          'investments': [
+            {'id': 'pot', 'name': 'Acil durum', 'unbookedCost': 0},
+            {'id': 'gold', 'name': 'Gram', 'unbookedCost': 120.5},
+          ],
+          'transactions': [
+            {'id': 't1', 'installmentGroupId': null},
+          ],
+          'users': <String, dynamic>{},
+        };
+
+    test('kartın üç yeni alanı AÇIKÇA null yazılır; eski alanlar korunur', () {
+      final result = migrateBackup(v15Backup(), targetVersion: 16);
+      expect(result['version'], 16);
+
+      final card = ((result['wallets'] as List)[1] as Map)['creditCard'] as Map;
+      expect(card, containsPair('dueOffsetDays', null));
+      expect(card, containsPair('monthlyInterestRate', null));
+      expect(card, containsPair('lateInterestRate', null));
+      expect(card['bankName'], 'QNB');
+      expect(card['closingDay'], 25);
+      expect(card['dueDay'], 5);
+    });
+
+    test('kartı OLMAYAN cüzdanın creditCard\'ı null KALIR (karta dönmez)', () {
+      final result = migrateBackup(v15Backup(), targetVersion: 16);
+      final plain = (result['wallets'] as List).first as Map;
+      expect(plain.containsKey('creditCard'), isTrue);
+      expect(plain['creditCard'], isNull);
+      expect(plain['name'], 'Maaş');
+    });
+
+    test('her yatırıma isPrimary: false yazılır — hiçbir kasa işaretli gelmez',
+        () {
+      // `true` ya da tahmin (ör. "en dolu kasa ana kasadır") kullanıcının
+      // hiç yapmadığı bir seçimi yedekten geri getirmek olurdu.
+      final result = migrateBackup(v15Backup(), targetVersion: 16);
+      final investments =
+          (result['investments'] as List).cast<Map<String, dynamic>>();
+      expect(investments, hasLength(2));
+      for (final i in investments) {
+        expect(i, containsPair('isPrimary', false));
+      }
+      expect(investments.map((i) => i['unbookedCost']), [0, 120.5]);
+    });
+
+    test('dönüşüm SAFTIR; işlemlere dokunulmaz', () {
+      final source = v15Backup();
+      final result = migrateBackup(source, targetVersion: 16);
+
+      expect(result['transactions'], source['transactions']);
+      expect(source['version'], 15);
+      final sourceCard =
+          ((source['wallets'] as List)[1] as Map)['creditCard'] as Map;
+      expect(sourceCard.containsKey('dueOffsetDays'), isFalse);
+      expect(
+          (source['investments'] as List).first, isNot(contains('isPrimary')));
+    });
+
+    test('cüzdan ya da yatırım listesi yoksa çökmez', () {
+      final result = migrateBackup(
+        {'version': 15, 'users': <String, dynamic>{}},
+        targetVersion: 16,
+      );
+      expect(result['wallets'], isEmpty);
+      expect(result['investments'], isEmpty);
+    });
+
+    test('v9 yedeği YEDİ adımda güncele yükselir', () {
+      final result = migrateBackup(
+        v9Backup(),
+        targetVersion: DataSerializationService.schemaVersion,
+      );
+      expect(result['version'], 16);
+      final wallet = (result['wallets'] as List).first as Map;
+      // v9'da kart kavramı yoktu: creditCard null, içine alan da yazılmaz.
+      expect(wallet['creditCard'], isNull);
+      final tx = (result['transactions'] as List).first as Map;
       expect(tx, containsPair('installmentGroupId', null));
     });
   });

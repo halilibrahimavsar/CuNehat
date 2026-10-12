@@ -100,8 +100,10 @@ void main() {
         'quantity': 0.05,
         'currency': 'USD',
         'unbookedCost': 400.0,
+        'isPrimary': true,
       };
       final model = InvestmentModel.fromJson('inv_1', json);
+      expect(model.isPrimary, isTrue);
       expect(model.id, 'inv_1');
       expect(model.name, 'Bitcoin');
       expect(model.type, InvestmentType.custom);
@@ -110,6 +112,34 @@ void main() {
       expect(model.unbookedCost, 400.0);
       // Deftere işlenmiş kısım: 1.000 - 400.
       expect(model.bookedCost, 600.0);
+    });
+
+    test('fromJson isPrimary eksikse REDDEDER (v15 yedeği migrasyonla gelir)',
+        () {
+      // Sıkı cast: alan eksikse sessizce `false` saymak yerine gürültülü
+      // hata. Eski yedekler buraya `_v15ToV16`'dan geçip `false` ile gelir.
+      final json = {
+        'userId': 'user_1',
+        'walletId': 'wallet_1',
+        'name': 'Bitcoin',
+        'amount': 1000.0,
+        'currentValue': 1200.0,
+        'type': 'InvestmentType.custom',
+        'color': Colors.orange.toARGB32(),
+        'dateAdded': date.toIso8601String(),
+        'unbookedCost': 0.0,
+      };
+      expect(() => InvestmentModel.fromJson('inv_1', json), throwsA(anything));
+    });
+
+    test('toJson isPrimary yazar; copyWith ve clearGoal onu korur', () {
+      final pot = InvestmentModel.fromEntity(
+          testEntity.copyWith(isPrimary: true, goalId: 'g1'));
+      expect(pot.toJson()['isPrimary'], isTrue);
+      expect(pot.copyWith(name: 'Yeni ad').isPrimary, isTrue);
+      expect(pot.clearGoal().isPrimary, isTrue);
+      expect(InvestmentModel.fromEntity(testEntity).toJson()['isPrimary'],
+          isFalse);
     });
 
     test('fromJson unbookedCost eksikse REDDEDER (şema sürüm kapılı)', () {

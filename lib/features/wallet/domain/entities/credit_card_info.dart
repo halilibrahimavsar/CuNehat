@@ -85,6 +85,23 @@ class CreditCardInfo extends Equatable {
   /// Kullanıcının girdiği son ekstre özeti; hiç girilmediyse `null`.
   final CardStatement? lastStatement;
 
+  /// Son ödeme, kesimden kaç GÜN sonra (1–31); `null` → ayarlanmamış.
+  ///
+  /// Bankaların çoğu son ödemeyi sabit bir takvim günü olarak değil
+  /// "kesimden N gün sonra" olarak belirler; [dueDay] ay uzunluğu değişince
+  /// bir gün kayabiliyordu. Verildiyse [dueDay]'in önüne geçer (bkz.
+  /// `CardCycle.dueFor`). Şema 16.
+  final int? dueOffsetDays;
+
+  /// Aylık AKDİ faiz oranı (yüzde, ör. 4.25); bilinmiyorsa `null`.
+  ///
+  /// Yalnız TAHMİN için (bkz. `estimateCardInterest`): deftere faiz
+  /// yazılmaz, gerçek faiz ekstreden gelir. Şema 16.
+  final double? monthlyInterestRate;
+
+  /// Aylık GECİKME faiz oranı (yüzde); bilinmiyorsa `null`. Şema 16.
+  final double? lateInterestRate;
+
   const CreditCardInfo({
     this.bankName,
     this.last4,
@@ -93,6 +110,9 @@ class CreditCardInfo extends Equatable {
     required this.dueDay,
     this.paymentWalletId,
     this.lastStatement,
+    this.dueOffsetDays,
+    this.monthlyInterestRate,
+    this.lateInterestRate,
   });
 
   /// Bankaların çoğunda son ödeme kesimden 10 gün sonradır (BDDK: en az 10).
@@ -111,11 +131,17 @@ class CreditCardInfo extends Equatable {
     int? dueDay,
     String? paymentWalletId,
     CardStatement? lastStatement,
+    int? dueOffsetDays,
+    double? monthlyInterestRate,
+    double? lateInterestRate,
     bool clearBankName = false,
     bool clearLast4 = false,
     bool clearLimit = false,
     bool clearPaymentWalletId = false,
     bool clearLastStatement = false,
+    bool clearDueOffsetDays = false,
+    bool clearMonthlyInterestRate = false,
+    bool clearLateInterestRate = false,
   }) {
     return CreditCardInfo(
       bankName: clearBankName ? null : (bankName ?? this.bankName),
@@ -128,6 +154,14 @@ class CreditCardInfo extends Equatable {
           : (paymentWalletId ?? this.paymentWalletId),
       lastStatement:
           clearLastStatement ? null : (lastStatement ?? this.lastStatement),
+      dueOffsetDays:
+          clearDueOffsetDays ? null : (dueOffsetDays ?? this.dueOffsetDays),
+      monthlyInterestRate: clearMonthlyInterestRate
+          ? null
+          : (monthlyInterestRate ?? this.monthlyInterestRate),
+      lateInterestRate: clearLateInterestRate
+          ? null
+          : (lateInterestRate ?? this.lateInterestRate),
     );
   }
 
@@ -140,5 +174,8 @@ class CreditCardInfo extends Equatable {
         dueDay,
         paymentWalletId,
         lastStatement,
+        dueOffsetDays,
+        monthlyInterestRate,
+        lateInterestRate,
       ];
 }

@@ -156,6 +156,74 @@ void main() {
       });
     });
 
+    group('son ödeme: kullanıcının "kesimden N gün sonra" ayarı (şema 16)', () {
+      CardStatement statement(DateTime closing, DateTime due) => CardStatement(
+            closingDate: closing,
+            dueDate: due,
+            statementBalance: 100,
+            recordedAt: closing,
+          );
+
+      test('ayar sabit günün önüne geçer; 31 çeken ayda kaymaz', () {
+        // Sabit gün (kesim 25 / son ödeme 5) Ağustos'tan sonra 11 gün,
+        // Eylül'den sonra 10 gün veriyordu.
+        final card = _card(closing: 25, due: 5).copyWith(dueOffsetDays: 10);
+        final cycle = CardCycle(card);
+        expect(cycle.effectiveDueOffsetDays, 10);
+        expect(cycle.dueFor(DateTime(2026, 8, 25)), DateTime(2026, 9, 4));
+        expect(cycle.dueFor(DateTime(2026, 9, 25)), DateTime(2026, 10, 5));
+        expect(cycle.dueFor(DateTime(2027, 2, 25)), DateTime(2027, 3, 7));
+      });
+
+      test('bankanın O KESİM için beyanı ayarın da önündedir', () {
+        final card = _card(
+          closing: 25,
+          due: 5,
+          statement: statement(DateTime(2026, 9, 25), DateTime(2026, 10, 7)),
+        ).copyWith(dueOffsetDays: 10);
+        // Beyan edilen kesim: bankanın tarihi (hafta sonu kaydırması).
+        expect(CardCycle(card).dueFor(DateTime(2026, 9, 25)),
+            DateTime(2026, 10, 7));
+      });
+
+      test('ayar, başka kesimin beyanından TÜRETİLEN kuralı ezer', () {
+        // Beyan 15 gün gösteriyor; kullanıcı açıkça 10 dedi.
+        final card = _card(
+          closing: 10,
+          due: 25,
+          statement: statement(DateTime(2026, 9, 10), DateTime(2026, 9, 25)),
+        ).copyWith(dueOffsetDays: 10);
+        expect(CardCycle(card).declaredDueOffsetDays, 15);
+        expect(CardCycle(card).effectiveDueOffsetDays, 10);
+        expect(CardCycle(card).dueFor(DateTime(2026, 10, 10)),
+            DateTime(2026, 10, 20));
+      });
+
+      test('ayar yokken eski davranış: türetilen kural, o da yoksa sabit gün',
+          () {
+        expect(CardCycle(_card(closing: 25, due: 5)).effectiveDueOffsetDays,
+            isNull);
+        expect(
+            CardCycle(_card(closing: 25, due: 5)).dueFor(DateTime(2026, 9, 25)),
+            DateTime(2026, 10, 5));
+      });
+
+      test('anlamsız ayar (0, 32) yok sayılır', () {
+        for (final bad in [0, -3, 32]) {
+          final card = _card(closing: 25, due: 5).copyWith(dueOffsetDays: bad);
+          expect(CardCycle(card).effectiveDueOffsetDays, isNull);
+          expect(CardCycle(card).dueFor(DateTime(2026, 9, 25)),
+              DateTime(2026, 10, 5));
+        }
+      });
+
+      test('copyWith: clearDueOffsetDays ayarı kaldırır, null KORUR', () {
+        final card = _card().copyWith(dueOffsetDays: 12);
+        expect(card.copyWith().dueOffsetDays, 12);
+        expect(card.copyWith(clearDueOffsetDays: true).dueOffsetDays, isNull);
+      });
+    });
+
     test('dönem: önceki kesimin ERTESİ günü … kesim günü', () {
       final p = CardCycle(_card()).periodEndingAt(DateTime(2026, 9, 15));
       expect(p.start, DateTime(2026, 8, 16));

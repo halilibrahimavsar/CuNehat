@@ -32,13 +32,14 @@ class InvestmentModelAdapter extends TypeAdapter<InvestmentModel> {
       goalId: fields[16] as String?,
       currency: fields[14] as String?,
       unbookedCost: fields[15] as double,
+      isPrimary: fields[17] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, InvestmentModel obj) {
     writer
-      ..writeByte(15)
+      ..writeByte(16)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -68,7 +69,9 @@ class InvestmentModelAdapter extends TypeAdapter<InvestmentModel> {
       ..writeByte(15)
       ..write(obj.unbookedCost)
       ..writeByte(16)
-      ..write(obj.goalId);
+      ..write(obj.goalId)
+      ..writeByte(17)
+      ..write(obj.isPrimary);
   }
 
   @override

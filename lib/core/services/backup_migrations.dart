@@ -37,6 +37,7 @@ const Map<int, BackupMigration> backupMigrations = {
   12: _v12ToV13,
   13: _v13ToV14,
   14: _v14ToV15,
+  15: _v15ToV16,
 };
 
 /// [raw]'ı [targetVersion]'a yükseltir.
@@ -189,6 +190,47 @@ Map<String, dynamic> _v14ToV15(Map<String, dynamic> raw) {
           'installmentNo': null,
           'installmentCount': null,
         },
+    ],
+  };
+}
+
+/// v15 → v16: kredi kartına `dueOffsetDays`, `monthlyInterestRate`,
+/// `lateInterestRate`; yatırımlara `isPrimary` (ana kasa).
+///
+/// v15'te son ödeme yalnız sabit bir takvim günüydü, kartın faiz oranı
+/// saklanmıyordu ve "ana kasa" kavramı yoktu. Kart alanlarında `null`
+/// ("ayarlanmamış") ve yatırımlarda `false` tam olarak bunu söyler: eski
+/// yedekten dönen kart bugünkü gibi davranır, hiçbir kasa işaretli gelmez
+/// (varsayılan kaynak eskisi gibi en dolu kasadır).
+///
+/// Kartı OLMAYAN cüzdanın `creditCard`'ı `null` kalır. Alanlar AÇIKÇA
+/// yazılıyor (bkz. `_v12ToV13`).
+Map<String, dynamic> _v15ToV16(Map<String, dynamic> raw) {
+  final wallets = (raw['wallets'] as List?) ?? const [];
+  final investments = (raw['investments'] as List?) ?? const [];
+  return {
+    ...raw,
+    'version': 16,
+    'wallets': [
+      for (final w in wallets)
+        () {
+          final wallet = Map<String, dynamic>.from(w as Map);
+          final card = wallet['creditCard'];
+          if (card == null) return wallet;
+          return {
+            ...wallet,
+            'creditCard': {
+              ...Map<String, dynamic>.from(card as Map),
+              'dueOffsetDays': null,
+              'monthlyInterestRate': null,
+              'lateInterestRate': null,
+            },
+          };
+        }(),
+    ],
+    'investments': [
+      for (final i in investments)
+        {...Map<String, dynamic>.from(i as Map), 'isPrimary': false},
     ],
   };
 }

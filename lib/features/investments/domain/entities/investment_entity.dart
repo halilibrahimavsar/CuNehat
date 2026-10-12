@@ -61,6 +61,12 @@ class InvestmentEntity extends Equatable {
   /// cüzdandan hiç çıkmadığı için geri de verilemez.
   final double unbookedCost;
 
+  /// ANA KASA: yalnız [InvestmentType.cash] kayıtlarında anlamlıdır. Varlık
+  /// alımında varsayılan kaynak, satışta varsayılan hedef bu kasadır (yoksa
+  /// en dolu kasa). Cüzdan başına en çok BİR kasa işaretlidir; tekilliği
+  /// `InvestmentBloc` korur (`SetPrimaryPotEvent`). Şema 16.
+  final bool isPrimary;
+
   const InvestmentEntity({
     required this.id,
     required this.userId,
@@ -77,6 +83,7 @@ class InvestmentEntity extends Equatable {
     this.goalId,
     this.currency,
     this.unbookedCost = 0,
+    this.isPrimary = false,
   });
 
   InvestmentEntity copyWith({
@@ -95,6 +102,7 @@ class InvestmentEntity extends Equatable {
     String? goalId,
     String? currency,
     double? unbookedCost,
+    bool? isPrimary,
   }) {
     return InvestmentEntity(
       id: id ?? this.id,
@@ -112,6 +120,7 @@ class InvestmentEntity extends Equatable {
       goalId: goalId ?? this.goalId,
       currency: currency ?? this.currency,
       unbookedCost: unbookedCost ?? this.unbookedCost,
+      isPrimary: isPrimary ?? this.isPrimary,
     );
   }
 
@@ -144,6 +153,7 @@ class InvestmentEntity extends Equatable {
         goalId: null,
         currency: currency,
         unbookedCost: unbookedCost,
+        isPrimary: isPrimary,
       );
 
   /// Birim başına güncel değer; miktar takibi yoksa null.
@@ -171,5 +181,6 @@ class InvestmentEntity extends Equatable {
         goalId,
         currency,
         unbookedCost,
+        isPrimary,
       ];
 }

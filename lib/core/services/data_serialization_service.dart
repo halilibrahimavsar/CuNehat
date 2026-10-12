@@ -172,7 +172,12 @@ class DataSerializationService {
   /// `installmentNo`, `installmentCount`) — kartla taksitli alışverişin
   /// aylık satırları birbirine bağlı. Taksitsiz kayıtta üçü de `null`; v14
   /// yedekleri `_v14ToV15` ile açıkça `null` alır.
-  static const int schemaVersion = 15;
+  ///
+  /// v16 (2026-10-12): kredi kartına `dueOffsetDays` (son ödeme = kesimden N
+  /// gün sonra), `monthlyInterestRate` ve `lateInterestRate` (yalnız tahmin
+  /// için); yatırımlara `isPrimary` (ana kasa). Kart alanları ayarlanmamışken
+  /// `null`, `isPrimary` `false`; v15 yedekleri `_v15ToV16` ile açıkça alır.
+  static const int schemaVersion = 16;
 
   final HiveInterface _hive;
   final ReceiptStorageService _receiptStorage;

@@ -310,6 +310,39 @@ void main() {
       expect(back.creditCard!.lastStatement!.minimumPayment, 4938.27);
     });
 
+    test('şema 16 alanları (gün farkı, faiz oranları) gidiş-dönüşte korunur',
+        () {
+      final rich = entity.copyWith(
+        creditCard: card.copyWith(
+          dueOffsetDays: 10,
+          monthlyInterestRate: 4.25,
+          lateInterestRate: 4.55,
+        ),
+      );
+      final json = WalletModel.fromEntity(rich).toJson();
+      final cardJson = json['creditCard'] as Map;
+      expect(cardJson['dueOffsetDays'], 10);
+      expect(cardJson['monthlyInterestRate'], 4.25);
+      expect(cardJson['lateInterestRate'], 4.55);
+
+      final back = WalletModel.fromJson('card-1', json).toEntity();
+      expect(back, rich);
+    });
+
+    test('şema 16 alanları ayarlanmamışken null yazılır ve null okunur', () {
+      final cardJson =
+          WalletModel.fromEntity(entity).toJson()['creditCard'] as Map;
+      expect(cardJson, containsPair('dueOffsetDays', null));
+      expect(cardJson, containsPair('monthlyInterestRate', null));
+      expect(cardJson, containsPair('lateInterestRate', null));
+    });
+
+    test('sıkı cast: gün farkı metinse gürültülü hata', () {
+      final json = WalletModel.fromEntity(entity).toJson();
+      (json['creditCard'] as Map)['dueOffsetDays'] = '10';
+      expect(() => WalletModel.fromJson('card-1', json), throwsA(anything));
+    });
+
     test('düz cüzdan: creditCard null yazılır ve null okunur', () {
       final plain = entity.copyWith(clearCreditCard: true);
       final json = WalletModel.fromEntity(plain).toJson();

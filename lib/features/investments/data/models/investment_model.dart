@@ -21,6 +21,7 @@ class InvestmentModel extends InvestmentEntity {
     super.goalId,
     super.currency,
     super.unbookedCost,
+    super.isPrimary,
   });
 
   // Create Investment from firestore document
@@ -42,6 +43,8 @@ class InvestmentModel extends InvestmentEntity {
       goalId: json['goalId'] as String?,
       currency: json['currency'] as String?,
       unbookedCost: (json['unbookedCost'] as num).toDouble(),
+      // Sıkı cast: v15 ve öncesi yedekler `_v15ToV16` ile yükseltilir.
+      isPrimary: json['isPrimary'] as bool,
     );
   }
 
@@ -62,6 +65,7 @@ class InvestmentModel extends InvestmentEntity {
           goalId: entity.goalId,
           currency: entity.currency,
           unbookedCost: entity.unbookedCost,
+          isPrimary: entity.isPrimary,
         );
 
   Map<String, dynamic> toJson() {
@@ -81,6 +85,7 @@ class InvestmentModel extends InvestmentEntity {
       'goalId': goalId,
       'currency': currency,
       'unbookedCost': unbookedCost,
+      'isPrimary': isPrimary,
     };
   }
 
@@ -102,6 +107,7 @@ class InvestmentModel extends InvestmentEntity {
     String? goalId,
     String? currency,
     double? unbookedCost,
+    bool? isPrimary,
   }) {
     return InvestmentModel(
       id: id ?? this.id,
@@ -119,6 +125,7 @@ class InvestmentModel extends InvestmentEntity {
       goalId: goalId ?? this.goalId,
       currency: currency ?? this.currency,
       unbookedCost: unbookedCost ?? this.unbookedCost,
+      isPrimary: isPrimary ?? this.isPrimary,
     );
   }
 
@@ -169,8 +176,14 @@ class InvestmentModel extends InvestmentEntity {
   double get unbookedCost => super.unbookedCost;
 
   /// 11 (targetAmount) ve 13 (goalCategory) EMEKLİ: hedef artık ayrı kayıt
-  /// (`GoalModel`, typeId 16). Sıradaki alan indeksi 17.
+  /// (`GoalModel`, typeId 16). Sıradaki alan indeksi için CLAUDE.md'ye bak.
   @override
   @HiveField(16)
   String? get goalId => super.goalId;
+
+  /// Şema 16. Eski kayıtta YOKTUR: okuma `false`a düşer (bkz.
+  /// `SafeInvestmentModelAdapter`).
+  @override
+  @HiveField(17)
+  bool get isPrimary => super.isPrimary;
 }

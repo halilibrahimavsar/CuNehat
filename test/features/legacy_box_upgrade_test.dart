@@ -197,6 +197,83 @@ void main() {
     expect(back.creditCard?.toEntity(), card.toEntity());
   });
 
+  test('kart: v15 biçimli (7 alanlı) kart bilgisi açılır, yeni alanlar null',
+      () async {
+    // 12 Eki 2026 öncesinde yazılmış kart cüzdanı: alan 7–9 (gün farkı,
+    // faiz oranları) karede YOK. İç içe kayıt okunamazsa cüzdan kutusu
+    // açılmaz — uygulama açılmaz.
+    final back = await upgrade(
+      'wallets',
+      WalletModel(
+        id: 'card',
+        userId: 'u',
+        name: 'Bonus',
+        balance: -3700.0,
+        debt: 0,
+        credit: 0,
+        investment: 0,
+        colorHex: '0xFF4CAF50',
+        iconName: 'credit_card',
+        createdAt: DateTime(2026, 9, 1),
+        openingBalance: -3700.0,
+        creditCard: const CreditCardInfoModel(
+          bankName: 'QNB',
+          last4: '4321',
+          limit: 20000,
+          closingDay: 25,
+          dueDay: 5,
+          paymentWalletId: 'w1',
+          // Eski yazıcı bunları YAZMAZ: geri okunursa yazıcı hatalıdır.
+          dueOffsetDays: 99,
+          monthlyInterestRate: 99,
+          lateInterestRate: 99,
+        ),
+      ),
+      [AdapterRegistration.of(_V15CardInfoWriter())],
+    );
+
+    final card = back.creditCard!;
+    expect(card.bankName, 'QNB');
+    expect(card.last4, '4321');
+    expect(card.limit, 20000);
+    expect(card.closingDay, 25);
+    expect(card.dueDay, 5);
+    expect(card.paymentWalletId, 'w1');
+    expect(card.dueOffsetDays, isNull, reason: 'alan 7 eski kayıtta YOK');
+    expect(card.monthlyInterestRate, isNull, reason: 'alan 8 YOK');
+    expect(card.lateInterestRate, isNull, reason: 'alan 9 YOK');
+  });
+
+  test('yatırım: v15 biçimli (isPrimary yok) kasa açılır, ana kasa DEĞİL',
+      () async {
+    final back = await upgrade(
+      'investments_box',
+      InvestmentModel(
+        id: 'pot',
+        userId: 'u',
+        walletId: 'w1',
+        name: 'Acil durum',
+        amount: 1500.0,
+        currentValue: 1500.0,
+        type: InvestmentType.cash,
+        color: const Color(0xFF26A69A),
+        dateAdded: DateTime(2026, 9, 1),
+        goalId: 'g1',
+        unbookedCost: 250.0,
+        // Eski yazıcı bunu YAZMAZ.
+        isPrimary: true,
+      ),
+      [AdapterRegistration.of(_V15InvestmentWriter())],
+    );
+
+    expect(back.isPrimary, isFalse, reason: 'alan 17 eski kayıtta YOK');
+    expect(back.name, 'Acil durum');
+    expect(back.amount, 1500.0);
+    expect(back.unbookedCost, 250.0);
+    expect(back.goalId, 'g1');
+    expect(back.type, InvestmentType.cash);
+  });
+
   test('işlem: v11 öncesi 11 alanlı kayıt açılır, yeni alanlar null gelir',
       () async {
     // 23 Eyl 2026: testerların defteri bu biçimde duruyor. Üç yeni alan
@@ -786,5 +863,79 @@ class _LegacyRecurringWriter extends TypeAdapter<RecurringTransactionModel> {
       ..write(obj.nextExecutionDate)
       ..writeByte(9)
       ..write(obj.isActive);
+  }
+}
+
+/// Şema 15'in kart bilgisi yazıcısı: 7 alan (0–6); 7–9 YOK.
+class _V15CardInfoWriter extends TypeAdapter<CreditCardInfoModel> {
+  @override
+  final int typeId = 17;
+
+  @override
+  CreditCardInfoModel read(BinaryReader reader) => throw UnimplementedError();
+
+  @override
+  void write(BinaryWriter writer, CreditCardInfoModel obj) {
+    writer
+      ..writeByte(7)
+      ..writeByte(0)
+      ..write(obj.bankName)
+      ..writeByte(1)
+      ..write(obj.last4)
+      ..writeByte(2)
+      ..write(obj.limit)
+      ..writeByte(3)
+      ..write(obj.closingDay)
+      ..writeByte(4)
+      ..write(obj.dueDay)
+      ..writeByte(5)
+      ..write(obj.paymentWalletId)
+      ..writeByte(6)
+      ..write(obj.lastStatement);
+  }
+}
+
+/// Şema 15'in yatırım yazıcısı: 15 alan; 17 (isPrimary) YOK.
+class _V15InvestmentWriter extends TypeAdapter<InvestmentModel> {
+  @override
+  final int typeId = 4;
+
+  @override
+  InvestmentModel read(BinaryReader reader) => throw UnimplementedError();
+
+  @override
+  void write(BinaryWriter writer, InvestmentModel obj) {
+    writer
+      ..writeByte(15)
+      ..writeByte(0)
+      ..write(obj.id)
+      ..writeByte(1)
+      ..write(obj.userId)
+      ..writeByte(2)
+      ..write(obj.walletId)
+      ..writeByte(3)
+      ..write(obj.name)
+      ..writeByte(4)
+      ..write(obj.amount)
+      ..writeByte(5)
+      ..write(obj.currentValue)
+      ..writeByte(6)
+      ..write(obj.type)
+      ..writeByte(7)
+      ..write(obj.color)
+      ..writeByte(8)
+      ..write(obj.dateAdded)
+      ..writeByte(9)
+      ..write(obj.symbol)
+      ..writeByte(10)
+      ..write(obj.returnRate)
+      ..writeByte(12)
+      ..write(obj.quantity)
+      ..writeByte(14)
+      ..write(obj.currency)
+      ..writeByte(15)
+      ..write(obj.unbookedCost)
+      ..writeByte(16)
+      ..write(obj.goalId);
   }
 }

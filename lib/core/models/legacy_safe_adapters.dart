@@ -57,7 +57,8 @@ Map<int, dynamic> readFieldMap(BinaryReader reader) {
   };
 }
 
-/// `InvestmentModel` — alan 15 (`unbookedCost`) v8'de (24 Ağu 2026) geldi.
+/// `InvestmentModel` — alan 15 (`unbookedCost`) v8'de (24 Ağu 2026), alan 17
+/// (`isPrimary`) v16'da (12 Eki 2026) geldi.
 class SafeInvestmentModelAdapter extends InvestmentModelAdapter {
   @override
   InvestmentModel read(BinaryReader reader) {
@@ -79,6 +80,8 @@ class SafeInvestmentModelAdapter extends InvestmentModelAdapter {
       currency: fields[14] as String?,
       // Kavram yokken hiçbir maliyet "işlenmemiş" değildi: 0 doğru varsayılan.
       unbookedCost: fields[15] as double? ?? 0,
+      // Ana kasa kavramı yokken hiçbir kasa işaretli değildi.
+      isPrimary: fields[17] as bool? ?? false,
     );
   }
 }

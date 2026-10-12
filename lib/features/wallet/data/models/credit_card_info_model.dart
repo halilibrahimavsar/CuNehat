@@ -73,6 +73,12 @@ class CreditCardInfoModel {
   final String? paymentWalletId;
   final CardStatementModel? lastStatement;
 
+  // Şema 16 (alan 7–9). Üçü de nullable: eski kayıtta YOKTUR ve `null`
+  // "ayarlanmamış" demektir — bugünkü davranış aynen sürer.
+  final int? dueOffsetDays;
+  final double? monthlyInterestRate;
+  final double? lateInterestRate;
+
   const CreditCardInfoModel({
     this.bankName,
     this.last4,
@@ -81,6 +87,9 @@ class CreditCardInfoModel {
     required this.dueDay,
     this.paymentWalletId,
     this.lastStatement,
+    this.dueOffsetDays,
+    this.monthlyInterestRate,
+    this.lateInterestRate,
   });
 
   factory CreditCardInfoModel.fromEntity(CreditCardInfo e) =>
@@ -94,6 +103,9 @@ class CreditCardInfoModel {
         lastStatement: e.lastStatement == null
             ? null
             : CardStatementModel.fromEntity(e.lastStatement!),
+        dueOffsetDays: e.dueOffsetDays,
+        monthlyInterestRate: e.monthlyInterestRate,
+        lateInterestRate: e.lateInterestRate,
       );
 
   CreditCardInfo toEntity() => CreditCardInfo(
@@ -104,6 +116,9 @@ class CreditCardInfoModel {
         dueDay: dueDay,
         paymentWalletId: paymentWalletId,
         lastStatement: lastStatement?.toEntity(),
+        dueOffsetDays: dueOffsetDays,
+        monthlyInterestRate: monthlyInterestRate,
+        lateInterestRate: lateInterestRate,
       );
 
   factory CreditCardInfoModel.fromJson(Map<String, dynamic> json) =>
@@ -118,6 +133,9 @@ class CreditCardInfoModel {
             ? null
             : CardStatementModel.fromJson(
                 Map<String, dynamic>.from(json['lastStatement'] as Map)),
+        dueOffsetDays: json['dueOffsetDays'] as int?,
+        monthlyInterestRate: (json['monthlyInterestRate'] as num?)?.toDouble(),
+        lateInterestRate: (json['lateInterestRate'] as num?)?.toDouble(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -128,6 +146,9 @@ class CreditCardInfoModel {
         'dueDay': dueDay,
         'paymentWalletId': paymentWalletId,
         'lastStatement': lastStatement?.toJson(),
+        'dueOffsetDays': dueOffsetDays,
+        'monthlyInterestRate': monthlyInterestRate,
+        'lateInterestRate': lateInterestRate,
       };
 }
 
@@ -150,13 +171,17 @@ class CreditCardInfoModelAdapter extends TypeAdapter<CreditCardInfoModel> {
       dueDay: fields[4] as int,
       paymentWalletId: fields[5] as String?,
       lastStatement: fields[6] as CardStatementModel?,
+      // 7–9 şema 16'da geldi: eski (7 alanlı) kayıtta yoktur → null.
+      dueOffsetDays: fields[7] as int?,
+      monthlyInterestRate: (fields[8] as num?)?.toDouble(),
+      lateInterestRate: (fields[9] as num?)?.toDouble(),
     );
   }
 
   @override
   void write(BinaryWriter writer, CreditCardInfoModel obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.bankName)
       ..writeByte(1)
@@ -170,7 +195,13 @@ class CreditCardInfoModelAdapter extends TypeAdapter<CreditCardInfoModel> {
       ..writeByte(5)
       ..write(obj.paymentWalletId)
       ..writeByte(6)
-      ..write(obj.lastStatement);
+      ..write(obj.lastStatement)
+      ..writeByte(7)
+      ..write(obj.dueOffsetDays)
+      ..writeByte(8)
+      ..write(obj.monthlyInterestRate)
+      ..writeByte(9)
+      ..write(obj.lateInterestRate);
   }
 }
 

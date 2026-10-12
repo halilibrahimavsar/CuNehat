@@ -49,23 +49,35 @@ class CardCycle {
   /// 31 çeken aylardan sonra bir gün GEÇ gösteriyordu; son ödeme gününde
   /// bir gün geç kalmak gecikme faizi demektir.
   ///
-  /// Hiç beyan yoksa: kesimden SONRAKİ ilk `dueDay` (kesim 15 / son ödeme 25
-  /// → aynı ay; kesim 25 / son ödeme 5 → ertesi ay).
+  /// Öncelik: (1) bankanın O KESİM için beyanı → (2) kullanıcının ayarı
+  /// ([CreditCardInfo.dueOffsetDays], "kesimden N gün sonra") → (3) başka
+  /// bir kesimin beyanından türetilen kural → (4) sabit `dueDay`: kesimden
+  /// SONRAKİ ilk o gün (kesim 15 / son ödeme 25 → aynı ay; kesim 25 / son
+  /// ödeme 5 → ertesi ay).
+  ///
+  /// Ayar türetilen kuralın ÖNÜNDE: kullanıcı kuralı açıkça söylediyse,
+  /// hafta sonuna denk gelmiş tek bir beyandan çıkarılan fark onu ezmemeli.
   DateTime dueFor(DateTime closing) {
     final c = dateOnly(closing);
     final declared = card.lastStatement;
-    if (declared != null) {
-      if (dateOnly(declared.closingDate) == c) {
-        return dateOnly(declared.dueDate);
-      }
-      final offset = declaredDueOffsetDays;
-      if (offset != null) return DateTime(c.year, c.month, c.day + offset);
+    if (declared != null && dateOnly(declared.closingDate) == c) {
+      return dateOnly(declared.dueDate);
     }
+    final offset = effectiveDueOffsetDays;
+    if (offset != null) return DateTime(c.year, c.month, c.day + offset);
     final sameMonth =
         DateTime(c.year, c.month, _clampDay(c.year, c.month, card.dueDay));
     if (sameMonth.isAfter(c)) return sameMonth;
     final (y, m) = _normalize(c.year, c.month + 1);
     return DateTime(y, m, _clampDay(y, m, card.dueDay));
+  }
+
+  /// Geçerli "kesimden kaç gün sonra" kuralı: kullanıcının ayarı, yoksa son
+  /// beyandan türetilen; ikisi de yoksa `null` (sabit `dueDay` kullanılır).
+  int? get effectiveDueOffsetDays {
+    final set = card.dueOffsetDays;
+    if (set != null && set >= 1 && set <= 31) return set;
+    return declaredDueOffsetDays;
   }
 
   /// Son beyandan türetilen "kesimden kaç gün sonra" kuralı; beyan yoksa ya
@@ -209,9 +221,8 @@ class CardStatus {
   /// Dönem borcundan kalan (ödemeler düşülmüş). Dönem borcu bilinmiyorsa
   /// ([statementKnown] false) 0: tahmin, ödeme çağrısı ya da gecikme
   /// üretmemeli.
-  double get remainingStatementDebt => statementKnown
-      ? _positive(statementDebt - paidSinceClosing)
-      : 0;
+  double get remainingStatementDebt =>
+      statementKnown ? _positive(statementDebt - paidSinceClosing) : 0;
 
   /// Asgari ödemeden kalan; asgari beyan edilmediyse `null`.
   double? get remainingMinimum {
@@ -320,10 +331,10 @@ DateTime cardPaymentDate(TransactionEntity t, CreditCardInfo card) {
   final cycle = CardCycle(card);
   final closing = cycle.periodContaining(t.date).end;
   final declared = card.lastStatement;
-  final due = declared != null &&
-          CardCycle.dateOnly(declared.closingDate) == closing
-      ? declared.dueDate
-      : cycle.dueFor(closing);
+  final due =
+      declared != null && CardCycle.dateOnly(declared.closingDate) == closing
+          ? declared.dueDate
+          : cycle.dueFor(closing);
   return DateTime(due.year, due.month, due.day, t.date.hour, t.date.minute,
       t.date.second, t.date.millisecond);
 }
