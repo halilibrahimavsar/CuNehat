@@ -979,6 +979,87 @@ void main() {
       expect(marked.relocateExisting, isFalse);
     });
   });
+
+  group('bozuk okunan Türkçe harfler (yedek yazı tipi → "kod + boşluk")', () {
+    // Ölçüm (12 Eki 2026, QNB kapanmış kart ekstresi): Türkçe'ye özgü harfler
+    // Unicode karşılığı olmayan bir yedek yazı tipinde; okuyucu harf yerine
+    // glifin kodunu + boşluk döndürüyor ve kod BELGEDEN BELGEYE değişiyor
+    // (aynı "İ": bir dosyada "9 ", ötekinde "8 "). Açıklama onarılamaz; ama
+    // aynı harcamanın düzgün ve bozuk yazımı tekrar tespitinde TEK anahtara
+    // inmeli — yoksa kesin tekrar "yaklaşık"a düşer.
+    final day = DateTime(2026, 9, 14);
+
+    void expectSameKey(String proper, String garbled) =>
+        expect(normalizeTitleForDedup(garbled), normalizeTitleForDedup(proper),
+            reason: '"$garbled" ile "$proper" aynı harcama');
+
+    test('kelime içi, kelime başı ve kelime sonu', () {
+      expectSameKey('ORNEK MENZİL GIDA', 'ORNEK MENZ9 L GIDA');
+      expectSameKey('ORNEK İSTANBUL', 'ORNEK 9 STANBUL');
+      expectSameKey('ORNEKBEYLİ İSTANBUL', 'ORNEKBEYL9  9 STANBUL');
+    });
+
+    test('kod belgeye göre değişir: aynı harf başka rakamla da eşleşir', () {
+      expectSameKey('ORNEK MENZİL', 'ORNEK MENZ8 L');
+      expect(normalizeTitleForDedup('ORNEK MENZ8 L'),
+          normalizeTitleForDedup('ORNEK MENZ9 L'));
+    });
+
+    test('küçük harfler ve iki haneli kodlar', () {
+      expectSameKey('Ödeme - Teşekkür Ederiz', '4 deme - Te1 ekk0 r Ederiz');
+      expectSameKey('Ornek Karşılığı', 'Ornek Kar11 ılı12 ı');
+    });
+
+    test('"bilinmeyen karakter" işaretiyle gelen yazım da aynı anahtara iner',
+        () {
+      expectSameKey('ORNEK MENZİL', 'ORNEK MENZ�L');
+    });
+
+    test('elle girilen küçük harfli yazım hâlâ eşleşir (eski güvence)', () {
+      // `foldTr` güvencesi korunur: "IŞIK ELEKTRİK" ~ "Işık Elektrik".
+      expectSameKey('IŞIK ELEKTRİK', 'Işık Elektrik');
+      expectSameKey('IŞIK ELEKTRİK', 'I5 IK ELEKTR9 K');
+    });
+
+    test(
+        'gerçek rakamlar iki yanda aynı biçimde değişir; farklı işyerleri '
+        'karışmaz', () {
+      expect(normalizeTitleForDedup('ORNEK A101 5 ADET'),
+          normalizeTitleForDedup('ORNEK A101 5 ADET'));
+      expect(normalizeTitleForDedup('ORNEK A101'), contains('a101'),
+          reason: 'işyeri adındaki rakamlara dokunulmaz');
+      expect(normalizeTitleForDedup('ORNEK MARKET'),
+          isNot(normalizeTitleForDedup('ORNEK MANAV')));
+      expect(normalizeTitleForDedup('ORNEK 2026 SEZON'), contains('2026'));
+    });
+
+    test(
+        'uçtan uca: dönem içi (düzgün) kaydı olan harcama, kapanmış '
+        'ekstreden (bozuk) gelince KESİN tekrar sayılır', () {
+      final existing = [
+        _tx(day, 248.5, 'ORNEK MENZİL GIDA'),
+        _tx(day, 90, 'ORNEK İSTANBUL BÜFE'),
+      ];
+      final marked = markDuplicateDrafts([
+        _draft(day, 248.5, 'ORNEK MENZ9 L GIDA'),
+        _draft(day, 90, 'ORNEK 9 STANBUL B0 FE'),
+      ], existing);
+
+      for (final d in marked) {
+        expect(d.duplicateOf?.kind, DuplicateKind.exact);
+        expect(d.selected, isFalse);
+      }
+    });
+
+    test('tutar ya da gün farklıysa başlık benzerliği kesin eşleşme YAPMAZ',
+        () {
+      final marked = markDuplicateDrafts(
+        [_draft(day, 250, 'ORNEK MENZ9 L GIDA')],
+        [_tx(day, 248.5, 'ORNEK MENZİL GIDA')],
+      ).single;
+      expect(marked.duplicateOf?.kind, isNot(DuplicateKind.exact));
+    });
+  });
 }
 
 // ===================================================== yaklaşık eşleşme

@@ -69,6 +69,7 @@
 /// işaretler).
 library;
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/core/utils/text_search.dart';
 import 'package:cunehat/features/bank_import/data/category_guesser.dart';
@@ -930,4 +931,41 @@ int _dayNumber(DateTime d) =>
 /// kullanıcı elle "Işık Elektrik" girer (`ışık elektrik`) — iki taraf hiç
 /// eşleşmez ve aynı hareket ikinci kez deftere yazılırdı. (Trim + iç
 /// boşlukların teklenmesi [foldTr]'nin içinde.)
-String _normTitle(String desc) => foldTr(desc);
+///
+/// **Bozuk okunan Türkçe harfler.** Bazı PDF'ler (ölçüldü: QNB kapanmış kart
+/// ekstresi, 12 Eki 2026) Türkçe'ye özgü harfleri ana yazı tipinde değil,
+/// Unicode karşılığı tanımsız bir YEDEK yazı tipinde ("Font3", sıfır
+/// genişlikli glif) taşır. Okuyucu o glifi harf yerine glifin KODUNU ve bir
+/// boşluk döndürür: "MENZİL" → "MENZ9 L", "İSTANBUL" → "9 STANBUL",
+/// "Teşekkür" → "Tesekk0 r". Kodlar belgeden belgeye değişir (aynı "İ" bir
+/// dosyada 9, ötekinde 8; kalın ve düz "Ö" ayrı kodlar) — metinden harfe
+/// SABİT bir eşleme yoktur, o yüzden açıklama onarılmaz.
+///
+/// Aynı harcama dönem içi dökümünde düzgün ("MENZİL"), kapanmış ekstrede
+/// bozuk ("MENZ9 L") geldiği için başlıklar tutmuyor ve kesin tekrar
+/// "yaklaşık"a düşüyordu. Burada iki yazım TEK anahtara iner: Türkçe'ye özgü
+/// her harf ve harfe yapışık her "kod + boşluk" aynı jokere (`?`) çevrilir.
+/// Dönüşüm iki tarafa da uygulandığı için gerçek bir rakam ("5 ADET") iki
+/// yanda aynı biçimde değişir; anahtarın geri kalanı (gün + kuruş) aynı
+/// kaldığından yanlış eşleşme riski yok denecek kadar azdır.
+String _normTitle(String desc) => foldTr(desc.replaceAll(_garbledGlyph, '?'))
+    .replaceAll(_turkishSpecific, '?');
+
+/// Türkçe'ye özgü harfler (yedek yazı tipine düşenler), KATLANDIKTAN sonra:
+/// `foldTr` "İ"yi "i"ye indirir, o yüzden düz "i" de jokere girer — yoksa
+/// "ELEKTRİK" (ekstre) ile "Elektrik" (elle) katlanınca aynıyken bozuk
+/// okunmuş "ELEKTR9 K" ikisinden de ayrı kalırdı. Sondaki, "bilinmeyen
+/// karakter" işaretidir.
+final RegExp _turkishSpecific = RegExp('[iöşğüç�]');
+
+/// Harf yerine okunmuş glif kodu: harfe yapışık 1–2 rakam + TEK boşluk.
+/// Kelime içinde ("MENZ9 L"), kelime başında ("9 STANBUL") ve kelime sonunda
+/// ("BEYL9  9 STANBUL").
+final RegExp _garbledGlyph = RegExp(
+  r'(?<=\p{L})\d{1,2} (?=\p{L}|\s|$)|(?<!\S)\d{1,2} (?=\p{L})',
+  unicode: true,
+);
+
+/// [_normTitle]'ın test kapısı.
+@visibleForTesting
+String normalizeTitleForDedup(String desc) => _normTitle(desc);
