@@ -1,3 +1,4 @@
+import 'package:cunehat/core/l10n/app_strings.dart';
 import 'package:dartz/dartz.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
@@ -19,7 +20,7 @@ class GetLiveQuoteUseCase {
     required String targetCurrency,
   }) async {
     if (symbol.trim().isEmpty) {
-      return Left(ValidationFailure('Sembol boş olamaz'));
+      return Left(ValidationFailure(appStrings.failSymbolEmpty));
     }
     return await repository.getLiveQuote(
       symbol: symbol.trim(),

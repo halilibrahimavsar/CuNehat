@@ -1,3 +1,4 @@
+import 'package:cunehat/core/l10n/app_strings.dart';
 import 'package:dartz/dartz.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/features/budgets/data/datasources/local/budget_local_datasource.dart';
@@ -22,7 +23,7 @@ class BudgetRepositoryImpl implements BudgetRepository {
       return Right(entities);
     } catch (e, st) {
       debugPrint('Budget get error: $e\n$st');
-      return const Left(CacheFailure('Bütçeler yüklenemedi.'));
+      return Left(CacheFailure(appStrings.failBudgetLoad));
     }
   }
 
@@ -34,7 +35,7 @@ class BudgetRepositoryImpl implements BudgetRepository {
       return const Right(null);
     } catch (e, st) {
       debugPrint('Budget save error: $e\n$st');
-      return const Left(CacheFailure('Bütçe kaydedilemedi.'));
+      return Left(CacheFailure(appStrings.failBudgetSave));
     }
   }
 
@@ -46,7 +47,7 @@ class BudgetRepositoryImpl implements BudgetRepository {
       return const Right(null);
     } catch (e, st) {
       debugPrint('Budget delete error: $e\n$st');
-      return const Left(CacheFailure('Bütçe silinemedi.'));
+      return Left(CacheFailure(appStrings.failBudgetDelete));
     }
   }
 
@@ -58,7 +59,7 @@ class BudgetRepositoryImpl implements BudgetRepository {
       return const Right(null);
     } catch (e, st) {
       debugPrint('Budget delete-for-category error: $e\n$st');
-      return const Left(CacheFailure('Bütçe silinemedi.'));
+      return Left(CacheFailure(appStrings.failBudgetDelete));
     }
   }
 
@@ -69,7 +70,7 @@ class BudgetRepositoryImpl implements BudgetRepository {
       return const Right(null);
     } catch (e, st) {
       debugPrint('Budget delete-for-wallet error: $e\n$st');
-      return const Left(CacheFailure('Bütçe silinemedi.'));
+      return Left(CacheFailure(appStrings.failBudgetDelete));
     }
   }
 }

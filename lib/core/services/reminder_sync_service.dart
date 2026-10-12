@@ -1,3 +1,4 @@
+import 'package:cunehat/core/l10n/app_strings.dart';
 import 'dart:async';
 
 import 'package:injectable/injectable.dart';
@@ -145,8 +146,8 @@ class ReminderSyncService {
       // Defter okunamazsa hiçbir hatırlatma kurulamaz; bu, kullanıcının
       // gördüğü "bildirim gelmiyor" tablosunun geçerli bir sebebi. Sessizce
       // yutulursa tanılamada da iz kalmaz.
-      (failure) async =>
-          _notifications.noteFailure('şablonlar okunamadı', failure.message),
+      (failure) async => _notifications.noteFailure(
+          appStrings.reminderNoteTemplatesUnreadable, failure.message),
       (templates) async {
         for (final template in templates) {
           await syncRecurringTemplate(template);
@@ -221,8 +222,8 @@ class ReminderSyncService {
   Future<void> syncAllDebtReminders() async {
     final result = await _debtRepository.getAllDebts();
     await result.fold(
-      (failure) async =>
-          _notifications.noteFailure('borçlar okunamadı', failure.message),
+      (failure) async => _notifications.noteFailure(
+          appStrings.reminderNoteDebtsUnreadable, failure.message),
       (debts) async {
         for (final debt in debts) {
           await syncDebt(debt);
@@ -297,7 +298,7 @@ class ReminderSyncService {
       await syncCard(wallet);
     } catch (e) {
       // Çıplak stream dinleyicisinden çağrılır: kaçan hata aboneliği öldürürdü.
-      _notifications.noteFailure('kart hatırlatması kurulamadı', '$e');
+      _notifications.noteFailure(appStrings.reminderNoteCardFailed, '$e');
     }
   }
 
@@ -309,8 +310,8 @@ class ReminderSyncService {
   Future<void> syncAllCardReminders() async {
     final result = await _walletRepository.getAllWallets();
     await result.fold(
-      (failure) async =>
-          _notifications.noteFailure('cüzdanlar okunamadı', failure.message),
+      (failure) async => _notifications.noteFailure(
+          appStrings.reminderNoteWalletsUnreadable, failure.message),
       (wallets) async {
         for (final w in wallets) {
           if (w.isCreditCard) await syncCard(w);

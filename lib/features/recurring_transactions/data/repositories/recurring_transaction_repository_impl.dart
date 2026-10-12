@@ -1,5 +1,6 @@
 // lib/features/recurring_transactions/data/repositories/recurring_transaction_repository_impl.dart
 
+import 'package:cunehat/core/l10n/app_strings.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
@@ -25,7 +26,7 @@ class RecurringTransactionRepositoryImpl
       return const Right(null);
     } catch (e, st) {
       debugPrint('Save recurring template error: $e\n$st');
-      return const Left(CacheFailure('Düzenli işlem şablonu kaydedilemedi.'));
+      return Left(CacheFailure(appStrings.failRecurringSave));
     }
   }
 
@@ -36,7 +37,7 @@ class RecurringTransactionRepositoryImpl
       return const Right(null);
     } catch (e, st) {
       debugPrint('Delete recurring template error: $e\n$st');
-      return const Left(CacheFailure('Düzenli işlem şablonu silinemedi.'));
+      return Left(CacheFailure(appStrings.failRecurringDelete));
     }
   }
 
@@ -49,7 +50,7 @@ class RecurringTransactionRepositoryImpl
       return Right(entities);
     } catch (e, st) {
       debugPrint('Get all recurring templates error: $e\n$st');
-      return const Left(CacheFailure('Düzenli işlem şablonları getirilemedi.'));
+      return Left(CacheFailure(appStrings.failRecurringGetMany));
     }
   }
 
@@ -60,7 +61,7 @@ class RecurringTransactionRepositoryImpl
       return Right(await localDataSource.retagTemplates(from, to));
     } catch (e, st) {
       debugPrint('Retag recurring templates error: $e\n$st');
-      return const Left(CacheFailure('Düzenli işlem şablonları taşınamadı.'));
+      return Left(CacheFailure(appStrings.failRecurringMove));
     }
   }
 
@@ -73,8 +74,7 @@ class RecurringTransactionRepositoryImpl
       return Right(entities);
     } catch (e, st) {
       debugPrint('Get pending recurring transactions error: $e\n$st');
-      return const Left(
-          CacheFailure('Bekleyen düzenli işlemler getirilemedi.'));
+      return Left(CacheFailure(appStrings.failRecurringGetPending));
     }
   }
 }

@@ -6897,4 +6897,187 @@ class AppLocalizationsEn extends AppLocalizations {
   String bankImportDoneRelocated(int count) {
     return '$count old installment rows moved to the right month.';
   }
+
+  @override
+  String failTxAdd(String hata) {
+    return 'Could not add the transaction: $hata';
+  }
+
+  @override
+  String failTxAddMany(String hata) {
+    return 'Could not add the transactions: $hata';
+  }
+
+  @override
+  String failTxUpdate(String hata) {
+    return 'Could not update the transaction: $hata';
+  }
+
+  @override
+  String failTxDelete(String hata) {
+    return 'Could not delete the transaction: $hata';
+  }
+
+  @override
+  String failTxCount(String hata) {
+    return 'Could not count the transactions: $hata';
+  }
+
+  @override
+  String failTxLinked(String hata) {
+    return 'Could not read the linked transactions: $hata';
+  }
+
+  @override
+  String failTxMove(String hata) {
+    return 'Could not move the transactions: $hata';
+  }
+
+  @override
+  String failTxGet(String hata) {
+    return 'Could not load the transaction: $hata';
+  }
+
+  @override
+  String failTxGetMany(String hata) {
+    return 'Could not load the transactions: $hata';
+  }
+
+  @override
+  String failTxGetGrouped(String hata) {
+    return 'Could not load the grouped transactions: $hata';
+  }
+
+  @override
+  String failReceivableAdd(String hata) {
+    return 'Could not add the receivable: $hata';
+  }
+
+  @override
+  String failReceivableDelete(String hata) {
+    return 'Could not delete the receivable: $hata';
+  }
+
+  @override
+  String failReceivableGetMany(String hata) {
+    return 'Could not load the receivables: $hata';
+  }
+
+  @override
+  String failReceivableUpdate(String hata) {
+    return 'Could not update the receivable: $hata';
+  }
+
+  @override
+  String failDebtAdd(String hata) {
+    return 'Could not add the debt: $hata';
+  }
+
+  @override
+  String failDebtUpdate(String hata) {
+    return 'Could not update the debt: $hata';
+  }
+
+  @override
+  String failDebtDelete(String hata) {
+    return 'Could not delete the debt: $hata';
+  }
+
+  @override
+  String failDebtGetMany(String hata) {
+    return 'Could not load the debts: $hata';
+  }
+
+  @override
+  String failWalletCreate(String hata) {
+    return 'Could not create the wallet: $hata';
+  }
+
+  @override
+  String failWalletDelete(String hata) {
+    return 'Could not delete the wallet: $hata';
+  }
+
+  @override
+  String failWalletGetMany(String hata) {
+    return 'Could not load the wallets: $hata';
+  }
+
+  @override
+  String failWalletWatch(String hata) {
+    return 'Could not watch the wallets: $hata';
+  }
+
+  @override
+  String failWalletSetActive(String hata) {
+    return 'Could not set the active wallet: $hata';
+  }
+
+  @override
+  String failWalletGetActive(String hata) {
+    return 'Could not load the active wallet: $hata';
+  }
+
+  @override
+  String failWalletGet(String hata) {
+    return 'Could not load the wallet: $hata';
+  }
+
+  @override
+  String failWalletUpdate(String hata) {
+    return 'Could not update the wallet: $hata';
+  }
+
+  @override
+  String failCategoriesRead(String hata) {
+    return 'Could not read the categories: $hata';
+  }
+
+  @override
+  String get failBudgetLoad => 'Could not load the budgets.';
+
+  @override
+  String get failBudgetSave => 'Could not save the budget.';
+
+  @override
+  String get failBudgetDelete => 'Could not delete the budget.';
+
+  @override
+  String get failRecurringSave => 'Could not save the recurring template.';
+
+  @override
+  String get failRecurringDelete => 'Could not delete the recurring template.';
+
+  @override
+  String get failRecurringGetMany => 'Could not load the recurring templates.';
+
+  @override
+  String get failRecurringMove => 'Could not move the recurring templates.';
+
+  @override
+  String get failRecurringGetPending =>
+      'Could not load the pending recurring transactions.';
+
+  @override
+  String get failCategoryMoveIntoSubtree =>
+      'A category cannot be moved into its own subtree';
+
+  @override
+  String get failCategoryDeleteNeedsTarget =>
+      'Pick a category to move the records to before deleting';
+
+  @override
+  String get failSymbolEmpty => 'The symbol cannot be empty';
+
+  @override
+  String get reminderNoteTemplatesUnreadable => 'could not read the templates';
+
+  @override
+  String get reminderNoteDebtsUnreadable => 'could not read the debts';
+
+  @override
+  String get reminderNoteCardFailed => 'could not schedule the card reminder';
+
+  @override
+  String get reminderNoteWalletsUnreadable => 'could not read the wallets';
 }

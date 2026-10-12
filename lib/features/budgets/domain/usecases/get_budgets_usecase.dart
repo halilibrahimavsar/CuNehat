@@ -1,3 +1,4 @@
+import 'package:cunehat/core/l10n/app_strings.dart';
 import 'package:dartz/dartz.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/utils/money_math.dart';
@@ -46,7 +47,7 @@ class GetBudgetsUsecase {
     try {
       categories = await categoryRepository.getAllCategories();
     } catch (e) {
-      return Left(CacheFailure('Kategoriler okunamadı: $e'));
+      return Left(CacheFailure(appStrings.failCategoriesRead('$e')));
     }
 
     return budgetsResult.fold(

@@ -11776,6 +11776,258 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{count} eski taksit satırı doğru aya taşındı.'**
   String bankImportDoneRelocated(int count);
+
+  /// No description provided for @failTxAdd.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem eklenemedi: {hata}'**
+  String failTxAdd(String hata);
+
+  /// No description provided for @failTxAddMany.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlemler eklenemedi: {hata}'**
+  String failTxAddMany(String hata);
+
+  /// No description provided for @failTxUpdate.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem güncellenemedi: {hata}'**
+  String failTxUpdate(String hata);
+
+  /// No description provided for @failTxDelete.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem silinemedi: {hata}'**
+  String failTxDelete(String hata);
+
+  /// No description provided for @failTxCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlemler sayılamadı: {hata}'**
+  String failTxCount(String hata);
+
+  /// No description provided for @failTxLinked.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlı işlemler alınamadı: {hata}'**
+  String failTxLinked(String hata);
+
+  /// No description provided for @failTxMove.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlemler taşınamadı: {hata}'**
+  String failTxMove(String hata);
+
+  /// No description provided for @failTxGet.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem getirilemedi: {hata}'**
+  String failTxGet(String hata);
+
+  /// No description provided for @failTxGetMany.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlemler getirilemedi: {hata}'**
+  String failTxGetMany(String hata);
+
+  /// No description provided for @failTxGetGrouped.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gruplanmış işlemler getirilemedi: {hata}'**
+  String failTxGetGrouped(String hata);
+
+  /// No description provided for @failReceivableAdd.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alacak eklenemedi: {hata}'**
+  String failReceivableAdd(String hata);
+
+  /// No description provided for @failReceivableDelete.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alacak silinemedi: {hata}'**
+  String failReceivableDelete(String hata);
+
+  /// No description provided for @failReceivableGetMany.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alacaklar getirilemedi: {hata}'**
+  String failReceivableGetMany(String hata);
+
+  /// No description provided for @failReceivableUpdate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alacak güncellenemedi: {hata}'**
+  String failReceivableUpdate(String hata);
+
+  /// No description provided for @failDebtAdd.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç eklenemedi: {hata}'**
+  String failDebtAdd(String hata);
+
+  /// No description provided for @failDebtUpdate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç güncellenemedi: {hata}'**
+  String failDebtUpdate(String hata);
+
+  /// No description provided for @failDebtDelete.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç silinemedi: {hata}'**
+  String failDebtDelete(String hata);
+
+  /// No description provided for @failDebtGetMany.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borçlar getirilemedi: {hata}'**
+  String failDebtGetMany(String hata);
+
+  /// No description provided for @failWalletCreate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan oluşturulamadı: {hata}'**
+  String failWalletCreate(String hata);
+
+  /// No description provided for @failWalletDelete.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan silinemedi: {hata}'**
+  String failWalletDelete(String hata);
+
+  /// No description provided for @failWalletGetMany.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdanlar getirilemedi: {hata}'**
+  String failWalletGetMany(String hata);
+
+  /// No description provided for @failWalletWatch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdanlar dinlenemedi: {hata}'**
+  String failWalletWatch(String hata);
+
+  /// No description provided for @failWalletSetActive.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aktif cüzdan ayarlanamadı: {hata}'**
+  String failWalletSetActive(String hata);
+
+  /// No description provided for @failWalletGetActive.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aktif cüzdan getirilemedi: {hata}'**
+  String failWalletGetActive(String hata);
+
+  /// No description provided for @failWalletGet.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan getirilemedi: {hata}'**
+  String failWalletGet(String hata);
+
+  /// No description provided for @failWalletUpdate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan güncellenemedi: {hata}'**
+  String failWalletUpdate(String hata);
+
+  /// No description provided for @failCategoriesRead.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategoriler okunamadı: {hata}'**
+  String failCategoriesRead(String hata);
+
+  /// No description provided for @failBudgetLoad.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçeler yüklenemedi.'**
+  String get failBudgetLoad;
+
+  /// No description provided for @failBudgetSave.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçe kaydedilemedi.'**
+  String get failBudgetSave;
+
+  /// No description provided for @failBudgetDelete.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçe silinemedi.'**
+  String get failBudgetDelete;
+
+  /// No description provided for @failRecurringSave.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenli işlem şablonu kaydedilemedi.'**
+  String get failRecurringSave;
+
+  /// No description provided for @failRecurringDelete.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenli işlem şablonu silinemedi.'**
+  String get failRecurringDelete;
+
+  /// No description provided for @failRecurringGetMany.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenli işlem şablonları getirilemedi.'**
+  String get failRecurringGetMany;
+
+  /// No description provided for @failRecurringMove.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenli işlem şablonları taşınamadı.'**
+  String get failRecurringMove;
+
+  /// No description provided for @failRecurringGetPending.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bekleyen düzenli işlemler getirilemedi.'**
+  String get failRecurringGetPending;
+
+  /// No description provided for @failCategoryMoveIntoSubtree.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori kendi alt ağacına taşınamaz'**
+  String get failCategoryMoveIntoSubtree;
+
+  /// No description provided for @failCategoryDeleteNeedsTarget.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taşınacak kategori seçilmeden silinemez'**
+  String get failCategoryDeleteNeedsTarget;
+
+  /// No description provided for @failSymbolEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sembol boş olamaz'**
+  String get failSymbolEmpty;
+
+  /// No description provided for @reminderNoteTemplatesUnreadable.
+  ///
+  /// In tr, this message translates to:
+  /// **'şablonlar okunamadı'**
+  String get reminderNoteTemplatesUnreadable;
+
+  /// No description provided for @reminderNoteDebtsUnreadable.
+  ///
+  /// In tr, this message translates to:
+  /// **'borçlar okunamadı'**
+  String get reminderNoteDebtsUnreadable;
+
+  /// No description provided for @reminderNoteCardFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'kart hatırlatması kurulamadı'**
+  String get reminderNoteCardFailed;
+
+  /// No description provided for @reminderNoteWalletsUnreadable.
+  ///
+  /// In tr, this message translates to:
+  /// **'cüzdanlar okunamadı'**
+  String get reminderNoteWalletsUnreadable;
 }
 
 class _AppLocalizationsDelegate

@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/features/wallet/data/datasource/wallet_local_datasource.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
@@ -78,6 +79,32 @@ void main() {
           (failure) => expect(failure, isA<CacheFailure>()),
           (_) => fail('should not return right'),
         );
+      });
+    });
+
+    group('hata metni uygulamanın dilini izler', () {
+      // Depo hataları koda gömülü Türkçeydi: uygulamayı İngilizce kullanan
+      // kişi her depo hatasında Türkçe bir cümle görüyordu.
+      final saved = Intl.defaultLocale;
+      tearDown(() => Intl.defaultLocale = saved);
+
+      Future<String> createFailure() async {
+        when(() => mockLocalDataSource.createWallet(any()))
+            .thenThrow(Exception('Hive error'));
+        final result = await repository.createWallet(entity);
+        return result.fold((f) => f.message, (_) => fail('Left bekleniyordu'));
+      }
+
+      test('Türkçe: metin eskisiyle AYNI', () async {
+        Intl.defaultLocale = 'tr';
+        expect(await createFailure(),
+            'Cüzdan oluşturulamadı: Exception: Hive error');
+      });
+
+      test('İngilizce: aynı hata İngilizce döner', () async {
+        Intl.defaultLocale = 'en';
+        expect(await createFailure(),
+            'Could not create the wallet: Exception: Hive error');
       });
     });
 

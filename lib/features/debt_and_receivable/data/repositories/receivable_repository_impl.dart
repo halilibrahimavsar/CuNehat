@@ -1,3 +1,4 @@
+import 'package:cunehat/core/l10n/app_strings.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/features/debt_and_receivable/data/datasource/receivable_local_datasource.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/receivable_model.dart';
@@ -20,7 +21,7 @@ class ReceivableRepositoryImpl implements ReceivableRepository {
       await receivableDatasourceRepository.addReceivable(model);
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure('Alacak eklenemedi: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failReceivableAdd(e.toString())));
     }
   }
 
@@ -30,7 +31,7 @@ class ReceivableRepositoryImpl implements ReceivableRepository {
       await receivableDatasourceRepository.deleteReceivable(id);
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure('Alacak silinemedi: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failReceivableDelete(e.toString())));
     }
   }
 
@@ -42,7 +43,7 @@ class ReceivableRepositoryImpl implements ReceivableRepository {
           .getReceivablesByWalletId(walletId);
       return Right(models.map((e) => e.toEntity()).toList());
     } catch (e) {
-      return Left(CacheFailure('Alacaklar getirilemedi: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failReceivableGetMany(e.toString())));
     }
   }
 
@@ -54,7 +55,7 @@ class ReceivableRepositoryImpl implements ReceivableRepository {
           .updateReceivable(ReceivableModel.fromEntity(receivable));
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure('Alacak güncellenemedi: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failReceivableUpdate(e.toString())));
     }
   }
 }

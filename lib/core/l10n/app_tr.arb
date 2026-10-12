@@ -4279,5 +4279,236 @@
         "type": "int"
       }
     }
-  }
+  },
+  "failTxAdd": "İşlem eklenemedi: {hata}",
+  "@failTxAdd": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failTxAddMany": "İşlemler eklenemedi: {hata}",
+  "@failTxAddMany": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failTxUpdate": "İşlem güncellenemedi: {hata}",
+  "@failTxUpdate": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failTxDelete": "İşlem silinemedi: {hata}",
+  "@failTxDelete": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failTxCount": "İşlemler sayılamadı: {hata}",
+  "@failTxCount": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failTxLinked": "Bağlı işlemler alınamadı: {hata}",
+  "@failTxLinked": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failTxMove": "İşlemler taşınamadı: {hata}",
+  "@failTxMove": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failTxGet": "İşlem getirilemedi: {hata}",
+  "@failTxGet": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failTxGetMany": "İşlemler getirilemedi: {hata}",
+  "@failTxGetMany": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failTxGetGrouped": "Gruplanmış işlemler getirilemedi: {hata}",
+  "@failTxGetGrouped": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failReceivableAdd": "Alacak eklenemedi: {hata}",
+  "@failReceivableAdd": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failReceivableDelete": "Alacak silinemedi: {hata}",
+  "@failReceivableDelete": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failReceivableGetMany": "Alacaklar getirilemedi: {hata}",
+  "@failReceivableGetMany": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failReceivableUpdate": "Alacak güncellenemedi: {hata}",
+  "@failReceivableUpdate": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failDebtAdd": "Borç eklenemedi: {hata}",
+  "@failDebtAdd": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failDebtUpdate": "Borç güncellenemedi: {hata}",
+  "@failDebtUpdate": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failDebtDelete": "Borç silinemedi: {hata}",
+  "@failDebtDelete": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failDebtGetMany": "Borçlar getirilemedi: {hata}",
+  "@failDebtGetMany": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failWalletCreate": "Cüzdan oluşturulamadı: {hata}",
+  "@failWalletCreate": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failWalletDelete": "Cüzdan silinemedi: {hata}",
+  "@failWalletDelete": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failWalletGetMany": "Cüzdanlar getirilemedi: {hata}",
+  "@failWalletGetMany": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failWalletWatch": "Cüzdanlar dinlenemedi: {hata}",
+  "@failWalletWatch": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failWalletSetActive": "Aktif cüzdan ayarlanamadı: {hata}",
+  "@failWalletSetActive": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failWalletGetActive": "Aktif cüzdan getirilemedi: {hata}",
+  "@failWalletGetActive": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failWalletGet": "Cüzdan getirilemedi: {hata}",
+  "@failWalletGet": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failWalletUpdate": "Cüzdan güncellenemedi: {hata}",
+  "@failWalletUpdate": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failCategoriesRead": "Kategoriler okunamadı: {hata}",
+  "@failCategoriesRead": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failBudgetLoad": "Bütçeler yüklenemedi.",
+  "failBudgetSave": "Bütçe kaydedilemedi.",
+  "failBudgetDelete": "Bütçe silinemedi.",
+  "failRecurringSave": "Düzenli işlem şablonu kaydedilemedi.",
+  "failRecurringDelete": "Düzenli işlem şablonu silinemedi.",
+  "failRecurringGetMany": "Düzenli işlem şablonları getirilemedi.",
+  "failRecurringMove": "Düzenli işlem şablonları taşınamadı.",
+  "failRecurringGetPending": "Bekleyen düzenli işlemler getirilemedi.",
+  "failCategoryMoveIntoSubtree": "Kategori kendi alt ağacına taşınamaz",
+  "failCategoryDeleteNeedsTarget": "Taşınacak kategori seçilmeden silinemez",
+  "failSymbolEmpty": "Sembol boş olamaz",
+  "reminderNoteTemplatesUnreadable": "şablonlar okunamadı",
+  "reminderNoteDebtsUnreadable": "borçlar okunamadı",
+  "reminderNoteCardFailed": "kart hatırlatması kurulamadı",
+  "reminderNoteWalletsUnreadable": "cüzdanlar okunamadı"
 }

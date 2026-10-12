@@ -1,3 +1,4 @@
+import 'package:cunehat/core/l10n/app_strings.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/services/receipt_storage_service.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/transaction_local_datasource.dart';
@@ -26,7 +27,7 @@ class TransactionRepositoryImpl implements TransactionsRepository {
           .addTransaction(TransactionModel.fromEntity(transaction));
       return Right(id);
     } catch (e) {
-      return Left(CacheFailure('İşlem eklenemedi: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failTxAdd(e.toString())));
     }
   }
 
@@ -39,7 +40,7 @@ class TransactionRepositoryImpl implements TransactionsRepository {
       );
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure('İşlemler eklenemedi: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failTxAddMany(e.toString())));
     }
   }
 
@@ -56,7 +57,7 @@ class TransactionRepositoryImpl implements TransactionsRepository {
       }
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure('İşlem güncellenemedi: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failTxUpdate(e.toString())));
     }
   }
 
@@ -75,7 +76,7 @@ class TransactionRepositoryImpl implements TransactionsRepository {
       }
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure('İşlem silinemedi: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failTxDelete(e.toString())));
     }
   }
 
@@ -84,7 +85,7 @@ class TransactionRepositoryImpl implements TransactionsRepository {
     try {
       return Right(await localDatasource.countByTags(tags));
     } catch (e) {
-      return Left(CacheFailure('İşlemler sayılamadı: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failTxCount(e.toString())));
     }
   }
 
@@ -100,7 +101,7 @@ class TransactionRepositoryImpl implements TransactionsRepository {
       );
       return Right([for (final m in models) m.toEntity()]);
     } catch (e) {
-      return Left(CacheFailure('Bağlı işlemler alınamadı: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failTxLinked(e.toString())));
     }
   }
 
@@ -110,7 +111,7 @@ class TransactionRepositoryImpl implements TransactionsRepository {
     try {
       return Right(await localDatasource.retagTransactions(from, to));
     } catch (e) {
-      return Left(CacheFailure('İşlemler taşınamadı: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failTxMove(e.toString())));
     }
   }
 
@@ -133,7 +134,7 @@ class TransactionRepositoryImpl implements TransactionsRepository {
       final model = await localDatasource.getTransactionById(id);
       return Right(model.toEntity());
     } catch (e) {
-      return Left(CacheFailure('İşlem getirilemedi: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failTxGet(e.toString())));
     }
   }
 
@@ -155,7 +156,7 @@ class TransactionRepositoryImpl implements TransactionsRepository {
       );
       return Right(models.map((e) => e.toEntity()).toList());
     } catch (e) {
-      return Left(CacheFailure('İşlemler getirilemedi: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failTxGetMany(e.toString())));
     }
   }
 
@@ -184,8 +185,7 @@ class TransactionRepositoryImpl implements TransactionsRepository {
 
       return Right(entitiesMap);
     } catch (e) {
-      return Left(
-          CacheFailure('Gruplanmış işlemler getirilemedi: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failTxGetGrouped(e.toString())));
     }
   }
 }

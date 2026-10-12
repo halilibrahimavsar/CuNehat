@@ -6848,4 +6848,187 @@ class AppLocalizationsTr extends AppLocalizations {
   String bankImportDoneRelocated(int count) {
     return '$count eski taksit satırı doğru aya taşındı.';
   }
+
+  @override
+  String failTxAdd(String hata) {
+    return 'İşlem eklenemedi: $hata';
+  }
+
+  @override
+  String failTxAddMany(String hata) {
+    return 'İşlemler eklenemedi: $hata';
+  }
+
+  @override
+  String failTxUpdate(String hata) {
+    return 'İşlem güncellenemedi: $hata';
+  }
+
+  @override
+  String failTxDelete(String hata) {
+    return 'İşlem silinemedi: $hata';
+  }
+
+  @override
+  String failTxCount(String hata) {
+    return 'İşlemler sayılamadı: $hata';
+  }
+
+  @override
+  String failTxLinked(String hata) {
+    return 'Bağlı işlemler alınamadı: $hata';
+  }
+
+  @override
+  String failTxMove(String hata) {
+    return 'İşlemler taşınamadı: $hata';
+  }
+
+  @override
+  String failTxGet(String hata) {
+    return 'İşlem getirilemedi: $hata';
+  }
+
+  @override
+  String failTxGetMany(String hata) {
+    return 'İşlemler getirilemedi: $hata';
+  }
+
+  @override
+  String failTxGetGrouped(String hata) {
+    return 'Gruplanmış işlemler getirilemedi: $hata';
+  }
+
+  @override
+  String failReceivableAdd(String hata) {
+    return 'Alacak eklenemedi: $hata';
+  }
+
+  @override
+  String failReceivableDelete(String hata) {
+    return 'Alacak silinemedi: $hata';
+  }
+
+  @override
+  String failReceivableGetMany(String hata) {
+    return 'Alacaklar getirilemedi: $hata';
+  }
+
+  @override
+  String failReceivableUpdate(String hata) {
+    return 'Alacak güncellenemedi: $hata';
+  }
+
+  @override
+  String failDebtAdd(String hata) {
+    return 'Borç eklenemedi: $hata';
+  }
+
+  @override
+  String failDebtUpdate(String hata) {
+    return 'Borç güncellenemedi: $hata';
+  }
+
+  @override
+  String failDebtDelete(String hata) {
+    return 'Borç silinemedi: $hata';
+  }
+
+  @override
+  String failDebtGetMany(String hata) {
+    return 'Borçlar getirilemedi: $hata';
+  }
+
+  @override
+  String failWalletCreate(String hata) {
+    return 'Cüzdan oluşturulamadı: $hata';
+  }
+
+  @override
+  String failWalletDelete(String hata) {
+    return 'Cüzdan silinemedi: $hata';
+  }
+
+  @override
+  String failWalletGetMany(String hata) {
+    return 'Cüzdanlar getirilemedi: $hata';
+  }
+
+  @override
+  String failWalletWatch(String hata) {
+    return 'Cüzdanlar dinlenemedi: $hata';
+  }
+
+  @override
+  String failWalletSetActive(String hata) {
+    return 'Aktif cüzdan ayarlanamadı: $hata';
+  }
+
+  @override
+  String failWalletGetActive(String hata) {
+    return 'Aktif cüzdan getirilemedi: $hata';
+  }
+
+  @override
+  String failWalletGet(String hata) {
+    return 'Cüzdan getirilemedi: $hata';
+  }
+
+  @override
+  String failWalletUpdate(String hata) {
+    return 'Cüzdan güncellenemedi: $hata';
+  }
+
+  @override
+  String failCategoriesRead(String hata) {
+    return 'Kategoriler okunamadı: $hata';
+  }
+
+  @override
+  String get failBudgetLoad => 'Bütçeler yüklenemedi.';
+
+  @override
+  String get failBudgetSave => 'Bütçe kaydedilemedi.';
+
+  @override
+  String get failBudgetDelete => 'Bütçe silinemedi.';
+
+  @override
+  String get failRecurringSave => 'Düzenli işlem şablonu kaydedilemedi.';
+
+  @override
+  String get failRecurringDelete => 'Düzenli işlem şablonu silinemedi.';
+
+  @override
+  String get failRecurringGetMany => 'Düzenli işlem şablonları getirilemedi.';
+
+  @override
+  String get failRecurringMove => 'Düzenli işlem şablonları taşınamadı.';
+
+  @override
+  String get failRecurringGetPending =>
+      'Bekleyen düzenli işlemler getirilemedi.';
+
+  @override
+  String get failCategoryMoveIntoSubtree =>
+      'Kategori kendi alt ağacına taşınamaz';
+
+  @override
+  String get failCategoryDeleteNeedsTarget =>
+      'Taşınacak kategori seçilmeden silinemez';
+
+  @override
+  String get failSymbolEmpty => 'Sembol boş olamaz';
+
+  @override
+  String get reminderNoteTemplatesUnreadable => 'şablonlar okunamadı';
+
+  @override
+  String get reminderNoteDebtsUnreadable => 'borçlar okunamadı';
+
+  @override
+  String get reminderNoteCardFailed => 'kart hatırlatması kurulamadı';
+
+  @override
+  String get reminderNoteWalletsUnreadable => 'cüzdanlar okunamadı';
 }

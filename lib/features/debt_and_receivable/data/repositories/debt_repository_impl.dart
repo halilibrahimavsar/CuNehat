@@ -1,3 +1,4 @@
+import 'package:cunehat/core/l10n/app_strings.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/features/debt_and_receivable/data/datasource/debt_local_datasource.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart';
@@ -19,7 +20,7 @@ class DebtRepositoryImpl implements DebtRepository {
       await debtDatasourceRepository.addDebt(model);
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure('Borç eklenemedi: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failDebtAdd(e.toString())));
     }
   }
 
@@ -29,7 +30,7 @@ class DebtRepositoryImpl implements DebtRepository {
       await debtDatasourceRepository.updateDebt(DebtModel.fromEntity(debt));
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure('Borç güncellenemedi: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failDebtUpdate(e.toString())));
     }
   }
 
@@ -39,7 +40,7 @@ class DebtRepositoryImpl implements DebtRepository {
       await debtDatasourceRepository.deleteDebt(id);
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure('Borç silinemedi: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failDebtDelete(e.toString())));
     }
   }
 
@@ -51,7 +52,7 @@ class DebtRepositoryImpl implements DebtRepository {
           await debtDatasourceRepository.getDebtsByWalletId(walletId);
       return Right(models.map((e) => e.toEntity()).toList());
     } catch (e) {
-      return Left(CacheFailure('Borçlar getirilemedi: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failDebtGetMany(e.toString())));
     }
   }
 
@@ -61,7 +62,7 @@ class DebtRepositoryImpl implements DebtRepository {
       final models = await debtDatasourceRepository.getAllDebts();
       return Right(models.map((e) => e.toEntity()).toList());
     } catch (e) {
-      return Left(CacheFailure('Borçlar getirilemedi: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failDebtGetMany(e.toString())));
     }
   }
 }

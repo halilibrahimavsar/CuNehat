@@ -1,3 +1,4 @@
+import 'package:cunehat/core/l10n/app_strings.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/features/budgets/domain/usecases/delete_budget_usecase.dart';
@@ -64,8 +65,8 @@ class DeleteCategoryUseCase {
     final subtree = subtreeIds(categoryId, all);
 
     if (reassignToId != null && subtree.contains(reassignToId)) {
-      return const Left(
-        ValidationFailure('Kategori kendi alt ağacına taşınamaz'),
+      return Left(
+        ValidationFailure(appStrings.failCategoryMoveIntoSubtree),
       );
     }
 
@@ -76,8 +77,8 @@ class DeleteCategoryUseCase {
 
     if (usageCount > 0) {
       if (reassignToId == null) {
-        return const Left(
-          ValidationFailure('Taşınacak kategori seçilmeden silinemez'),
+        return Left(
+          ValidationFailure(appStrings.failCategoryDeleteNeedsTarget),
         );
       }
       final retag =

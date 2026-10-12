@@ -1,3 +1,4 @@
+import 'package:cunehat/core/l10n/app_strings.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/features/wallet/data/datasource/wallet_local_datasource.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
@@ -18,7 +19,7 @@ class WalletRepositoryImpl implements WalletRepository {
       final id = await dataSource.createWallet(model);
       return Right(id);
     } catch (e) {
-      return Left(CacheFailure('Cüzdan oluşturulamadı: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failWalletCreate(e.toString())));
     }
   }
 
@@ -28,7 +29,7 @@ class WalletRepositoryImpl implements WalletRepository {
       await dataSource.deleteWallet(walletId);
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure('Cüzdan silinemedi: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failWalletDelete(e.toString())));
     }
   }
 
@@ -38,7 +39,7 @@ class WalletRepositoryImpl implements WalletRepository {
       final walletModels = await dataSource.getWallets(userId);
       return Right(walletModels.map((model) => model.toEntity()).toList());
     } catch (e) {
-      return Left(CacheFailure('Cüzdanlar getirilemedi: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failWalletGetMany(e.toString())));
     }
   }
 
@@ -48,7 +49,7 @@ class WalletRepositoryImpl implements WalletRepository {
       final walletModels = await dataSource.getAllWallets();
       return Right(walletModels.map((model) => model.toEntity()).toList());
     } catch (e) {
-      return Left(CacheFailure('Cüzdanlar getirilemedi: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failWalletGetMany(e.toString())));
     }
   }
 
@@ -60,7 +61,7 @@ class WalletRepositoryImpl implements WalletRepository {
         yield Right(models.map((m) => m.toEntity()).toList());
       }
     } catch (error) {
-      yield Left(CacheFailure('Cüzdanlar dinlenemedi: ${error.toString()}'));
+      yield Left(CacheFailure(appStrings.failWalletWatch(error.toString())));
     }
   }
 
@@ -72,7 +73,7 @@ class WalletRepositoryImpl implements WalletRepository {
           userId: userId, newActiveWalletId: newActiveWalletId);
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure('Aktif cüzdan ayarlanamadı: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failWalletSetActive(e.toString())));
     }
   }
 
@@ -82,7 +83,7 @@ class WalletRepositoryImpl implements WalletRepository {
       final model = await dataSource.getActiveWallet(userId);
       return Right(model?.toEntity());
     } catch (e) {
-      return Left(CacheFailure('Aktif cüzdan getirilemedi: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failWalletGetActive(e.toString())));
     }
   }
 
@@ -92,7 +93,7 @@ class WalletRepositoryImpl implements WalletRepository {
       final model = await dataSource.getWalletById(walletId);
       return Right(model?.toEntity());
     } catch (e) {
-      return Left(CacheFailure('Cüzdan getirilemedi: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failWalletGet(e.toString())));
     }
   }
 
@@ -108,7 +109,7 @@ class WalletRepositoryImpl implements WalletRepository {
       await dataSource.updateWallet(model);
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure('Cüzdan güncellenemedi: ${e.toString()}'));
+      return Left(CacheFailure(appStrings.failWalletUpdate(e.toString())));
     }
   }
 }

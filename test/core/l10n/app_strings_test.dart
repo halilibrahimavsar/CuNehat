@@ -56,4 +56,20 @@ void main() {
     Intl.defaultLocale = 'en';
     expect(CashCouplingMixin.cashWarning, startsWith(' (Warning:'));
   });
+
+  test('depo hata metinleri iki dilde de çözülür; Türkçe metin eskisiyle aynı',
+      () {
+    // UX Tur 2 · 9: depo/use case katmanındaki sabit Türkçe cümleler.
+    Intl.defaultLocale = 'tr';
+    expect(appStrings.failTxAdd('x'), 'İşlem eklenemedi: x');
+    expect(appStrings.failBudgetDelete, 'Bütçe silinemedi.');
+    expect(appStrings.failRecurringGetPending,
+        'Bekleyen düzenli işlemler getirilemedi.');
+    expect(appStrings.failCategoryDeleteNeedsTarget,
+        'Taşınacak kategori seçilmeden silinemez');
+    Intl.defaultLocale = 'en';
+    expect(appStrings.failTxAdd('x'), 'Could not add the transaction: x');
+    expect(appStrings.failBudgetDelete, 'Could not delete the budget.');
+    expect(appStrings.failSymbolEmpty, 'The symbol cannot be empty');
+  });
 }

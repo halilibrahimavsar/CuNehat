@@ -4045,5 +4045,236 @@
         "type": "int"
       }
     }
-  }
+  },
+  "failTxAdd": "Could not add the transaction: {hata}",
+  "@failTxAdd": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failTxAddMany": "Could not add the transactions: {hata}",
+  "@failTxAddMany": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failTxUpdate": "Could not update the transaction: {hata}",
+  "@failTxUpdate": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failTxDelete": "Could not delete the transaction: {hata}",
+  "@failTxDelete": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failTxCount": "Could not count the transactions: {hata}",
+  "@failTxCount": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failTxLinked": "Could not read the linked transactions: {hata}",
+  "@failTxLinked": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failTxMove": "Could not move the transactions: {hata}",
+  "@failTxMove": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failTxGet": "Could not load the transaction: {hata}",
+  "@failTxGet": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failTxGetMany": "Could not load the transactions: {hata}",
+  "@failTxGetMany": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failTxGetGrouped": "Could not load the grouped transactions: {hata}",
+  "@failTxGetGrouped": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failReceivableAdd": "Could not add the receivable: {hata}",
+  "@failReceivableAdd": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failReceivableDelete": "Could not delete the receivable: {hata}",
+  "@failReceivableDelete": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failReceivableGetMany": "Could not load the receivables: {hata}",
+  "@failReceivableGetMany": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failReceivableUpdate": "Could not update the receivable: {hata}",
+  "@failReceivableUpdate": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failDebtAdd": "Could not add the debt: {hata}",
+  "@failDebtAdd": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failDebtUpdate": "Could not update the debt: {hata}",
+  "@failDebtUpdate": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failDebtDelete": "Could not delete the debt: {hata}",
+  "@failDebtDelete": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failDebtGetMany": "Could not load the debts: {hata}",
+  "@failDebtGetMany": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failWalletCreate": "Could not create the wallet: {hata}",
+  "@failWalletCreate": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failWalletDelete": "Could not delete the wallet: {hata}",
+  "@failWalletDelete": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failWalletGetMany": "Could not load the wallets: {hata}",
+  "@failWalletGetMany": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failWalletWatch": "Could not watch the wallets: {hata}",
+  "@failWalletWatch": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failWalletSetActive": "Could not set the active wallet: {hata}",
+  "@failWalletSetActive": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failWalletGetActive": "Could not load the active wallet: {hata}",
+  "@failWalletGetActive": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failWalletGet": "Could not load the wallet: {hata}",
+  "@failWalletGet": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failWalletUpdate": "Could not update the wallet: {hata}",
+  "@failWalletUpdate": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failCategoriesRead": "Could not read the categories: {hata}",
+  "@failCategoriesRead": {
+    "placeholders": {
+      "hata": {
+        "type": "String"
+      }
+    }
+  },
+  "failBudgetLoad": "Could not load the budgets.",
+  "failBudgetSave": "Could not save the budget.",
+  "failBudgetDelete": "Could not delete the budget.",
+  "failRecurringSave": "Could not save the recurring template.",
+  "failRecurringDelete": "Could not delete the recurring template.",
+  "failRecurringGetMany": "Could not load the recurring templates.",
+  "failRecurringMove": "Could not move the recurring templates.",
+  "failRecurringGetPending": "Could not load the pending recurring transactions.",
+  "failCategoryMoveIntoSubtree": "A category cannot be moved into its own subtree",
+  "failCategoryDeleteNeedsTarget": "Pick a category to move the records to before deleting",
+  "failSymbolEmpty": "The symbol cannot be empty",
+  "reminderNoteTemplatesUnreadable": "could not read the templates",
+  "reminderNoteDebtsUnreadable": "could not read the debts",
+  "reminderNoteCardFailed": "could not schedule the card reminder",
+  "reminderNoteWalletsUnreadable": "could not read the wallets"
 }
