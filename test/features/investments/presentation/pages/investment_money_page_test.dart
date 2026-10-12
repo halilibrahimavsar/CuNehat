@@ -710,6 +710,85 @@ void main() {
           ))).called(1);
     });
 
+    testWidgets('eylem sayfasından "Ana kasa yap" olayı gönderilir',
+        (tester) async {
+      await pumpPage(tester);
+      expect(
+          find.byKey(const ValueKey('cash-pot-primary-pot_1')), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('cash-pot-pot_1')));
+      await tester.pumpAndSettle();
+      expect(find.text('Ana kasa yap'), findsOneWidget);
+      await tester
+          .tap(find.byKey(const ValueKey('cash-pot-action-togglePrimary')));
+      await tester.pumpAndSettle();
+
+      verify(() => mockInvestmentBloc.add(any(
+            that: isA<SetPrimaryPotEvent>()
+                .having((e) => e.pot.id, 'kasa', 'pot_1')
+                .having((e) => e.primary, 'işaret', isTrue),
+          ))).called(1);
+    });
+
+    testWidgets('ana kasa yıldızlıdır, BAŞTA durur ve satışta varsayılan hedef',
+        (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      // Değere göre sıralamada "Büyük" (5000) üstte olurdu.
+      final big = pot.copyWith(
+          id: 'pot_big', name: 'Büyük', amount: 5000, currentValue: 5000);
+      final main = pot.copyWith(id: 'pot_main', name: 'Ana', isPrimary: true);
+      when(() => mockInvestmentBloc.state).thenReturn(
+        InvestmentLoaded([testInvestment1, big, main], totalAmount: 7000.0),
+      );
+      await tester.pumpWidget(
+        buildTestableWidget(InvestmentMoneyPage(activeWallet: testWallet)),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('cash-pot-primary-pot_main')),
+          findsOneWidget);
+      expect(
+          find.byKey(const ValueKey('cash-pot-primary-pot_big')), findsNothing);
+      expect(
+          tester.getTopLeft(find.byKey(const ValueKey('cash-pot-pot_main'))).dy,
+          lessThan(tester
+              .getTopLeft(find.byKey(const ValueKey('cash-pot-pot_big')))
+              .dy));
+
+      // İşaretli kasada eylem "kaldır"a döner.
+      await tester.tap(find.byKey(const ValueKey('cash-pot-pot_main')));
+      await tester.pumpAndSettle();
+      expect(find.text('Ana kasa işaretini kaldır'), findsOneWidget);
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+
+      // Satış: varsayılan hedef ana kasa (en dolu olan değil).
+      final card = find
+          .descendant(
+              of: find.byType(InvestmentCard),
+              matching: find.text('Gram Altın'))
+          .first;
+      await tester.ensureVisible(card);
+      await tester.tap(card);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Sat'));
+      await tester.pumpAndSettle();
+      expect(
+          tester
+              .widget<ChoiceChip>(
+                  find.byKey(const ValueKey('sell-to-pot-pot_main')))
+              .selected,
+          isTrue);
+      expect(
+          tester
+              .widget<ChoiceChip>(
+                  find.byKey(const ValueKey('sell-to-pot-pot_big')))
+              .selected,
+          isFalse);
+    });
+
     testWidgets('kasayı kapatmak bakiyeyi cüzdana aktarır', (tester) async {
       await pumpPage(tester);
       await tester.tap(find.byKey(const ValueKey('cash-pot-pot_1')));

@@ -1,3 +1,4 @@
+import 'package:cunehat/features/investments/domain/cash_pot_math.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/core/services/cash_source.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
@@ -36,10 +37,17 @@ class PurchasePayment {
       : mode = PurchasePaymentMode.pot,
         ledgerTransaction = null;
 
-  /// Formun açılış seçimi: bakiyesi olan kasa varsa EN ÇOK parası olan kasa
-  /// (kullanıcı bakiyesinden yatırım yapmayı seçti — varsayılan o), yoksa
-  /// cüzdan.
+  /// Formun açılış seçimi: parası olan ANA KASA (kullanıcı onu açıkça
+  /// seçti); yoksa bakiyesi olan kasalardan EN ÇOK parası olan (kullanıcı
+  /// bakiyesinden yatırım yapmayı seçti — varsayılan o), o da yoksa cüzdan.
+  ///
+  /// Ana kasa boşsa atlanır: boş kasayı ön seçmek her alımı "kasada yalnız
+  /// 0 var" uyarısıyla açardı.
   factory PurchasePayment.defaultFor(List<InvestmentEntity> pots) {
+    final primary = primaryPotOf(pots);
+    if (primary != null && primary.amount > 0) {
+      return PurchasePayment.pot(primary);
+    }
     final funded = [
       for (final p in pots)
         if (p.amount > 0) p,
@@ -78,8 +86,7 @@ class PurchasePayment {
   /// Bloc'a gidecek nakit kaynağı.
   CashSource get cashSource => switch (mode) {
         PurchasePaymentMode.wallet => const NewCashMovement(),
-        PurchasePaymentMode.ledger =>
-          AdoptedCashMovement(ledgerTransaction!),
+        PurchasePaymentMode.ledger => AdoptedCashMovement(ledgerTransaction!),
         PurchasePaymentMode.alreadyOwned => const OffLedgerCash(),
         PurchasePaymentMode.pot => FromSavingsPot(pot!.id!),
       };

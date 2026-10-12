@@ -35,6 +35,9 @@ String investmentNoticeTextOf(
     PricesUnavailableNotice() => l10n.fiyatlarAlinamadiMesaji,
     AdoptionFailedNotice() => l10n.benimsemeYapilamadiMesaji,
     PotUnavailableNotice() => l10n.potUnavailableMessage,
+    PrimaryPotChangedNotice(:final potName, :final isPrimary) => isPrimary
+        ? l10n.anaKasaYapildiMesaji(potName)
+        : l10n.anaKasaKaldirildiMesaji(potName),
     PricesRefreshedNotice(:final updated, :final failed) => failed == 0
         ? l10n.fiyatlarGuncellendiMesaji(updated)
         : l10n.fiyatlarKismenGuncellendiMesaji(updated, failed),

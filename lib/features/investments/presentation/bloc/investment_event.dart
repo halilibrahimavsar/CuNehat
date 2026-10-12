@@ -105,6 +105,19 @@ final class UpdateInvestmentEvent extends InvestmentEvent {
       [investment, userId, walletId, bookingDate, cashSource];
 }
 
+/// Bir nakit kasasını ANA KASA yapar ([primary] true) ya da işaretini
+/// kaldırır. Cüzdanın öteki kasalarındaki işaret düşürülür: en çok bir ana
+/// kasa olur. Para hareketi YOKTUR — defter ve cüzdan değişmez.
+final class SetPrimaryPotEvent extends InvestmentEvent {
+  final InvestmentEntity pot;
+  final bool primary;
+
+  const SetPrimaryPotEvent({required this.pot, required this.primary});
+
+  @override
+  List<Object> get props => [pot, primary];
+}
+
 /// Canlı fiyatlardan güncel değer yenileme. [investmentId] verilirse tek
 /// kayıt, verilmezse yenilenebilir (sembol + miktar) tüm kayıtlar güncellenir.
 /// Maliyet değişmediği için defterde nakit hareketi oluşturmaz.

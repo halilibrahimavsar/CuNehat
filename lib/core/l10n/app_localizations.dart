@@ -11476,6 +11476,42 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Birim alış fiyatı'**
   String get katkiBirimFiyatGenel;
+
+  /// No description provided for @anaKasa.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana kasa'**
+  String get anaKasa;
+
+  /// No description provided for @anaKasaYap.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana kasa yap'**
+  String get anaKasaYap;
+
+  /// No description provided for @anaKasaYapAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alımlarda varsayılan kaynak, satışta varsayılan hedef olur.'**
+  String get anaKasaYapAciklama;
+
+  /// No description provided for @anaKasaKaldir.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana kasa işaretini kaldır'**
+  String get anaKasaKaldir;
+
+  /// No description provided for @anaKasaYapildiMesaji.
+  ///
+  /// In tr, this message translates to:
+  /// **'“{name}” ana kasa oldu'**
+  String anaKasaYapildiMesaji(String name);
+
+  /// No description provided for @anaKasaKaldirildiMesaji.
+  ///
+  /// In tr, this message translates to:
+  /// **'“{name}” artık ana kasa değil'**
+  String anaKasaKaldirildiMesaji(String name);
 }
 
 class _AppLocalizationsDelegate

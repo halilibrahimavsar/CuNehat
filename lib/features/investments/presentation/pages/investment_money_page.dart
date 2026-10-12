@@ -1,6 +1,7 @@
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/services/cash_source.dart';
 import 'package:cunehat/features/investments/data/investment_sort_store.dart';
+import 'package:cunehat/features/investments/domain/cash_pot_math.dart';
 import 'package:cunehat/features/investments/domain/investment_sort.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
@@ -429,6 +430,10 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
         _depositToPot(pot);
       case CashPotAction.withdraw:
         _withdrawFromPot(pot);
+      case CashPotAction.togglePrimary:
+        context
+            .read<InvestmentBloc>()
+            .add(SetPrimaryPotEvent(pot: pot, primary: !pot.isPrimary));
       case CashPotAction.edit:
         _openEditSheet(pot);
       case CashPotAction.close:
@@ -533,10 +538,11 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
             .where((i) => i.type != InvestmentType.cash)
             .toList();
         final goalIds = {for (final g in goals) g.id};
-        final freePots = [
+        // Ana kasa seçili sıralamadan bağımsız olarak BAŞTA durur.
+        final freePots = primaryPotFirst([
           for (final p in cashPotsOf(investments))
             if (p.goalId == null || !goalIds.contains(p.goalId)) p,
-        ];
+        ]);
 
         return Stack(
           children: [

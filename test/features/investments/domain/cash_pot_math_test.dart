@@ -142,4 +142,30 @@ void main() {
       expect(correctPotBalance(pot(), 123.456).amount, 123.46);
     });
   });
+
+  group('ana kasa', () {
+    InvestmentEntity named(String id, {bool primary = false}) =>
+        pot().copyWith(id: id, name: id, isPrimary: primary);
+
+    test('primaryPotOf: işaretli kasa; yoksa null', () {
+      expect(primaryPotOf([named('a'), named('b')]), isNull);
+      expect(primaryPotOf([named('a'), named('b', primary: true)])!.id, 'b');
+      expect(primaryPotOf(const []), isNull);
+    });
+
+    test('primaryPotOf: kasa OLMAYAN kayıttaki işaret sayılmaz', () {
+      expect(primaryPotOf([gold().copyWith(isPrimary: true)]), isNull);
+    });
+
+    test('primaryPotFirst: ana kasa başa gelir, kalanın sırası korunur', () {
+      final ordered = primaryPotFirst(
+          [named('c'), named('a'), named('b', primary: true), named('d')]);
+      expect([for (final p in ordered) p.id], ['b', 'c', 'a', 'd']);
+    });
+
+    test('primaryPotFirst: işaret yoksa liste aynen döner', () {
+      final ordered = primaryPotFirst([named('c'), named('a')]);
+      expect([for (final p in ordered) p.id], ['c', 'a']);
+    });
+  });
 }

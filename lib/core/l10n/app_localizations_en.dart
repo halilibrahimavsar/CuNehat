@@ -6707,4 +6707,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get katkiBirimFiyatGenel => 'Buy price per unit';
+
+  @override
+  String get anaKasa => 'Main pot';
+
+  @override
+  String get anaKasaYap => 'Make main pot';
+
+  @override
+  String get anaKasaYapAciklama =>
+      'Default source when buying, default target when selling.';
+
+  @override
+  String get anaKasaKaldir => 'Remove main pot mark';
+
+  @override
+  String anaKasaYapildiMesaji(String name) {
+    return '“$name” is now the main pot';
+  }
+
+  @override
+  String anaKasaKaldirildiMesaji(String name) {
+    return '“$name” is no longer the main pot';
+  }
 }

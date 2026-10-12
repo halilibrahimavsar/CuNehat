@@ -177,8 +177,8 @@ void main() {
       walletId: 'w',
       cashSource: const FromSavingsPot('pot'),
     ));
-    expect(
-        states.whereType<InvestmentError>().single.notice, isA<PotUnavailableNotice>());
+    expect(states.whereType<InvestmentError>().single.notice,
+        isA<PotUnavailableNotice>());
     expect(store.keys, ['pot']);
     expect(store['pot']!.amount, 100);
   });
@@ -305,7 +305,8 @@ void main() {
         )).called(1);
   });
 
-  test('defterdeki satır kasaya bağlanınca "Birikime Aktarım" olur, ikinci '
+  test(
+      'defterdeki satır kasaya bağlanınca "Birikime Aktarım" olur, ikinci '
       'hareket yazılmaz', () async {
     final line = TransactionEntity(
       id: 'row',
@@ -341,5 +342,77 @@ void main() {
         )).called(1);
     expect(store['yeni']!.bookedCost, 300);
     expectLedgerUntouched();
+  });
+
+  group('ana kasa işareti (SetPrimaryPotEvent)', () {
+    InvestmentEntity named(String id,
+            {bool primary = false, double balance = 500}) =>
+        pot(balance: balance).copyWith(id: id, name: id, isPrimary: primary);
+
+    test('işaretler; ÖNCEKİ ana kasanın işareti düşer (en çok bir tane)',
+        () async {
+      store['eski'] = named('eski', primary: true);
+      store['yeni'] = named('yeni');
+      store['gold'] = gold();
+
+      final states =
+          await run(SetPrimaryPotEvent(pot: store['yeni']!, primary: true));
+
+      final success = states.whereType<InvestmentActionSuccess>().single;
+      expect(success.notice,
+          const PrimaryPotChangedNotice(potName: 'yeni', isPrimary: true));
+      expect(store['yeni']!.isPrimary, isTrue);
+      expect(store['eski']!.isPrimary, isFalse);
+      expect(store.values.where((i) => i.isPrimary), hasLength(1));
+      expectLedgerUntouched();
+    });
+
+    test('işaret kaldırılabilir: hiçbir kasa ana kalmaz', () async {
+      store['ana'] = named('ana', primary: true);
+
+      await run(SetPrimaryPotEvent(pot: store['ana']!, primary: false));
+
+      expect(store['ana']!.isPrimary, isFalse);
+      expectLedgerUntouched();
+    });
+
+    test('bayat kopya güncel bakiyeyi EZMEZ', () async {
+      // Sayfadaki kopya 500 gösterirken depoda bakiye 800 olmuş.
+      final stale = named('kasa', balance: 500);
+      store['kasa'] = named('kasa', balance: 800);
+
+      await run(SetPrimaryPotEvent(pot: stale, primary: true));
+
+      expect(store['kasa']!.isPrimary, isTrue);
+      expect(store['kasa']!.amount, 800);
+    });
+
+    test('kasa olmayan kayıt ya da silinmiş kasa: hiçbir şey yazılmaz',
+        () async {
+      store['eski'] = named('eski', primary: true);
+      store['gold'] = gold();
+
+      final onAsset =
+          await run(SetPrimaryPotEvent(pot: store['gold']!, primary: true));
+      final onMissing =
+          await run(SetPrimaryPotEvent(pot: named('yok'), primary: true));
+
+      expect(onAsset.whereType<InvestmentError>(), isNotEmpty);
+      expect(onMissing.whereType<InvestmentError>(), isNotEmpty);
+      expect(store['eski']!.isPrimary, isTrue);
+      expect(store['gold']!.isPrimary, isFalse);
+    });
+
+    test('yazım hatasında başarı bildirilmez', () async {
+      store['kasa'] = named('kasa');
+      failPotWrite = true;
+
+      final states =
+          await run(SetPrimaryPotEvent(pot: store['kasa']!, primary: true));
+
+      expect(states.whereType<InvestmentActionSuccess>(), isEmpty);
+      expect(states.whereType<InvestmentError>(), isNotEmpty);
+      expect(store['kasa']!.isPrimary, isFalse);
+    });
   });
 }

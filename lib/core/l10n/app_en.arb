@@ -3843,5 +3843,25 @@
       }
     }
   },
-  "katkiBirimFiyatGenel": "Buy price per unit"
+  "katkiBirimFiyatGenel": "Buy price per unit",
+  "anaKasa": "Main pot",
+  "anaKasaYap": "Make main pot",
+  "anaKasaYapAciklama": "Default source when buying, default target when selling.",
+  "anaKasaKaldir": "Remove main pot mark",
+  "anaKasaYapildiMesaji": "“{name}” is now the main pot",
+  "@anaKasaYapildiMesaji": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "anaKasaKaldirildiMesaji": "“{name}” is no longer the main pot",
+  "@anaKasaKaldirildiMesaji": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

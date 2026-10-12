@@ -4077,5 +4077,25 @@
       }
     }
   },
-  "katkiBirimFiyatGenel": "Birim alış fiyatı"
+  "katkiBirimFiyatGenel": "Birim alış fiyatı",
+  "anaKasa": "Ana kasa",
+  "anaKasaYap": "Ana kasa yap",
+  "anaKasaYapAciklama": "Alımlarda varsayılan kaynak, satışta varsayılan hedef olur.",
+  "anaKasaKaldir": "Ana kasa işaretini kaldır",
+  "anaKasaYapildiMesaji": "“{name}” ana kasa oldu",
+  "@anaKasaYapildiMesaji": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "anaKasaKaldirildiMesaji": "“{name}” artık ana kasa değil",
+  "@anaKasaKaldirildiMesaji": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

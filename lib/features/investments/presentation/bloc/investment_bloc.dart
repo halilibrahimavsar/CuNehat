@@ -321,6 +321,53 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
       );
     });
 
+    // Ana kasa işareti. Tekillik BURADA korunur: önce eski işaret(ler)
+    // düşürülür, sonra yenisi yazılır — yazım arada kesilirse "iki ana kasa"
+    // değil "ana kasa yok" kalır (varsayılan en dolu kasaya düşer, zararsız).
+    on<SetPrimaryPotEvent>((event, emit) async {
+      emit(InvestmentLoading());
+      final userId = event.pot.userId;
+      final walletId = event.pot.walletId;
+      final listResult = await getInvestmentsUseCase.call(
+        userId: userId,
+        walletId: walletId,
+      );
+
+      await listResult.fold(
+        (failure) async => _emitError(emit, RawFailureNotice(failure.message)),
+        (investments) async {
+          // Olayla gelen kopya bayat olabilir (bu arada bakiye değişti):
+          // işaret depodaki GÜNCEL kaydın üstüne yazılır.
+          final current =
+              investments.where((i) => i.id == event.pot.id).firstOrNull;
+          if (current == null || !_isPot(current)) {
+            _emitError(emit, const PotUnavailableNotice());
+            return;
+          }
+          for (final other in investments) {
+            if (!other.isPrimary || other.id == current.id) continue;
+            final cleared = await updateInvestmentUseCase
+                .call(other.copyWith(isPrimary: false));
+            if (cleared.isLeft()) {
+              _emitError(emit, RawFailureNotice(_failureText(cleared)));
+              return;
+            }
+          }
+          final saved = await updateInvestmentUseCase
+              .call(current.copyWith(isPrimary: event.primary));
+          if (saved.isLeft()) {
+            _emitError(emit, RawFailureNotice(_failureText(saved)));
+            return;
+          }
+          emit(InvestmentActionSuccess(PrimaryPotChangedNotice(
+            potName: current.name,
+            isPrimary: event.primary,
+          )));
+          add(GetInvestmentsEvent(userId: userId, walletId: walletId));
+        },
+      );
+    });
+
     // Fiyat Yenile: güncel değer = miktar × canlı fiyat (CÜZDANIN biriminde;
     // fiyat kaynağı başka birimdeyse çapraz kurla çevrilir). Maliyet
     // değişmediği için (costDiff yok) defterde nakit hareketi oluşmaz;
@@ -413,8 +460,8 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
             walletId: event.walletId,
             potId: targetPot.id!,
             proceeds: event.proceeds,
-            bookedMoved:
-                roundToCents(event.previous.bookedCost - event.remaining.bookedCost),
+            bookedMoved: roundToCents(
+                event.previous.bookedCost - event.remaining.bookedCost),
             writeAsset: () => updateInvestmentUseCase.call(event.remaining),
             restoreAsset: () => updateInvestmentUseCase.call(event.previous),
             previousAsset: event.previous,
@@ -642,8 +689,8 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
   /// olabilir); kasa değilse ya da yoksa `null`.
   Future<InvestmentEntity?> _freshPot(
       String userId, String walletId, String potId) async {
-    final pot =
-        await _investmentSnapshot(userId: userId, walletId: walletId, id: potId);
+    final pot = await _investmentSnapshot(
+        userId: userId, walletId: walletId, id: potId);
     return pot != null && _isPot(pot) ? pot : null;
   }
 

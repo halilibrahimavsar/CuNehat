@@ -75,6 +75,20 @@ final class AdoptionFailedNotice extends InvestmentNotice {
   const AdoptionFailedNotice();
 }
 
+/// Ana kasa işareti değişti; [isPrimary] yeni durum.
+final class PrimaryPotChangedNotice extends InvestmentNotice {
+  final String potName;
+  final bool isPrimary;
+
+  const PrimaryPotChangedNotice({
+    required this.potName,
+    required this.isPrimary,
+  });
+
+  @override
+  List<Object?> get props => [potName, isPrimary];
+}
+
 /// Seçilen nakit kasası bulunamadı ya da bakiyesi yetmiyor (bu arada başka
 /// bir işlemle azalmış olabilir). Hiçbir kayıt YAZILMADI.
 final class PotUnavailableNotice extends InvestmentNotice {

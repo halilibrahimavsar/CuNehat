@@ -217,12 +217,30 @@ class CashPotTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      pot.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            pot.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        if (pot.isPrimary) ...[
+                          const SizedBox(width: 6),
+                          Tooltip(
+                            message: context.l10n.anaKasa,
+                            child: Icon(
+                              Icons.star_rounded,
+                              key: ValueKey('cash-pot-primary-${pot.id}'),
+                              size: 16,
+                              color: Colors.amber.shade700,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -258,7 +276,7 @@ class CashPotTile extends StatelessWidget {
 
 // ============================================================== eylem menüsü
 
-enum CashPotAction { deposit, withdraw, edit, close }
+enum CashPotAction { deposit, withdraw, togglePrimary, edit, close }
 
 class CashPotActionSheet extends StatelessWidget {
   final InvestmentEntity pot;
@@ -291,7 +309,9 @@ class CashPotActionSheet extends StatelessWidget {
     return RowActionSheet<CashPotAction>(
       keyPrefix: 'cash-pot-action',
       title: pot.name,
-      subtitle: l10n.kasaBakiyeSade(money(pot.currentValue)),
+      subtitle: pot.isPrimary
+          ? '${l10n.anaKasa} · ${l10n.kasaBakiyeSade(money(pot.currentValue))}'
+          : l10n.kasaBakiyeSade(money(pot.currentValue)),
       icon: Icons.savings_rounded,
       accent: kCashPotColor,
       actions: [
@@ -308,6 +328,12 @@ class CashPotActionSheet extends StatelessWidget {
           title: l10n.kasaParaCek,
           subtitle: l10n.kasaParaCekAciklama,
           enabled: hasBalance,
+        ),
+        RowAction(
+          value: CashPotAction.togglePrimary,
+          icon: pot.isPrimary ? Icons.star_outline_rounded : Icons.star_rounded,
+          title: pot.isPrimary ? l10n.anaKasaKaldir : l10n.anaKasaYap,
+          subtitle: pot.isPrimary ? null : l10n.anaKasaYapAciklama,
         ),
         RowAction(
           value: CashPotAction.edit,

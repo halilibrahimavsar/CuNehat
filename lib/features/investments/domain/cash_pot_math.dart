@@ -25,6 +25,22 @@ InvestmentEntity _potWith(InvestmentEntity pot, double balance, double booked) {
   );
 }
 
+/// ANA KASA: [pots] içinde işaretli olan; yoksa `null`.
+///
+/// Varlık alımında varsayılan kaynak ve satışta varsayılan hedef odur.
+/// Cüzdan başına en çok bir tane olur (bkz. `SetPrimaryPotEvent`).
+InvestmentEntity? primaryPotOf(Iterable<InvestmentEntity> pots) =>
+    pots.where((p) => p.type == InvestmentType.cash && p.isPrimary).firstOrNull;
+
+/// [pots]'u ana kasa BAŞTA olacak biçimde döndürür; geri kalanın sırası
+/// (kullanıcının seçtiği sıralama) korunur.
+List<InvestmentEntity> primaryPotFirst(List<InvestmentEntity> pots) => [
+      for (final p in pots)
+        if (p.isPrimary) p,
+      for (final p in pots)
+        if (!p.isPrimary) p,
+    ];
+
 /// Kasanın bakiyesini [newBalance] olarak DÜZELTİR — cüzdana ve deftere
 /// dokunmadan ("kasayı düzenle"deki bakiye alanı).
 ///

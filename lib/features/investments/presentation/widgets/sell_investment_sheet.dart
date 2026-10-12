@@ -8,6 +8,7 @@ import 'package:cunehat/features/investments/domain/contribution_calculator.dart
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/usecases/get_live_quote_usecase.dart';
 import 'package:cunehat/features/investments/presentation/widgets/gold_types.dart';
+import 'package:cunehat/features/investments/domain/cash_pot_math.dart';
 import 'package:flutter/material.dart';
 
 /// Satış sonucu: kaydın tamamı mı gitti, cüzdana ne girecek, kısmi satışta
@@ -82,11 +83,11 @@ class _SellInvestmentSheetState extends State<SellInvestmentSheet> {
   final _soldController = TextEditingController();
   final _proceedsController = TextEditingController();
 
-  /// Bedelin gideceği kasa; `null` → cüzdan. Varsayılan: kasa varsa ilki
-  /// (kullanıcı kararı: satış parası birikimde kalır, istenirse sonra
-  /// cüzdana aktarılır).
-  late InvestmentEntity? _targetPot =
-      widget.pots.isEmpty ? null : widget.pots.first;
+  /// Bedelin gideceği kasa; `null` → cüzdan. Varsayılan: ANA KASA, o yoksa
+  /// kasaların ilki (kullanıcı kararı: satış parası birikimde kalır,
+  /// istenirse sonra cüzdana aktarılır).
+  late InvestmentEntity? _targetPot = primaryPotOf(widget.pots) ??
+      (widget.pots.isEmpty ? null : widget.pots.first);
 
   bool _isLoading = false;
   String? _error;
@@ -441,15 +442,13 @@ class _SellInvestmentSheetState extends State<SellInvestmentSheet> {
                             key: ValueKey('sell-to-pot-${pot.id}'),
                             label: Text(pot.name),
                             selected: _targetPot?.id == pot.id,
-                            onSelected: (_) =>
-                                setState(() => _targetPot = pot),
+                            onSelected: (_) => setState(() => _targetPot = pot),
                           ),
                         ChoiceChip(
                           key: const ValueKey('sell-to-wallet'),
                           label: Text(context.l10n.satisHedefiCuzdan),
                           selected: _targetPot == null,
-                          onSelected: (_) =>
-                              setState(() => _targetPot = null),
+                          onSelected: (_) => setState(() => _targetPot = null),
                         ),
                       ],
                     ),

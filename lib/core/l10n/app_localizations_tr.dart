@@ -6658,4 +6658,27 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get katkiBirimFiyatGenel => 'Birim alış fiyatı';
+
+  @override
+  String get anaKasa => 'Ana kasa';
+
+  @override
+  String get anaKasaYap => 'Ana kasa yap';
+
+  @override
+  String get anaKasaYapAciklama =>
+      'Alımlarda varsayılan kaynak, satışta varsayılan hedef olur.';
+
+  @override
+  String get anaKasaKaldir => 'Ana kasa işaretini kaldır';
+
+  @override
+  String anaKasaYapildiMesaji(String name) {
+    return '“$name” ana kasa oldu';
+  }
+
+  @override
+  String anaKasaKaldirildiMesaji(String name) {
+    return '“$name” artık ana kasa değil';
+  }
 }
