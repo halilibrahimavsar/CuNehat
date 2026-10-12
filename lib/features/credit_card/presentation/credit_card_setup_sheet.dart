@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
@@ -10,7 +11,11 @@ import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_math.dart';
+import 'package:cunehat/core/shared/money_writer.dart';
+import 'package:cunehat/core/shared/widgets/labeled_segment.dart';
 import 'package:cunehat/features/credit_card/presentation/card_reminders.dart';
+import 'package:cunehat/features/credit_card/presentation/card_statement_sheet.dart';
+import 'package:cunehat/features/credit_card/presentation/card_status.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:cunehat/core/utils/money_format.dart';
@@ -98,9 +103,20 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
   final _debt = TextEditingController();
   final _statementBalance = TextEditingController();
   final _minimum = TextEditingController();
+  final _monthlyRate = TextEditingController();
+  final _lateRate = TextEditingController();
 
   int _closingDay = 15;
   int _dueDay = CreditCardInfo.defaultDueDayFor(15);
+
+  /// Son ödeme nasıl belirleniyor: ayın sabit bir günü mü, kesimden N gün
+  /// sonrası mı ([CreditCardInfo.dueOffsetDays]).
+  _DueMode _dueMode = _DueMode.fixedDay;
+  int _dueOffset = 10;
+
+  /// Ayarlarda borç alanının AÇILIŞ metni. Kullanıcı alana dokunmadıysa
+  /// (metin aynıysa) bakiye yazılmaz: form açıkken defter değişmiş olabilir.
+  String _debtInitial = '';
 
   /// Son ödeme günü kullanıcı tarafından seçildi mi; seçilmediyse kesim günü
   /// değişince varsayılan (kesim + 10) izler.
@@ -168,6 +184,18 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
         _dueDay = card.dueDay;
         _dueTouched = true;
         _paymentWalletId = card.paymentWalletId;
+        if (card.dueOffsetDays case final offset?) {
+          _dueMode = _DueMode.offset;
+          _dueOffset = offset;
+        } else {
+          // Kip değiştirilirse bankanın beyanından türetilen farkla açılsın.
+          _dueOffset = CardCycle(card).declaredDueOffsetDays ?? 10;
+        }
+        _monthlyRate.text = _rateText(card.monthlyInterestRate);
+        _lateRate.text = _rateText(card.lateInterestRate);
+        // Borç = eksi bakiye. Kart alacaklıysa (fazla ödeme) alan boş açılır.
+        _debtInitial = w.balance < 0 ? formatAmountForInput(-w.balance) : '';
+        _debt.text = _debtInitial;
       }
     }
     if (_paymentWalletId != null &&
@@ -222,10 +250,62 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
       _debt,
       _statementBalance,
       _minimum,
+      _monthlyRate,
+      _lateRate,
     ]) {
       c.dispose();
     }
     super.dispose();
+  }
+
+  static String _rateText(double? rate) =>
+      rate == null ? '' : formatAmountForInput(rate, decimalDigits: 4);
+
+  /// Yüzde alanı: boş → `null` (ayarlanmamış).
+  double? _rate(TextEditingController c) {
+    final text = c.text.trim();
+    return text.isEmpty ? null : parseAmountInput(text);
+  }
+
+  String? _optionalRate(String? v) {
+    final text = (v ?? '').trim();
+    if (text.isEmpty) return null;
+    final parsed = parseAmountInput(text);
+    if (parsed == null || parsed < 0 || parsed > 100) {
+      return context.l10n.kkFaizOraniHatasi;
+    }
+    return null;
+  }
+
+  /// Formdaki kurallar (kesim + son ödeme) — beyan olmadan.
+  CreditCardInfo get _rules => CreditCardInfo(
+        closingDay: _closingDay,
+        dueDay: _dueDay,
+        dueOffsetDays: _dueMode == _DueMode.offset ? _dueOffset : null,
+      );
+
+  /// Kaydedilecek sabit son ödeme günü. "Kesimden N gün sonra" kipinde de
+  /// DOLU ve tutarlı yazılır (son kesim + N'in günü): ayar bir gün
+  /// kaldırılırsa kart anlamlı bir güne düşsün.
+  int get _savedDueDay => _dueMode == _DueMode.offset
+      ? CardCycle(_rules).dueFor(_lastClosing).day
+      : _dueDay;
+
+  /// Düzenlenen kartın bloc'taki GÜNCEL hâli. Ekstre bilgisi bu sayfa
+  /// açıkken değişebilir ("Son ekstre › Düzenle"); kaydederken açılıştaki
+  /// kopyanın beyanını yazmak o değişikliği geri alırdı.
+  WalletEntity? _liveTarget(BuildContext context) {
+    final id = _target?.id;
+    if (id == null) return _target;
+    try {
+      final state = context.read<WalletBloc>().state;
+      if (state is WalletLoadedSt) {
+        return state.wallets.where((w) => w.id == id).firstOrNull ?? _target;
+      }
+    } on ProviderNotFoundException {
+      // WalletBloc'suz ağaç (yalıtılmış testler).
+    }
+    return _target;
   }
 
   /// Önceki (en yakın geçmiş) kesim — "son ekstre" sorusu bu kesim içindir.
@@ -253,25 +333,26 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
 
     final statementBalance = _money(_statementBalance);
     final lastClosing = _lastClosing;
+    final rules = _rules;
     final info = CreditCardInfo(
       bankName: _bank.text.trim().isEmpty ? null : _bank.text.trim(),
       last4: _last4.text.trim().isEmpty ? null : _last4.text.trim(),
       limit: _money(_limit),
       closingDay: _closingDay,
-      dueDay: _dueDay,
+      dueDay: _savedDueDay,
       paymentWalletId: _paymentWalletId,
       lastStatement: statementBalance == null
-          ? _target?.creditCard?.lastStatement
+          ? _liveTarget(context)?.creditCard?.lastStatement
           : CardStatement(
               closingDate: lastClosing,
-              dueDate: CardCycle(CreditCardInfo(
-                closingDay: _closingDay,
-                dueDay: _dueDay,
-              )).dueFor(lastClosing),
+              dueDate: CardCycle(rules).dueFor(lastClosing),
               statementBalance: roundToCents(statementBalance),
               minimumPayment: _money(_minimum),
               recordedAt: DateTime.now(),
             ),
+      dueOffsetDays: rules.dueOffsetDays,
+      monthlyInterestRate: _rate(_monthlyRate),
+      lateInterestRate: _rate(_lateRate),
     );
 
     final w = _target;
@@ -300,6 +381,10 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
       bloc.add(CreateWalletEvent(created, activate: false));
       resyncCardReminders(created);
     } else {
+      // Ayarlarda borç alanına DOKUNULDUYSA bakiye düzeltilir: fark açılış
+      // bakiyesine yansır (cüzdan formunun bakiye düzeltmesiyle aynı yol),
+      // deftere işlem yazılmaz. Dokunulmadıysa bakiye olduğu gibi kalır.
+      final debtEdited = _isEdit && _debt.text.trim() != _debtInitial;
       final updated = w.copyWith(
         name: _name.text.trim(),
         creditCard: info,
@@ -307,10 +392,11 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
         // Çevirmede renk yalnız kullanıcı seçtiyse değişir (cüzdanın kendi
         // rengi korunur); ayarlarda seçilen renk yazılır.
         colorHex: _color,
+        balance: debtEdited ? -roundToCents(_money(_debt) ?? 0) : null,
       );
       bloc.add(UpdateWalletEvent(
         updated,
-        // Bakiye alanı bu sayfada yok: defter olduğu gibi kalır.
+        // Taban = sayfa açılırken görülen bakiye; bloc farkı buna göre ölçer.
         baselineBalance: w.balance,
       ));
       resyncCardReminders(updated);
@@ -386,302 +472,378 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
         clipBehavior: Clip.antiAlias,
         child: SafeArea(
           top: false,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: cs.onSurface.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Icon(Icons.credit_card_rounded, color: cs.primary),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
+          child: Form(
+            key: _formKey,
+            // Kaydet kaydırılan içeriğin DIŞINDA: ayarlarda alan sayısı
+            // arttı ve düğme klavyenin/katlanmanın altında kalıyordu.
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 40,
+                            height: 4,
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: cs.onSurface.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  if (!_isEdit) ...[
-                    const SizedBox(height: 8),
-                    Text(l10n.kkKurulumAciklama,
-                        style: theme.textTheme.bodySmall),
-                  ],
-                  if (_isNew && _convertible.isNotEmpty)
-                    Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: TextButton(
-                        key: const ValueKey('kk-convert-link'),
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          visualDensity: VisualDensity.compact,
+                        Row(
+                          children: [
+                            Icon(Icons.credit_card_rounded, color: cs.primary),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                title,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        onPressed: _pickConvertTarget,
-                        child: Text(l10n.kkMevcutCevir),
-                      ),
-                    ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _name,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: _decoration(
-                      label: l10n.kkKartAdi,
-                      hint: l10n.kkKartAdiIpucu,
-                      icon: Icons.badge_outlined,
-                    ),
-                    validator: (v) =>
-                        (v ?? '').trim().isEmpty ? l10n.kkKartAdiGerekli : null,
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _dayField(
-                          label: l10n.kkKesimGunu,
-                          value: _closingDay,
-                          onChanged: (d) => setState(() {
-                            _closingDay = d;
-                            if (!_dueTouched) {
-                              _dueDay = CreditCardInfo.defaultDueDayFor(d);
-                            }
-                          }),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _dayField(
-                          label: l10n.kkSonOdemeGunu,
-                          value: _dueDay,
-                          onChanged: (d) => setState(() {
-                            _dueDay = d;
-                            _dueTouched = true;
-                          }),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  _ColorRow(
-                    selected: _color ??
-                        (_isNew
-                            ? _nextCardColor(_payers
-                                .where((p) => p.id == _paymentWalletId)
-                                .firstOrNull)
-                            : _target!.colorHex),
-                    colors: _cardColors,
-                    onSelect: (c) => setState(() => _color = c),
-                  ),
-                  if (_isNew) ...[
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _debt,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: [AmountInputFormatter()],
-                      decoration: _decoration(
-                        label: l10n.kkGuncelBorc,
-                        hint: '0',
-                        icon: Icons.account_balance_wallet_outlined,
-                        suffix: currencySymbol(currency),
-                      ),
-                      validator: _optionalMoney,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4, left: 4),
-                      child: Text(l10n.kkGuncelBorcAciklama,
-                          style: theme.textTheme.bodySmall),
-                    ),
-                  ],
-                  const SizedBox(height: 12),
-                  if (_payers.isNotEmpty) ...[
-                    DropdownButtonFormField<String?>(
-                      // Çevir kipine geçişte seçim yeniden okunsun.
-                      key: ValueKey('kk-owner-${_target?.id}'),
-                      initialValue: _paymentWalletId,
-                      isExpanded: true,
-                      decoration: _decoration(
-                        label: l10n.kkOdemeCuzdani,
-                        icon: Icons.account_balance_rounded,
-                      ),
-                      items: [
-                        for (final w in _payers)
-                          DropdownMenuItem<String?>(
-                            value: w.id,
-                            child:
-                                Text(w.name, overflow: TextOverflow.ellipsis),
+                        if (!_isEdit) ...[
+                          const SizedBox(height: 8),
+                          Text(l10n.kkKurulumAciklama,
+                              style: theme.textTheme.bodySmall),
+                        ],
+                        if (_isNew && _convertible.isNotEmpty)
+                          Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: TextButton(
+                              key: const ValueKey('kk-convert-link'),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                visualDensity: VisualDensity.compact,
+                              ),
+                              onPressed: _pickConvertTarget,
+                              child: Text(l10n.kkMevcutCevir),
+                            ),
                           ),
-                      ],
-                      // Kart bir cüzdanın içinde durur: bağlı cüzdan
-                      // zorunlu (yetim kart listede ayrı cüzdan gibi durur).
-                      validator: (v) =>
-                          v == null ? l10n.kkBagliCuzdanGerekli : null,
-                      onChanged: (v) => setState(() => _paymentWalletId = v),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4, left: 4),
-                      child: Text(l10n.kkBagliCuzdanAciklama,
-                          style: theme.textTheme.bodySmall),
-                    ),
-                  ],
-                  if (!_isEdit) ...[
-                    // Temel olmayan alanlar katlanır (yeni kartta 9 alan
-                    // birden kalabalıktı); ayarlarda hep açık.
-                    const SizedBox(height: 4),
-                    Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: TextButton.icon(
-                        key: const ValueKey('kk-more-toggle'),
-                        onPressed: () => setState(() => _showMore = !_showMore),
-                        icon: AnimatedRotation(
-                          turns: _moreOpen ? 0.5 : 0,
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _name,
+                          textCapitalization: TextCapitalization.words,
+                          decoration: _decoration(
+                            label: l10n.kkKartAdi,
+                            hint: l10n.kkKartAdiIpucu,
+                            icon: Icons.badge_outlined,
+                          ),
+                          validator: (v) => (v ?? '').trim().isEmpty
+                              ? l10n.kkKartAdiGerekli
+                              : null,
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _dayField(
+                                label: l10n.kkKesimGunu,
+                                value: _closingDay,
+                                onChanged: (d) => setState(() {
+                                  _closingDay = d;
+                                  if (!_dueTouched) {
+                                    _dueDay =
+                                        CreditCardInfo.defaultDueDayFor(d);
+                                  }
+                                }),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: _dueMode == _DueMode.offset
+                                  ? _dayField(
+                                      key: const ValueKey('kk-due-offset'),
+                                      label: l10n.kkKesimdenKacGun,
+                                      value: _dueOffset,
+                                      onChanged: (d) =>
+                                          setState(() => _dueOffset = d),
+                                    )
+                                  : _dayField(
+                                      key: const ValueKey('kk-due-day'),
+                                      label: l10n.kkSonOdemeGunu,
+                                      value: _dueDay,
+                                      onChanged: (d) => setState(() {
+                                        _dueDay = d;
+                                        _dueTouched = true;
+                                      }),
+                                    ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        // Bankaların çoğu son ödemeyi "kesimden N gün sonra" diye
+                        // belirler; sabit gün 31 çeken aylardan sonra bir gün
+                        // kayıyordu.
+                        LabeledSegment<_DueMode>(
+                          selected: _dueMode,
+                          onChanged: (mode) => setState(() => _dueMode = mode),
+                          items: [
+                            SegmentItem(
+                                value: _DueMode.fixedDay,
+                                label: l10n.kkSonOdemeKipiGun),
+                            SegmentItem(
+                                value: _DueMode.offset,
+                                label: l10n.kkSonOdemeKipiFark),
+                          ],
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4, left: 4),
+                          child: Text(
+                            l10n.kkSonOdemeOnizleme(
+                              // Ay ADIYLA: iki rakam tarih yan yana hangisinin
+                              // kesim, hangisinin son ödeme olduğunu
+                              // söylemiyor.
+                              DateFormat.MMMd(Intl.defaultLocale)
+                                  .format(_lastClosing),
+                              DateFormat.MMMd(Intl.defaultLocale).format(
+                                  CardCycle(_rules).dueFor(_lastClosing)),
+                            ),
+                            key: const ValueKey('kk-due-preview'),
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        _ColorRow(
+                          selected: _color ??
+                              (_isNew
+                                  ? _nextCardColor(_payers
+                                      .where((p) => p.id == _paymentWalletId)
+                                      .firstOrNull)
+                                  : _target!.colorHex),
+                          colors: _cardColors,
+                          onSelect: (c) => setState(() => _color = c),
+                        ),
+                        if (_isNew || _isEdit) ...[
+                          // Ayarlarda borç ve limit kendi bölümünde, EN GÖRÜNÜR
+                          // yerde: eskiden borç yalnız kart kurulurken soruluyordu
+                          // ve limit "ayrıntı"ların arasındaydı.
+                          if (_isEdit)
+                            _sectionLabel(l10n.kkBolumTutarlar)
+                          else
+                            const SizedBox(height: 12),
+                          TextFormField(
+                            key: const ValueKey('kk-debt'),
+                            controller: _debt,
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
+                            inputFormatters: [AmountInputFormatter()],
+                            decoration: _decoration(
+                              label: l10n.kkGuncelBorc,
+                              hint: '0',
+                              icon: Icons.account_balance_wallet_outlined,
+                              suffix: currencySymbol(currency),
+                            ),
+                            validator: _optionalMoney,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4, left: 4),
+                            child: Text(
+                                _isEdit
+                                    ? l10n.kkGuncelBorcDuzeltAciklama
+                                    : l10n.kkGuncelBorcAciklama,
+                                style: theme.textTheme.bodySmall),
+                          ),
+                          if (_isEdit) ...[
+                            const SizedBox(height: 12),
+                            _limitField(currency),
+                          ],
+                        ],
+                        const SizedBox(height: 12),
+                        if (_payers.isNotEmpty) ...[
+                          DropdownButtonFormField<String?>(
+                            // Çevir kipine geçişte seçim yeniden okunsun.
+                            key: ValueKey('kk-owner-${_target?.id}'),
+                            initialValue: _paymentWalletId,
+                            isExpanded: true,
+                            decoration: _decoration(
+                              label: l10n.kkOdemeCuzdani,
+                              icon: Icons.account_balance_rounded,
+                            ),
+                            items: [
+                              for (final w in _payers)
+                                DropdownMenuItem<String?>(
+                                  value: w.id,
+                                  child: Text(w.name,
+                                      overflow: TextOverflow.ellipsis),
+                                ),
+                            ],
+                            // Kart bir cüzdanın içinde durur: bağlı cüzdan
+                            // zorunlu (yetim kart listede ayrı cüzdan gibi durur).
+                            validator: (v) =>
+                                v == null ? l10n.kkBagliCuzdanGerekli : null,
+                            onChanged: (v) =>
+                                setState(() => _paymentWalletId = v),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4, left: 4),
+                            child: Text(l10n.kkBagliCuzdanAciklama,
+                                style: theme.textTheme.bodySmall),
+                          ),
+                        ],
+                        if (!_isEdit) ...[
+                          // Temel olmayan alanlar katlanır (yeni kartta 9 alan
+                          // birden kalabalıktı); ayarlarda hep açık.
+                          const SizedBox(height: 4),
+                          Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: TextButton.icon(
+                              key: const ValueKey('kk-more-toggle'),
+                              onPressed: () =>
+                                  setState(() => _showMore = !_showMore),
+                              icon: AnimatedRotation(
+                                turns: _moreOpen ? 0.5 : 0,
+                                duration: _motion(context),
+                                child: const Icon(Icons.expand_more_rounded),
+                              ),
+                              label: Text(l10n.kkDahaFazlaAyrinti),
+                            ),
+                          ),
+                        ],
+                        AnimatedSize(
                           duration: _motion(context),
-                          child: const Icon(Icons.expand_more_rounded),
-                        ),
-                        label: Text(l10n.kkDahaFazlaAyrinti),
-                      ),
-                    ),
-                  ],
-                  AnimatedSize(
-                    duration: _motion(context),
-                    curve: Curves.easeOutCubic,
-                    alignment: Alignment.topCenter,
-                    child: !_moreOpen
-                        ? const SizedBox(width: double.infinity)
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              const SizedBox(height: 12),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    flex: 3,
-                                    child: TextFormField(
-                                      controller: _bank,
-                                      textCapitalization:
-                                          TextCapitalization.words,
-                                      decoration: _decoration(
-                                        label: l10n.kkBanka,
-                                        icon: Icons.account_balance_outlined,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    flex: 2,
-                                    child: TextFormField(
-                                      controller: _last4,
-                                      keyboardType: TextInputType.number,
-                                      inputFormatters: [
-                                        FilteringTextInputFormatter.digitsOnly,
-                                        LengthLimitingTextInputFormatter(4),
-                                      ],
-                                      decoration:
-                                          _decoration(label: l10n.kkSon4),
-                                      validator: (v) {
-                                        final t = (v ?? '').trim();
-                                        return t.isEmpty || t.length == 4
-                                            ? null
-                                            : l10n.kkSon4Hatasi;
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4, left: 4),
-                                child: Text(l10n.kkSon4Aciklama,
-                                    style: theme.textTheme.bodySmall),
-                              ),
-                              const SizedBox(height: 12),
-                              TextFormField(
-                                controller: _limit,
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                        decimal: true),
-                                inputFormatters: [AmountInputFormatter()],
-                                decoration: _decoration(
-                                  label: l10n.kkLimit,
-                                  icon: Icons.speed_rounded,
-                                  suffix: currencySymbol(currency),
-                                ),
-                                validator: _optionalMoney,
-                              ),
-                              if (!_isEdit) ...[
-                                const SizedBox(height: 16),
-                                Text(
-                                  l10n.kkSonEkstre,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.w700),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  l10n.kkSonEkstreAciklama(AppFormatters
-                                      .dateShort
-                                      .format(_lastClosing)),
-                                  style: theme.textTheme.bodySmall,
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                          curve: Curves.easeOutCubic,
+                          alignment: Alignment.topCenter,
+                          child: !_moreOpen
+                              ? const SizedBox(width: double.infinity)
+                              : Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
-                                    Expanded(
-                                      child: TextFormField(
-                                        controller: _statementBalance,
-                                        keyboardType: const TextInputType
-                                            .numberWithOptions(decimal: true),
-                                        inputFormatters: [
-                                          AmountInputFormatter()
-                                        ],
-                                        decoration: _decoration(
-                                          label: l10n.kkDonemBorcu,
-                                          suffix: currencySymbol(currency),
+                                    const SizedBox(height: 12),
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          flex: 3,
+                                          child: TextFormField(
+                                            controller: _bank,
+                                            textCapitalization:
+                                                TextCapitalization.words,
+                                            decoration: _decoration(
+                                              label: l10n.kkBanka,
+                                              icon: Icons
+                                                  .account_balance_outlined,
+                                            ),
+                                          ),
                                         ),
-                                        validator: _optionalMoney,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: TextFormField(
-                                        controller: _minimum,
-                                        keyboardType: const TextInputType
-                                            .numberWithOptions(decimal: true),
-                                        inputFormatters: [
-                                          AmountInputFormatter()
-                                        ],
-                                        decoration: _decoration(
-                                          label: l10n.kkAsgariOdeme,
-                                          suffix: currencySymbol(currency),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          flex: 2,
+                                          child: TextFormField(
+                                            controller: _last4,
+                                            keyboardType: TextInputType.number,
+                                            inputFormatters: [
+                                              FilteringTextInputFormatter
+                                                  .digitsOnly,
+                                              LengthLimitingTextInputFormatter(
+                                                  4),
+                                            ],
+                                            decoration:
+                                                _decoration(label: l10n.kkSon4),
+                                            validator: (v) {
+                                              final t = (v ?? '').trim();
+                                              return t.isEmpty || t.length == 4
+                                                  ? null
+                                                  : l10n.kkSon4Hatasi;
+                                            },
+                                          ),
                                         ),
-                                        validator: _optionalMoney,
-                                      ),
+                                      ],
                                     ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          top: 4, left: 4),
+                                      child: Text(l10n.kkSon4Aciklama,
+                                          style: theme.textTheme.bodySmall),
+                                    ),
+                                    // Ayarlarda limit yukarıda, "Tutarlar"da.
+                                    if (!_isEdit) ...[
+                                      const SizedBox(height: 12),
+                                      _limitField(currency),
+                                    ],
+                                    ..._rateFields(theme),
+                                    if (_isEdit) _statementRow(theme),
+                                    if (!_isEdit) ...[
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        l10n.kkSonEkstre,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w700),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        l10n.kkSonEkstreAciklama(AppFormatters
+                                            .dateShort
+                                            .format(_lastClosing)),
+                                        style: theme.textTheme.bodySmall,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            child: TextFormField(
+                                              controller: _statementBalance,
+                                              keyboardType: const TextInputType
+                                                  .numberWithOptions(
+                                                  decimal: true),
+                                              inputFormatters: [
+                                                AmountInputFormatter()
+                                              ],
+                                              decoration: _decoration(
+                                                label: l10n.kkDonemBorcu,
+                                                suffix:
+                                                    currencySymbol(currency),
+                                              ),
+                                              validator: _optionalMoney,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: TextFormField(
+                                              controller: _minimum,
+                                              keyboardType: const TextInputType
+                                                  .numberWithOptions(
+                                                  decimal: true),
+                                              inputFormatters: [
+                                                AmountInputFormatter()
+                                              ],
+                                              decoration: _decoration(
+                                                label: l10n.kkAsgariOdeme,
+                                                suffix:
+                                                    currencySymbol(currency),
+                                              ),
+                                              validator: _optionalMoney,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ],
                                 ),
-                              ],
-                            ],
-                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 20),
-                  FilledButton.icon(
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                  child: FilledButton.icon(
+                    key: const ValueKey('kk-save'),
                     onPressed: _saving ? null : _save,
                     icon: const Icon(Icons.check_rounded),
                     label: Text(l10n.kaydet),
@@ -689,12 +851,121 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _sectionLabel(String text) => Padding(
+        padding: const EdgeInsets.only(top: 18, bottom: 8),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.5,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      );
+
+  /// Faiz oranları: yalnız TAHMİN için (bkz. `estimateCardInterest`).
+  List<Widget> _rateFields(ThemeData theme) {
+    final l10n = context.l10n;
+    Widget field(TextEditingController c, String label, Key key) =>
+        TextFormField(
+          key: key,
+          controller: c,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [AmountInputFormatter(decimalDigits: 4)],
+          decoration: _decoration(label: label, suffix: '%'),
+          validator: _optionalRate,
+        );
+    return [
+      _sectionLabel(l10n.kkBolumFaiz),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: field(_monthlyRate, l10n.kkAylikFaiz,
+                const ValueKey('kk-monthly-rate')),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: field(
+                _lateRate, l10n.kkGecikmeFaizi, const ValueKey('kk-late-rate')),
+          ),
+        ],
+      ),
+      Padding(
+        padding: const EdgeInsets.only(top: 4, left: 4),
+        child: Text(l10n.kkFaizAciklama, style: theme.textTheme.bodySmall),
+      ),
+    ];
+  }
+
+  /// Ayarlarda "son ekstre" satırı: bankanın beyanı (dönem borcu / asgari)
+  /// ve onu düzenleyen sayfaya giden yol. Kartın GÜNCEL hâlinden okur.
+  Widget _statementRow(ThemeData theme) {
+    final l10n = context.l10n;
+    final WalletEntity? live;
+    try {
+      final state = context.watch<WalletBloc>().state;
+      final id = _target?.id;
+      live = state is WalletLoadedSt
+          ? (state.wallets.where((w) => w.id == id).firstOrNull ?? _target)
+          : _target;
+    } on ProviderNotFoundException {
+      return const SizedBox.shrink();
+    }
+    if (live == null || !live.isCreditCard) return const SizedBox.shrink();
+    final card = live;
+    final statement = card.creditCard!.lastStatement;
+    final money = MoneyWriter(currency: card.currency, visible: true);
+    final summary = statement == null
+        ? l10n.kkEkstreHenuzYok
+        : statement.minimumPayment == null
+            ? l10n.kkEkstreOzetAsgarisiz(money(statement.statementBalance))
+            : l10n.kkEkstreOzetSatiri(
+                money(statement.statementBalance),
+                money(statement.minimumPayment!),
+              );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _sectionLabel(l10n.kkBolumEkstre),
+        CardStatusBuilder(
+          card: card,
+          today: widget.today,
+          builder: (context, status) => Row(
+            children: [
+              Expanded(
+                child: Text(
+                  summary,
+                  key: const ValueKey('kk-statement-summary'),
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ),
+              TextButton(
+                key: const ValueKey('kk-statement-edit'),
+                // Durum defterden okunur; gelene kadar düğme bekler.
+                onPressed: status == null
+                    ? null
+                    : () => CardStatementSheet.show(
+                          context,
+                          card: card,
+                          status: status,
+                        ),
+                child: Text(l10n.duzenle),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -712,12 +983,27 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       );
 
+  Widget _limitField(String currency) => TextFormField(
+        key: const ValueKey('kk-limit'),
+        controller: _limit,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        inputFormatters: [AmountInputFormatter()],
+        decoration: _decoration(
+          label: context.l10n.kkLimit,
+          icon: Icons.speed_rounded,
+          suffix: currencySymbol(currency),
+        ),
+        validator: _optionalMoney,
+      );
+
   Widget _dayField({
+    Key? key,
     required String label,
     required int value,
     required ValueChanged<int> onChanged,
   }) {
     return DropdownButtonFormField<int>(
+      key: key,
       initialValue: value,
       isExpanded: true,
       decoration: _decoration(label: label),
@@ -730,6 +1016,15 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
       },
     );
   }
+}
+
+/// Son ödemenin belirlenme biçimi.
+enum _DueMode {
+  /// Ayın sabit bir günü ([CreditCardInfo.dueDay]).
+  fixedDay,
+
+  /// Kesimden N gün sonra ([CreditCardInfo.dueOffsetDays]).
+  offset,
 }
 
 /// Kart rengi seçici: koyu kart renkleri; seçili olan beyaz halkalı ve

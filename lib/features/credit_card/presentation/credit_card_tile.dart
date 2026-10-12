@@ -7,6 +7,7 @@ import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/credit_card/presentation/card_pay_sheet.dart';
 import 'package:cunehat/features/finance_transactions/domain/installments.dart';
 import 'package:cunehat/features/credit_card/presentation/card_statement_sheet.dart';
@@ -128,10 +129,11 @@ class CreditCardTile extends StatelessWidget {
                     else
                       TweenAnimationBuilder<double>(
                         tween: Tween(end: status.remainingStatementDebt),
-                        duration: (MediaQuery.maybeDisableAnimationsOf(context) ??
-                                false)
-                            ? Duration.zero
-                            : const Duration(milliseconds: 500),
+                        duration:
+                            (MediaQuery.maybeDisableAnimationsOf(context) ??
+                                    false)
+                                ? Duration.zero
+                                : const Duration(milliseconds: 500),
                         curve: Curves.easeOutCubic,
                         builder: (context, v, _) => Text(
                           _money(v),
@@ -194,6 +196,7 @@ class CreditCardTile extends StatelessWidget {
             l10n.kkSonrakiKesimEtiket,
             AppFormatters.dateShort.format(status.nextClosing),
           ),
+          ..._interestNotes(context, status),
           ..._notes(context, status),
         ],
         const SizedBox(height: 4),
@@ -249,6 +252,58 @@ class CreditCardTile extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Faiz TAHMİNİ (oran kart ayarlarında girildiyse): dönem borcundan ödenecek
+  /// bir şey varken "yalnız asgariyi ödersen" ve gecikmedeyse gecikme faizi.
+  List<Widget> _interestNotes(BuildContext context, CardStatus s) {
+    final l10n = context.l10n;
+    final info = card.creditCard;
+    if (info == null || !moneyIsPositive(s.remainingStatementDebt)) {
+      return const [];
+    }
+    final minimum = s.remainingMinimum;
+    final carry = estimateCarryInterest(
+      remainingStatementDebt: s.remainingStatementDebt,
+      // Asgari bilinmiyorsa "hiç ödenmezse" tahmini.
+      payment: minimum ?? 0,
+      monthlyRatePercent: info.monthlyInterestRate,
+    );
+    final late = s.isOverdue
+        ? estimateLateInterest(
+            overdueMinimum: minimum,
+            lateRatePercent: info.lateInterestRate,
+          )
+        : null;
+    final lines = <String>[
+      if (carry != null)
+        minimum == null
+            ? l10n.kkFaizTahminiOdenmezse(
+                _money(carry.carried), _money(carry.interest))
+            : l10n.kkFaizTahminiAsgari(
+                _money(carry.carried), _money(carry.interest)),
+      if (late != null && minimum != null)
+        l10n.kkGecikmeFaiziTahmini(_money(minimum), _money(late)),
+    ];
+    if (lines.isEmpty) return const [];
+    final theme = Theme.of(context);
+    return [
+      Padding(
+        key: const ValueKey('kk-interest-estimate'),
+        padding: const EdgeInsets.only(top: 6, right: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.percent_rounded,
+                size: 16, color: theme.colorScheme.onSurfaceVariant),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(lines.join('\n'), style: theme.textTheme.bodySmall),
+            ),
+          ],
+        ),
+      ),
+    ];
   }
 
   List<Widget> _notes(BuildContext context, CardStatus s) {

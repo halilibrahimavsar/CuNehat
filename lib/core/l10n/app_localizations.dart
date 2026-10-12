@@ -11512,6 +11512,120 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'“{name}” artık ana kasa değil'**
   String anaKasaKaldirildiMesaji(String name);
+
+  /// No description provided for @kkSonOdemeKipiGun.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayın günü'**
+  String get kkSonOdemeKipiGun;
+
+  /// No description provided for @kkSonOdemeKipiFark.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kesimden N gün sonra'**
+  String get kkSonOdemeKipiFark;
+
+  /// No description provided for @kkKesimdenKacGun.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kesimden kaç gün sonra'**
+  String get kkKesimdenKacGun;
+
+  /// No description provided for @kkSonOdemeOnizleme.
+  ///
+  /// In tr, this message translates to:
+  /// **'{closing} kesiminin son ödemesi: {due}'**
+  String kkSonOdemeOnizleme(String closing, String due);
+
+  /// No description provided for @kkBolumTutarlar.
+  ///
+  /// In tr, this message translates to:
+  /// **'TUTARLAR'**
+  String get kkBolumTutarlar;
+
+  /// No description provided for @kkBolumFaiz.
+  ///
+  /// In tr, this message translates to:
+  /// **'FAİZ ORANLARI (İSTEĞE BAĞLI)'**
+  String get kkBolumFaiz;
+
+  /// No description provided for @kkBolumEkstre.
+  ///
+  /// In tr, this message translates to:
+  /// **'SON EKSTRE'**
+  String get kkBolumEkstre;
+
+  /// No description provided for @kkGuncelBorcDuzeltAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartın bugünkü toplam borcu. Değiştirirsen fark açılış bakiyesine yansır; deftere işlem yazılmaz.'**
+  String get kkGuncelBorcDuzeltAciklama;
+
+  /// No description provided for @kkAylikFaiz.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aylık akdi faiz'**
+  String get kkAylikFaiz;
+
+  /// No description provided for @kkGecikmeFaizi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aylık gecikme faizi'**
+  String get kkGecikmeFaizi;
+
+  /// No description provided for @kkFaizAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız tahmin için: oranlar ekstrende yazar. Deftere faiz yazılmaz, gerçek faiz ekstreden gelir.'**
+  String get kkFaizAciklama;
+
+  /// No description provided for @kkFaizOraniHatasi.
+  ///
+  /// In tr, this message translates to:
+  /// **'0–100 arası bir oran gir'**
+  String get kkFaizOraniHatasi;
+
+  /// No description provided for @kkEkstreHenuzYok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz ekstre girilmedi.'**
+  String get kkEkstreHenuzYok;
+
+  /// No description provided for @kkEkstreOzetSatiri.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dönem borcu {debt} · asgari {minimum}'**
+  String kkEkstreOzetSatiri(String debt, String minimum);
+
+  /// No description provided for @kkEkstreOzetAsgarisiz.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dönem borcu {debt}'**
+  String kkEkstreOzetAsgarisiz(String debt);
+
+  /// No description provided for @kkFaizTahminiAsgari.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız asgariyi ödersen kalan {carried} için bir ayda ≈ {interest} faiz işler (vergiler hariç, tahmin).'**
+  String kkFaizTahminiAsgari(String carried, String interest);
+
+  /// No description provided for @kkFaizTahminiOdenmezse.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu dönem ödenmezse {carried} için bir ayda ≈ {interest} faiz işler (vergiler hariç, tahmin).'**
+  String kkFaizTahminiOdenmezse(String carried, String interest);
+
+  /// No description provided for @kkGecikmeFaiziTahmini.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gecikmiş asgari {minimum} için bir ayda ≈ {interest} gecikme faizi (tahmin).'**
+  String kkGecikmeFaiziTahmini(String minimum, String interest);
+
+  /// No description provided for @kkFaizTahminiOdemeSonrasi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dönem borcundan kalan {carried} için bir ayda ≈ {interest} faiz işler (vergiler hariç, tahmin).'**
+  String kkFaizTahminiOdemeSonrasi(String carried, String interest);
 }
 
 class _AppLocalizationsDelegate

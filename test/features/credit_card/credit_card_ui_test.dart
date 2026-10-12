@@ -75,6 +75,10 @@ void main() {
     Intl.defaultLocale = 'tr_TR';
     SharedPreferences.setMockInitialValues({});
     bloc = _MockWalletBloc();
+    // Kart ayarları sayfası kartın GÜNCEL hâlini bloc'tan okur (ekstre
+    // bilgisi sayfa açıkken değişebilir). Durumu ayrıca kuran testler bunu
+    // ezer.
+    when(() => bloc.state).thenReturn(WalletLoadingSt());
   });
 
   tearDown(() async => getIt.reset());
@@ -347,6 +351,332 @@ void main() {
     });
   });
 
+  group('kart ayarları: tutarlar, faiz, gün farkı, ekstre (12 Eki 2026)', () {
+    const info = CreditCardInfo(
+      closingDay: 25,
+      dueDay: 5,
+      limit: 20000,
+      paymentWalletId: 'bank',
+    );
+
+    Future<AppLocalizations> pumpSettings(
+      WidgetTester tester,
+      WalletEntity card, {
+      DateTime? today,
+    }) async {
+      tall(tester);
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      await tester.pumpWidget(app(CreditCardSetupSheet(
+        userId: 'u',
+        wallets: [_wallet('bank'), card],
+        wallet: card,
+        defaultCurrency: 'TRY',
+        today: today ?? DateTime(2026, 10, 12),
+      )));
+      await tester.pumpAndSettle();
+      return l10n;
+    }
+
+    Future<UpdateWalletEvent> save(WidgetTester tester) async {
+      await tester.tap(find.byKey(const ValueKey('kk-save')));
+      await tester.pumpAndSettle();
+      return verify(() => bloc.add(captureAny())).captured.single
+          as UpdateWalletEvent;
+    }
+
+    String fieldText(WidgetTester tester, String key) => tester
+        .widget<TextFormField>(find.byKey(ValueKey(key)))
+        .controller!
+        .text;
+
+    testWidgets('borç ve LİMİT "ayrıntı"ya inmeden görünür; borç ön dolu',
+        (tester) async {
+      await pumpSettings(tester, _wallet('c', balance: -3700, card: info));
+
+      expect(find.text('TUTARLAR'), findsOneWidget);
+      expect(fieldText(tester, 'kk-debt'), '3.700');
+      expect(fieldText(tester, 'kk-limit'), '20.000');
+      // Borç, limitin ÜSTÜNDE ve ikisi de banka/son 4'ten önce.
+      expect(
+          tester.getTopLeft(find.byKey(const ValueKey('kk-debt'))).dy,
+          lessThan(
+              tester.getTopLeft(find.byKey(const ValueKey('kk-limit'))).dy));
+    });
+
+    testWidgets(
+        'borç değiştirilince bakiye düzeltilir; taban açılıştaki bakiye',
+        (tester) async {
+      await pumpSettings(tester, _wallet('c', balance: -3700, card: info));
+
+      await tester.enterText(find.byKey(const ValueKey('kk-debt')), '4.000');
+      final event = await save(tester);
+
+      // Fark (−300) bloc'ta açılış bakiyesine yansır; deftere işlem yazılmaz.
+      expect(event.wallet.balance, -4000);
+      expect(event.baselineBalance, -3700);
+    });
+
+    testWidgets('borca DOKUNULMAZSA bakiye yazılmaz', (tester) async {
+      await pumpSettings(tester, _wallet('c', balance: -3700, card: info));
+
+      await tester.enterText(find.byKey(const ValueKey('kk-limit')), '25000');
+      final event = await save(tester);
+
+      expect(event.wallet.balance, -3700);
+      expect(event.baselineBalance, -3700);
+      expect(event.wallet.creditCard!.limit, 25000);
+    });
+
+    testWidgets('borç alanı boşaltılırsa borç sıfırlanır', (tester) async {
+      await pumpSettings(tester, _wallet('c', balance: -3700, card: info));
+
+      await tester.enterText(find.byKey(const ValueKey('kk-debt')), '');
+      final event = await save(tester);
+
+      expect(event.wallet.balance, 0);
+    });
+
+    testWidgets(
+        'alacaklı kartta (fazla ödeme) alan boş açılır; dokunmadan '
+        'kaydetmek alacağı SİLMEZ', (tester) async {
+      await pumpSettings(tester, _wallet('c', balance: 150, card: info));
+
+      expect(fieldText(tester, 'kk-debt'), isEmpty);
+      final event = await save(tester);
+
+      expect(event.wallet.balance, 150);
+    });
+
+    testWidgets('faiz oranları kaydedilir; boş bırakılan null kalır',
+        (tester) async {
+      await pumpSettings(tester, _wallet('c', balance: -3700, card: info));
+
+      await tester.enterText(
+          find.byKey(const ValueKey('kk-monthly-rate')), '4,25');
+      final event = await save(tester);
+
+      expect(event.wallet.creditCard!.monthlyInterestRate, 4.25);
+      expect(event.wallet.creditCard!.lateInterestRate, isNull);
+    });
+
+    testWidgets('kayıtlı oranlar ön dolu gelir ve silinebilir', (tester) async {
+      await pumpSettings(
+          tester,
+          _wallet('c',
+              balance: -3700,
+              card: info.copyWith(
+                  monthlyInterestRate: 4.25, lateInterestRate: 4.55)));
+
+      expect(fieldText(tester, 'kk-monthly-rate'), '4,25');
+      expect(fieldText(tester, 'kk-late-rate'), '4,55');
+
+      await tester.enterText(find.byKey(const ValueKey('kk-late-rate')), '');
+      final event = await save(tester);
+
+      expect(event.wallet.creditCard!.monthlyInterestRate, 4.25);
+      expect(event.wallet.creditCard!.lateInterestRate, isNull);
+    });
+
+    testWidgets('anlamsız oran (150) reddedilir, hiçbir şey yazılmaz',
+        (tester) async {
+      final l10n =
+          await pumpSettings(tester, _wallet('c', balance: -3700, card: info));
+
+      await tester.enterText(
+          find.byKey(const ValueKey('kk-monthly-rate')), '150');
+      await tester.tap(find.byKey(const ValueKey('kk-save')));
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.kkFaizOraniHatasi), findsOneWidget);
+      verifyNever(() => bloc.add(any()));
+    });
+
+    testWidgets(
+        '"Kesimden N gün sonra" kipi gün farkını yazar; önizleme '
+        'değişir', (tester) async {
+      final l10n =
+          await pumpSettings(tester, _wallet('c', balance: -3700, card: info));
+      // Son kesim 25 Eyl 2026; sabit gün 5 → 5 Eki.
+      expect(find.byKey(const ValueKey('kk-due-day')), findsOneWidget);
+      expect(
+          tester
+              .widget<Text>(find.byKey(const ValueKey('kk-due-preview')))
+              .data,
+          '25 Eyl kesiminin son ödemesi: 5 Eki');
+
+      await tester.tap(find.text(l10n.kkSonOdemeKipiFark));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('kk-due-offset')), findsOneWidget);
+      expect(find.byKey(const ValueKey('kk-due-day')), findsNothing);
+
+      // Varsayılan 10 gün → yine 5 Eki; 12 seçilince 7 Eki.
+      await tester.tap(find.byKey(const ValueKey('kk-due-offset')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('12').last);
+      await tester.pumpAndSettle();
+      expect(
+          tester
+              .widget<Text>(find.byKey(const ValueKey('kk-due-preview')))
+              .data,
+          '25 Eyl kesiminin son ödemesi: 7 Eki');
+
+      final event = await save(tester);
+      expect(event.wallet.creditCard!.dueOffsetDays, 12);
+      // Sabit gün de tutarlı yazılır (ayar bir gün kaldırılırsa anlamlı kalsın).
+      expect(event.wallet.creditCard!.dueDay, 7);
+    });
+
+    testWidgets(
+        'gün farkı kayıtlı kart o kipte açılır; "Ayın günü"ne '
+        'dönülünce ayar kalkar', (tester) async {
+      final l10n = await pumpSettings(tester,
+          _wallet('c', balance: -3700, card: info.copyWith(dueOffsetDays: 12)));
+      expect(find.byKey(const ValueKey('kk-due-offset')), findsOneWidget);
+
+      await tester.tap(find.text(l10n.kkSonOdemeKipiGun));
+      await tester.pumpAndSettle();
+      final event = await save(tester);
+
+      expect(event.wallet.creditCard!.dueOffsetDays, isNull);
+      expect(event.wallet.creditCard!.dueDay, 5);
+    });
+
+    testWidgets(
+        'ekstre satırı kartın GÜNCEL beyanını gösterir ve kaydederken '
+        'onu korur', (tester) async {
+      final stale = _wallet('c', balance: -3700, card: info);
+      // Sayfa açıkken "Ekstre bilgisi"nden yeni beyan girildi: bloc güncel.
+      final statement = CardStatement(
+        closingDate: DateTime(2026, 9, 25),
+        dueDate: DateTime(2026, 10, 5),
+        statementBalance: 2150,
+        minimumPayment: 860,
+        recordedAt: DateTime(2026, 9, 26),
+      );
+      final fresh =
+          stale.copyWith(creditCard: info.copyWith(lastStatement: statement));
+      when(() => bloc.state)
+          .thenReturn(WalletLoadedSt([_wallet('bank'), fresh], fresh));
+
+      await pumpSettings(tester, stale);
+
+      expect(find.text('SON EKSTRE'), findsOneWidget);
+      expect(
+          tester
+              .widget<Text>(find.byKey(const ValueKey('kk-statement-summary')))
+              .data,
+          'Dönem borcu 2.150,00 ₺ · asgari 860,00 ₺');
+
+      final event = await save(tester);
+      // Açılıştaki (beyansız) kopyayı yazmak yeni beyanı geri alırdı.
+      expect(event.wallet.creditCard!.lastStatement, statement);
+    });
+
+    testWidgets('beyan yokken ekstre satırı bunu söyler', (tester) async {
+      final l10n =
+          await pumpSettings(tester, _wallet('c', balance: -3700, card: info));
+      expect(find.text(l10n.kkEkstreHenuzYok), findsOneWidget);
+    });
+
+    testWidgets('klavye açıkken Kaydet görünür kalır (kaydırmanın dışında)',
+        (tester) async {
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1.0;
+      tester.view.viewInsets = const FakeViewPadding(bottom: 320);
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(app(Align(
+        alignment: Alignment.bottomCenter,
+        child: CreditCardSetupSheet(
+          userId: 'u',
+          wallets: [_wallet('bank'), _wallet('c', balance: -3700, card: info)],
+          wallet: _wallet('c', balance: -3700, card: info),
+          defaultCurrency: 'TRY',
+          today: DateTime(2026, 10, 12),
+        ),
+      )));
+      await tester.pumpAndSettle();
+
+      final save = tester.getRect(find.byKey(const ValueKey('kk-save')));
+      expect(save.bottom, lessThanOrEqualTo(800 - 320));
+      expect(save.top, greaterThan(0));
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('faiz tahmini (kart ayrıntısı ve ödeme sayfası)', () {
+    CardStatus status({
+      double statementDebt = 10000,
+      double? minimum = 4000,
+      int daysToDue = 5,
+    }) =>
+        CardStatus(
+          lastClosing: DateTime(2026, 9, 25),
+          dueDate: DateTime(2026, 10, 5),
+          nextClosing: DateTime(2026, 10, 25),
+          derivedStatementDebt: statementDebt,
+          derivedReliable: true,
+          declared: CardStatement(
+            closingDate: DateTime(2026, 9, 25),
+            dueDate: DateTime(2026, 10, 5),
+            statementBalance: statementDebt,
+            minimumPayment: minimum,
+            recordedAt: DateTime(2026, 9, 26),
+          ),
+          paidSinceClosing: 0,
+          currentDebt: statementDebt,
+          availableLimit: null,
+          futureInstallments: 0,
+          daysToDue: daysToDue,
+        );
+
+    Future<void> pumpPay(WidgetTester tester, CreditCardInfo card) async {
+      tall(tester);
+      await tester.pumpWidget(app(Align(
+        alignment: Alignment.bottomCenter,
+        child: CardPaySheet(
+          card: _wallet('card', name: 'Bonus', balance: -10000, card: card),
+          payers: [_wallet('bank', balance: 50000)],
+          status: status(),
+        ),
+      )));
+      await tester.pumpAndSettle();
+    }
+
+    const base =
+        CreditCardInfo(closingDay: 25, dueDay: 5, paymentWalletId: 'bank');
+    final estimate = find.byKey(const ValueKey('pay-interest-estimate'));
+
+    testWidgets('dönem borcunun tamamı ödenirken tahmin YOK', (tester) async {
+      await pumpPay(tester, base.copyWith(monthlyInterestRate: 4.25));
+      expect(estimate, findsNothing);
+    });
+
+    testWidgets('asgari seçilince kalanın faizi yazılır', (tester) async {
+      await pumpPay(tester, base.copyWith(monthlyInterestRate: 4.25));
+
+      await tester.tap(find.byKey(const ValueKey('pay-option-minimum')));
+      await tester.pumpAndSettle();
+
+      // 10.000 − 4.000 = 6.000 × %4,25 = 255.
+      expect(estimate, findsOneWidget);
+      expect(
+          find.descendant(
+              of: estimate,
+              matching:
+                  find.textContaining('6.000,00 ₺ için bir ayda ≈ 255,00 ₺')),
+          findsOneWidget);
+    });
+
+    testWidgets('oran girilmemişse hiçbir seçenekte tahmin YOK',
+        (tester) async {
+      await pumpPay(tester, base);
+
+      await tester.tap(find.byKey(const ValueKey('pay-option-minimum')));
+      await tester.pumpAndSettle();
+      expect(estimate, findsNothing);
+    });
+  });
+
   group('CardStatementSheet', () {
     testWidgets(
         'kayıtlardan türetilen dönem borcuyla dolu açılır, beyanı yazar',
@@ -474,6 +804,75 @@ void main() {
       expect((call[0] as WalletEntity).id, 'bank');
       expect((call[1] as WalletEntity).id, 'card');
       expect(call[2], 500);
+    });
+
+    testWidgets(
+        'faiz oranı girilmiş kartta "yalnız asgariyi ödersen" tahmini yazar; '
+        'oran yoksa yazmaz', (tester) async {
+      tall(tester);
+      final repo = _MockTxRepo();
+      getIt.registerSingleton<TransactionsRepository>(repo);
+      when(() => repo.getTransactions(
+            userId: any(named: 'userId'),
+            walletId: 'card',
+          )).thenAnswer((_) async => Right([
+            TransactionEntity(
+              id: 't1',
+              userId: 'u',
+              walletId: 'card',
+              title: 'MARKET',
+              tag: 'cat-a',
+              amount: 800,
+              date: DateTime(2026, 9, 10),
+              type: TransactionTypeModel.expense,
+            ),
+          ]));
+      final info = CreditCardInfo(
+        closingDay: 15,
+        dueDay: 25,
+        paymentWalletId: 'bank',
+        lastStatement: CardStatement(
+          closingDate: DateTime(2026, 9, 15),
+          dueDate: DateTime(2026, 9, 25),
+          statementBalance: 800,
+          minimumPayment: 320,
+          recordedAt: DateTime(2026, 9, 16),
+        ),
+      );
+      WalletEntity card(CreditCardInfo i) => _wallet('card',
+          name: 'Bonus',
+          balance: -800,
+          opening: 0,
+          createdAt: DateTime(2026, 8, 1),
+          card: i);
+      final bank = _wallet('bank');
+      final estimate = find.byKey(const ValueKey('kk-interest-estimate'));
+
+      await tester.pumpWidget(app(CreditCardTile(
+        key: const ValueKey('oransiz'),
+        card: card(info),
+        wallets: [bank, card(info)],
+        today: DateTime(2026, 9, 20),
+      )));
+      await tester.pumpAndSettle();
+      expect(estimate, findsNothing);
+
+      final rated = card(info.copyWith(monthlyInterestRate: 5));
+      await tester.pumpWidget(app(CreditCardTile(
+        key: const ValueKey('oranli'),
+        card: rated,
+        wallets: [bank, rated],
+        today: DateTime(2026, 9, 20),
+      )));
+      await tester.pumpAndSettle();
+
+      // 800 − 320 = 480 devreder × %5 = 24.
+      expect(
+          find.descendant(
+              of: estimate,
+              matching:
+                  find.textContaining('480,00 ₺ için bir ayda ≈ 24,00 ₺')),
+          findsOneWidget);
     });
 
     testWidgets('360dp genişlikte taşma yok', (tester) async {

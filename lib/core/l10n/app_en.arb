@@ -3863,5 +3863,91 @@
         "type": "String"
       }
     }
+  },
+  "kkSonOdemeKipiGun": "Day of month",
+  "kkSonOdemeKipiFark": "N days after closing",
+  "kkKesimdenKacGun": "Days after closing",
+  "kkSonOdemeOnizleme": "Statement closed {closing} is due {due}",
+  "@kkSonOdemeOnizleme": {
+    "placeholders": {
+      "closing": {
+        "type": "String"
+      },
+      "due": {
+        "type": "String"
+      }
+    }
+  },
+  "kkBolumTutarlar": "AMOUNTS",
+  "kkBolumFaiz": "INTEREST RATES (OPTIONAL)",
+  "kkBolumEkstre": "LAST STATEMENT",
+  "kkGuncelBorcDuzeltAciklama": "The card's total debt today. If you change it, the difference goes to the opening balance; no transaction is written.",
+  "kkAylikFaiz": "Monthly interest",
+  "kkGecikmeFaizi": "Monthly late interest",
+  "kkFaizAciklama": "For estimates only: the rates are on your statement. No interest is written to the ledger; real interest comes from the statement.",
+  "kkFaizOraniHatasi": "Enter a rate between 0 and 100",
+  "kkEkstreHenuzYok": "No statement entered yet.",
+  "kkEkstreOzetSatiri": "Statement balance {debt} · minimum {minimum}",
+  "@kkEkstreOzetSatiri": {
+    "placeholders": {
+      "debt": {
+        "type": "String"
+      },
+      "minimum": {
+        "type": "String"
+      }
+    }
+  },
+  "kkEkstreOzetAsgarisiz": "Statement balance {debt}",
+  "@kkEkstreOzetAsgarisiz": {
+    "placeholders": {
+      "debt": {
+        "type": "String"
+      }
+    }
+  },
+  "kkFaizTahminiAsgari": "If you pay only the minimum, the remaining {carried} accrues ≈ {interest} interest in a month (before tax, estimate).",
+  "@kkFaizTahminiAsgari": {
+    "placeholders": {
+      "carried": {
+        "type": "String"
+      },
+      "interest": {
+        "type": "String"
+      }
+    }
+  },
+  "kkFaizTahminiOdenmezse": "If unpaid this period, {carried} accrues ≈ {interest} interest in a month (before tax, estimate).",
+  "@kkFaizTahminiOdenmezse": {
+    "placeholders": {
+      "carried": {
+        "type": "String"
+      },
+      "interest": {
+        "type": "String"
+      }
+    }
+  },
+  "kkGecikmeFaiziTahmini": "The overdue minimum {minimum} accrues ≈ {interest} late interest in a month (estimate).",
+  "@kkGecikmeFaiziTahmini": {
+    "placeholders": {
+      "minimum": {
+        "type": "String"
+      },
+      "interest": {
+        "type": "String"
+      }
+    }
+  },
+  "kkFaizTahminiOdemeSonrasi": "The remaining {carried} of the statement accrues ≈ {interest} interest in a month (before tax, estimate).",
+  "@kkFaizTahminiOdemeSonrasi": {
+    "placeholders": {
+      "carried": {
+        "type": "String"
+      },
+      "interest": {
+        "type": "String"
+      }
+    }
   }
 }

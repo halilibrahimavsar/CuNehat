@@ -4097,5 +4097,91 @@
         "type": "String"
       }
     }
+  },
+  "kkSonOdemeKipiGun": "Ayın günü",
+  "kkSonOdemeKipiFark": "Kesimden N gün sonra",
+  "kkKesimdenKacGun": "Kesimden kaç gün sonra",
+  "kkSonOdemeOnizleme": "{closing} kesiminin son ödemesi: {due}",
+  "@kkSonOdemeOnizleme": {
+    "placeholders": {
+      "closing": {
+        "type": "String"
+      },
+      "due": {
+        "type": "String"
+      }
+    }
+  },
+  "kkBolumTutarlar": "TUTARLAR",
+  "kkBolumFaiz": "FAİZ ORANLARI (İSTEĞE BAĞLI)",
+  "kkBolumEkstre": "SON EKSTRE",
+  "kkGuncelBorcDuzeltAciklama": "Kartın bugünkü toplam borcu. Değiştirirsen fark açılış bakiyesine yansır; deftere işlem yazılmaz.",
+  "kkAylikFaiz": "Aylık akdi faiz",
+  "kkGecikmeFaizi": "Aylık gecikme faizi",
+  "kkFaizAciklama": "Yalnız tahmin için: oranlar ekstrende yazar. Deftere faiz yazılmaz, gerçek faiz ekstreden gelir.",
+  "kkFaizOraniHatasi": "0–100 arası bir oran gir",
+  "kkEkstreHenuzYok": "Henüz ekstre girilmedi.",
+  "kkEkstreOzetSatiri": "Dönem borcu {debt} · asgari {minimum}",
+  "@kkEkstreOzetSatiri": {
+    "placeholders": {
+      "debt": {
+        "type": "String"
+      },
+      "minimum": {
+        "type": "String"
+      }
+    }
+  },
+  "kkEkstreOzetAsgarisiz": "Dönem borcu {debt}",
+  "@kkEkstreOzetAsgarisiz": {
+    "placeholders": {
+      "debt": {
+        "type": "String"
+      }
+    }
+  },
+  "kkFaizTahminiAsgari": "Yalnız asgariyi ödersen kalan {carried} için bir ayda ≈ {interest} faiz işler (vergiler hariç, tahmin).",
+  "@kkFaizTahminiAsgari": {
+    "placeholders": {
+      "carried": {
+        "type": "String"
+      },
+      "interest": {
+        "type": "String"
+      }
+    }
+  },
+  "kkFaizTahminiOdenmezse": "Bu dönem ödenmezse {carried} için bir ayda ≈ {interest} faiz işler (vergiler hariç, tahmin).",
+  "@kkFaizTahminiOdenmezse": {
+    "placeholders": {
+      "carried": {
+        "type": "String"
+      },
+      "interest": {
+        "type": "String"
+      }
+    }
+  },
+  "kkGecikmeFaiziTahmini": "Gecikmiş asgari {minimum} için bir ayda ≈ {interest} gecikme faizi (tahmin).",
+  "@kkGecikmeFaiziTahmini": {
+    "placeholders": {
+      "minimum": {
+        "type": "String"
+      },
+      "interest": {
+        "type": "String"
+      }
+    }
+  },
+  "kkFaizTahminiOdemeSonrasi": "Dönem borcundan kalan {carried} için bir ayda ≈ {interest} faiz işler (vergiler hariç, tahmin).",
+  "@kkFaizTahminiOdemeSonrasi": {
+    "placeholders": {
+      "carried": {
+        "type": "String"
+      },
+      "interest": {
+        "type": "String"
+      }
+    }
   }
 }

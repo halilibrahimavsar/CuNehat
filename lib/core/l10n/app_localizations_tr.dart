@@ -6681,4 +6681,77 @@ class AppLocalizationsTr extends AppLocalizations {
   String anaKasaKaldirildiMesaji(String name) {
     return '“$name” artık ana kasa değil';
   }
+
+  @override
+  String get kkSonOdemeKipiGun => 'Ayın günü';
+
+  @override
+  String get kkSonOdemeKipiFark => 'Kesimden N gün sonra';
+
+  @override
+  String get kkKesimdenKacGun => 'Kesimden kaç gün sonra';
+
+  @override
+  String kkSonOdemeOnizleme(String closing, String due) {
+    return '$closing kesiminin son ödemesi: $due';
+  }
+
+  @override
+  String get kkBolumTutarlar => 'TUTARLAR';
+
+  @override
+  String get kkBolumFaiz => 'FAİZ ORANLARI (İSTEĞE BAĞLI)';
+
+  @override
+  String get kkBolumEkstre => 'SON EKSTRE';
+
+  @override
+  String get kkGuncelBorcDuzeltAciklama =>
+      'Kartın bugünkü toplam borcu. Değiştirirsen fark açılış bakiyesine yansır; deftere işlem yazılmaz.';
+
+  @override
+  String get kkAylikFaiz => 'Aylık akdi faiz';
+
+  @override
+  String get kkGecikmeFaizi => 'Aylık gecikme faizi';
+
+  @override
+  String get kkFaizAciklama =>
+      'Yalnız tahmin için: oranlar ekstrende yazar. Deftere faiz yazılmaz, gerçek faiz ekstreden gelir.';
+
+  @override
+  String get kkFaizOraniHatasi => '0–100 arası bir oran gir';
+
+  @override
+  String get kkEkstreHenuzYok => 'Henüz ekstre girilmedi.';
+
+  @override
+  String kkEkstreOzetSatiri(String debt, String minimum) {
+    return 'Dönem borcu $debt · asgari $minimum';
+  }
+
+  @override
+  String kkEkstreOzetAsgarisiz(String debt) {
+    return 'Dönem borcu $debt';
+  }
+
+  @override
+  String kkFaizTahminiAsgari(String carried, String interest) {
+    return 'Yalnız asgariyi ödersen kalan $carried için bir ayda ≈ $interest faiz işler (vergiler hariç, tahmin).';
+  }
+
+  @override
+  String kkFaizTahminiOdenmezse(String carried, String interest) {
+    return 'Bu dönem ödenmezse $carried için bir ayda ≈ $interest faiz işler (vergiler hariç, tahmin).';
+  }
+
+  @override
+  String kkGecikmeFaiziTahmini(String minimum, String interest) {
+    return 'Gecikmiş asgari $minimum için bir ayda ≈ $interest gecikme faizi (tahmin).';
+  }
+
+  @override
+  String kkFaizTahminiOdemeSonrasi(String carried, String interest) {
+    return 'Dönem borcundan kalan $carried için bir ayda ≈ $interest faiz işler (vergiler hariç, tahmin).';
+  }
 }

@@ -350,3 +350,50 @@ List<TransactionEntity> datedByPayment(
       for (final t in ledger)
         if (t.isSystem) t else t.copyWith(date: cardPaymentDate(t, card)),
     ];
+
+/// Dönem borcunun ödenmeyen kısmına bir ayda işleyecek faizin TAHMİNİ.
+///
+/// **Yalnız bilgi.** Deftere faiz yazılmaz; gerçek faiz bankanın gün sayımı
+/// ve vergilerle (KKDF/BSMV) hesaplanır ve bir sonraki ekstrede gelir. Buradaki
+/// rakam bilerek kaba ve VERGİSİZ: "asgariyi ödersem ne öderim" sorusuna
+/// büyüklük sırası verir.
+class CardInterestEstimate {
+  /// Bir sonraki döneme devreden (faiz işleyecek) tutar.
+  final double carried;
+
+  /// [carried]'a bir ayda işleyecek faiz.
+  final double interest;
+
+  const CardInterestEstimate({required this.carried, required this.interest});
+}
+
+/// [remainingStatementDebt]'ten [payment] ödendikten sonra kalan tutara bir
+/// ayda işleyecek AKDİ faiz.
+///
+/// Oran girilmemişse ([monthlyRatePercent] `null` ya da ≤ 0) ya da devreden
+/// tutar kalmıyorsa `null` — gösterilecek bir tahmin yoktur.
+CardInterestEstimate? estimateCarryInterest({
+  required double remainingStatementDebt,
+  required double payment,
+  required double? monthlyRatePercent,
+}) {
+  if (monthlyRatePercent == null || monthlyRatePercent <= 0) return null;
+  final paid = payment < 0 ? 0.0 : payment;
+  final carried = roundToCents(remainingStatementDebt - paid);
+  if (!moneyIsPositive(carried)) return null;
+  return CardInterestEstimate(
+    carried: carried,
+    interest: roundToCents(carried * monthlyRatePercent / 100),
+  );
+}
+
+/// Son ödemesi GEÇMİŞ asgari tutara bir ayda işleyecek gecikme faizi.
+/// Oran ya da ödenmemiş asgari yoksa `null`.
+double? estimateLateInterest({
+  required double? overdueMinimum,
+  required double? lateRatePercent,
+}) {
+  if (lateRatePercent == null || lateRatePercent <= 0) return null;
+  if (overdueMinimum == null || !moneyIsPositive(overdueMinimum)) return null;
+  return roundToCents(overdueMinimum * lateRatePercent / 100);
+}

@@ -267,6 +267,28 @@ class _CardPaySheetState extends State<CardPaySheet> {
                       ),
                     ),
                   ),
+                // Seçilen tutar dönem borcunu kapatmıyorsa kalanına işleyecek
+                // faizin tahmini (oran kart ayarlarında girildiyse).
+                if (amount != null)
+                  if (estimateCarryInterest(
+                    remainingStatementDebt: _s.remainingStatementDebt,
+                    payment: amount,
+                    monthlyRatePercent:
+                        widget.card.creditCard?.monthlyInterestRate,
+                  )
+                      case final estimate?)
+                    Padding(
+                      key: const ValueKey('pay-interest-estimate'),
+                      padding: const EdgeInsets.only(top: 6, left: 4),
+                      child: Text(
+                        l10n.kkFaizTahminiOdemeSonrasi(
+                          _money(estimate.carried),
+                          _money(estimate.interest),
+                        ),
+                        style:
+                            TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                      ),
+                    ),
                 const SizedBox(height: 16),
                 FilledButton.icon(
                   key: const ValueKey('pay-confirm'),

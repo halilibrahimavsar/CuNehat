@@ -458,4 +458,71 @@ void main() {
       expect(out.single.id, t.id);
     });
   });
+
+  group('faiz TAHMİNİ (yalnız bilgi, vergisiz)', () {
+    test('asgari ödenirse: kalan × aylık oran', () {
+      final e = estimateCarryInterest(
+        remainingStatementDebt: 10000,
+        payment: 4000,
+        monthlyRatePercent: 4.25,
+      )!;
+      expect(e.carried, 6000);
+      expect(e.interest, 255);
+    });
+
+    test('hiç ödenmezse borcun tamamı devreder', () {
+      final e = estimateCarryInterest(
+        remainingStatementDebt: 1234.56,
+        payment: 0,
+        monthlyRatePercent: 5,
+      )!;
+      expect(e.carried, 1234.56);
+      expect(e.interest, 61.73); // kuruşa yuvarlı
+    });
+
+    test('dönem borcu kapanıyorsa (ya da fazlası ödeniyorsa) tahmin YOK', () {
+      for (final payment in [10000.0, 12000.0, 9999.999]) {
+        expect(
+            estimateCarryInterest(
+              remainingStatementDebt: 10000,
+              payment: payment,
+              monthlyRatePercent: 4.25,
+            ),
+            isNull);
+      }
+    });
+
+    test('oran girilmemişse (null / 0) tahmin YOK', () {
+      for (final rate in <double?>[null, 0, -1]) {
+        expect(
+            estimateCarryInterest(
+              remainingStatementDebt: 10000,
+              payment: 0,
+              monthlyRatePercent: rate,
+            ),
+            isNull);
+      }
+    });
+
+    test('eksi ödeme sıfır sayılır', () {
+      final e = estimateCarryInterest(
+        remainingStatementDebt: 1000,
+        payment: -50,
+        monthlyRatePercent: 4,
+      )!;
+      expect(e.carried, 1000);
+      expect(e.interest, 40);
+    });
+
+    test('gecikme faizi: gecikmiş asgari × gecikme oranı', () {
+      expect(estimateLateInterest(overdueMinimum: 4000, lateRatePercent: 4.55),
+          182);
+      expect(estimateLateInterest(overdueMinimum: 4000, lateRatePercent: null),
+          isNull);
+      expect(estimateLateInterest(overdueMinimum: null, lateRatePercent: 4.55),
+          isNull);
+      expect(estimateLateInterest(overdueMinimum: 0, lateRatePercent: 4.55),
+          isNull);
+    });
+  });
 }

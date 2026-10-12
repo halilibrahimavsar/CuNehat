@@ -6730,4 +6730,77 @@ class AppLocalizationsEn extends AppLocalizations {
   String anaKasaKaldirildiMesaji(String name) {
     return '“$name” is no longer the main pot';
   }
+
+  @override
+  String get kkSonOdemeKipiGun => 'Day of month';
+
+  @override
+  String get kkSonOdemeKipiFark => 'N days after closing';
+
+  @override
+  String get kkKesimdenKacGun => 'Days after closing';
+
+  @override
+  String kkSonOdemeOnizleme(String closing, String due) {
+    return 'Statement closed $closing is due $due';
+  }
+
+  @override
+  String get kkBolumTutarlar => 'AMOUNTS';
+
+  @override
+  String get kkBolumFaiz => 'INTEREST RATES (OPTIONAL)';
+
+  @override
+  String get kkBolumEkstre => 'LAST STATEMENT';
+
+  @override
+  String get kkGuncelBorcDuzeltAciklama =>
+      'The card\'s total debt today. If you change it, the difference goes to the opening balance; no transaction is written.';
+
+  @override
+  String get kkAylikFaiz => 'Monthly interest';
+
+  @override
+  String get kkGecikmeFaizi => 'Monthly late interest';
+
+  @override
+  String get kkFaizAciklama =>
+      'For estimates only: the rates are on your statement. No interest is written to the ledger; real interest comes from the statement.';
+
+  @override
+  String get kkFaizOraniHatasi => 'Enter a rate between 0 and 100';
+
+  @override
+  String get kkEkstreHenuzYok => 'No statement entered yet.';
+
+  @override
+  String kkEkstreOzetSatiri(String debt, String minimum) {
+    return 'Statement balance $debt · minimum $minimum';
+  }
+
+  @override
+  String kkEkstreOzetAsgarisiz(String debt) {
+    return 'Statement balance $debt';
+  }
+
+  @override
+  String kkFaizTahminiAsgari(String carried, String interest) {
+    return 'If you pay only the minimum, the remaining $carried accrues ≈ $interest interest in a month (before tax, estimate).';
+  }
+
+  @override
+  String kkFaizTahminiOdenmezse(String carried, String interest) {
+    return 'If unpaid this period, $carried accrues ≈ $interest interest in a month (before tax, estimate).';
+  }
+
+  @override
+  String kkGecikmeFaiziTahmini(String minimum, String interest) {
+    return 'The overdue minimum $minimum accrues ≈ $interest late interest in a month (estimate).';
+  }
+
+  @override
+  String kkFaizTahminiOdemeSonrasi(String carried, String interest) {
+    return 'The remaining $carried of the statement accrues ≈ $interest interest in a month (before tax, estimate).';
+  }
 }
