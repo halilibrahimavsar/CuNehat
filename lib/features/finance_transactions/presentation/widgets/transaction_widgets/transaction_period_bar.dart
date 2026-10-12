@@ -152,11 +152,14 @@ String periodLabel(DateTimeRange range, AppLocalizations l10n) {
 
     case PeriodKind.week:
     case PeriodKind.custom:
-      return _rangeLabel(start, end, locale);
+      return dateRangeLabel(start, end, locale);
   }
 }
 
-String _rangeLabel(DateTime start, DateTime end, String? locale) {
+/// İki günün ay adlı kısa aralığı: "10 – 16 Ağu", "1 Ağu – 15 Eyl", yıl
+/// değişiyorsa iki uçta da yıl. Dönem çubuğu dışında da kullanılır (ekstre
+/// içe aktarım geçmişi).
+String dateRangeLabel(DateTime start, DateTime end, String? locale) {
   final dayMonth = DateFormat.MMMd(locale);
   if (start.year != end.year) {
     final full = DateFormat.yMMMd(locale);

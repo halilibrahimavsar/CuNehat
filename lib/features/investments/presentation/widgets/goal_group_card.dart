@@ -178,15 +178,22 @@ class GoalGroupCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        context.l10n.hedefUyeSayisi(progress.members.length),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: cs.onSurfaceVariant,
+                      Flexible(
+                        child: Text(
+                          context.l10n.hedefUyeSayisi(progress.members.length),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: cs.onSurfaceVariant,
+                          ),
                         ),
                       ),
+                      // Kapalı kartta da ekleme yolu: tam genişlik düğme
+                      // yalnız kart AÇIKKEN görünüyordu, yani hedefe varlık
+                      // eklemek için önce karta dokunmak gerektiğini bilmek
+                      // gerekiyordu. Açıkken alttaki düğme zaten var.
+                      if (!expanded) _compactAdd(context, accent),
                       _menu(context, cs),
                     ],
                   ),
@@ -243,6 +250,34 @@ class GoalGroupCard extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _compactAdd(BuildContext context, Color accent) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 6),
+      child: Tooltip(
+        message: context.l10n.hedefeVarlikEkle,
+        child: TextButton.icon(
+          key: ValueKey('goal-add-asset-${progress.goal.id}'),
+          onPressed: onAddAsset,
+          icon: const Icon(Icons.add_rounded, size: 18),
+          label: Text(context.l10n.hedefVarlikEkleKisa),
+          style: TextButton.styleFrom(
+            foregroundColor: accent,
+            backgroundColor: accent.withValues(alpha: 0.12),
+            visualDensity: VisualDensity.compact,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            minimumSize: const Size(0, 36),
+            tapTargetSize: MaterialTapTargetSize.padded,
+            textStyle:
+                const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -1,10 +1,10 @@
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/period_unit_editor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cunehat/features/finance_transactions/domain/period_preferences.dart';
 import 'package:cunehat/features/finance_transactions/data/period_preferences_store.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/core/config/feature_flags.dart';
+import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/core/shared/widgets/app_date_range_picker.dart';
@@ -14,6 +14,7 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/filterin
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 // İşlemler, İçgörü ve Rapor TEK dönemi paylaşır: sahibi uygulama düzeyindeki
@@ -63,9 +64,15 @@ Future<void> savePeriodPreferences(
   await PeriodPreferencesStore(getIt<SharedPreferences>()).write(prefs);
 }
 
-/// Ortak dönem sayfası: üstte dönem BİRİMİ (gün / hafta / 2 hafta / ay +
-/// başlangıç ayarı, kalıcı), altında hazır aralıklar ve takvim. Kart
-/// bağlamında ekstre seçenekleri başta gelir.
+/// Ortak dönem sayfası: hazır aralıklar ve takvim. Kart bağlamında ekstre
+/// seçenekleri başta gelir.
+///
+/// Dönem BİRİMİ (gün / hafta / 2 hafta / ay + başlangıç) burada
+/// DÜZENLENMEZ, yalnız Ayarlar'da ([PeriodSettingsCard]). Eskiden sayfanın
+/// en üstünde duruyordu: "hangi tarihe bakayım" diye gelen kullanıcı önce
+/// kalıcı bir ayarla karşılaşıyor, birime dokununca seçtiği aralık da
+/// değişiyordu (kullanıcı şikâyeti, 12 Eki 2026). Sayfada yalnız geçerli
+/// birimi söyleyen ve Ayarlar'a götüren tek satır kaldı.
 Future<void> pickSharedPeriod(BuildContext context) async {
   final cubit = context.read<TransactionFilterCubit>();
   final l10n = context.l10n;
@@ -94,9 +101,17 @@ Future<void> pickSharedPeriod(BuildContext context) async {
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => _PeriodSheet(cubit: cubit, quickOptions: quickOptions),
+    builder: (_) => _PeriodSheet(
+      unit: cubit.periodPreferences.unit,
+      quickOptions: quickOptions,
+    ),
   );
   if (result == null || !context.mounted) return;
+  if (result.openSettings) {
+    // Yönlendiricisiz ağaçta (yalıtılmış sayfa testleri) sessizce geçilir.
+    GoRouter.maybeOf(context)?.push(AppRoutes.settings);
+    return;
+  }
   if (result.range != null) {
     cubit.setPeriod(result.range!);
     return;
@@ -108,30 +123,31 @@ Future<void> pickSharedPeriod(BuildContext context) async {
 
 class _PeriodSheetResult {
   final DateTimeRange? range;
-  const _PeriodSheetResult.range(DateTimeRange this.range);
-  const _PeriodSheetResult.calendar() : range = null;
+  final bool openSettings;
+  const _PeriodSheetResult.range(DateTimeRange this.range)
+      : openSettings = false;
+  const _PeriodSheetResult.calendar()
+      : range = null,
+        openSettings = false;
+  const _PeriodSheetResult.settings()
+      : range = null,
+        openSettings = true;
 }
 
-class _PeriodSheet extends StatefulWidget {
-  final TransactionFilterCubit cubit;
+/// [unit]'in kısa adı ("Ay", "Hafta" …).
+String periodUnitName(PeriodUnit unit, AppLocalizations l10n) => switch (unit) {
+      PeriodUnit.day => l10n.periodUnitDay,
+      PeriodUnit.week => l10n.periodUnitWeek,
+      PeriodUnit.biweek => l10n.periodUnitBiweek,
+      PeriodUnit.month => l10n.periodUnitMonth,
+    };
+
+class _PeriodSheet extends StatelessWidget {
+  /// Geçerli dönem birimi — yalnız bilgi olarak gösterilir.
+  final PeriodUnit unit;
   final List<IboDateRangeQuickOption> quickOptions;
 
-  const _PeriodSheet({required this.cubit, required this.quickOptions});
-
-  @override
-  State<_PeriodSheet> createState() => _PeriodSheetState();
-}
-
-class _PeriodSheetState extends State<_PeriodSheet> {
-  late PeriodPreferences _prefs = widget.cubit.periodPreferences;
-
-  Future<void> _change(PeriodPreferences next) async {
-    setState(() => _prefs = next);
-    await savePeriodPreferences(widget.cubit, next);
-    // Birim değiştirmek "o birimde bakmak" demektir: özel bir aralıktan da
-    // yeni birimin içinde bulunulan dönemine geçilir.
-    widget.cubit.setPeriod(widget.cubit.basePeriod());
-  }
+  const _PeriodSheet({required this.unit, required this.quickOptions});
 
   Widget _sectionLabel(BuildContext context, String text) => Padding(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
@@ -199,13 +215,8 @@ class _PeriodSheetState extends State<_PeriodSheet> {
                     ],
                   ),
                 ),
-                _sectionLabel(context, l10n.periodUnitSection),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: PeriodUnitEditor(value: _prefs, onChanged: _change),
-                ),
                 _sectionLabel(context, l10n.periodQuickSection),
-                for (final option in widget.quickOptions)
+                for (final option in quickOptions)
                   ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 20),
                     title: Text(
@@ -239,6 +250,33 @@ class _PeriodSheetState extends State<_PeriodSheet> {
                   ),
                   onTap: () => Navigator.of(context)
                       .pop(const _PeriodSheetResult.calendar()),
+                ),
+                Divider(
+                  height: 1,
+                  indent: 20,
+                  endIndent: 20,
+                  color: cs.onSurface.withValues(alpha: 0.10),
+                ),
+                ListTile(
+                  key: const ValueKey('period-unit-settings'),
+                  dense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+                  leading: Icon(Icons.tune_rounded,
+                      size: 18, color: cs.onSurfaceVariant),
+                  title: Text(
+                    l10n.periodUnitCurrent(periodUnitName(unit, l10n)),
+                    style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+                  ),
+                  trailing: Text(
+                    l10n.periodUnitChangeInSettings,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: cs.primary,
+                    ),
+                  ),
+                  onTap: () => Navigator.of(context)
+                      .pop(const _PeriodSheetResult.settings()),
                 ),
                 const SizedBox(height: 8),
               ],

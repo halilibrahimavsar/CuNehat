@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockBankImportCubit extends MockCubit<BankImportState>
@@ -44,6 +45,10 @@ void main() {
   late _MockBankImportCubit cubit;
   late _MockWalletBloc walletBloc;
   late _MockAuthBloc authBloc;
+
+  // Tarih etiketleri `Intl.defaultLocale`'e bakar; boş bırakılırsa intl
+  // sistem yereline (genelde en_US) düşer ve ay adları makineye göre kayar.
+  setUpAll(() => Intl.defaultLocale = 'tr');
 
   setUp(() {
     cubit = _MockBankImportCubit();
@@ -238,6 +243,13 @@ void main() {
 
     expect(find.text('Son içe aktarımlar'), findsOneWidget);
     expect(find.text('Nakit · 157 işlem'), findsOneWidget);
+    // İki tarih ETİKETLİ ve ay adıyla: eskiden "24.09.2026 09:50 ·
+    // 30.05.2026–25.08.2026" hangisinin ne olduğunu söylemiyordu. (Yıl,
+    // içinde bulunulan yıl değilse eklenir — o yüzden `textContaining`.)
+    expect(find.textContaining('İşlem tarihleri: 30 May – 25 Ağu'),
+        findsOneWidget);
+    expect(find.textContaining('Aktarıldı: 24 Eyl'), findsOneWidget);
+    expect(find.textContaining('24.09.2026'), findsNothing);
 
     await tester.tap(find.text('Geri al'));
     await tester.pumpAndSettle();

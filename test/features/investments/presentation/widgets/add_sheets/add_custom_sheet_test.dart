@@ -1,3 +1,4 @@
+import 'package:cunehat/features/investments/domain/entities/goal_entity.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_custom_sheet.dart';
@@ -475,5 +476,51 @@ void main() {
     expect(saved!.dateAdded, DateTime(2026, 9, 5));
     expect(source, isA<AdoptedCashMovement>());
     expect((source! as AdoptedCashMovement).transaction.id, 'row-9');
+  });
+
+  testWidgets('hedefin "varlık ekle"sinden açılınca hedef ön seçili gelir',
+      (WidgetTester tester) async {
+    final goals = [
+      GoalEntity(
+        id: 'g1',
+        userId: 'user_123',
+        walletId: 'wallet_123',
+        name: 'Araba',
+        targetAmount: 500000,
+        category: 'araba',
+        color: Colors.teal,
+        createdAt: DateTime(2026, 1, 1),
+      ),
+      GoalEntity(
+        id: 'g2',
+        userId: 'user_123',
+        walletId: 'wallet_123',
+        name: 'Tatil',
+        targetAmount: 80000,
+        category: 'tatil',
+        color: Colors.orange,
+        createdAt: DateTime(2026, 1, 2),
+      ),
+    ];
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        AddCustomSheet(
+          walletId: 'wallet_123',
+          userId: 'user_123',
+          walletCurrency: 'TRY',
+          goals: goals,
+          initialGoalId: 'g2',
+          onSave: (_, __) {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    // Parametre alınıyor ama okunmuyordu: seçici "Hedefe bağlı değil"de
+    // açılıyor, kullanıcı içinden geldiği hedefi yeniden seçiyordu.
+    final picker = tester
+        .widget<DropdownButton<String?>>(find.byType(DropdownButton<String?>));
+    expect(picker.value, 'g2');
   });
 }

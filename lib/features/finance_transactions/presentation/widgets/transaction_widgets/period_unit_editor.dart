@@ -10,9 +10,9 @@ import 'package:intl/intl.dart';
 /// Dönem birimi düzenleyicisi: Gün · Hafta · 2 Hafta · Ay + birimin
 /// başlangıç ayarı + "Bu dönem: …" önizlemesi.
 ///
-/// Dönem sayfasında ([pickSharedPeriod]) ve Ayarlar'da aynı bileşen: bir
-/// ayarın iki yerde iki farklı biçimde düzenlenmesi, hangisinin geçerli
-/// olduğunu sorgulatır.
+/// Yalnız Ayarlar'da kullanılır (bkz. `PeriodSettingsCard`). Bir ara dönem
+/// sayfasında da duruyordu; tarih seçmeye gelen kullanıcıyı kalıcı bir
+/// ayarla karşıladığı için oradan kaldırıldı.
 class PeriodUnitEditor extends StatelessWidget {
   final PeriodPreferences value;
   final ValueChanged<PeriodPreferences> onChanged;

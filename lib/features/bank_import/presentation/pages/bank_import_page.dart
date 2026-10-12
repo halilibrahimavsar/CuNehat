@@ -12,6 +12,7 @@ import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/bank_import/data/category_guesser.dart';
+import 'package:cunehat/features/bank_import/presentation/import_batch_labels.dart';
 import 'package:cunehat/features/bank_import/presentation/widgets/link_suggestions_card.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit.dart';
 import 'package:cunehat/features/bank_import/domain/statement_format.dart';
@@ -434,10 +435,14 @@ class _RecentImports extends StatelessWidget {
                                   const TextStyle(fontWeight: FontWeight.w600),
                             ),
                             Text(
-                              '${AppFormatters.dateShort.format(batches[i].importedAt)} '
-                              '${AppFormatters.time.format(batches[i].importedAt)}'
-                              ' · ${AppFormatters.dateShort.format(batches[i].firstDate)}'
-                              '–${AppFormatters.dateShort.format(batches[i].lastDate)}',
+                              l10n.bankImportRecentRange(importBatchRangeLabel(
+                                  batches[i].firstDate, batches[i].lastDate)),
+                              style: TextStyle(
+                                  fontSize: 12, color: cs.onSurfaceVariant),
+                            ),
+                            Text(
+                              l10n.bankImportRecentImportedAt(
+                                  importedAtLabel(batches[i].importedAt, l10n)),
                               style: TextStyle(
                                   fontSize: 12, color: cs.onSurfaceVariant),
                             ),

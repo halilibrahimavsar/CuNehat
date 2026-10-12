@@ -10091,12 +10091,6 @@ abstract class AppLocalizations {
   /// **'Dönem'**
   String get periodSheetTitle;
 
-  /// No description provided for @periodUnitSection.
-  ///
-  /// In tr, this message translates to:
-  /// **'DÖNEM BİRİMİ'**
-  String get periodUnitSection;
-
   /// No description provided for @periodUnitDay.
   ///
   /// In tr, this message translates to:
@@ -11302,6 +11296,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{count} satır transfer olarak bağlandı.'**
   String bankImportDoneLinkedTransfers(int count);
+
+  /// No description provided for @hedefVarlikEkleKisa.
+  ///
+  /// In tr, this message translates to:
+  /// **'Varlık'**
+  String get hedefVarlikEkleKisa;
+
+  /// No description provided for @periodUnitCurrent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dönem birimi: {unit}'**
+  String periodUnitCurrent(String unit);
+
+  /// No description provided for @periodUnitChangeInSettings.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayarlar\'dan değiştir'**
+  String get periodUnitChangeInSettings;
+
+  /// No description provided for @bankImportRecentRange.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem tarihleri: {range}'**
+  String bankImportRecentRange(String range);
+
+  /// No description provided for @bankImportRecentImportedAt.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aktarıldı: {when}'**
+  String bankImportRecentImportedAt(String when);
 }
 
 class _AppLocalizationsDelegate

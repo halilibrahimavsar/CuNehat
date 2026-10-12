@@ -141,6 +141,10 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
       _goalId = item.goalId;
       _selectedColor = item.color;
       _purchaseDate = item.dateAdded;
+    } else {
+      // Hedefin "varlık ekle"sinden gelindiyse hedef ön seçili gelir (bkz.
+      // AddStockSheet — aynı parametre orada da okunmuyordu).
+      _goalId = widget.initialGoalId;
     }
     // "Bağla…" akışı: satır önceden seçili gelir; maliyet ve tarih ondan.
     final ledgerTx = widget.initialLedgerTransaction;

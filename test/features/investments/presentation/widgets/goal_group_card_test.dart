@@ -235,4 +235,55 @@ void main() {
       expect(find.byIcon(Icons.flag_rounded), findsOneWidget);
     });
   });
+
+  group('varlık ekleme yolu', () {
+    testWidgets('KAPALI kartta da "+ Varlık" görünür ve hedefe ekler',
+        (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(360, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      var added = 0;
+      var toggled = 0;
+      await tester.pumpWidget(buildTestableWidget(GoalGroupCard(
+        progress: GoalProgress.from(goal, [member]),
+        currency: 'TRY',
+        expanded: false,
+        onToggle: () => toggled++,
+        onMemberTap: (_) {},
+        onAddAsset: () => added++,
+        onEdit: () {},
+        onDelete: () {},
+      )));
+      await tester.pump();
+
+      // Eskiden ekleme düğmesi yalnız kart açıkken çiziliyordu.
+      final button = find.byKey(const ValueKey('goal-add-asset-g'));
+      expect(button, findsOneWidget);
+      expect(find.text('Bu hedefe varlık ekle'), findsNothing);
+      expect(tester.takeException(), isNull);
+
+      await tester.tap(button);
+      await tester.pump();
+      expect(added, 1);
+      // Düğme kartın aç/kapa dokunuşunu tetiklemez.
+      expect(toggled, 0);
+    });
+
+    testWidgets('AÇIK kartta yalnız tam genişlik düğme vardır',
+        (WidgetTester tester) async {
+      var added = 0;
+      await tester.pumpWidget(
+          buildTestableWidget(card(expanded: true, onAddAsset: () => added++)));
+      await tester.pump();
+
+      expect(find.byKey(const ValueKey('goal-add-asset-g')), findsNothing);
+      await tester.tap(find.text('Bu hedefe varlık ekle'));
+      await tester.pump();
+      expect(added, 1);
+    });
+  });
 }

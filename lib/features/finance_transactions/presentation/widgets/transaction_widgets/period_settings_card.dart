@@ -6,7 +6,8 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Ayarlar'daki "Dönem" kartı: dönem sayfasındakiyle AYNI düzenleyici.
+/// Ayarlar'daki "Dönem" kartı — dönem biriminin TEK düzenlendiği yer (dönem
+/// sayfası yalnız geçerli birimi söyler ve buraya yönlendirir).
 class PeriodSettingsCard extends StatefulWidget {
   const PeriodSettingsCard({super.key});
 

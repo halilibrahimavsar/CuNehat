@@ -52,30 +52,28 @@ class BudgetsPage extends StatelessWidget {
         body: CustomScrollView(
           slivers: [
             SliverAppBar(
-              expandedHeight: 120,
+              // Standart yükseklikte SABİT çubuk. Eskiden 120dp'ye genişleyen
+              // bir başlıktı: sayfa açıldığında boş gradyan çok yer kaplıyor
+              // ve içerik aşağı itiliyordu (kullanıcı şikâyeti, 12 Eki 2026).
               pinned: true,
               backgroundColor: scheme.primary,
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
                 onPressed: () => context.pop(),
               ),
-              flexibleSpace: FlexibleSpaceBar(
-                title: Text(
-                  context.l10n.butcePlanlama,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+              title: Text(
+                context.l10n.butcePlanlama,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
                 ),
-                centerTitle: false,
-                titlePadding: const EdgeInsets.only(left: 48, bottom: 16),
-                background: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [scheme.primary, scheme.secondary],
-                    ),
+              ),
+              flexibleSpace: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [scheme.primary, scheme.secondary],
                   ),
                 ),
               ),

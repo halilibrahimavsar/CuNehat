@@ -5785,9 +5785,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get periodSheetTitle => 'Dönem';
 
   @override
-  String get periodUnitSection => 'DÖNEM BİRİMİ';
-
-  @override
   String get periodUnitDay => 'Gün';
 
   @override
@@ -6553,5 +6550,26 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String bankImportDoneLinkedTransfers(int count) {
     return '$count satır transfer olarak bağlandı.';
+  }
+
+  @override
+  String get hedefVarlikEkleKisa => 'Varlık';
+
+  @override
+  String periodUnitCurrent(String unit) {
+    return 'Dönem birimi: $unit';
+  }
+
+  @override
+  String get periodUnitChangeInSettings => 'Ayarlar\'dan değiştir';
+
+  @override
+  String bankImportRecentRange(String range) {
+    return 'İşlem tarihleri: $range';
+  }
+
+  @override
+  String bankImportRecentImportedAt(String when) {
+    return 'Aktarıldı: $when';
   }
 }

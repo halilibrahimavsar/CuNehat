@@ -1,6 +1,6 @@
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/period_unit_editor.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
 import 'package:cunehat/features/finance_transactions/domain/transaction_period.dart';
-import 'package:cunehat/features/finance_transactions/domain/period_preferences.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/features/main_feature/controllers/home_navigation_requests.dart';
@@ -1015,9 +1015,9 @@ void main() {
     });
   });
 
-  group('dönem birimi', () {
+  group('dönem sayfası', () {
     testWidgets(
-        'dönem sayfasından Hafta + Çarşamba seçilince çubuk o haftayı gösterir',
+        'birim DÜZENLENMEZ: yalnız geçerli birim ve Ayarlar yönlendirmesi var',
         (tester) async {
       seed([txMarket, txFatura]);
       await pumpPage(tester);
@@ -1028,24 +1028,29 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Dönem'), findsOneWidget);
 
-      await tester.tap(find.text('Hafta'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('week-start-3')));
-      await tester.pumpAndSettle();
+      // Eskiden sayfanın en üstünde Gün/Hafta/2 Hafta/Ay seçimi ve başlangıç
+      // ayarı duruyordu; tarih seçmeye gelen kullanıcıyı kalıcı bir ayarla
+      // karşılıyordu. Düzenleme artık yalnız Ayarlar'da.
+      expect(find.byType(PeriodUnitEditor), findsNothing);
+      expect(find.text('DÖNEM BİRİMİ'), findsNothing);
+      expect(find.text('2 Hafta'), findsNothing);
+      expect(find.text('HAZIR ARALIKLAR'), findsOneWidget);
 
-      const prefs = PeriodPreferences(
-          unit: PeriodUnit.week, weekStart: DateTime.wednesday);
-      final expected = periodLabel(prefs.periodContaining(DateTime.now()),
-          lookupAppLocalizations(const Locale('tr')));
-      // Önizleme ve (sayfa kapanınca) dönem çubuğu aynı haftayı söyler.
-      expect(find.text('Bu dönem: $expected'), findsOneWidget);
-      await tester.tapAt(const Offset(10, 10));
-      await tester.pumpAndSettle();
+      final footer = find.byKey(const ValueKey('period-unit-settings'));
+      await tester.ensureVisible(footer);
+      expect(
+          find.descendant(of: footer, matching: find.text('Dönem birimi: Ay')),
+          findsOneWidget);
       expect(
           find.descendant(
-              of: find.byType(TransactionPeriodBar),
-              matching: find.text(expected)),
+              of: footer, matching: find.text("Ayarlar'dan değiştir")),
           findsOneWidget);
+
+      // Yönlendiricisiz ağaçta dokunuş sayfayı kapatır, hata vermez.
+      await tester.tap(footer);
+      await tester.pumpAndSettle();
+      expect(find.text('HAZIR ARALIKLAR'), findsNothing);
+      expect(tester.takeException(), isNull);
     });
   });
 }

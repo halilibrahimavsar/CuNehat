@@ -5827,9 +5827,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get periodSheetTitle => 'Period';
 
   @override
-  String get periodUnitSection => 'PERIOD UNIT';
-
-  @override
   String get periodUnitDay => 'Day';
 
   @override
@@ -6602,5 +6599,26 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String bankImportDoneLinkedTransfers(int count) {
     return '$count rows were linked as transfers.';
+  }
+
+  @override
+  String get hedefVarlikEkleKisa => 'Asset';
+
+  @override
+  String periodUnitCurrent(String unit) {
+    return 'Period unit: $unit';
+  }
+
+  @override
+  String get periodUnitChangeInSettings => 'Change in Settings';
+
+  @override
+  String bankImportRecentRange(String range) {
+    return 'Transaction dates: $range';
+  }
+
+  @override
+  String bankImportRecentImportedAt(String when) {
+    return 'Imported: $when';
   }
 }

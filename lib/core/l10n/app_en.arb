@@ -3206,7 +3206,6 @@
   "txCollapseAllDays": "Collapse all",
   "txExpandAllDays": "Expand all",
   "periodSheetTitle": "Period",
-  "periodUnitSection": "PERIOD UNIT",
   "periodUnitDay": "Day",
   "periodUnitWeek": "Week",
   "periodUnitBiweek": "2 Weeks",
@@ -3763,6 +3762,32 @@
     "placeholders": {
       "count": {
         "type": "int"
+      }
+    }
+  },
+  "hedefVarlikEkleKisa": "Asset",
+  "periodUnitCurrent": "Period unit: {unit}",
+  "@periodUnitCurrent": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "periodUnitChangeInSettings": "Change in Settings",
+  "bankImportRecentRange": "Transaction dates: {range}",
+  "@bankImportRecentRange": {
+    "placeholders": {
+      "range": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportRecentImportedAt": "Imported: {when}",
+  "@bankImportRecentImportedAt": {
+    "placeholders": {
+      "when": {
+        "type": "String"
       }
     }
   }

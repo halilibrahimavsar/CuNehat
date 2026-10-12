@@ -3329,7 +3329,6 @@
   "txCollapseAllDays": "Tümünü daralt",
   "txExpandAllDays": "Tümünü genişlet",
   "periodSheetTitle": "Dönem",
-  "periodUnitSection": "DÖNEM BİRİMİ",
   "periodUnitDay": "Gün",
   "periodUnitWeek": "Hafta",
   "periodUnitBiweek": "2 Hafta",
@@ -3997,6 +3996,32 @@
     "placeholders": {
       "count": {
         "type": "int"
+      }
+    }
+  },
+  "hedefVarlikEkleKisa": "Varlık",
+  "periodUnitCurrent": "Dönem birimi: {unit}",
+  "@periodUnitCurrent": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "periodUnitChangeInSettings": "Ayarlar'dan değiştir",
+  "bankImportRecentRange": "İşlem tarihleri: {range}",
+  "@bankImportRecentRange": {
+    "placeholders": {
+      "range": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportRecentImportedAt": "Aktarıldı: {when}",
+  "@bankImportRecentImportedAt": {
+    "placeholders": {
+      "when": {
+        "type": "String"
       }
     }
   }

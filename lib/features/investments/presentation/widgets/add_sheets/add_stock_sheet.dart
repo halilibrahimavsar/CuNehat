@@ -162,6 +162,11 @@ class _AddStockSheetState extends State<AddStockSheet> {
       _selectedColor = item.color;
       _purchaseDate = item.dateAdded;
       _symbolController.text = item.symbol ?? '';
+    } else {
+      // Hedefin "varlık ekle"sinden gelindiyse hedef ön seçili gelir.
+      // Eskiden parametre alınıp hiç okunmuyordu: kullanıcı hedefin içinden
+      // geldiği hâlde hedefi yeniden seçmek zorunda kalıyordu.
+      _goalId = widget.initialGoalId;
     }
     // "Bağla…" akışı: satır önceden seçili gelir; maliyet ve tarih ondan.
     final ledgerTx = widget.initialLedgerTransaction;
