@@ -4024,5 +4024,24 @@
         "type": "String"
       }
     }
+  },
+  "txDayAdd": "Bu güne işlem ekle",
+  "txDayEmptyRow": "{date} · kayıt yok",
+  "@txDayEmptyRow": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "kategoriSirala": "Sırala",
+  "kategoriSiralaAciklama": "Tutamaçtan sürükleyerek sırala. Sıra bütün cüzdanlarda aynıdır.",
+  "kategoriSiralaTutamac": "{name}: sürükleyerek taşı",
+  "@kategoriSiralaTutamac": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

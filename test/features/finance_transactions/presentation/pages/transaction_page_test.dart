@@ -1,3 +1,4 @@
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_fields.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/period_unit_editor.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
 import 'package:cunehat/features/finance_transactions/domain/transaction_period.dart';
@@ -889,6 +890,58 @@ void main() {
       expect(find.text('Ayın ilk kaydı'), findsOneWidget);
       // Dönem etiketi değişmedi.
       expect(find.text(label), findsOneWidget);
+    });
+  });
+
+  group('tarihe hızlı giriş', () {
+    Future<void> tapRailDay(WidgetTester tester, int day) async {
+      final cell = find.descendant(
+        of: find.byType(TransactionDayRail),
+        matching: find.text('$day'),
+      );
+      await tester.dragUntilVisible(
+        cell,
+        find.byType(TransactionDayRail),
+        const Offset(120, 0),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(cell);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('kaydı OLMAYAN gün seçilince "ekle" satırı çıkar',
+        (tester) async {
+      // Eskiden boş güne dokunmak yalnız şeritteki vurguyu değiştiriyordu.
+      seed([txMarket, txFatura]); // ayın 3'ü ve 4'ü
+      await pumpPage(tester);
+      final add = find.byKey(const ValueKey('tx-empty-day-add'));
+      expect(add, findsNothing);
+
+      await tapRailDay(tester, 1);
+      expect(add, findsOneWidget);
+      expect(find.textContaining('kayıt yok'), findsOneWidget);
+
+      // Kaydı olan güne geçilince satır çekilir: o günün başlığında "+" var.
+      await tapRailDay(tester, 3);
+      expect(add, findsNothing);
+    });
+
+    testWidgets('gün başlığındaki "+" formu O GÜNLE açar', (tester) async {
+      seed([txMarket, txFatura]);
+      await pumpPage(tester);
+
+      final month = now.month.toString().padLeft(2, '0');
+      await tester
+          .tap(find.byKey(ValueKey('tx-day-add-${now.year}-$month-03')));
+      await tester.pumpAndSettle();
+
+      final form =
+          tester.widget<TransactionFormSheet>(find.byType(TransactionFormSheet));
+      expect(form.initialTransaction, isNull);
+      expect(
+          DateTime(form.initialDate!.year, form.initialDate!.month,
+              form.initialDate!.day),
+          DateTime(now.year, now.month, 3));
     });
   });
 

@@ -68,6 +68,7 @@ void main() {
     bool isExpense = true,
     TransactionEntity? initial,
     TransactionEntity? prefill,
+    DateTime? initialDate,
     void Function(TransactionEntity, RecurringFrequency?)? onSave,
     void Function(List<TransactionEntity>, RecurringFrequency?)? onSaveAndNew,
   }) async {
@@ -94,6 +95,7 @@ void main() {
               userId: 'u1',
               initialTransaction: initial,
               prefill: prefill,
+              initialDate: initialDate,
               onSave: onSave ?? (_, __) {},
               onSaveAndNew: onSaveAndNew,
               onCancel: () {},
@@ -395,6 +397,50 @@ void main() {
       expect(saved!.tag, 'Market');
       expect(saved!.date.day, DateTime.now().day);
       expect(saved!.origin, TransactionOrigin.manual);
+    });
+  });
+
+  group('tarihe hızlı giriş (gün başlığındaki "+")', () {
+    testWidgets('form verilen GÜNE açılır; "Kaydet ve yeni" günü korur',
+        (tester) async {
+      final rows = <TransactionEntity>[];
+      await pumpForm(
+        tester,
+        initialDate: DateTime(2026, 9, 3),
+        onSaveAndNew: (r, _) => rows.addAll(r),
+      );
+
+      for (final (amount, category) in [('120', 'Market'), ('75', 'Kira')]) {
+        await tester.enterText(amountField, amount);
+        await tester.tap(find.text(category));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(l10n.kaydetVeYeni));
+        await tester.pumpAndSettle();
+      }
+
+      // Aynı güne art arda kayıt: ikinci kayıt bugüne dönmez.
+      expect(rows, hasLength(2));
+      for (final row in rows) {
+        expect(DateTime(row.date.year, row.date.month, row.date.day),
+            DateTime(2026, 9, 3));
+      }
+    });
+
+    testWidgets('düzenlemede yok sayılır: kaydın kendi tarihi korunur',
+        (tester) async {
+      TransactionEntity? saved;
+      await pumpForm(
+        tester,
+        initial: existing(),
+        initialDate: DateTime(2026, 1, 1),
+        onSave: (t, _) => saved = t,
+      );
+
+      await tester.tap(find.text(l10n.guncelle));
+      // Kayıttan sonra düğme dönen göstergeye geçer; sayfayı çağıran kapatır.
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(saved!.date, DateTime(2026, 9, 5, 18, 30));
     });
   });
 }

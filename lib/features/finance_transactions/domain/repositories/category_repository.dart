@@ -45,6 +45,15 @@ abstract class CategoryRepository {
   /// ilgilendirir, o orkestrasyon `DeleteCategoryUseCase`'te.
   Future<void> deleteCategories(Set<String> ids);
 
+  /// Bir kardeş kümesinin sırasını yazar: [orderedSiblingIds] sırasıyla
+  /// 1..n `sortOrder` alır (kökler kendi türü içinde, alt kategoriler kendi
+  /// ana kategorisi içinde — `sortOrder` kardeş kapsamlıdır).
+  ///
+  /// Sıra KÜRESELDİR: kategoriler cüzdanlar arasında ortak olduğu için her
+  /// cüzdanda aynı görünür. Artık var olmayan kimlikler atlanır; farklı
+  /// kardeş kümelerinden kimlik karıştırılırsa [ArgumentError] fırlatır.
+  Future<void> reorder(List<String> orderedSiblingIds);
+
   /// Verilen kategorileri TEK yazımda ekler (başlangıç paketi).
   Future<List<CategoryEntity>> addAll(Iterable<CategoryEntity> categories);
 }

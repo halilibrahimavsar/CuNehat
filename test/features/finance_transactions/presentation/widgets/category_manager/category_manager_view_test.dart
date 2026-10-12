@@ -238,4 +238,131 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('Ulaşım ve Akaryakıt Giderleri'), findsOneWidget);
   });
+
+  group('sıralama kipi', () {
+    // Fatura(Doğalgaz, Elektrik) · Kira · Market
+    final wide = [
+      cat('f', 'Fatura'),
+      cat('f-d', 'Doğalgaz', parentId: 'f'),
+      cat('f-e', 'Elektrik', parentId: 'f'),
+      cat('k', 'Kira'),
+      cat('m', 'Market'),
+    ];
+
+    setUp(() {
+      when(() => repository.getCategories(any())).thenAnswer((_) async => wide);
+      when(() => repository.reorder(any())).thenAnswer((_) async {});
+    });
+
+    Future<void> dragHandle(
+        WidgetTester tester, String id, Offset offset) async {
+      final gesture = await tester.startGesture(
+          tester.getCenter(find.byKey(ValueKey('reorder-handle-$id'))));
+      await tester.pump();
+      // Birkaç adımda sürükle: tek sıçrama yerleşimi güncellemeden bırakır.
+      for (var i = 0; i < 5; i++) {
+        await gesture.moveBy(offset / 5);
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      await gesture.up();
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('"Sırala" kipi açar: anahtarlar ve kaydırarak silme çekilir',
+        (tester) async {
+      await pump(tester);
+      expect(find.byType(Switch), findsWidgets);
+
+      await tester.tap(find.byKey(const ValueKey('category-reorder-start')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(Switch), findsNothing);
+      expect(find.byType(Dismissible), findsNothing);
+      expect(find.byKey(const ValueKey('reorder-handle-f')), findsOneWidget);
+      // Alt kategoriler kök açılana kadar gizli.
+      expect(find.text('Elektrik'), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('category-reorder-done')));
+      await tester.pumpAndSettle();
+      expect(find.byType(Switch), findsWidgets);
+    });
+
+    testWidgets('kök sürüklenince yeni sıra depoya yazılır ve bildirilir',
+        (tester) async {
+      var changed = 0;
+      await tester.pumpWidget(host(CategoryManagerView(
+        walletId: 'w1',
+        isExpense: true,
+        onChanged: () => changed++,
+      )));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('category-reorder-start')));
+      await tester.pumpAndSettle();
+
+      // Market en alttan en üste.
+      final top =
+          tester.getCenter(find.byKey(const ValueKey('reorder-handle-f')));
+      final from =
+          tester.getCenter(find.byKey(const ValueKey('reorder-handle-m')));
+      await dragHandle(tester, 'm', Offset(0, top.dy - from.dy - 20));
+
+      final ids = verify(() => repository.reorder(captureAny())).captured.single
+          as List<String>;
+      expect(ids, ['m', 'f', 'k']);
+      expect(changed, 1);
+    });
+
+    testWidgets('alt kategoriler kendi ana kategorisinin içinde sıralanır',
+        (tester) async {
+      await pump(tester);
+      await tester.tap(find.byKey(const ValueKey('category-reorder-start')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('reorder-expand-f')));
+      await tester.pumpAndSettle();
+
+      final first =
+          tester.getCenter(find.byKey(const ValueKey('reorder-handle-f-d')));
+      final second =
+          tester.getCenter(find.byKey(const ValueKey('reorder-handle-f-e')));
+      await dragHandle(tester, 'f-e', Offset(0, first.dy - second.dy - 20));
+
+      final ids = verify(() => repository.reorder(captureAny())).captured.single
+          as List<String>;
+      expect(ids, ['f-e', 'f-d']);
+    });
+
+    testWidgets('yazım başarısızsa hata gösterilir ve liste depodan tazelenir',
+        (tester) async {
+      when(() => repository.reorder(any()))
+          .thenThrow(CacheException('disk dolu'));
+      await pump(tester);
+      await tester.tap(find.byKey(const ValueKey('category-reorder-start')));
+      await tester.pumpAndSettle();
+      clearInteractions(repository);
+
+      final top =
+          tester.getCenter(find.byKey(const ValueKey('reorder-handle-f')));
+      final from =
+          tester.getCenter(find.byKey(const ValueKey('reorder-handle-m')));
+      await dragHandle(tester, 'm', Offset(0, top.dy - from.dy - 20));
+
+      expect(find.byType(SnackBar), findsOneWidget);
+      // Depo eski sırayı döndü: Market yeniden en altta.
+      verify(() => repository.getCategories(true)).called(1);
+      expect(
+          tester.getCenter(find.byKey(const ValueKey('reorder-handle-m'))).dy,
+          greaterThan(tester
+              .getCenter(find.byKey(const ValueKey('reorder-handle-k')))
+              .dy));
+    });
+
+    testWidgets('sıralanacak bir şey yokken "Sırala" çıkmaz', (tester) async {
+      when(() => repository.getCategories(any()))
+          .thenAnswer((_) async => [cat('m', 'Market')]);
+      await pump(tester);
+
+      expect(
+          find.byKey(const ValueKey('category-reorder-start')), findsNothing);
+    });
+  });
 }

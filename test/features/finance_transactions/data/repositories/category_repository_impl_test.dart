@@ -280,4 +280,109 @@ void main() {
       await sub.cancel();
     });
   });
+
+  group('sıralama (reorder)', () {
+    List<CategoryModel> written() =>
+        (verify(() => dataSource.putAll(captureAny())).captured.single
+                as Iterable<CategoryModel>)
+            .toList();
+
+    test('kardeşlere verilen sırayla 1..n yazar; ağaç yeni sırayı izler',
+        () async {
+      // Hepsi sortOrder 0: sıra bugüne kadar ADA göreydi.
+      final models = [
+        model('f', 'Fatura'),
+        model('k', 'Kira'),
+        model('m', 'Market')
+      ];
+      seed(models);
+      expect((await repository.getCategories(true)).map((c) => c.id),
+          ['f', 'k', 'm']);
+
+      await repository.reorder(['m', 'f', 'k']);
+
+      final saved = written();
+      expect(
+          {for (final c in saved) c.id: c.sortOrder}, {'m': 1, 'f': 2, 'k': 3});
+      // Ad, ikon, tür korunur: yalnız sıra değişir.
+      expect(saved.firstWhere((c) => c.id == 'm').name, 'Market');
+
+      seed(saved);
+      expect((await repository.getCategories(true)).map((c) => c.id),
+          ['m', 'f', 'k']);
+    });
+
+    test('yalnız yeri DEĞİŞEN kayıtlar yazılır', () async {
+      seed([
+        model('a', 'A', sortOrder: 1),
+        model('b', 'B', sortOrder: 2),
+        model('c', 'C', sortOrder: 3),
+      ]);
+
+      await repository.reorder(['a', 'c', 'b']);
+
+      expect(written().map((c) => c.id), unorderedEquals(['b', 'c']));
+    });
+
+    test('sıra aynıysa ne yazım ne yayın olur', () async {
+      seed([model('a', 'A', sortOrder: 1), model('b', 'B', sortOrder: 2)]);
+      final events = <void>[];
+      final sub = changedNotifier.stream.listen(events.add);
+
+      await repository.reorder(['a', 'b']);
+      await repository.reorder(const []);
+
+      await Future<void>.delayed(Duration.zero);
+      verifyNever(() => dataSource.putAll(any()));
+      expect(events, isEmpty);
+      await sub.cancel();
+    });
+
+    test('alt kategoriler KENDİ ana kategorisi içinde sıralanır', () async {
+      seed([
+        model('f', 'Fatura', sortOrder: 1),
+        model('f-d', 'Doğalgaz', parentId: 'f'),
+        model('f-e', 'Elektrik', parentId: 'f'),
+        model('m', 'Market', sortOrder: 2),
+      ]);
+
+      await repository.reorder(['f-e', 'f-d']);
+
+      expect(
+          {for (final c in written()) c.id: c.sortOrder}, {'f-e': 1, 'f-d': 2});
+    });
+
+    test('farklı kardeş kümeleri karıştırılırsa reddeder, hiçbir şey yazmaz',
+        () async {
+      seed([
+        model('f', 'Fatura'),
+        model('f-e', 'Elektrik', parentId: 'f'),
+        model('maas', 'Maaş', isExpense: false),
+      ]);
+
+      await expectLater(repository.reorder(['f', 'f-e']), throwsArgumentError);
+      await expectLater(repository.reorder(['f', 'maas']), throwsArgumentError);
+      verifyNever(() => dataSource.putAll(any()));
+    });
+
+    test('artık var olmayan kimlik atlanır', () async {
+      seed([model('a', 'A'), model('b', 'B')]);
+
+      await repository.reorder(['silinmis', 'b', 'a']);
+
+      expect({for (final c in written()) c.id: c.sortOrder}, {'b': 1, 'a': 2});
+    });
+
+    test('yazınca değişiklik bildirir', () async {
+      seed([model('a', 'A'), model('b', 'B')]);
+      final events = <void>[];
+      final sub = changedNotifier.stream.listen(events.add);
+
+      await repository.reorder(['b', 'a']);
+
+      await Future<void>.delayed(Duration.zero);
+      expect(events, hasLength(1));
+      await sub.cancel();
+    });
+  });
 }

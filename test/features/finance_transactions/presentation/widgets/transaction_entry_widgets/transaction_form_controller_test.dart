@@ -103,4 +103,14 @@ void main() {
 
     expect(c.categoryId.value, isNull);
   });
+
+  test('startOn: gün verilen gün, saat ŞİMDİKİ saat', () {
+    final c = TransactionFormController(isExpense: true, walletId: 'w1');
+    addTearDown(c.dispose);
+
+    c.startOn(DateTime(2026, 9, 3), now: DateTime(2026, 10, 12, 14, 25, 7));
+
+    // Gece yarısına yazılsaydı kayıt o günün en altına düşerdi.
+    expect(c.dateTime.value, DateTime(2026, 9, 3, 14, 25, 7));
+  });
 }

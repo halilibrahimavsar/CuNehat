@@ -74,6 +74,35 @@ class CategoryRepositoryImpl implements CategoryRepository {
   }
 
   @override
+  Future<void> reorder(List<String> orderedSiblingIds) async {
+    if (orderedSiblingIds.isEmpty) return;
+    final byId = {for (final c in await getAllCategories()) c.id: c};
+    final siblings = [
+      for (final id in orderedSiblingIds)
+        if (byId[id] case final c?) c,
+    ];
+    if (siblings.isEmpty) return;
+
+    final first = siblings.first;
+    if (siblings.any((c) =>
+        c.parentId != first.parentId || c.isExpense != first.isExpense)) {
+      throw ArgumentError.value(orderedSiblingIds, 'orderedSiblingIds',
+          'tek bir kardeş kümesi olmalı (aynı tür, aynı ana kategori)');
+    }
+
+    // Yalnız yeri DEĞİŞEN kayıtlar yazılır; sıra aynıysa yayın da yok.
+    final changed = <CategoryModel>[
+      for (var i = 0; i < siblings.length; i++)
+        if (siblings[i].sortOrder != i + 1)
+          CategoryModel.fromEntity(siblings[i].copyWith(sortOrder: i + 1)),
+    ];
+    if (changed.isEmpty) return;
+
+    await dataSource.putAll(changed);
+    changedNotifier.notify();
+  }
+
+  @override
   Future<List<CategoryEntity>> addAll(
       Iterable<CategoryEntity> categories) async {
     final list = categories.toList();

@@ -11326,6 +11326,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Aktarıldı: {when}'**
   String bankImportRecentImportedAt(String when);
+
+  /// No description provided for @txDayAdd.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu güne işlem ekle'**
+  String get txDayAdd;
+
+  /// No description provided for @txDayEmptyRow.
+  ///
+  /// In tr, this message translates to:
+  /// **'{date} · kayıt yok'**
+  String txDayEmptyRow(String date);
+
+  /// No description provided for @kategoriSirala.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sırala'**
+  String get kategoriSirala;
+
+  /// No description provided for @kategoriSiralaAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutamaçtan sürükleyerek sırala. Sıra bütün cüzdanlarda aynıdır.'**
+  String get kategoriSiralaAciklama;
+
+  /// No description provided for @kategoriSiralaTutamac.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name}: sürükleyerek taşı'**
+  String kategoriSiralaTutamac(String name);
 }
 
 class _AppLocalizationsDelegate

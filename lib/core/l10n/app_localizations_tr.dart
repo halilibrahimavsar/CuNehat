@@ -6572,4 +6572,24 @@ class AppLocalizationsTr extends AppLocalizations {
   String bankImportRecentImportedAt(String when) {
     return 'Aktarıldı: $when';
   }
+
+  @override
+  String get txDayAdd => 'Bu güne işlem ekle';
+
+  @override
+  String txDayEmptyRow(String date) {
+    return '$date · kayıt yok';
+  }
+
+  @override
+  String get kategoriSirala => 'Sırala';
+
+  @override
+  String get kategoriSiralaAciklama =>
+      'Tutamaçtan sürükleyerek sırala. Sıra bütün cüzdanlarda aynıdır.';
+
+  @override
+  String kategoriSiralaTutamac(String name) {
+    return '$name: sürükleyerek taşı';
+  }
 }

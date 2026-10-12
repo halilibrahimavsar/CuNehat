@@ -6621,4 +6621,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String bankImportRecentImportedAt(String when) {
     return 'Imported: $when';
   }
+
+  @override
+  String get txDayAdd => 'Add a transaction on this day';
+
+  @override
+  String txDayEmptyRow(String date) {
+    return '$date · no records';
+  }
+
+  @override
+  String get kategoriSirala => 'Reorder';
+
+  @override
+  String get kategoriSiralaAciklama =>
+      'Drag the handle to reorder. The order is the same in every wallet.';
+
+  @override
+  String kategoriSiralaTutamac(String name) {
+    return '$name: drag to move';
+  }
 }

@@ -202,6 +202,11 @@ class TransactionLedgerSliver extends StatefulWidget {
   /// sliver kendi durumunu taşır.
   final LedgerCollapseController? collapse;
 
+  /// Verilirse gün başlığında "+" çıkar: o GÜNE yeni kayıt. Geçmiş bir güne
+  /// kayıt girmenin tek yolu formu açıp tarihi elle geri almaktı. Salt
+  /// okunur yüzeylerde (rapor alt sayfaları) verilmez, düğme çizilmez.
+  final ValueChanged<DateTime>? onAddForDay;
+
   const TransactionLedgerSliver({
     super.key,
     required this.transactions,
@@ -211,6 +216,7 @@ class TransactionLedgerSliver extends StatefulWidget {
     this.showDayEndBalance = true,
     this.anchors,
     this.collapse,
+    this.onAddForDay,
   });
 
   @override
@@ -264,6 +270,9 @@ class _TransactionLedgerSliverState extends State<TransactionLedgerSliver> {
                   anchorKey: widget.anchors?.keyFor(group.day),
                   extent: _headerExtent(context),
                   onToggle: () => _collapse.toggle(group.day),
+                  onAdd: widget.onAddForDay == null
+                      ? null
+                      : () => widget.onAddForDay!(group.day),
                 ),
               ),
               if (!_collapse.isCollapsed(group.day))
@@ -355,6 +364,7 @@ class _DayHeaderDelegate extends SliverPersistentHeaderDelegate {
   final GlobalKey? anchorKey;
   final double extent;
   final VoidCallback onToggle;
+  final VoidCallback? onAdd;
 
   _DayHeaderDelegate({
     required this.group,
@@ -362,6 +372,7 @@ class _DayHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.anchorKey,
     required this.extent,
     required this.onToggle,
+    this.onAdd,
   });
 
   @override
@@ -415,7 +426,24 @@ class _DayHeaderDelegate extends SliverPersistentHeaderDelegate {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                if (onAdd != null)
+                  // Başlığın kendi dokunuşu günü katlar; "+" ondan ayrı bir
+                  // hedeftir (başlık yüksekliği en az 44dp, bkz.
+                  // `_headerExtent`).
+                  IconButton(
+                    key: ValueKey('tx-day-add-${_dayKey(group.day)}'),
+                    tooltip: context.l10n.txDayAdd,
+                    onPressed: onAdd,
+                    visualDensity: VisualDensity.compact,
+                    constraints:
+                        const BoxConstraints(minWidth: 40, minHeight: 40),
+                    padding: EdgeInsets.zero,
+                    iconSize: 20,
+                    color: scheme.primary,
+                    icon: const Icon(Icons.add_circle_outline_rounded),
+                  )
+                else
+                  const SizedBox(width: 8),
                 group.isOnlyMoved
                     ? _NetBadge(net: group.moved, moved: true)
                     : _NetBadge(net: group.net),
@@ -433,8 +461,14 @@ class _DayHeaderDelegate extends SliverPersistentHeaderDelegate {
       old.group.net != group.net ||
       old.group.items.length != group.items.length ||
       old.isExpanded != isExpanded ||
-      old.extent != extent;
+      old.extent != extent ||
+      (old.onAdd == null) != (onAdd == null);
 }
+
+/// Gün başlığı anahtarlarında kullanılan yerelden bağımsız gün damgası.
+String _dayKey(DateTime day) =>
+    '${day.year}-${day.month.toString().padLeft(2, '0')}-'
+    '${day.day.toString().padLeft(2, '0')}';
 
 class _NetBadge extends StatelessWidget {
   final double net;

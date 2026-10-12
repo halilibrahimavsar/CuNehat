@@ -79,6 +79,14 @@ class CategoryManagerViewState extends State<CategoryManagerView> {
   /// oku-değiştir-yaz başlatır ve biri diğerini bayat kümeyle ezer.
   final Set<String> _pending = {};
 
+  /// Sıralama kipi: liste sürüklenebilir tutamaçlı satırlara döner; silme
+  /// kaydırması ve görünürlük anahtarı o sırada yoktur (sürükleme ile
+  /// kaydırarak silme aynı harekete talip olurdu).
+  bool _reordering = false;
+
+  /// Sıralama kipinde alt kategorileri açık olan kökler.
+  final Set<String> _reorderExpanded = {};
+
   /// Yükleme kuşağı: `walletId` değişince yeni bir yükleme başlıyor ve ESKİ
   /// yüklemenin geç dönen sonucu yeni cüzdanın listesini ezebilirdi (tam da
   /// `didUpdateWidget`'ın çözdüğü hatanın yarış hâli).
@@ -157,6 +165,58 @@ class CategoryManagerViewState extends State<CategoryManagerView> {
 
   void _notifyChanged() => widget.onChanged?.call();
 
+  bool get isReordering => _reordering;
+
+  /// Sıralanacak bir şey var mı: en az iki kök ya da iki çocuklu bir kök.
+  bool get _canReorder =>
+      _tree.length > 1 || _tree.any((node) => node.children.length > 1);
+
+  void _setReordering(bool value) => setState(() {
+        _reordering = value;
+        if (!value) _reorderExpanded.clear();
+      });
+
+  /// Kökleri yeniden sıralar ve yazar. Liste önce YERELDE değişir (sürüklenen
+  /// satır bırakıldığı yerde kalsın), yazım başarısız olursa depodan yeniden
+  /// okunur. [newIndex] satır çıkarıldıktan SONRAKİ konumdur
+  /// (`onReorderItem` sözleşmesi).
+  Future<void> _reorderRoots(int oldIndex, int newIndex) async {
+    if (oldIndex == newIndex) return;
+    final next = [..._tree];
+    next.insert(newIndex, next.removeAt(oldIndex));
+    setState(() => _tree = next);
+    await _persistOrder([for (final node in next) node.category.id]);
+  }
+
+  Future<void> _reorderChildren(
+      CategoryEntity root, int oldIndex, int newIndex) async {
+    if (oldIndex == newIndex) return;
+    final at = _tree.indexWhere((node) => node.category.id == root.id);
+    if (at < 0) return;
+    final children = [..._tree[at].children];
+    children.insert(newIndex, children.removeAt(oldIndex));
+    setState(() {
+      _tree = [..._tree]..[at] =
+          (category: _tree[at].category, children: children);
+    });
+    await _persistOrder([for (final c in children) c.id]);
+  }
+
+  Future<void> _persistOrder(List<String> orderedSiblingIds) async {
+    try {
+      await _categoryRepository.reorder(orderedSiblingIds);
+      if (!mounted) return;
+      // `sortOrder` değerleri değişti: yerel kopya depoyla eşitlensin
+      // (spinner'sız — liste zaten doğru sırada duruyor).
+      await _reload();
+      _notifyChanged();
+    } catch (e) {
+      if (!mounted) return;
+      AppMessenger.error(categoryFailureMessage(context, e));
+      await _reload();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -165,6 +225,8 @@ class CategoryManagerViewState extends State<CategoryManagerView> {
     if (_tree.isEmpty) return _buildEmptyState();
 
     final color = widget.isExpense ? Colors.red : Colors.green;
+
+    if (_reordering) return _buildReorderList(color);
 
     return RefreshIndicator(
       onRefresh: load,
@@ -220,6 +282,19 @@ class CategoryManagerViewState extends State<CategoryManagerView> {
                   style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
                 ),
               ),
+              // Açıklamanın YANINDA, altında değil: ayrı bir satır 0,85
+              // ekranlık alt sayfada bir kategori satırını aşağı itiyordu.
+              if (_canReorder)
+                TextButton.icon(
+                  key: const ValueKey('category-reorder-start'),
+                  onPressed: () => _setReordering(true),
+                  icon: const Icon(Icons.swap_vert_rounded, size: 18),
+                  label: Text(context.l10n.kategoriSirala),
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                ),
             ],
           ),
           // Kategorisi olan ama bu cüzdanda hiçbiri açık olmayan durum:
@@ -242,6 +317,145 @@ class CategoryManagerViewState extends State<CategoryManagerView> {
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  // ============================================================ sıralama kipi
+
+  Widget _buildReorderList(Color color) {
+    final cs = Theme.of(context).colorScheme;
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
+          child: Row(
+            children: [
+              Icon(Icons.swap_vert_rounded, size: 18, color: cs.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  context.l10n.kategoriSiralaAciklama,
+                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                ),
+              ),
+              FilledButton.tonal(
+                key: const ValueKey('category-reorder-done'),
+                onPressed: () => _setReordering(false),
+                style: FilledButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                ),
+                child: Text(context.l10n.tamam),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ReorderableListView.builder(
+            // Tutamaç AÇIKÇA verilir: varsayılan (satırın tamamına uzun
+            // basma) iç içe listede kök ile çocuğun sürüklemesini karıştırır.
+            buildDefaultDragHandles: false,
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16)
+                .plusSystemBottom(context)
+                .plusFabClearance(fabHeight: 48),
+            itemCount: _tree.length,
+            onReorderItem: _reorderRoots,
+            itemBuilder: (context, index) {
+              final node = _tree[index];
+              final root = node.category;
+              final open = _reorderExpanded.contains(root.id);
+              return Column(
+                key: ValueKey('reorder-root-${root.id}'),
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _reorderTile(
+                    root,
+                    color,
+                    index: index,
+                    trailing: node.children.length < 2
+                        ? null
+                        : IconButton(
+                            key: ValueKey('reorder-expand-${root.id}'),
+                            tooltip: context.l10n
+                                .starterPackChildCount(node.children.length),
+                            visualDensity: VisualDensity.compact,
+                            onPressed: () => setState(() {
+                              if (!_reorderExpanded.remove(root.id)) {
+                                _reorderExpanded.add(root.id);
+                              }
+                            }),
+                            icon: Icon(open
+                                ? Icons.expand_less_rounded
+                                : Icons.expand_more_rounded),
+                          ),
+                  ),
+                  if (open)
+                    ReorderableListView.builder(
+                      buildDefaultDragHandles: false,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: const EdgeInsets.only(left: 24),
+                      itemCount: node.children.length,
+                      onReorderItem: (o, n) => _reorderChildren(root, o, n),
+                      itemBuilder: (context, i) => KeyedSubtree(
+                        key: ValueKey('reorder-child-${node.children[i].id}'),
+                        child: _reorderTile(node.children[i], color, index: i),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _reorderTile(
+    CategoryEntity category,
+    Color color, {
+    required int index,
+    Widget? trailing,
+  }) {
+    final isChild = !category.isRoot;
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: AppCard(
+        accent: color,
+        padding: EdgeInsets.fromLTRB(4, isChild ? 2 : 4, 6, isChild ? 2 : 4),
+        child: Row(
+          children: [
+            ReorderableDragStartListener(
+              index: index,
+              child: Semantics(
+                label: context.l10n.kategoriSiralaTutamac(category.name),
+                child: SizedBox(
+                  key: ValueKey('reorder-handle-${category.id}'),
+                  width: 44,
+                  height: 44,
+                  child: Icon(Icons.drag_indicator_rounded,
+                      color: cs.onSurfaceVariant),
+                ),
+              ),
+            ),
+            Icon(AppIcons.getIconData(category.iconName),
+                color: color, size: isChild ? 18 : 22),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                category.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: isChild ? FontWeight.w500 : FontWeight.w700,
+                  fontSize: isChild ? 14 : 15,
+                ),
+              ),
+            ),
+            if (trailing != null) trailing,
+          ],
+        ),
       ),
     );
   }

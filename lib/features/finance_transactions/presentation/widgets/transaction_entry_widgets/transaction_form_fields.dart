@@ -40,6 +40,11 @@ class TransactionFormSheet extends StatefulWidget {
   /// başlatır (tarih bugün). Düzenleme değildir; [initialTransaction] ile
   /// birlikte verilmez.
   final TransactionEntity? prefill;
+
+  /// Yeni kayıt bu GÜNE açılır (defterde gün başlığındaki "+"); saat
+  /// şimdiki saattir. Düzenlemede yok sayılır. "Kaydet ve yeni" tarihi
+  /// korur — aynı güne art arda kayıt girilebilir.
+  final DateTime? initialDate;
   final void Function(
       TransactionEntity transaction, RecurringFrequency? frequency) onSave;
 
@@ -47,7 +52,8 @@ class TransactionFormSheet extends StatefulWidget {
   /// kayda hazırlanır. Taksitli alışverişte [rows] bölünmüş satırlardır,
   /// aksi halde tek elemanlıdır. Verilmezse düğme gösterilmez.
   final void Function(
-      List<TransactionEntity> rows, RecurringFrequency? frequency)? onSaveAndNew;
+          List<TransactionEntity> rows, RecurringFrequency? frequency)?
+      onSaveAndNew;
 
   /// Taksitli alışveriş kaydedilince (kart cüzdanı, taksit > 1) bölünmüş
   /// satırlarla çağrılır; verilmezse taksit seçici gösterilmez.
@@ -61,6 +67,7 @@ class TransactionFormSheet extends StatefulWidget {
     required this.userId,
     this.initialTransaction,
     this.prefill,
+    this.initialDate,
     required this.onSave,
     this.onSaveAndNew,
     this.onSaveInstallments,
@@ -93,6 +100,9 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
       _c.initialize(widget.initialTransaction!);
     } else if (widget.prefill case final source?) {
       _c.prefill(source);
+    }
+    if (!_isEdit) {
+      if (widget.initialDate case final day?) _c.startOn(day);
     }
     _c.targetWalletId.addListener(_onTargetChanged);
 

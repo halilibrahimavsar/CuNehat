@@ -106,6 +106,14 @@ class TransactionFormController {
     categoryId.value = t.tag;
   }
 
+  /// Yeni kaydı [day] gününe açar; saat ŞİMDİKİ saattir (gün içi sıralama
+  /// doğal kalsın — gece yarısına yazılan kayıt günün en altına düşerdi).
+  void startOn(DateTime day, {DateTime? now}) {
+    final clock = now ?? DateTime.now();
+    dateTime.value = DateTime(
+        day.year, day.month, day.day, clock.hour, clock.minute, clock.second);
+  }
+
   /// Türü değiştirir ve kategori listesini o türe göre yeniden yükler.
   ///
   /// Seçili kategori SIFIRLANIR: gider kategorisi gelir listesinde yoktur ve

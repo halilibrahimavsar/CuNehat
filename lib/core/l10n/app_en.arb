@@ -3790,5 +3790,24 @@
         "type": "String"
       }
     }
+  },
+  "txDayAdd": "Add a transaction on this day",
+  "txDayEmptyRow": "{date} · no records",
+  "@txDayEmptyRow": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "kategoriSirala": "Reorder",
+  "kategoriSiralaAciklama": "Drag the handle to reorder. The order is the same in every wallet.",
+  "kategoriSiralaTutamac": "{name}: drag to move",
+  "@kategoriSiralaTutamac": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

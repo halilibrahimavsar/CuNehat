@@ -27,6 +27,8 @@ class TransactionSheetHandler {
   /// `TransactionsChangedNotifier` üzerinden ana sayfadaki bloc'a ulaşır.
   ///
   /// [prefill]: "Yeniden ekle" — bu işlemin içeriğiyle YENİ kayıt açar.
+  ///
+  /// [initialDate]: yeni kayıt bu güne açılır (gün başlığındaki "+").
   static void showSheet({
     required BuildContext context,
     required String userId,
@@ -34,6 +36,7 @@ class TransactionSheetHandler {
     required TransactionTypeModel type,
     TransactionEntity? initialTransaction,
     TransactionEntity? prefill,
+    DateTime? initialDate,
     TransactionBloc? transactionBloc,
     PendingRecurringBloc? pendingBloc,
   }) {
@@ -90,6 +93,7 @@ class TransactionSheetHandler {
           isExpense: type == TransactionTypeModel.expense,
           initialTransaction: initialTransaction,
           prefill: prefill,
+          initialDate: initialDate,
           onSave: (transaction, recurringFrequency) {
             Navigator.pop(sheetContext);
 

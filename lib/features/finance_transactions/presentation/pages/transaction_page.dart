@@ -44,6 +44,7 @@ import 'package:cunehat/features/finance_transactions/domain/entities/category_e
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 /// İşlemler ekranı — uygulamanın açılış yüzü.
 ///
@@ -408,6 +409,21 @@ class _TransactionsViewState extends State<_TransactionsView> {
     );
   }
 
+  /// [day] gününe yeni kayıt formu açar (gün başlığındaki "+" ve kaydı
+  /// olmayan günün satırı). Tür, bakılan görünümden gelir: "Gelir" kipinde
+  /// gelir, diğerlerinde gider — formda her zaman değiştirilebilir.
+  void _addForDay(DateTime day, FinanceMode mode) {
+    TransactionSheetHandler.showSheet(
+      context: context,
+      userId: widget.userId,
+      walletId: widget.wallet.id ?? '',
+      type: mode == FinanceMode.income
+          ? TransactionTypeModel.income
+          : TransactionTypeModel.expense,
+      initialDate: day,
+    );
+  }
+
   /// Şeritten seçilen günün başlığını listenin tepesine getirir.
   ///
   /// Başlık tembel listede henüz KURULMAMIŞ olabilir; `ensureVisible` o zaman
@@ -530,62 +546,62 @@ class _TransactionsViewState extends State<_TransactionsView> {
               body: LedgerSelectionScope(
                 selection: _selection,
                 child: Column(
-                children: [
-                  // Cüzdan ↔ bağlı kartları (yalnız kartı olan cüzdanda).
-                  const CardContextRail(),
-                  // Seçim kipinde üst çubuğun yerini seçim çubuğu alır:
-                  // süzgeç/dönem o sırada değişmez, seçili satırlar ekrandan
-                  // kaybolup "görünmeyen satırlara uygulandı" olmaz.
-                  ListenableBuilder(
-                    listenable: _selection,
-                    builder: (context, topBar) => _selection.active
-                        ? _SelectionBar(
-                            count: _selection.count,
-                            onClose: _selection.clear,
-                            onRecategorize: () => _recategorizeSelected(
-                                state.currentTransactions),
-                          )
-                        : topBar!,
-                    child: TransactionTopBar(
-                    filter: filterState,
-                    periodLabel: statementPeriodLabel(cubit, context.l10n),
-                    categoryLabels: _categoryLabels,
-                    onModeChanged: cubit.setFinanceMode,
-                    onPeriodStep: cubit.stepPeriod,
-                    onPeriodPick: () => pickSharedPeriod(context),
-                    onFilterTap: () => _showFilterSheet(context),
-                    onSearchChanged: cubit.setSearchQuery,
-                    onDataFilterChanged: cubit.setDataFilter,
-                    onClearCategories: () => cubit.setCategories(const {}),
-                    onClearPriceRange: () => cubit.setPriceRange(null),
-                    onClearSearch: () => cubit.setSearchQuery(null),
-                    // Çip satırındaki "Temizle" görünen TÜM çipleri kaldırır,
-                    // tür çipi dahil; dönem korunur.
-                    onClearAllFilters: () => cubit
-                      ..clearDataFilters()
-                      ..setFinanceMode(FinanceMode.compare),
-                  ),
-                  ),
-                  Expanded(
-                    child: isLoading && walletIsEmpty
-                        ? const TransactionListSkeleton()
-                        : CustomScrollView(
-                            controller: _scrollController,
-                            slivers: _buildSlivers(
-                              context: context,
-                              cubit: cubit,
-                              filterState: filterState,
-                              ledger: ledger,
-                              visible: visible,
-                              mode: mode,
-                              period: period,
-                              periodHasToday: periodHasToday,
-                              walletIsEmpty: walletIsEmpty,
+                  children: [
+                    // Cüzdan ↔ bağlı kartları (yalnız kartı olan cüzdanda).
+                    const CardContextRail(),
+                    // Seçim kipinde üst çubuğun yerini seçim çubuğu alır:
+                    // süzgeç/dönem o sırada değişmez, seçili satırlar ekrandan
+                    // kaybolup "görünmeyen satırlara uygulandı" olmaz.
+                    ListenableBuilder(
+                      listenable: _selection,
+                      builder: (context, topBar) => _selection.active
+                          ? _SelectionBar(
+                              count: _selection.count,
+                              onClose: _selection.clear,
+                              onRecategorize: () => _recategorizeSelected(
+                                  state.currentTransactions),
+                            )
+                          : topBar!,
+                      child: TransactionTopBar(
+                        filter: filterState,
+                        periodLabel: statementPeriodLabel(cubit, context.l10n),
+                        categoryLabels: _categoryLabels,
+                        onModeChanged: cubit.setFinanceMode,
+                        onPeriodStep: cubit.stepPeriod,
+                        onPeriodPick: () => pickSharedPeriod(context),
+                        onFilterTap: () => _showFilterSheet(context),
+                        onSearchChanged: cubit.setSearchQuery,
+                        onDataFilterChanged: cubit.setDataFilter,
+                        onClearCategories: () => cubit.setCategories(const {}),
+                        onClearPriceRange: () => cubit.setPriceRange(null),
+                        onClearSearch: () => cubit.setSearchQuery(null),
+                        // Çip satırındaki "Temizle" görünen TÜM çipleri kaldırır,
+                        // tür çipi dahil; dönem korunur.
+                        onClearAllFilters: () => cubit
+                          ..clearDataFilters()
+                          ..setFinanceMode(FinanceMode.compare),
+                      ),
+                    ),
+                    Expanded(
+                      child: isLoading && walletIsEmpty
+                          ? const TransactionListSkeleton()
+                          : CustomScrollView(
+                              controller: _scrollController,
+                              slivers: _buildSlivers(
+                                context: context,
+                                cubit: cubit,
+                                filterState: filterState,
+                                ledger: ledger,
+                                visible: visible,
+                                mode: mode,
+                                period: period,
+                                periodHasToday: periodHasToday,
+                                walletIsEmpty: walletIsEmpty,
+                              ),
                             ),
-                          ),
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -650,9 +666,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
                 mode: mode,
                 filter: filterState,
                 periodLabel: periodLabel(period, context.l10n),
-                onToday: periodHasToday
-                    ? null
-                    : cubit.jumpToToday,
+                onToday: periodHasToday ? null : cubit.jumpToToday,
                 onModeChanged: cubit.setFinanceMode,
                 // Tümünü daralt / genişlet: uzun bir dönemde gün başlıklarını
                 // tek tek kapatmak gerekiyordu. Tek günde anlamsız, gizlenir.
@@ -688,6 +702,17 @@ class _TransactionsViewState extends State<_TransactionsView> {
           ),
         ),
       ),
+      // Seçilen günde kayıt yoksa kaydırılacak bir başlık da yok: eskiden
+      // dokunuş yalnız şeritteki vurguyu değiştiriyordu. Şimdi o güne kayıt
+      // girmenin yolu burada.
+      if (_selectedDay case final day?
+          when isDayInRange(day, period) && !days.contains(dayOf(day)))
+        SliverToBoxAdapter(
+          child: _EmptyDayRow(
+            day: day,
+            onAdd: () => _addForDay(day, mode),
+          ),
+        ),
       SliverPadding(
         padding: const EdgeInsets.fromLTRB(16, 2, 16, 28),
         sliver: TransactionLedgerSliver(
@@ -697,9 +722,49 @@ class _TransactionsViewState extends State<_TransactionsView> {
           categoryLabels: _categoryLabels,
           anchors: _anchors,
           collapse: _collapse,
+          onAddForDay: (day) => _addForDay(day, mode),
         ),
       ),
     ];
+  }
+}
+
+/// Şeritten seçilen ama hiç kaydı olmayan günün satırı: "14 Eki Çar · kayıt
+/// yok  [+ Ekle]".
+class _EmptyDayRow extends StatelessWidget {
+  final DateTime day;
+  final VoidCallback onAdd;
+
+  const _EmptyDayRow({required this.day, required this.onAdd});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final date = DateFormat.MMMEd(Intl.defaultLocale).format(day);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 6, 8, 0),
+      child: Row(
+        children: [
+          Icon(Icons.event_available_rounded,
+              size: 18, color: scheme.onSurfaceVariant),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              context.l10n.txDayEmptyRow(date),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
+            ),
+          ),
+          TextButton.icon(
+            key: const ValueKey('tx-empty-day-add'),
+            onPressed: onAdd,
+            icon: const Icon(Icons.add_rounded, size: 18),
+            label: Text(context.l10n.ekle),
+          ),
+        ],
+      ),
+    );
   }
 }
 

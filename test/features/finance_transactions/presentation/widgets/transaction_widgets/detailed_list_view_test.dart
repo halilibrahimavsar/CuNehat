@@ -254,8 +254,8 @@ void main() {
   group('gün başlığı', () {
     test('gün ADINI yazar; yıl yalnız başka yıllarda', () {
       final now = DateTime(2026, 9, 25);
-      expect(dayHeaderLabel(DateTime(2026, 9, 24), now: now),
-          '24 Eylül Perşembe');
+      expect(
+          dayHeaderLabel(DateTime(2026, 9, 24), now: now), '24 Eylül Perşembe');
       expect(dayHeaderLabel(DateTime(2025, 9, 24), now: now),
           '24 Eylül 2025 Çarşamba');
     });
@@ -280,8 +280,7 @@ void main() {
       expect(groups.last.dayEndBalance, 2000.0);
     });
 
-    test(
-        'REGRESYON: para taşıma hareketi gün netine KATILMAZ, ayrı tutulur',
+    test('REGRESYON: para taşıma hareketi gün netine KATILMAZ, ayrı tutulur',
         () {
       // Özet şeridi "gider 0" derken gün rozeti transferi sayıp "−2.500"
       // diyordu: iki bileşen aynı dönem için farklı evren konuşuyordu.
@@ -324,6 +323,62 @@ void main() {
       expect(onlyIncome, hasLength(1));
       expect(onlyIncome.single.day, DateTime(2026, 6, 12));
       expect(onlyIncome.single.expense, 0.0);
+    });
+  });
+
+  group('gün başlığında "+"', () {
+    Widget ledger({ValueChanged<DateTime>? onAddForDay}) => CustomScrollView(
+          slivers: [
+            TransactionLedgerSliver(
+              transactions: transactions,
+              categoryIcons: const {},
+              categoryLabels: const {},
+              onAddForDay: onAddForDay,
+            ),
+          ],
+        );
+
+    setUp(() {
+      when(() => mockTransactionBloc.state).thenReturn(
+        TransactionLoaded(
+          groupedTransactions: {
+            date1: [tx1],
+            date2: [tx2],
+          },
+          allTransactions: [tx1, tx2],
+        ),
+      );
+    });
+
+    testWidgets('o günü bildirir ve günü KATLAMAZ', (tester) async {
+      // Dar yüzey: başlık satırı etiket + "+" + net rozetiyle taşmamalı.
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final added = <DateTime>[];
+      await tester
+          .pumpWidget(buildTestableWidget(ledger(onAddForDay: added.add)));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+
+      await tester.tap(find.byKey(const ValueKey('tx-day-add-2026-06-12')));
+      await tester.pumpAndSettle();
+
+      expect(added, hasLength(1));
+      expect(DateTime(added.single.year, added.single.month, added.single.day),
+          DateTime(2026, 6, 12));
+      // Başlığın kendi dokunuşu (katlama) tetiklenmedi.
+      expect(find.text('Salary Income'), findsOneWidget);
+      expect(find.byTooltip('Bu güne işlem ekle'), findsNWidgets(2));
+    });
+
+    testWidgets('geri çağrı yoksa (salt okunur yüzey) düğme çizilmez',
+        (tester) async {
+      await tester.pumpWidget(buildTestableWidget(ledger()));
+      await tester.pumpAndSettle();
+
+      expect(find.byTooltip('Bu güne işlem ekle'), findsNothing);
     });
   });
 }
