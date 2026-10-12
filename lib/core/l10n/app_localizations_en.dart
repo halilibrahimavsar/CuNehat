@@ -5413,7 +5413,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingCardRailDesc =>
-      'Switch between the account and its cards here. You don\'t even need to switch to add card spending: pick the card under \"Paid with\" in the expense form.';
+      'Switch between the account and its cards with this button. You don\'t even need to switch to add card spending: pick the card under \"Paid with\" in the expense form.';
 
   @override
   String get kkRaporKartlarDahil => 'Include card spending';
@@ -6840,4 +6840,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get installmentEditNameRequired => 'Give the purchase a name';
+
+  @override
+  String get tutarlariGizle => 'Hide amounts';
+
+  @override
+  String get tutarlariGoster => 'Show amounts';
+
+  @override
+  String kkGecisKartaGec(String name) {
+    return 'Switch to card: $name';
+  }
+
+  @override
+  String kkGecisHesabaDon(String name) {
+    return 'Back to account: $name';
+  }
+
+  @override
+  String kkGecisKartSec(int count) {
+    return 'Choose card ($count)';
+  }
+
+  @override
+  String get kkGecisBaslik => 'Account and its cards';
+
+  @override
+  String get kkGecisAciklama =>
+      'Choose what you are looking at: the account itself or one of its cards.';
+
+  @override
+  String get kkGecisHesap => 'Account';
+
+  @override
+  String get kkGecisAyrintilar => 'Details';
 }

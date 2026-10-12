@@ -548,7 +548,10 @@ class _TransactionsViewState extends State<_TransactionsView> {
                 child: Column(
                   children: [
                     // Cüzdan ↔ bağlı kartları (yalnız kartı olan cüzdanda).
-                    const CardContextRail(),
+                    // Hap satırı YOK: hesap ↔ kart geçişi üst çubuktaki kart
+                  // düğmesinde. Burada yalnız borç/öde şeridi ve son ödeme
+                  // bantları kalır.
+                  const CardContextRail(showPills: false),
                     // Seçim kipinde üst çubuğun yerini seçim çubuğu alır:
                     // süzgeç/dönem o sırada değişmez, seçili satırlar ekrandan
                     // kaybolup "görünmeyen satırlara uygulandı" olmaz.

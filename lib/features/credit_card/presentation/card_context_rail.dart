@@ -39,7 +39,17 @@ class CardContextRail extends StatelessWidget {
   /// olur, iki kopya aynı anahtarı taşıyamaz.
   final bool pillsOnly;
 
-  const CardContextRail({super.key, this.pillsOnly = false});
+  /// Hap satırı çizilsin mi. İşlemler ekranında `false`: orada geçiş üst
+  /// çubuktaki kart düğmesindedir (`CardSwitcherButton`) — aynı seçimi iki
+  /// yerde göstermek hem yer tutuyor hem "hangisi geçerli" diye
+  /// düşündürüyordu. Yalnız durum şeridi / son ödeme bantları kalır.
+  final bool showPills;
+
+  const CardContextRail({
+    super.key,
+    this.pillsOnly = false,
+    this.showPills = true,
+  }) : assert(showPills || !pillsOnly, 'hapsız "yalnız hap" kipi boş olurdu');
 
   @override
   Widget build(BuildContext context) {
@@ -64,40 +74,82 @@ class CardContextRail extends StatelessWidget {
         active.isCreditCard && active.id != owner.id ? active : null;
 
     Widget pills() => SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    for (final w in [owner, ...cards]) ...[
-                      _ContextPill(
-                        key: ValueKey('ctx-${w.id}'),
-                        wallet: w,
-                        selected: w.id == active.id,
-                        onTap: () {
-                          if (w.id == active.id) {
-                            if (w.isCreditCard) {
-                              CardDetailsSheet.show(context, card: w);
-                            }
-                            return;
-                          }
-                          context.read<WalletBloc>().add(SetActiveWalletEvent(
-                                userId: w.userId,
-                                walletId: w.id!,
-                                // Aynı cüzdanın içinde sekme değişimi: şeridin
-                                // kendisi zaten değişimi gösteriyor.
-                                announce: false,
-                              ));
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                  ],
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (final w in [owner, ...cards]) ...[
+                _ContextPill(
+                  key: ValueKey('ctx-${w.id}'),
+                  wallet: w,
+                  selected: w.id == active.id,
+                  onTap: () {
+                    if (w.id == active.id) {
+                      if (w.isCreditCard) {
+                        CardDetailsSheet.show(context, card: w);
+                      }
+                      return;
+                    }
+                    context.read<WalletBloc>().add(SetActiveWalletEvent(
+                          userId: w.userId,
+                          walletId: w.id!,
+                          // Aynı cüzdanın içinde sekme değişimi: şeridin
+                          // kendisi zaten değişimi gösteriyor.
+                          announce: false,
+                        ));
+                  },
                 ),
-              );
+                const SizedBox(width: 8),
+              ],
+            ],
+          ),
+        );
 
     if (pillsOnly) {
       return Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
         child: pills(),
+      );
+    }
+
+    final status = AnimatedSize(
+      duration: reduce ? Duration.zero : const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topCenter,
+      child: AnimatedSwitcher(
+        duration: reduce ? Duration.zero : const Duration(milliseconds: 220),
+        switchInCurve: Curves.easeOut,
+        switchOutCurve: Curves.easeIn,
+        transitionBuilder: (child, anim) => FadeTransition(
+          opacity: anim,
+          child: SlideTransition(
+            position: Tween(
+              begin: const Offset(0, -0.15),
+              end: Offset.zero,
+            ).animate(anim),
+            child: child,
+          ),
+        ),
+        child: activeCard == null
+            ? _DueBands(
+                key: const ValueKey('ctx-due-bands'),
+                cards: cards,
+                wallets: state.wallets,
+              )
+            : _CardStrip(
+                key: ValueKey('ctx-strip-${activeCard.id}'),
+                card: activeCard,
+                wallets: state.wallets,
+              ),
+      ),
+    );
+
+    // Hapsız kip: tanıtım turu da yok (anahtarı üst çubuktaki kart düğmesi
+    // taşıyor). Şerit ve bantlar kendi üst boşluğunu getirir; gösterilecek
+    // bir şey yokken hiç yer kaplamaz.
+    if (!showPills) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: status,
       );
     }
 
@@ -115,39 +167,7 @@ class CardContextRail extends StatelessWidget {
               description: context.l10n.onboardingCardRailDesc,
               child: pills(),
             ),
-            AnimatedSize(
-              duration:
-                  reduce ? Duration.zero : const Duration(milliseconds: 280),
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.topCenter,
-              child: AnimatedSwitcher(
-                duration:
-                    reduce ? Duration.zero : const Duration(milliseconds: 220),
-                switchInCurve: Curves.easeOut,
-                switchOutCurve: Curves.easeIn,
-                transitionBuilder: (child, anim) => FadeTransition(
-                  opacity: anim,
-                  child: SlideTransition(
-                    position: Tween(
-                      begin: const Offset(0, -0.15),
-                      end: Offset.zero,
-                    ).animate(anim),
-                    child: child,
-                  ),
-                ),
-                child: activeCard == null
-                    ? _DueBands(
-                        key: const ValueKey('ctx-due-bands'),
-                        cards: cards,
-                        wallets: state.wallets,
-                      )
-                    : _CardStrip(
-                        key: ValueKey('ctx-strip-${activeCard.id}'),
-                        card: activeCard,
-                        wallets: state.wallets,
-                      ),
-              ),
-            ),
+            status,
           ],
         ),
       ),
@@ -190,24 +210,42 @@ class _ContextPill extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             gradient: selected && isCard ? creditCardGradient(wallet) : null,
+            // Seçili hap DOLU, seçili olmayan soluk: eskiden hesap hapında
+            // seçim yalnız %16'lık bir ton ve 0,4dp'lik kenarlık farkıydı —
+            // hangisinin seçili olduğu okunmuyordu (kullanıcı şikâyeti).
             color: selected
-                ? (isCard ? null : tint.withValues(alpha: 0.16))
-                : cs.onSurface.withValues(alpha: 0.05),
+                ? (isCard ? null : tint.withValues(alpha: 0.26))
+                : cs.onSurface.withValues(alpha: 0.04),
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: selected ? tint : cs.outlineVariant,
-              width: selected ? 1.4 : 1,
+              color: selected
+                  ? tint
+                  : cs.outlineVariant.withValues(alpha: 0.6),
+              width: selected ? 2 : 1,
             ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Onay işareti: seçim renge BAĞLI kalmasın (renk körlüğü,
+              // birbirine yakın cüzdan renkleri).
+              if (selected) ...[
+                Icon(
+                  Icons.check_circle_rounded,
+                  key: ValueKey('ctx-selected-${wallet.id}'),
+                  size: 15,
+                  color: isCard ? Colors.white : tint,
+                ),
+                const SizedBox(width: 5),
+              ],
               Icon(
                 isCard
                     ? Icons.credit_card_rounded
                     : AppIcons.getIconData(wallet.iconName),
                 size: 16,
-                color: selected && isCard ? Colors.white : tint,
+                color: selected
+                    ? (isCard ? Colors.white : tint)
+                    : cs.onSurfaceVariant,
               ),
               const SizedBox(width: 6),
               ConstrainedBox(
@@ -218,8 +256,10 @@ class _ContextPill extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 13,
-                    fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                    color: selected && isCard ? Colors.white : cs.onSurface,
+                    fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+                    color: selected
+                        ? (isCard ? Colors.white : cs.onSurface)
+                        : cs.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -308,8 +348,8 @@ class _CardStrip extends StatelessWidget {
                                   fontSize: 16,
                                   fontWeight: FontWeight.w900,
                                   color: (status?.isOverdue ?? false)
-                                          ? cs.error
-                                          : cs.onSurface,
+                                      ? cs.error
+                                      : cs.onSurface,
                                 ),
                               ),
                               if (status != null) CardDueChip(status: status),

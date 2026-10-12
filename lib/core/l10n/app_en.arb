@@ -2840,7 +2840,7 @@
   "kkDahaFazlaAyrinti": "More details (bank, last 4 digits, limit, last statement)",
   "kkKartRengi": "Card colour",
   "onboardingCardRailTitle": "Your card lives inside this wallet",
-  "onboardingCardRailDesc": "Switch between the account and its cards here. You don't even need to switch to add card spending: pick the card under \"Paid with\" in the expense form.",
+  "onboardingCardRailDesc": "Switch between the account and its cards with this button. You don't even need to switch to add card spending: pick the card under \"Paid with\" in the expense form.",
   "kkRaporKartlarDahil": "Include card spending",
   "kkRaporKartlarAcik": "Spending of {count} card(s) is included; the balance line stays the account's own.",
   "kkRaporKartlarKapali": "Spending of {count} linked card(s) is kept separate.",
@@ -3992,5 +3992,35 @@
       }
     }
   },
-  "installmentEditNameRequired": "Give the purchase a name"
+  "installmentEditNameRequired": "Give the purchase a name",
+  "tutarlariGizle": "Hide amounts",
+  "tutarlariGoster": "Show amounts",
+  "kkGecisKartaGec": "Switch to card: {name}",
+  "@kkGecisKartaGec": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kkGecisHesabaDon": "Back to account: {name}",
+  "@kkGecisHesabaDon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kkGecisKartSec": "Choose card ({count})",
+  "@kkGecisKartSec": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kkGecisBaslik": "Account and its cards",
+  "kkGecisAciklama": "Choose what you are looking at: the account itself or one of its cards.",
+  "kkGecisHesap": "Account",
+  "kkGecisAyrintilar": "Details"
 }

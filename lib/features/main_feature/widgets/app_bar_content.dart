@@ -18,6 +18,7 @@ import 'package:cunehat/features/main_feature/widgets/wallet_headline.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/core/config/feature_flags.dart';
 import 'package:cunehat/features/credit_card/presentation/card_status.dart';
+import 'package:cunehat/features/credit_card/presentation/card_switcher_button.dart';
 import 'package:cunehat/features/wallet/domain/card_family.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
@@ -28,7 +29,6 @@ import 'package:cunehat/core/utils/money_math.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:unified_flutter_features/features/amount_visibility/ibo_amount_display.dart';
 import 'package:unified_flutter_features/features/slider_2d_navigation/models/slider_models.dart';
 
 class AppBarContent extends StatefulWidget {
@@ -114,7 +114,7 @@ class _AppBarContentState extends State<AppBarContent> {
             children: [
               _buildMenuButton(context),
               Expanded(child: _buildCenterContent(context)),
-              _buildVisibilityButton(),
+              _buildCardSlot(context),
             ],
           ),
         ),
@@ -148,29 +148,50 @@ class _AppBarContentState extends State<AppBarContent> {
     );
   }
 
-  Widget _buildVisibilityButton() {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: AppDurations.extraLong,
-      curve: Curves.elasticOut,
-      builder: (context, value, child) {
-        return Transform.scale(
-          scale: value,
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppColors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(AppBorderRadius.medium),
-              border: Border.all(
-                color: AppColors.white.withValues(alpha: 0.3),
-                width: 1.5,
+  /// Sağ yuva: hesabın bağlı kartı varsa KART DÜĞMESİ (bkz.
+  /// [CardSwitcherButton]); yoksa menü düğmesiyle eş genişlikte boşluk —
+  /// başlık her durumda ortada kalır.
+  ///
+  /// Göz düğmesi eskiden buradaydı; tutarın yanına taşındı (bkz.
+  /// `WalletHeadline`). Kart bağlamı yalnız İşlemler'de anlamlıdır: Birikim
+  /// ve Borç her zaman HESABIN verisini gösterir, orada düğme yoktur.
+  Widget _buildCardSlot(BuildContext context) {
+    const empty = SizedBox(width: _sideSlot, height: _sideSlot);
+    if (!FeatureFlags.creditCards ||
+        widget.currentState != SliderState.transactions) {
+      return empty;
+    }
+    return BlocBuilder<WalletBloc, WalletState>(
+      builder: (context, state) {
+        final loaded = state is WalletLoadedSt ? state : _cachedLoadedState;
+        final active = loaded?.activeWallet;
+        if (loaded == null || active == null) return empty;
+        final owner = accountOf(active, loaded.wallets);
+        final cards = cardsOf(owner.id, loaded.wallets);
+        if (cards.isEmpty) return empty;
+        return OnboardingTour(
+          flow: OnboardingFlow.cardRail,
+          keys: [OnboardingKeys.cardRail],
+          child: Showcase(
+            key: OnboardingKeys.cardRail,
+            title: context.l10n.onboardingCardRailTitle,
+            description: context.l10n.onboardingCardRailDesc,
+            child: ScaleTransition(
+              scale: widget.scaleAnimation,
+              child: CardSwitcherButton(
+                owner: owner,
+                cards: cards,
+                active: active,
               ),
             ),
-            child: const AmountVisibilityButton(),
           ),
         );
       },
     );
   }
+
+  /// Yan yuvaların kenarı (menü düğmesi = 48).
+  static const double _sideSlot = 48;
 
   Widget _buildCenterContent(BuildContext context) {
     return BlocBuilder<WalletBloc, WalletState>(

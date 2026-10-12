@@ -9452,7 +9452,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingCardRailDesc.
   ///
   /// In tr, this message translates to:
-  /// **'Hesap ile kartları arasında buradan geç. Kart harcaması eklemek için karta geçmen de gerekmez: gider formunda \"Nereden ödendi?\" ile kartı seç.'**
+  /// **'Hesap ile kartları arasında bu düğmeyle geç. Kart harcaması eklemek için karta geçmen de gerekmez: gider formunda \"Nereden ödendi?\" ile kartı seç.'**
   String get onboardingCardRailDesc;
 
   /// No description provided for @kkRaporKartlarDahil.
@@ -11686,6 +11686,60 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Alışverişe bir ad ver'**
   String get installmentEditNameRequired;
+
+  /// No description provided for @tutarlariGizle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutarları gizle'**
+  String get tutarlariGizle;
+
+  /// No description provided for @tutarlariGoster.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutarları göster'**
+  String get tutarlariGoster;
+
+  /// No description provided for @kkGecisKartaGec.
+  ///
+  /// In tr, this message translates to:
+  /// **'Karta geç: {name}'**
+  String kkGecisKartaGec(String name);
+
+  /// No description provided for @kkGecisHesabaDon.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesaba dön: {name}'**
+  String kkGecisHesabaDon(String name);
+
+  /// No description provided for @kkGecisKartSec.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart seç ({count})'**
+  String kkGecisKartSec(int count);
+
+  /// No description provided for @kkGecisBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesap ve kartları'**
+  String get kkGecisBaslik;
+
+  /// No description provided for @kkGecisAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Baktığın bağlamı seç: hesabın kendisi ya da kartlarından biri.'**
+  String get kkGecisAciklama;
+
+  /// No description provided for @kkGecisHesap.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesap'**
+  String get kkGecisHesap;
+
+  /// No description provided for @kkGecisAyrintilar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayrıntılar'**
+  String get kkGecisAyrintilar;
 }
 
 class _AppLocalizationsDelegate

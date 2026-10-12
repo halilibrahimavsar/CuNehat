@@ -1,3 +1,5 @@
+import 'package:cunehat/features/main_feature/utils/app_bar_style_helper.dart';
+import 'package:cunehat/features/credit_card/presentation/card_switcher_button.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
@@ -207,7 +209,8 @@ void main() {
       expect(find.byKey(const ValueKey('ctx-due-card')), findsNothing);
     });
 
-    testWidgets('REGRESYON: tutarlar gizliyken bant ve şerit tutarı da gizlenir',
+    testWidgets(
+        'REGRESYON: tutarlar gizliyken bant ve şerit tutarı da gizlenir',
         (tester) async {
       final bank = _bank();
       final card = _card();
@@ -245,6 +248,258 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('ctx-due-card')), findsNothing);
       expect(find.byKey(const ValueKey('ctx-card-pay')), findsOneWidget);
+    });
+  });
+
+  group('üst çubukta kart düğmesi', () {
+    final switcher = find.byKey(const ValueKey('card-switcher'));
+    final activeBadge = find.byKey(const ValueKey('card-switcher-active'));
+
+    WalletEntity second() => _card().copyWith(id: 'card2', name: 'Axess');
+
+    List<SetActiveWalletEvent> selections() =>
+        verify(() => bloc.add(captureAny()))
+            .captured
+            .whereType<SetActiveWalletEvent>()
+            .toList();
+
+    setUp(() => registerFallbackValue(
+        const SetActiveWalletEvent(userId: 'u', walletId: 'x')));
+
+    testWidgets('kartı olmayan hesapta düğme YOK; başlık ortada kalır',
+        (tester) async {
+      final bank = _bank();
+      when(() => bloc.state).thenReturn(WalletLoadedSt([bank], bank));
+      await tester.pumpWidget(app(header()));
+      await tester.pumpAndSettle();
+
+      expect(switcher, findsNothing);
+      // Göz artık sağ köşede değil, tutarın yanında.
+      expect(find.byKey(const ValueKey('amount-eye')), findsOneWidget);
+      final content = tester.getRect(find.byType(AppBarContent));
+      final carousel =
+          tester.getRect(find.byKey(const ValueKey('wallet-carousel')));
+      expect(carousel.center.dx, closeTo(content.center.dx, 0.5),
+          reason: 'sağ yuva boşken başlık kaymamalı');
+    });
+
+    testWidgets('TEK kart: dokunmak hesaptan karta geçirir (sessiz)',
+        (tester) async {
+      final bank = _bank();
+      final card = _card();
+      when(() => bloc.state).thenReturn(WalletLoadedSt([bank, card], bank));
+      await tester.pumpWidget(app(header()));
+      await tester.pumpAndSettle();
+
+      expect(switcher, findsOneWidget);
+      expect(activeBadge, findsNothing);
+      expect(find.byTooltip('Karta geç: Bonus'), findsOneWidget);
+
+      await tester.tap(switcher);
+      await tester.pumpAndSettle();
+
+      final event = selections().single;
+      expect(event.walletId, 'card');
+      expect(event.announce, isFalse);
+      // Tek kartta seçim sayfası açılmaz.
+      expect(find.byType(CardSwitchSheet), findsNothing);
+    });
+
+    testWidgets(
+        'kart seçiliyken düğme DOLU + onay rozetli; dokunmak hesaba '
+        'döndürür', (tester) async {
+      final bank = _bank();
+      final card = _card();
+      when(() => bloc.state).thenReturn(WalletLoadedSt([bank, card], card));
+      await tester.pumpWidget(app(header()));
+      await tester.pumpAndSettle();
+
+      expect(activeBadge, findsOneWidget);
+      expect(find.byTooltip('Hesaba dön: Banka'), findsOneWidget);
+
+      await tester.tap(switcher);
+      await tester.pumpAndSettle();
+      expect(selections().single.walletId, 'bank');
+    });
+
+    testWidgets(
+        'BİRDEN ÇOK kart: dokunmak seçim sayfasını açar; karta '
+        'dokunmak seçer ve kapatır', (tester) async {
+      tester.view.physicalSize = const Size(411, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      final bank = _bank();
+      final card = _card();
+      final other = second();
+      when(() => bloc.state)
+          .thenReturn(WalletLoadedSt([bank, card, other], bank));
+      await tester.pumpWidget(app(header()));
+      await tester.pumpAndSettle();
+      expect(find.byTooltip('Kart seç (2)'), findsOneWidget);
+
+      await tester.tap(switcher);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CardSwitchSheet), findsOneWidget);
+      // Hesap + iki kart; etkin olan (hesap) işaretli.
+      expect(find.byKey(const ValueKey('card-switch-bank')), findsOneWidget);
+      expect(find.byKey(const ValueKey('card-switch-card')), findsOneWidget);
+      expect(find.byKey(const ValueKey('card-switch-card2')), findsOneWidget);
+      verifyNever(() => bloc.add(any(that: isA<SetActiveWalletEvent>())));
+
+      await tester.tap(find.byKey(const ValueKey('card-switch-card2')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CardSwitchSheet), findsNothing);
+      expect(selections().single.walletId, 'card2');
+    });
+
+    testWidgets('tek kartta uzun basmak da seçim sayfasını açar',
+        (tester) async {
+      tester.view.physicalSize = const Size(411, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      final bank = _bank();
+      when(() => bloc.state).thenReturn(WalletLoadedSt([bank, _card()], bank));
+      await tester.pumpWidget(app(header()));
+      await tester.pumpAndSettle();
+
+      await tester.longPress(switcher);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CardSwitchSheet), findsOneWidget);
+      // Etkin bağlama dokunmak seçim yazmaz, yalnız kapatır.
+      await tester.tap(find.byKey(const ValueKey('card-switch-bank')));
+      await tester.pumpAndSettle();
+      expect(find.byType(CardSwitchSheet), findsNothing);
+      verifyNever(() => bloc.add(any(that: isA<SetActiveWalletEvent>())));
+    });
+
+    testWidgets('Birikim / Borç durumunda düğme YOK (orada hesabın verisi var)',
+        (tester) async {
+      final bank = _bank();
+      when(() => bloc.state).thenReturn(WalletLoadedSt([bank, _card()], bank));
+      for (final st in [SliderState.savedMoney, SliderState.debt]) {
+        await tester.pumpWidget(app(SizedBox(
+          height: 70,
+          child: AppBarContent(
+            currentState: st,
+            scaleAnimation: const AlwaysStoppedAnimation(1),
+            fadeAnimation: const AlwaysStoppedAnimation(1),
+          ),
+        )));
+        await tester.pumpAndSettle();
+        expect(switcher, findsNothing, reason: '$st');
+      }
+    });
+
+    testWidgets('360dp: düğme + başlık + menü taşmadan sığar', (tester) async {
+      tester.view.physicalSize = const Size(360, 300);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      final card = _card();
+      when(() => bloc.state)
+          .thenReturn(WalletLoadedSt([_bank(), card, second()], card));
+      await tester.pumpWidget(app(header()));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(tester.getSize(switcher), const Size(48, 48));
+    });
+  });
+
+  group('üst çubuk zemini kart rengine bürünür', () {
+    const card = [Color(0xFF102030), Color(0xFF000810)];
+
+    LinearGradient gradientOf(double value,
+            {List<Color>? cardColors, double factor = 0}) =>
+        AppBarStyleHelper.getAppbarDecoration(value,
+                cardColors: cardColors, cardFactor: factor)
+            .gradient! as LinearGradient;
+
+    test('İşlemler durumunda (0,5) ve tam geçişte zemin kartın renkleri', () {
+      final g = gradientOf(0.5, cardColors: card, factor: 1);
+      expect(g.colors.first, card.first);
+      expect(g.colors.last, card.last);
+    });
+
+    test('Birikim (0) ve Borç (1) durumunda kart rengi YOK', () {
+      for (final value in [0.0, 1.0]) {
+        expect(gradientOf(value, cardColors: card, factor: 1).colors,
+            gradientOf(value).colors);
+      }
+    });
+
+    test('kart yokken ya da geçiş 0 iken zemin değişmez', () {
+      expect(gradientOf(0.5, cardColors: card).colors, gradientOf(0.5).colors);
+      expect(gradientOf(0.5, factor: 1).colors, gradientOf(0.5).colors);
+    });
+
+    test('yakınlık: 0,5\'te 1, uçlarda 0, arada doğrusal', () {
+      expect(AppBarStyleHelper.transactionsProximity(0.5), 1);
+      expect(AppBarStyleHelper.transactionsProximity(0), 0);
+      expect(AppBarStyleHelper.transactionsProximity(1), 0);
+      expect(AppBarStyleHelper.transactionsProximity(0.25), closeTo(0.5, 1e-9));
+    });
+  });
+
+  group('kart şeridi: hap satırı', () {
+    testWidgets(
+        'İşlemler kipi (showPills: false): hap YOK, borç/öde şeridi VAR',
+        (tester) async {
+      final bank = _bank();
+      final card = _card();
+      when(() => bloc.state).thenReturn(WalletLoadedSt([bank, card], card));
+      await tester.pumpWidget(app(const CardContextRail(showPills: false)));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('ctx-bank')), findsNothing);
+      expect(find.byKey(const ValueKey('ctx-card')), findsNothing);
+      expect(find.byKey(const ValueKey('ctx-card-pay')), findsOneWidget);
+    });
+
+    testWidgets('İşlemler kipi, hesap bağlamı: yaklaşan ödeme bandı kalır',
+        (tester) async {
+      final bank = _bank();
+      when(() => bloc.state).thenReturn(WalletLoadedSt([bank, _card()], bank));
+      await tester.pumpWidget(app(const CardContextRail(showPills: false)));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('ctx-bank')), findsNothing);
+      expect(find.byKey(const ValueKey('ctx-due-card')), findsOneWidget);
+    });
+
+    testWidgets('gösterilecek bir şey yokken hapsız şerit HİÇ yer kaplamaz',
+        (tester) async {
+      final bank = _bank();
+      final paid = _card(balance: 0);
+      final quiet = paid.copyWith(
+          creditCard: paid.creditCard!.copyWith(clearLastStatement: true));
+      when(() => bloc.state).thenReturn(WalletLoadedSt([bank, quiet], bank));
+      await tester.pumpWidget(app(const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [CardContextRail(showPills: false)],
+      )));
+      await tester.pumpAndSettle();
+
+      expect(tester.getSize(find.byType(CardContextRail)).height, 0);
+    });
+
+    testWidgets('haplı kipte (İçgörü/Rapor) seçili hap ONAY işaretlidir',
+        (tester) async {
+      final bank = _bank();
+      final card = _card();
+      when(() => bloc.state).thenReturn(WalletLoadedSt([bank, card], bank));
+      await tester.pumpWidget(app(const CardContextRail(pillsOnly: true)));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('ctx-selected-bank')), findsOneWidget);
+      expect(find.byKey(const ValueKey('ctx-selected-card')), findsNothing);
+
+      when(() => bloc.state).thenReturn(WalletLoadedSt([bank, card], card));
+      await tester.pumpWidget(app(const CardContextRail(pillsOnly: true)));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('ctx-selected-card')), findsOneWidget);
+      expect(find.byKey(const ValueKey('ctx-selected-bank')), findsNothing);
     });
   });
 }

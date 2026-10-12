@@ -2949,7 +2949,7 @@
   "kkDahaFazlaAyrinti": "Daha fazla ayrıntı (banka, son 4 hane, limit, son ekstre)",
   "kkKartRengi": "Kart rengi",
   "onboardingCardRailTitle": "Kartın bu cüzdanın içinde",
-  "onboardingCardRailDesc": "Hesap ile kartları arasında buradan geç. Kart harcaması eklemek için karta geçmen de gerekmez: gider formunda \"Nereden ödendi?\" ile kartı seç.",
+  "onboardingCardRailDesc": "Hesap ile kartları arasında bu düğmeyle geç. Kart harcaması eklemek için karta geçmen de gerekmez: gider formunda \"Nereden ödendi?\" ile kartı seç.",
   "kkRaporKartlarDahil": "Kart harcamalarını dahil et",
   "kkRaporKartlarAcik": "{count} kartın harcamaları analizde; bakiye çizgisi yalnız hesabın.",
   "kkRaporKartlarKapali": "{count} bağlı kartın harcamaları ayrı tutuluyor.",
@@ -4226,5 +4226,35 @@
       }
     }
   },
-  "installmentEditNameRequired": "Alışverişe bir ad ver"
+  "installmentEditNameRequired": "Alışverişe bir ad ver",
+  "tutarlariGizle": "Tutarları gizle",
+  "tutarlariGoster": "Tutarları göster",
+  "kkGecisKartaGec": "Karta geç: {name}",
+  "@kkGecisKartaGec": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kkGecisHesabaDon": "Hesaba dön: {name}",
+  "@kkGecisHesabaDon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kkGecisKartSec": "Kart seç ({count})",
+  "@kkGecisKartSec": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kkGecisBaslik": "Hesap ve kartları",
+  "kkGecisAciklama": "Baktığın bağlamı seç: hesabın kendisi ya da kartlarından biri.",
+  "kkGecisHesap": "Hesap",
+  "kkGecisAyrintilar": "Ayrıntılar"
 }

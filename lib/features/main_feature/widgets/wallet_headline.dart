@@ -1,3 +1,4 @@
+import 'package:cunehat/core/shared/widgets/amount_eye_button.dart';
 import 'package:cunehat/core/shared/widgets/money_text.dart';
 import 'package:cunehat/features/main_feature/utils/app_constants.dart';
 import 'package:flutter/material.dart';
@@ -78,7 +79,7 @@ class WalletHeadline extends StatelessWidget {
               children: [
                 _buildBadge(),
                 const SizedBox(height: 2),
-                _buildMoneyText(),
+                _buildMoneyRow(),
                 if (secondaryLine case final String line)
                   Text(
                     line,
@@ -161,6 +162,27 @@ class WalletHeadline extends StatelessWidget {
                   AppColors.white.withValues(alpha: i == pageIndex ? 1.0 : 0.4),
             ),
           ),
+      ],
+    );
+  }
+
+  /// Tutar + hemen yanında göz düğmesi.
+  ///
+  /// Satır YÜKSEKLİĞİ değişmez (düğme 36dp, tutar satırı ~43dp): 70dp
+  /// tuzağına yeni bir satır eklenmiyor. Tutar dar alanda SARMAZ, küçülür —
+  /// sarsaydı yığın bir satır uzar ve bütün başlık küçülürdü.
+  Widget _buildMoneyRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: _buildMoneyText(),
+          ),
+        ),
+        const SizedBox(width: 2),
+        const AmountEyeButton(),
       ],
     );
   }

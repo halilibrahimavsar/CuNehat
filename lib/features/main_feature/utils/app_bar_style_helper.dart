@@ -39,14 +39,45 @@ class AppBarStyleHelper {
     }
   }
 
-  static BoxDecoration getAppbarDecoration(double currentValue) {
-    final appBarColor = getAppBarColor(currentValue);
+  /// [value]'nun İşlemler durumuna (0,5) yakınlığı: tam üstünde 1, komşu
+  /// durumlarda (0 = Birikim, 1 = Borç) 0.
+  static double transactionsProximity(double value) =>
+      (1 - (value - 0.5).abs() * 2).clamp(0.0, 1.0);
+
+  /// Çubuğun zemini. [cardColors] verilirse ve [cardFactor] > 0 ise zemin,
+  /// İşlemler durumuna yakınlık ölçüsünde o kartın rengine harmanlanır
+  /// (bkz. `AppBarBackground`): Birikim ve Borç hesabın verisidir, orada
+  /// kart rengi YOKTUR.
+  static BoxDecoration getAppbarDecoration(
+    double currentValue, {
+    List<Color>? cardColors,
+    double cardFactor = 0,
+  }) {
+    var appBarColor = getAppBarColor(currentValue);
+    var gradient = _getAppBarGradient(currentValue);
+
+    final blend = cardColors == null || cardColors.isEmpty
+        ? 0.0
+        : cardFactor * transactionsProximity(currentValue);
+    if (blend > 0) {
+      final from = cardColors!.first;
+      final to = cardColors.last;
+      gradient = [
+        for (var i = 0; i < gradient.length; i++)
+          Color.lerp(
+            gradient[i],
+            Color.lerp(from, to, i / (gradient.length - 1)),
+            blend,
+          )!,
+      ];
+      appBarColor = Color.lerp(appBarColor, from, blend)!;
+    }
 
     return BoxDecoration(
       gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: _getAppBarGradient(currentValue),
+        colors: gradient,
       ),
       borderRadius: const BorderRadius.only(
         bottomLeft: Radius.circular(AppBorderRadius.appBarBottom),

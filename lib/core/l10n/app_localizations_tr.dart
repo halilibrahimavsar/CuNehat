@@ -5380,7 +5380,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get onboardingCardRailDesc =>
-      'Hesap ile kartları arasında buradan geç. Kart harcaması eklemek için karta geçmen de gerekmez: gider formunda \"Nereden ödendi?\" ile kartı seç.';
+      'Hesap ile kartları arasında bu düğmeyle geç. Kart harcaması eklemek için karta geçmen de gerekmez: gider formunda \"Nereden ödendi?\" ile kartı seç.';
 
   @override
   String get kkRaporKartlarDahil => 'Kart harcamalarını dahil et';
@@ -6791,4 +6791,38 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get installmentEditNameRequired => 'Alışverişe bir ad ver';
+
+  @override
+  String get tutarlariGizle => 'Tutarları gizle';
+
+  @override
+  String get tutarlariGoster => 'Tutarları göster';
+
+  @override
+  String kkGecisKartaGec(String name) {
+    return 'Karta geç: $name';
+  }
+
+  @override
+  String kkGecisHesabaDon(String name) {
+    return 'Hesaba dön: $name';
+  }
+
+  @override
+  String kkGecisKartSec(int count) {
+    return 'Kart seç ($count)';
+  }
+
+  @override
+  String get kkGecisBaslik => 'Hesap ve kartları';
+
+  @override
+  String get kkGecisAciklama =>
+      'Baktığın bağlamı seç: hesabın kendisi ya da kartlarından biri.';
+
+  @override
+  String get kkGecisHesap => 'Hesap';
+
+  @override
+  String get kkGecisAyrintilar => 'Ayrıntılar';
 }

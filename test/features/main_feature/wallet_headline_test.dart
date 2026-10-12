@@ -1,7 +1,9 @@
 import 'package:cunehat/features/main_feature/utils/app_constants.dart';
 import 'package:cunehat/features/main_feature/widgets/wallet_headline.dart';
 import 'package:flutter/material.dart';
+import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unified_flutter_features/features/amount_visibility/amount_visibility_cubit.dart';
@@ -35,6 +37,15 @@ void main() {
       BlocProvider(
         create: (_) => AmountVisibilityCubit(),
         child: MaterialApp(
+          // Tutarın yanındaki göz düğmesinin ipucu metni çeviriden gelir.
+          locale: const Locale('tr'),
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
           home: MediaQuery(
             data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
             child: Scaffold(
@@ -175,5 +186,92 @@ void main() {
         reason: 'Uzun ad tutarı küçülttü: genişlik kutusu kaçmış');
     expect(stackRect(tester).width,
         lessThanOrEqualTo(toolbarRect(tester).width + 0.01));
+  });
+
+  group('göz düğmesi tutarın YANINDA', () {
+    final eye = find.byKey(const ValueKey('amount-eye'));
+
+    testWidgets('tutarla aynı satırda, hemen sağında ve çubuğun içinde',
+        (tester) async {
+      await pump(tester, secondaryLine: '≈ 199.456,05 ₺');
+
+      final money = moneyRect(tester);
+      final button = tester.getRect(eye);
+      expect(button.left, greaterThanOrEqualTo(money.right - 0.01),
+          reason: 'göz tutarın sağında olmalı');
+      expect(button.left - money.right, lessThan(12),
+          reason: 'göz tutardan kopuk durmamalı');
+      // Aynı satır: dikeyde örtüşürler.
+      expect(button.center.dy, closeTo(money.center.dy, money.height / 2));
+      final toolbar = toolbarRect(tester);
+      expect(button.top, greaterThanOrEqualTo(toolbar.top - 0.01));
+      expect(button.bottom, lessThanOrEqualTo(toolbar.bottom + 0.01));
+    });
+
+    testWidgets('dokunmak tutarları gizler/gösterir; ipucu Türkçe',
+        (tester) async {
+      await pump(tester);
+      final cubit = BlocProvider.of<AmountVisibilityCubit>(
+          tester.element(find.byType(WalletHeadline)));
+      expect(cubit.state, isTrue);
+      expect(find.byTooltip('Tutarları gizle'), findsOneWidget);
+
+      await tester.tap(eye);
+      await tester.pumpAndSettle();
+
+      expect(cubit.state, isFalse);
+      expect(find.byTooltip('Tutarları göster'), findsOneWidget);
+    });
+
+    testWidgets('göz yeni bir SATIR açmaz: yığın yüksekliği değişmedi',
+        (tester) async {
+      // 70dp tuzağı: rozet + tutar satırı. Göz tutar satırının içinde
+      // durduğu için yığın, tutar satırının kendi yüksekliğinden uzun olamaz.
+      await pump(tester);
+      final stack = stackRect(tester);
+      expectFitsInToolbar(tester, reason: 'Göz düğmesi yığını taşırdı');
+      expect(stack.height, lessThanOrEqualTo(AppSizes.appBarHeight + 0.01));
+    });
+
+    testWidgets('uzun tutar SARMAZ, küçülür', (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400); // 360dp
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        BlocProvider(
+          create: (_) => AmountVisibilityCubit(),
+          child: MaterialApp(
+            locale: const Locale('tr'),
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(
+              body: Center(
+                child: SizedBox(
+                  width: 248, // 360dp çubukta başlık alanı
+                  child: WalletHeadline(
+                    badgeLabel: 'NAKİT',
+                    amount: 123456789.12,
+                    currency: 'TRY',
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final text = find.textContaining('123');
+      expect(text, findsOneWidget);
+      // Tek satır: yükseklik iki satırlık (≥ 80dp) olamaz.
+      expect(tester.getSize(text).height, lessThan(60));
+      expect(tester.takeException(), isNull);
+      expect(eye, findsOneWidget);
+    });
   });
 }
