@@ -168,6 +168,13 @@ class DuplicateMatch extends Equatable {
   /// panel diğer satırı gösterir.
   final int? alternativeDraftIndex;
 
+  /// Eşleşen kayıt, taksit bilgisi taşımayan ESKİ bir içe aktarımın satırı:
+  /// taksitin kendi ayına değil alışverişin özgün gününe yazılmış, başlığında
+  /// "(k/N)" var ama taksit grubuna bağlı değil (şema 15 öncesi). Taşınabilir:
+  /// doğru aya alınır, gruba bağlanır ve kalan taksitler yazılır (bkz.
+  /// `ImportDraft.relocateExisting`). Sistem/benimsenmiş/bağlı kayıtta `false`.
+  final bool legacyInstallment;
+
   const DuplicateMatch({
     required this.kind,
     required this.existingTitle,
@@ -183,6 +190,7 @@ class DuplicateMatch extends Equatable {
     this.categoryMatches = false,
     this.strong = true,
     this.alternativeDraftIndex,
+    this.legacyInstallment = false,
   });
 
   /// Belirsiz eşleşme: [index]'teki satır da aynı kayda neredeyse aynı güçte
@@ -202,6 +210,7 @@ class DuplicateMatch extends Equatable {
         categoryMatches: categoryMatches,
         strong: false,
         alternativeDraftIndex: index,
+        legacyInstallment: legacyInstallment,
       );
 
   bool get isApproximate => kind == DuplicateKind.approximate;
@@ -233,6 +242,7 @@ class DuplicateMatch extends Equatable {
         categoryMatches,
         strong,
         alternativeDraftIndex,
+        legacyInstallment,
       ];
 }
 
@@ -352,6 +362,13 @@ class ImportDraft extends Equatable {
   /// eklenir ya eskisi düzeltilir.
   final bool correctExisting;
 
+  /// Eşleşen ESKİ biçimli taksit satırı doğru aya TAŞINACAK (bkz.
+  /// [DuplicateMatch.legacyInstallment]). Yeni kayıt açılmaz: defterdeki
+  /// satırın tarihi bu taslağın tarihine çekilir, taksit grubuna bağlanır ve
+  /// kalan taksitler ileri tarihe yazılır. [selected] ile birlikte `true`
+  /// OLAMAZ.
+  final bool relocateExisting;
+
   const ImportDraft({
     required this.date,
     required this.description,
@@ -366,6 +383,7 @@ class ImportDraft extends Equatable {
     this.duplicateOf,
     this.selected = true,
     this.correctExisting = false,
+    this.relocateExisting = false,
   });
 
   bool get isIncome => type == TransactionTypeModel.income;
@@ -395,6 +413,7 @@ class ImportDraft extends Equatable {
         duplicateOf: duplicateOf,
         selected: selected,
         correctExisting: correctExisting,
+        relocateExisting: relocateExisting,
       );
 
   /// [duplicateOf] `copyWith` ile TEMİZLENEMEZ (`??` deseni); eşleşmeyi
@@ -412,6 +431,7 @@ class ImportDraft extends Equatable {
     DuplicateMatch? duplicateOf,
     bool? selected,
     bool? correctExisting,
+    bool? relocateExisting,
   }) {
     return ImportDraft(
       date: date ?? this.date,
@@ -427,6 +447,7 @@ class ImportDraft extends Equatable {
       duplicateOf: duplicateOf ?? this.duplicateOf,
       selected: selected ?? this.selected,
       correctExisting: correctExisting ?? this.correctExisting,
+      relocateExisting: relocateExisting ?? this.relocateExisting,
     );
   }
 
@@ -446,6 +467,7 @@ class ImportDraft extends Equatable {
         duplicateOf: duplicateOf,
         selected: selected,
         correctExisting: correctExisting,
+        relocateExisting: relocateExisting,
       );
 
   /// Eşleşmesi düşürülmüş kopya (düzeltme kararı da düşer).
@@ -553,5 +575,6 @@ class ImportDraft extends Equatable {
         duplicateOf,
         selected,
         correctExisting,
+        relocateExisting,
       ];
 }

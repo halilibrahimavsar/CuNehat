@@ -155,16 +155,26 @@ List<ImportDraft> markDuplicateDrafts(
     // farkına DAYANIKLI: deftere önceden yazılmış kalan taksitin tutarı bir
     // tahmindir (bkz. `ImportDraft.remainingInstallments`), bankanınki esas.
     if (d.installment case final inst?) {
-      final hit = _consumeInstallment(
-            byInstallment[
-                _installmentKey(d.date, !d.isIncome, inst.no, inst.count)],
-            amount: d.amount,
-            tolerance: inst.count.toDouble(),
-          ) ??
-          _consumeLegacyInstallment(pool, d, inst);
+      final current = _consumeInstallment(
+        byInstallment[
+            _installmentKey(d.date, !d.isIncome, inst.no, inst.count)],
+        amount: d.amount,
+        tolerance: inst.count.toDouble(),
+      );
+      final legacy =
+          current == null ? _consumeLegacyInstallment(pool, d, inst) : null;
+      final hit = current ?? legacy;
       if (hit != null) {
         final t = hit.tx;
         final delta = ((d.amount - t.amount) * 100).round() / 100;
+        // Eski biçimli satır TAŞINABİLİR: yanlış aya yazılmış ve gruba bağlı
+        // değil. Sistem, benimsenmiş ya da bir kayda bağlı satır yerinde
+        // kalır — onların tarihi başka bir kaydın nakit bacağıdır.
+        final relocatable = legacy != null &&
+            t.id != null &&
+            !t.isSystem &&
+            !t.isAdopted &&
+            t.linkedRecordId == null;
         result[i] = d.copyWith(
           duplicateOf: DuplicateMatch(
             kind: DuplicateKind.exact,
@@ -175,9 +185,11 @@ List<ImportDraft> markDuplicateDrafts(
             existingDate: t.date,
             existingIsSystem: t.isSystem,
             amountDelta: delta,
+            legacyInstallment: relocatable,
           ),
           selected: false,
           correctExisting: delta.abs() >= 0.005 && !t.isSystem && t.id != null,
+          relocateExisting: relocatable,
         );
         continue;
       }

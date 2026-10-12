@@ -531,6 +531,185 @@ void main() {
       verify(() => notifier.notify(userId: 'u1', walletId: 'w1')).called(1);
     });
 
+    group('eski içe aktarımın yanlış aya yazdığı taksit TAŞINIR', () {
+      // Eski biçim: alışveriş günü (11 Eyl) + başlıkta "(k/3)", taksit
+      // alanı yok. Kullanıcı başlığı ve kategoriyi düzenlemiş olabilir.
+      TransactionEntity legacy(String id, int no, {String? title}) =>
+          TransactionEntity(
+            id: id,
+            userId: 'u1',
+            walletId: 'w1',
+            title: title ?? 'ORNEK MAGAZA ($no/3)',
+            tag: 'kullanicinin-kategorisi',
+            amount: 503,
+            date: DateTime(2026, 9, 11, 14, 25),
+            type: TransactionTypeModel.expense,
+            origin: TransactionOrigin.bankImport,
+          );
+
+      ImportDraft relocation(TransactionEntity row, {int no = 2}) =>
+          installmentDraft(
+            no: no,
+            amount: 503,
+            selected: false,
+            duplicateOf: DuplicateMatch(
+              kind: DuplicateKind.exact,
+              existingId: row.id,
+              existingTitle: row.title,
+              existingAmount: row.amount,
+              existingDate: row.date,
+              legacyInstallment: true,
+            ),
+          ).copyWith(relocateExisting: true);
+
+      // Sahteler `build()` içinde kurulur: saplamalar ondan SONRA eklenir.
+      BankImportCubit buildRelocating() {
+        final cubit = build();
+        when(() => txRepo.updateTransaction(any()))
+            .thenAnswer((_) async => const Right(null));
+        return cubit;
+      }
+
+      List<TransactionEntity> updates() =>
+          verify(() => txRepo.updateTransaction(captureAny()))
+              .captured
+              .cast<TransactionEntity>();
+
+      test(
+          'satır taksitin kendi ayına alınır ve gruba bağlanır; başlık, '
+          'kategori, tutar ve SAAT korunur; kalan taksit yazılır', () async {
+        final old = legacy('old-2', 2, title: 'Kulaklık (2/3)');
+        final cubit = buildRelocating();
+        cubit.debugSeedReview(
+          userId: 'u1',
+          walletId: 'w1',
+          drafts: [relocation(old)],
+          ledger: [old],
+        );
+
+        await cubit.commit();
+
+        final moved = updates().single;
+        expect(moved.id, 'old-2');
+        expect(moved.date, DateTime(2026, 10, 11, 14, 25),
+            reason: 'gün taksitin ayı, saat kaydın kendi saati');
+        expect(moved.installmentNo, 2);
+        expect(moved.installmentCount, 3);
+        expect(moved.installmentGroupId, isNotNull);
+        expect(moved.title, 'Kulaklık (2/3)');
+        expect(moved.tag, 'kullanicinin-kategorisi');
+        expect(moved.amount, 503);
+
+        // 3/3 ileri tarihe yazıldı, taşınan satırla AYNI grupta.
+        final written = verify(() => txRepo.addTransaction(captureAny()))
+            .captured
+            .cast<TransactionEntity>();
+        expect(written.single.installmentNo, 3);
+        expect(written.single.date, DateTime(2026, 11, 11));
+        expect(written.single.installmentGroupId, moved.installmentGroupId);
+
+        final done = cubit.state as BankImportDone;
+        expect(done.relocated, 1);
+        expect(done.added, 0);
+        expect(done.corrected, 0);
+        expect(done.futureInstallments, 1);
+        expect(done.skipped, 0, reason: 'taşınan satır "atlandı" sayılmaz');
+      });
+
+      test(
+          'ÇİFT SAYIM ÖNLEMİ: sonraki taksit de eski biçimde duruyorsa yenisi '
+          'yazılmaz, o satır kendi ayına taşınır', () async {
+        final old2 = legacy('old-2', 2);
+        final old3 = legacy('old-3', 3);
+        final cubit = buildRelocating();
+        cubit.debugSeedReview(
+          userId: 'u1',
+          walletId: 'w1',
+          drafts: [relocation(old2)],
+          ledger: [old2, old3],
+        );
+
+        await cubit.commit();
+
+        verifyNever(() => txRepo.addTransaction(any()));
+        final moved = {for (final t in updates()) t.id: t};
+        expect(moved.keys, unorderedEquals(['old-2', 'old-3']));
+        expect(moved['old-2']!.date, DateTime(2026, 10, 11, 14, 25));
+        expect(moved['old-3']!.date, DateTime(2026, 11, 11, 14, 25));
+        expect(moved['old-3']!.installmentNo, 3);
+        expect(moved['old-2']!.installmentGroupId,
+            moved['old-3']!.installmentGroupId);
+
+        final done = cubit.state as BankImportDone;
+        expect(done.relocated, 2);
+        expect(done.futureInstallments, 0);
+      });
+
+      test('geri al: taşınan satırlar ESKİ hâline döner, yazılan silinir',
+          () async {
+        final old = legacy('old-2', 2);
+        final cubit = buildRelocating();
+        when(() => txRepo.getTransactionById(any()))
+            .thenAnswer((_) async => Right(old));
+        cubit.debugSeedReview(
+          userId: 'u1',
+          walletId: 'w1',
+          drafts: [relocation(old)],
+          ledger: [old],
+        );
+        await cubit.commit();
+        clearInteractions(txRepo);
+
+        final result = await cubit.undoImport();
+
+        // Özgün satır aynen geri yazılır: tarih 11 Eyl, taksit alanları yok.
+        final restored = updates().single;
+        expect(restored, old);
+        expect(restored.installmentGroupId, isNull);
+        verify(() => txRepo.deleteTransaction(any())).called(1);
+        expect(result.reverted, 1);
+        expect(result.removed, 1);
+      });
+
+      test('taşıma kapatılmışsa satıra dokunulmaz (yalnız atlanır)', () async {
+        final old = legacy('old-2', 2);
+        final cubit = buildRelocating();
+        cubit.debugSeedReview(
+          userId: 'u1',
+          walletId: 'w1',
+          drafts: [relocation(old).copyWith(relocateExisting: false)],
+          ledger: [old],
+        );
+
+        await cubit.commit();
+
+        verifyNever(() => txRepo.updateTransaction(any()));
+        verifyNever(() => txRepo.addTransaction(any()));
+      });
+
+      test('satır eklenmeye alınırsa taşıma kararı düşer', () async {
+        final old = legacy('old-2', 2);
+        final cubit = buildRelocating();
+        cubit.debugSeedReview(
+          userId: 'u1',
+          walletId: 'w1',
+          drafts: [relocation(old)],
+          ledger: [old],
+        );
+
+        cubit.setDraftSelected(0, true);
+        final toggled = (cubit.state as BankImportReview).drafts.single;
+        expect(toggled.selected, isTrue);
+        expect(toggled.relocateExisting, isFalse);
+
+        cubit.setDraftSelected(0, false);
+        cubit.setRelocateExisting(0, true);
+        final back = (cubit.state as BankImportReview).drafts.single;
+        expect(back.relocateExisting, isTrue);
+        expect(back.selected, isFalse);
+      });
+    });
+
     test('geri al, ileri yazılan taksitleri de kaldırır', () async {
       final cubit = build();
       cubit.debugSeedReview(

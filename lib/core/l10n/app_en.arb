@@ -4024,5 +4024,26 @@
   "kkGecisHesap": "Account",
   "kkGecisAyrintilar": "Details",
   "txKategoriSec": "Pick a category",
-  "transferKaldirildiKategorisiz": "The row has no category. Edit the transaction to pick one."
+  "transferKaldirildiKategorisiz": "The row has no category. Edit the transaction to pick one.",
+  "bankImportDupWillRelocate": "Not added: an earlier import wrote this installment to the wrong month. The record moves to {date} and the remaining {count} installments are written.",
+  "@bankImportDupWillRelocate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportDupRelocate": "Move to the right month",
+  "bankImportDupRelocateUndo": "Do not move",
+  "bankImportDoneRelocated": "{count} old installment rows moved to the right month.",
+  "@bankImportDoneRelocated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

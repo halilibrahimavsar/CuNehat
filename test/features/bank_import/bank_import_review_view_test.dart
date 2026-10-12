@@ -2035,6 +2035,83 @@ void main() {
       );
     });
 
+    testWidgets(
+        'eski içe aktarımın yanlış aya yazdığı taksit: panel TAŞINACAĞINI '
+        'söyler; karar değiştirilebilir', (tester) async {
+      when(() => cubit.setRelocateExisting(any(), any())).thenReturn(null);
+      final info =
+          DraftInstallment(no: 2, count: 6, purchaseDate: DateTime(2026, 9, 6));
+      ImportDraft legacy({required bool relocate}) => ImportDraft(
+            date: info.dateOf(2),
+            description: 'ORNEK MOTOR (2/6)',
+            amount: 1200.5,
+            type: TransactionTypeModel.expense,
+            categoryId: 'Market',
+            installment: info,
+            selected: false,
+            relocateExisting: relocate,
+            duplicateOf: DuplicateMatch(
+              kind: DuplicateKind.exact,
+              existingId: 'old-2',
+              existingTitle: 'ORNEK MOTOR (2/6)',
+              existingAmount: 1200.5,
+              existingDate: DateTime(2026, 9, 6),
+              legacyInstallment: true,
+            ),
+          );
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+
+      await pump(tester, review(drafts: [legacy(relocate: true)]));
+      // Taşınacağı tarih (taksitin kendi ayı) ve kalan taksit sayısı yazar.
+      expect(find.text(l10n.bankImportDupWillRelocate('06.10.26', 4)),
+          findsOneWidget);
+      await tester.tap(find.text(l10n.bankImportDupRelocateUndo));
+      await tester.pumpAndSettle();
+      verify(() => cubit.setRelocateExisting(0, false)).called(1);
+
+      // Karar kapalıyken: satır yalnız atlanır, taşıma yeniden seçilebilir.
+      await pump(tester, review(drafts: [legacy(relocate: false)]));
+      expect(find.text(l10n.bankImportDupWillSkip), findsOneWidget);
+      await tester.tap(find.text(l10n.bankImportDupRelocate));
+      await tester.pumpAndSettle();
+      verify(() => cubit.setRelocateExisting(0, true)).called(1);
+    });
+
+    test('deftere DOKUNACAK satır "bilinen" sayılmaz (katlanmaz)', () {
+      // Birebir eşleşen satırlar tek satıra katlanır; taşınacak ya da tutarı
+      // düzeltilecek satır katlansaydı kullanıcı defterinin değişeceğini
+      // görmeden "İçe aktar"a basardı.
+      ImportDraft dup({
+        bool legacy = false,
+        bool relocate = false,
+        bool correct = false,
+      }) =>
+          ImportDraft(
+            date: DateTime(2026, 10, 6),
+            description: 'X (2/6)',
+            amount: 100,
+            type: TransactionTypeModel.expense,
+            selected: false,
+            relocateExisting: relocate,
+            correctExisting: correct,
+            duplicateOf: DuplicateMatch(
+              kind: DuplicateKind.exact,
+              existingId: 'e',
+              existingTitle: 'X (2/6)',
+              existingAmount: 100,
+              existingDate: DateTime(2026, 9, 6),
+              legacyInstallment: legacy,
+            ),
+          );
+
+      expect(BankImportReview.isKnown(dup()), isTrue);
+      expect(
+          BankImportReview.isKnown(dup(legacy: true, relocate: true)), isFalse);
+      // Taşıma kapatılmış olsa da görünür kalır: karar geri açılabilsin.
+      expect(BankImportReview.isKnown(dup(legacy: true)), isFalse);
+      expect(BankImportReview.isKnown(dup(correct: true)), isFalse);
+    });
+
     testWidgets('adım adım görünümde de kalan taksit notu yazar',
         (tester) async {
       await pump(

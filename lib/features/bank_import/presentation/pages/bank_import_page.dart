@@ -739,6 +739,15 @@ class _DoneState extends State<_Done> {
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
+            if (state.relocated > 0) ...[
+              const SizedBox(height: 6),
+              Text(
+                context.l10n.bankImportDoneRelocated(state.relocated),
+                key: const ValueKey('import-done-relocated'),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
             if (state.corrected > 0) ...[
               const SizedBox(height: 6),
               Text(

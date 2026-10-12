@@ -4258,5 +4258,26 @@
   "kkGecisHesap": "Hesap",
   "kkGecisAyrintilar": "Ayrıntılar",
   "txKategoriSec": "Kategori seç",
-  "transferKaldirildiKategorisiz": "Satır kategorisiz kaldı. İşlemi düzenleyerek kategorisini seçebilirsin."
+  "transferKaldirildiKategorisiz": "Satır kategorisiz kaldı. İşlemi düzenleyerek kategorisini seçebilirsin.",
+  "bankImportDupWillRelocate": "Eklenmeyecek: eski içe aktarım bu taksiti yanlış aya yazmış. Kayıt {date} tarihine taşınacak, kalan {count} taksit yazılacak.",
+  "@bankImportDupWillRelocate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportDupRelocate": "Doğru aya taşı",
+  "bankImportDupRelocateUndo": "Taşımadan vazgeç",
+  "bankImportDoneRelocated": "{count} eski taksit satırı doğru aya taşındı.",
+  "@bankImportDoneRelocated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

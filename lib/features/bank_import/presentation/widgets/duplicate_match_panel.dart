@@ -37,6 +37,10 @@ class DuplicateMatchPanel extends StatelessWidget {
   /// Eşleşmeyi [alternativeDraft]'a taşı.
   final VoidCallback? onMoveMatch;
 
+  /// "Eski taksit satırını doğru aya taşı" kararı (bkz.
+  /// `DuplicateMatch.legacyInstallment`); verilmezse seçenek sunulmaz.
+  final ValueChanged<bool>? onRelocate;
+
   const DuplicateMatchPanel({
     super.key,
     required this.draft,
@@ -46,6 +50,7 @@ class DuplicateMatchPanel extends StatelessWidget {
     this.existingCategoryLabel,
     this.alternativeDraft,
     this.onMoveMatch,
+    this.onRelocate,
   });
 
   @override
@@ -173,15 +178,26 @@ class DuplicateMatchPanel extends StatelessWidget {
   Widget _decision(BuildContext context, DuplicateMatch m, Color color) {
     final l10n = context.l10n;
     final bank = formatMoney(draft.amount, currency: currency);
+    final relocating = draft.relocateExisting && m.legacyInstallment;
     final status = draft.selected
         ? l10n.bankImportDupWillAdd
-        : draft.correctExisting
-            ? l10n.bankImportDupWillCorrect(bank)
-            : l10n.bankImportDupWillSkip;
+        : relocating
+            // Eski içe aktarım bu taksiti alışveriş gününe yazmış: satır
+            // taksitin kendi ayına alınır, kalanlar da yazılır.
+            ? l10n.bankImportDupWillRelocate(
+                AppFormatters.dateShort.format(draft.date),
+                draft.installment?.remaining ?? 0,
+              )
+            : draft.correctExisting
+                ? l10n.bankImportDupWillCorrect(bank)
+                : l10n.bankImportDupWillSkip;
 
     final actions = <Widget>[
       if (draft.selected)
         _action(context, l10n.bankImportDupSkip, () => onSelected(false))
+      else if (relocating)
+        _action(context, l10n.bankImportDupRelocateUndo,
+            () => onRelocate?.call(false))
       else if (draft.correctExisting)
         _action(context, l10n.bankImportDupCorrectUndo, () => onCorrect(false))
       else ...[
@@ -198,6 +214,9 @@ class DuplicateMatchPanel extends StatelessWidget {
               emphasized: true),
         if (alternativeDraft != null && onMoveMatch != null)
           _action(context, l10n.bankImportDupMoveMatch, onMoveMatch!),
+        if (m.legacyInstallment && onRelocate != null)
+          _action(context, l10n.bankImportDupRelocate, () => onRelocate!(true),
+              emphasized: true),
       ],
     ];
 

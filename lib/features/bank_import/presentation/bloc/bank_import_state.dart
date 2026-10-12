@@ -223,8 +223,16 @@ class BankImportReview extends BankImportState {
   /// Defterde BİREBİR kayıtlı olduğu için eklenmeyecek satır mı. Bu satırlar
   /// listede varsayılan olarak tek bir satıra katlanır: ardışık ekstrelerde
   /// her örtüşen satır ayrı bir "zaten kayıtlı" paneli çiziyordu.
+  ///
+  /// DEFTERE DOKUNACAK satır "bilinen" sayılmaz ve katlanmaz: tutarı
+  /// düzeltilecek kayıt ve doğru aya taşınabilecek eski taksit satırı
+  /// (bkz. `DuplicateMatch.legacyInstallment`). Katlansalardı kullanıcı
+  /// defterinin değişeceğini görmeden "İçe aktar"a basardı.
   static bool isKnown(ImportDraft d) =>
-      !d.selected && d.duplicateOf?.kind == DuplicateKind.exact;
+      !d.selected &&
+      d.duplicateOf?.kind == DuplicateKind.exact &&
+      !d.correctExisting &&
+      !(d.duplicateOf?.legacyInstallment ?? false);
 
   int get knownCount => drafts.where(isKnown).length;
 
@@ -306,6 +314,10 @@ class BankImportDone extends BankImportState {
 
   /// Tutarı ekstredekiyle düzeltilen (yeni kayıt açılmayan) defter kaydı sayısı.
   final int corrected;
+
+  /// Doğru aya TAŞINAN eski biçimli taksit satırı sayısı (bkz.
+  /// `ImportDraft.relocateExisting`).
+  final int relocated;
   final int skipped;
   final String walletId;
   final String userId;
@@ -350,6 +362,7 @@ class BankImportDone extends BankImportState {
   const BankImportDone({
     required this.added,
     this.corrected = 0,
+    this.relocated = 0,
     required this.skipped,
     required this.walletId,
     required this.userId,

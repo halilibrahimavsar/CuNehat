@@ -6832,4 +6832,20 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get transferKaldirildiKategorisiz =>
       'Satır kategorisiz kaldı. İşlemi düzenleyerek kategorisini seçebilirsin.';
+
+  @override
+  String bankImportDupWillRelocate(String date, int count) {
+    return 'Eklenmeyecek: eski içe aktarım bu taksiti yanlış aya yazmış. Kayıt $date tarihine taşınacak, kalan $count taksit yazılacak.';
+  }
+
+  @override
+  String get bankImportDupRelocate => 'Doğru aya taşı';
+
+  @override
+  String get bankImportDupRelocateUndo => 'Taşımadan vazgeç';
+
+  @override
+  String bankImportDoneRelocated(int count) {
+    return '$count eski taksit satırı doğru aya taşındı.';
+  }
 }

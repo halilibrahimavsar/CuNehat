@@ -11752,6 +11752,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Satır kategorisiz kaldı. İşlemi düzenleyerek kategorisini seçebilirsin.'**
   String get transferKaldirildiKategorisiz;
+
+  /// No description provided for @bankImportDupWillRelocate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eklenmeyecek: eski içe aktarım bu taksiti yanlış aya yazmış. Kayıt {date} tarihine taşınacak, kalan {count} taksit yazılacak.'**
+  String bankImportDupWillRelocate(String date, int count);
+
+  /// No description provided for @bankImportDupRelocate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğru aya taşı'**
+  String get bankImportDupRelocate;
+
+  /// No description provided for @bankImportDupRelocateUndo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taşımadan vazgeç'**
+  String get bankImportDupRelocateUndo;
+
+  /// No description provided for @bankImportDoneRelocated.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} eski taksit satırı doğru aya taşındı.'**
+  String bankImportDoneRelocated(int count);
 }
 
 class _AppLocalizationsDelegate

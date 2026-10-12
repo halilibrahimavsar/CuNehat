@@ -6881,4 +6881,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get transferKaldirildiKategorisiz =>
       'The row has no category. Edit the transaction to pick one.';
+
+  @override
+  String bankImportDupWillRelocate(String date, int count) {
+    return 'Not added: an earlier import wrote this installment to the wrong month. The record moves to $date and the remaining $count installments are written.';
+  }
+
+  @override
+  String get bankImportDupRelocate => 'Move to the right month';
+
+  @override
+  String get bankImportDupRelocateUndo => 'Do not move';
+
+  @override
+  String bankImportDoneRelocated(int count) {
+    return '$count old installment rows moved to the right month.';
+  }
 }

@@ -899,6 +899,86 @@ void main() {
       expect(m.hasReasons, isTrue);
     });
   });
+
+  group('eski biçimli taksit satırı (taksit ayına taşınmamış)', () {
+    // Şema 15 öncesi içe aktarım: taksit, alışverişin ÖZGÜN gününe ve
+    // başlığında "(k/N)" ile yazılmış; taksit alanı yok.
+    final purchase = DateTime(2026, 9, 11);
+    ImportDraft second() {
+      final info = DraftInstallment(no: 2, count: 3, purchaseDate: purchase);
+      return ImportDraft(
+        date: info.dateOf(2), // 11 Eki
+        description: 'ORNEK MAGAZA (2/3)',
+        amount: 503,
+        type: TransactionTypeModel.expense,
+        installment: info,
+      );
+    }
+
+    TransactionEntity legacyRow({
+      bool isSystem = false,
+      String? linkedRecordId,
+      String? adoptedFromTag,
+    }) =>
+        TransactionEntity(
+          id: 'old-2',
+          userId: 'u',
+          walletId: 'w',
+          title: 'ORNEK MAGAZA (2/3)',
+          tag: 'cat',
+          amount: 503,
+          date: purchase, // yanlış ay
+          type: TransactionTypeModel.expense,
+          isSystem: isSystem,
+          linkedRecordId: linkedRecordId,
+          adoptedFromTag: adoptedFromTag,
+        );
+
+    test('tekrar sayılır VE taşınabilir işaretlenir; varsayılan karar taşımak',
+        () {
+      final marked = markDuplicateDrafts([second()], [legacyRow()]).single;
+
+      expect(marked.selected, isFalse, reason: 'ikinci kez eklenmez');
+      expect(marked.duplicateOf!.existingId, 'old-2');
+      expect(marked.duplicateOf!.legacyInstallment, isTrue);
+      expect(marked.relocateExisting, isTrue);
+      expect(marked.correctExisting, isFalse);
+    });
+
+    test('sistem / bağlı / benimsenmiş satır tekrar sayılır ama TAŞINMAZ', () {
+      for (final row in [
+        legacyRow(isSystem: true),
+        legacyRow(linkedRecordId: 'pair-1'),
+        legacyRow(adoptedFromTag: 'cat'),
+      ]) {
+        final marked = markDuplicateDrafts([second()], [row]).single;
+        expect(marked.selected, isFalse);
+        expect(marked.duplicateOf!.legacyInstallment, isFalse);
+        expect(marked.relocateExisting, isFalse);
+      }
+    });
+
+    test('doğru ayda ve grubunda duran taksit eski biçimli SAYILMAZ', () {
+      final current = TransactionEntity(
+        id: 'new-2',
+        userId: 'u',
+        walletId: 'w',
+        title: 'ORNEK MAGAZA (2/3)',
+        tag: 'cat',
+        amount: 503,
+        date: DateTime(2026, 10, 11),
+        type: TransactionTypeModel.expense,
+        installmentGroupId: 'g',
+        installmentNo: 2,
+        installmentCount: 3,
+      );
+      final marked = markDuplicateDrafts([second()], [current]).single;
+
+      expect(marked.duplicateOf!.existingId, 'new-2');
+      expect(marked.duplicateOf!.legacyInstallment, isFalse);
+      expect(marked.relocateExisting, isFalse);
+    });
+  });
 }
 
 // ===================================================== yaklaşık eşleşme

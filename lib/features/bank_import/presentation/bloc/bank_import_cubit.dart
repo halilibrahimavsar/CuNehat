@@ -1180,7 +1180,23 @@ class BankImportCubit extends Cubit<BankImportState>
   static ImportDraft _withSelected(ImportDraft d, bool selected) => d.copyWith(
         selected: selected,
         correctExisting: selected ? false : d.correctExisting,
+        // Aynı gerekçe: ya yeni satır yazılır ya eskisi taşınır.
+        relocateExisting: selected ? false : d.relocateExisting,
       );
+
+  /// Eski içe aktarımın yanlış aya yazdığı taksit satırını doğru aya taşıma
+  /// kararı (bkz. `ImportDraft.relocateExisting`). Yalnız eşleşmesi taşınabilir
+  /// olan satırda geçerlidir; açılınca satır eklenmez.
+  void setRelocateExisting(int i, bool value) => _mutate((d) => [
+        for (var k = 0; k < d.length; k++)
+          if (k == i && (d[k].duplicateOf?.legacyInstallment ?? false))
+            d[k].copyWith(
+              relocateExisting: value,
+              selected: value ? false : d[k].selected,
+            )
+          else
+            d[k],
+      ]);
 
   /// Yaklaşık eşleşen satırda "aynı harcama, defterdekinin tutarını
   /// ekstredekiyle düzelt" kararı. Açılınca satır eklenmez (yeni kayıt
@@ -1439,7 +1455,14 @@ class BankImportCubit extends Cubit<BankImportState>
       for (final d in s.drafts)
         if (d.correctExisting && !d.selected) d,
     ];
-    if (selected.isEmpty && corrections.isEmpty) {
+    final relocations = [
+      for (final d in s.drafts)
+        if (d.relocateExisting &&
+            !d.selected &&
+            (d.duplicateOf?.legacyInstallment ?? false))
+          d,
+    ];
+    if (selected.isEmpty && corrections.isEmpty && relocations.isEmpty) {
       emit(await _buildDone(
         added: 0,
         totalDrafts: s.drafts.length,
@@ -1449,7 +1472,7 @@ class BankImportCubit extends Cubit<BankImportState>
       return;
     }
 
-    final total = selected.length + corrections.length;
+    final total = selected.length + corrections.length + relocations.length;
     emit(BankImportCommitting(done: 0, total: total));
     // Bu içe aktarımın bütün satırları aynı kimliği taşır: "Son içe
     // aktarımlar" listesi ve bitiş ekranından çıkıldıktan sonra geri alma
@@ -1548,6 +1571,90 @@ class BankImportCubit extends Cubit<BankImportState>
         }
       }
     }
+    final correctedCount = originals.length;
+
+    // Eski içe aktarımın yanlış aya yazdığı taksit satırları TAŞINIR: tarih
+    // taksitin kendi ayına çekilir, satır taksit grubuna bağlanır ve kalan
+    // taksitler ileri tarihe yazılır. Başlık, kategori, tutar ve saat
+    // kullanıcınındır — dokunulmaz. Özgün hâller `originals`'a girer:
+    // "geri al" tarihi ve grup alanlarını eski hâline döndürür.
+    var relocatedRows = 0;
+    var relocatedDrafts = 0;
+    final ledger = Map<String, TransactionEntity>.of(_ledgerById);
+    Future<bool> relocate(
+      TransactionEntity row, {
+      required DateTime day,
+      required String groupId,
+      required int no,
+      required int count,
+      String? reference,
+    }) async {
+      final moved = row.copyWith(
+        date: DateTime(day.year, day.month, day.day, row.date.hour,
+            row.date.minute, row.date.second),
+        installmentGroupId: groupId,
+        installmentNo: no,
+        installmentCount: count,
+        reference: reference,
+      );
+      final res = await _txRepo.updateTransaction(moved);
+      if (res.isLeft()) return false;
+      originals.add(row);
+      ledger[moved.id!] = moved;
+      relocatedRows++;
+      return true;
+    }
+
+    for (final draft in relocations) {
+      final original = ledger[draft.duplicateOf?.existingId];
+      final inst = draft.installment;
+      if (original == null || inst == null || !_relocatable(original)) continue;
+      // Kardeş araması GÜNCEL defterde: aynı içe aktarımda taşınan bir başka
+      // taksit bu alışverişin grubunu az önce kurmuş olabilir.
+      _ledgerById = ledger;
+      final groupId = _siblingGroupOf(draft) ?? UidGenerator.generateV7();
+      final ok = await relocate(
+        original,
+        day: draft.date,
+        groupId: groupId,
+        no: inst.no,
+        count: inst.count,
+        reference: draft.reference,
+      );
+      if (!ok) continue;
+      relocatedDrafts++;
+      _ledgerById = ledger;
+
+      // Kalan taksitler. ÇİFT SAYIM ÖNLEMİ: eski içe aktarım sonraki
+      // taksitleri de alışveriş gününe "(k/N)" başlığıyla yazmış olabilir;
+      // öyleyse yenisi yazılmaz, o satır kendi ayına taşınır.
+      final base = ledger[original.id]!.copyWith(importBatchId: batchId);
+      for (final next in draft.remainingInstallments(
+        base,
+        newId: UidGenerator.generateV7,
+      )) {
+        if (_installmentExists(next)) continue;
+        final twin = _legacyTwinOf(next, inst);
+        if (twin != null) {
+          await relocate(
+            twin,
+            day: next.date,
+            groupId: groupId,
+            no: next.installmentNo!,
+            count: inst.count,
+          );
+          _ledgerById = ledger;
+          continue;
+        }
+        final r = await _txRepo.addTransaction(next);
+        r.fold((_) {}, (_) {
+          futureInstallments++;
+          importedIds.add(next.id!);
+          ledger[next.id!] = next;
+        });
+        _ledgerById = ledger;
+      }
+    }
     _lastCorrectedOriginals = originals;
 
     // Transfer olarak işaretlenenler bağlanır. Bağlanamayan satır düz
@@ -1586,7 +1693,9 @@ class BankImportCubit extends Cubit<BankImportState>
       added: added,
       totalDrafts: s.drafts.length,
       committed: selected,
-      corrected: originals.length,
+      corrected: correctedCount,
+      relocated: relocatedRows,
+      relocatedDrafts: relocatedDrafts,
       unresolvedLeftovers: s.leftovers.length,
       linkSuggestions: linkable,
       cardStatementSaved: cardSaved,
@@ -1717,6 +1826,27 @@ class BankImportCubit extends Cubit<BankImportState>
 
   static bool _sameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
+
+  /// Satır taşınabilir mi: düz bir defter kaydı. Sistem, benimsenmiş ya da
+  /// bir kayda bağlı satırın tarihi başka bir kaydın nakit bacağıdır.
+  static bool _relocatable(TransactionEntity t) =>
+      t.id != null && !t.isSystem && !t.isAdopted && t.linkedRecordId == null;
+
+  /// [next] taksitinin defterdeki ESKİ biçimli eşi: alışverişin özgün gününe
+  /// "(k/N)" başlığıyla, taksit alanı OLMADAN yazılmış ve tutarı yakın.
+  TransactionEntity? _legacyTwinOf(
+      TransactionEntity next, DraftInstallment inst) {
+    final marker = '(${next.installmentNo}/${inst.count})';
+    for (final t in _ledgerById.values) {
+      if (!_relocatable(t) || t.installmentNo != null) continue;
+      if (t.isIncome != next.isIncome) continue;
+      if (!_sameDay(t.date, inst.purchaseDate)) continue;
+      if (!t.title.contains(marker)) continue;
+      if ((t.amount - next.amount).abs() > inst.count) continue;
+      return t;
+    }
+    return null;
+  }
 
   /// Kapanmış kart ekstresinin künyesini hedef KART cüzdanının son ekstresi
   /// olarak yazar (kesim, son ödeme, dönem borcu, asgari; limit ve eksikse son
@@ -1967,6 +2097,8 @@ class BankImportCubit extends Cubit<BankImportState>
     required int totalDrafts,
     required List<ImportDraft> committed,
     int corrected = 0,
+    int relocated = 0,
+    int relocatedDrafts = 0,
     int unresolvedLeftovers = 0,
     List<LinkSuggestion> linkSuggestions = const [],
     bool cardStatementSaved = false,
@@ -2002,7 +2134,8 @@ class BankImportCubit extends Cubit<BankImportState>
     return BankImportDone(
       added: added,
       corrected: corrected,
-      skipped: totalDrafts - added - corrected,
+      relocated: relocated,
+      skipped: totalDrafts - added - corrected - relocatedDrafts,
       walletId: _walletId,
       userId: _userId,
       balance: balance,

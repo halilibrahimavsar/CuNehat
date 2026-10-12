@@ -1678,6 +1678,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                   : null)),
       onSelected: (value) => _cubit.setDraftSelected(i, value),
       onCorrect: (value) => _cubit.setCorrectExisting(i, value),
+      onRelocate: (value) => _cubit.setRelocateExisting(i, value),
       alternativeDraft: freeAlternative,
       onMoveMatch:
           freeAlternative == null ? null : () => _cubit.moveMatch(i, alt!),
