@@ -171,9 +171,9 @@ void main() {
 
     expect(find.text('Gram Altın · Varlık Ekle'), findsOneWidget);
 
-    // Locate TextFields: Quantity and Amount
+    // Alanlar: miktar, birim alış fiyatı, ödenen tutar.
     final textFields = find.byType(TextField);
-    expect(textFields, findsNWidgets(2));
+    expect(textFields, findsNWidgets(3));
 
     final quantityField = textFields.first;
 
@@ -547,5 +547,53 @@ void main() {
     expect(saved!.amount, 1750);
     expect(source, isA<AdoptedCashMovement>());
     expect((source! as AdoptedCashMovement).transaction.id, 'row-8');
+  });
+
+  group('birim alış fiyatı (miktar kipi)', () {
+    final unitField = find.byKey(const ValueKey('contribute-unit-price'));
+    TextField paidField(WidgetTester tester) =>
+        tester.widget<TextField>(find.byType(TextField).last);
+
+    Future<void> pumpSheet(
+        WidgetTester tester, void Function(InvestmentEntity) onSave) async {
+      await tester.pumpWidget(buildTestableWidget(ContributeSheet(
+        investment: assetInvestment,
+        walletCurrency: 'TRY',
+        onSave: (inv, _) => onSave(inv),
+      )));
+      await tester.pump();
+    }
+
+    testWidgets('miktar × birim fiyat ödenen tutarı doldurur ve maliyete girer',
+        (tester) async {
+      InvestmentEntity? saved;
+      await pumpSheet(tester, (inv) => saved = inv);
+
+      await tester.enterText(find.byType(TextField).first, '2');
+      await tester.enterText(unitField, '1.750,5');
+      await tester.pump();
+      expect(paidField(tester).controller!.text, '3.501');
+
+      // Miktar değişince tutar birim fiyattan yeniden çarpılır.
+      await tester.enterText(find.byType(TextField).first, '3');
+      await tester.pump();
+      expect(paidField(tester).controller!.text, '5.251,5');
+
+      await tester.tap(find.text('Ekle'));
+      await tester.pumpAndSettle();
+      expect(saved!.quantity, 4.5);
+      expect(saved!.amount, 2500 + 5251.5);
+    });
+
+    testWidgets('ödenen elle yazılınca birim fiyat ondan türer',
+        (tester) async {
+      await pumpSheet(tester, (_) {});
+
+      await tester.enterText(find.byType(TextField).first, '4');
+      await tester.enterText(find.byType(TextField).last, '1000');
+      await tester.pump();
+
+      expect(tester.widget<TextField>(unitField).controller!.text, '250');
+    });
   });
 }

@@ -4043,5 +4043,39 @@
         "type": "String"
       }
     }
-  }
+  },
+  "portfoyVarligaGore": "Varlığa göre",
+  "portfoyTureGore": "Türe göre",
+  "portfoyToplam": "Toplam",
+  "portfoyDiger": "Diğer",
+  "portfoyTurAltin": "Altın",
+  "portfoyTurHisse": "Hisse",
+  "portfoyTurOzel": "Özel",
+  "portfoyTurNakit": "Nakit",
+  "portfoyTumunuGoster": "Tümünü göster ({count})",
+  "@portfoyTumunuGoster": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "portfoyDahaAzGoster": "Daha az göster",
+  "birikimSirala": "Sırala",
+  "birikimSiralaDeger": "Değer",
+  "birikimSiralaTarih": "Tarih",
+  "birikimSiralaAd": "Ad",
+  "kasaBakiyeDuzelt": "Bakiye",
+  "kasaBakiyeDuzeltYardim": "Yalnız rakamı düzeltir; cüzdana ve deftere yansımaz. Para taşımak için Para ekle / Para çek.",
+  "lotFiyatiAlis": "Lot fiyatı (alış)",
+  "lotFiyatiAciklama": "Lot × lot fiyatı toplam maliyeti doldurur. Toplamı yazarsan lot fiyatı ondan hesaplanır.",
+  "katkiBirimFiyatHint": "Alış fiyatı (1 {unit})",
+  "@katkiBirimFiyatHint": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "katkiBirimFiyatGenel": "Birim alış fiyatı"
 }

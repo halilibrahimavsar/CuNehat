@@ -25,6 +25,25 @@ InvestmentEntity _potWith(InvestmentEntity pot, double balance, double booked) {
   );
 }
 
+/// Kasanın bakiyesini [newBalance] olarak DÜZELTİR — cüzdana ve deftere
+/// dokunmadan ("kasayı düzenle"deki bakiye alanı).
+///
+/// Para ekle/çek bir AKTARIMDIR (cüzdan ↔ kasa, defterde satır). Düzeltme
+/// öyle değil: kasadaki para uygulamanın dışında değişmiştir (elden
+/// harcandı, faiz işledi, baştan yanlış girildi) ve kullanıcı yalnız rakamı
+/// gerçeğe çekmek ister.
+///
+/// - Artış işlenmemiş kısma yazılır (o para cüzdandan hiç çıkmadı).
+/// - Azalış önce işlenmemiş kısımdan düşer; yetmezse işlenmiş kısım
+///   bakiyeyi aşamaz ([_potWith]).
+///
+/// Çağıran, defter farkı YAZILMAYACAK biçimde gönderir
+/// (`UpdateInvestmentEvent.prevAmount == newAmount`).
+InvestmentEntity correctPotBalance(InvestmentEntity pot, double newBalance) {
+  assert(pot.type == InvestmentType.cash);
+  return _potWith(pot, newBalance < 0 ? 0 : newBalance, pot.bookedCost);
+}
+
 /// Kasadan [amount] kadar para çıkar (varlık alımı ya da katkı için).
 ///
 /// Dönüş: kasanın yeni hâli + varlığa GEÇEN işlenmiş maliyet. Varlık bu
@@ -73,7 +92,6 @@ InvestmentEntity bookAssetFromPot(
 }) {
   final unbookedPart = roundToCents(cost - movedBooked);
   return asset.copyWith(
-    unbookedCost:
-        roundToCents((isNew ? 0 : asset.unbookedCost) + unbookedPart),
+    unbookedCost: roundToCents((isNew ? 0 : asset.unbookedCost) + unbookedPart),
   );
 }

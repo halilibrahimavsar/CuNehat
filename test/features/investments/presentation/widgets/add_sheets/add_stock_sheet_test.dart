@@ -624,4 +624,91 @@ void main() {
         .widget<DropdownButton<String?>>(find.byType(DropdownButton<String?>));
     expect(picker.value, 'g2');
   });
+
+  group('lot fiyatıyla alım', () {
+    final unitField = find.descendant(
+      of: find.byKey(const ValueKey('stock-unit-cost')),
+      matching: find.byType(TextField),
+    );
+    final lotField = find.byWidgetPredicate(
+        (w) => w is TextField && w.decoration?.hintText == 'lot');
+    final costField = find.byWidgetPredicate((w) =>
+        w is TextField &&
+        w.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)');
+
+    String text(WidgetTester tester, Finder field) =>
+        tester.widget<TextField>(field).controller!.text;
+
+    Future<void> pumpSheet(WidgetTester tester,
+        {InvestmentEntity? edit}) async {
+      tester.view.physicalSize = const Size(400, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(buildTestableWidget(AddStockSheet(
+        walletId: 'wallet_123',
+        userId: 'user_123',
+        walletCurrency: 'TRY',
+        investmentToEdit: edit,
+        onSave: (_, __) {},
+      )));
+      await tester.pump();
+    }
+
+    testWidgets('lot × lot fiyatı toplam maliyeti doldurur', (tester) async {
+      await pumpSheet(tester);
+
+      await tester.enterText(lotField, '12');
+      await tester.enterText(unitField, '312,5');
+      await tester.pump();
+
+      expect(text(tester, costField), '3.750');
+    });
+
+    testWidgets('lot değişince toplam, lot fiyatından yeniden çarpılır',
+        (tester) async {
+      await pumpSheet(tester);
+
+      await tester.enterText(lotField, '12');
+      await tester.enterText(unitField, '312,5');
+      await tester.enterText(lotField, '20');
+      await tester.pump();
+
+      expect(text(tester, costField), '6.250');
+      expect(text(tester, unitField), '312,5');
+    });
+
+    testWidgets('toplam elle yazılınca lot fiyatı ondan hesaplanır',
+        (tester) async {
+      await pumpSheet(tester);
+
+      await tester.enterText(lotField, '8');
+      await tester.enterText(costField, '1.000');
+      await tester.pump();
+      expect(text(tester, unitField), '125');
+
+      // Son dokunulan toplam: lot değişince toplam KORUNUR, fiyat değişir.
+      await tester.enterText(lotField, '10');
+      await tester.pump();
+      expect(text(tester, costField), '1.000');
+      expect(text(tester, unitField), '100');
+    });
+
+    testWidgets('lot yokken lot fiyatı toplamı EZMEZ', (tester) async {
+      await pumpSheet(tester);
+
+      await tester.enterText(costField, '500');
+      await tester.enterText(unitField, '40');
+      await tester.pump();
+
+      expect(text(tester, costField), '500');
+    });
+
+    testWidgets('düzenlemede lot fiyatı maliyet / lot olarak ön dolar',
+        (tester) async {
+      await pumpSheet(tester,
+          edit: testInvestment.copyWith(amount: 5000, quantity: 16));
+
+      expect(text(tester, unitField), '312,5');
+    });
+  });
 }

@@ -18,6 +18,7 @@ import 'package:cunehat/features/investments/presentation/widgets/add_sheets/sha
 import 'package:cunehat/core/services/cash_source.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/investment_sheet_widgets.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/purchase_payment.dart';
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:flutter/material.dart';
 import 'package:showcaseview/showcaseview.dart';
 
@@ -121,6 +122,16 @@ class _AddStockSheetState extends State<AddStockSheet> {
   final _symbolController = TextEditingController();
   final FocusNode _symbolFocusNode = FocusNode();
 
+  /// Lot başına ALIŞ fiyatı. Saklanmaz — toplam maliyeti doldurmanın bir
+  /// yoludur (lot × lot fiyatı); düzenlemede `maliyet / lot`tan türetilir.
+  /// Aracı kurum ekstreleri lot ve lot fiyatı verir, toplamı değil: kullanıcı
+  /// çarpımı hesap makinesinde yapmak zorunda kalıyordu.
+  final _unitCostController = TextEditingController();
+
+  /// Maliyeti en son hangi alan belirledi; lot değişince o korunur, öteki
+  /// yeniden hesaplanır.
+  _CostDriver _costDriver = _CostDriver.total;
+
   /// Alım tarihi: kayıt açılırken seçilir, gider bu tarihe yazılır.
   DateTime _purchaseDate = DateTime.now();
 
@@ -162,6 +173,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
       _selectedColor = item.color;
       _purchaseDate = item.dateAdded;
       _symbolController.text = item.symbol ?? '';
+      _syncUnitFromTotal();
     } else {
       // Hedefin "varlık ekle"sinden gelindiyse hedef ön seçili gelir.
       // Eskiden parametre alınıp hiç okunmuyordu: kullanıcı hedefin içinden
@@ -175,6 +187,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
       _amountController.text = _fmt(ledgerTx.amount);
       _purchaseDate =
           DateTime(ledgerTx.date.year, ledgerTx.date.month, ledgerTx.date.day);
+      _syncUnitFromTotal();
     }
     // Alım özeti ("şu kadarı cüzdandan düşülecek") maliyetten türer.
     _amountController.addListener(() => setState(() {}));
@@ -187,6 +200,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
     _quantityController.dispose();
     _currentValueController.dispose();
     _symbolController.dispose();
+    _unitCostController.dispose();
     _symbolFocusNode.dispose();
     super.dispose();
   }
@@ -199,8 +213,56 @@ class _AddStockSheetState extends State<AddStockSheet> {
   double? get _parsedCurrentValue =>
       parseMoneyInput(_currentValueController.text);
 
+  double? get _parsedUnitCost => parseAmountInput(_unitCostController.text);
+
   void _clearError() {
     if (_error != null) setState(() => _error = null);
+  }
+
+  // ---- lot × lot fiyatı ⇄ toplam maliyet --------------------------------
+  //
+  // Üç alan birbirine bağlı; SON DOKUNULAN kazanır. Alanların `onChanged`'i
+  // yalnız kullanıcı yazınca tetiklenir (programatik `text =` tetiklemez),
+  // o yüzden karşılıklı güncelleme döngüye girmez.
+
+  void _onUnitCostChanged() {
+    _clearError();
+    _costDriver = _CostDriver.unit;
+    _syncTotalFromUnit();
+  }
+
+  void _onTotalChanged() {
+    _clearError();
+    _costDriver = _CostDriver.total;
+    _syncUnitFromTotal();
+  }
+
+  void _onQuantityChanged() {
+    _clearError();
+    if (_costDriver == _CostDriver.unit) {
+      _syncTotalFromUnit();
+    } else {
+      _syncUnitFromTotal();
+    }
+  }
+
+  /// Toplam maliyet = lot × lot fiyatı (kuruşa yuvarlı). Lot ya da fiyat
+  /// yoksa toplama DOKUNULMAZ; defterden kilitli maliyet de ezilmez.
+  void _syncTotalFromUnit() {
+    if (_payment.isLedgerLocked) return;
+    final qty = _parsedQuantity;
+    final unit = _parsedUnitCost;
+    if (qty == null || qty <= 0 || unit == null || unit <= 0) return;
+    _amountController.text = _fmt(roundToCents(qty * unit));
+  }
+
+  /// Lot fiyatı = toplam maliyet / lot. Bölünemiyorsa alan olduğu gibi kalır.
+  void _syncUnitFromTotal() {
+    final qty = _parsedQuantity;
+    final total = _parsedAmount;
+    if (qty == null || qty <= 0 || total == null || total <= 0) return;
+    _unitCostController.text =
+        formatAmountForInput(total / qty, decimalDigits: 4);
   }
 
   /// Her tuş vuruşunda tetiklendiği için üst sınır kısa: yanıt gecikirse
@@ -270,6 +332,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
           _currentValueController.text = _fmt(total);
           if (_amountController.text.isEmpty) {
             _amountController.text = _fmt(total);
+            _syncUnitFromTotal();
           }
         }
         setState(() {
@@ -322,6 +385,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
       if (tx != null) {
         _amountController.text = _fmt(tx.amount);
         _purchaseDate = DateTime(tx.date.year, tx.date.month, tx.date.day);
+        _syncUnitFromTotal();
       }
       _error = null;
     });
@@ -448,7 +512,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
                           accent: _accent,
                           unitLabel: context.l10n.lot,
                           quantityController: _quantityController,
-                          onQuantityChanged: _clearError,
+                          onQuantityChanged: _onQuantityChanged,
                           isLoading: _isLoading,
                           fetchedMessage: _fetchedPriceMessage,
                           fetchedColor: _fetchedPriceColor,
@@ -470,6 +534,24 @@ class _AddStockSheetState extends State<AddStockSheet> {
                       ),
                       InvestmentHintCaption(context.l10n.mevcutDegerAciklama),
                       const SizedBox(height: 14),
+                      InvestmentFilledField(
+                        key: const ValueKey('stock-unit-cost'),
+                        controller: _unitCostController,
+                        // Defterden seçilen satırda maliyet kilitli: lot
+                        // fiyatı yalnız ondan türeyen bir bilgidir.
+                        readOnly: _payment.isLedgerLocked,
+                        hint: context.l10n.lotFiyatiAlis,
+                        icon: Icons.sell_outlined,
+                        accent: _accent,
+                        onChanged: _onUnitCostChanged,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        inputFormatters: [
+                          AmountInputFormatter(decimalDigits: 4)
+                        ],
+                      ),
+                      InvestmentHintCaption(context.l10n.lotFiyatiAciklama),
+                      const SizedBox(height: 14),
                       // Toplam Maliyet: Mevcut Değer'in hemen altında durur ki
                       // "ne ödedim / bugün ne ediyor" yan yana okunabilsin.
                       Showcase(
@@ -483,7 +565,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
                           hint: context.l10n.maliyetYatirilanAnaPara,
                           icon: Icons.payments_rounded,
                           accent: _accent,
-                          onChanged: _clearError,
+                          onChanged: _onTotalChanged,
                           keyboardType: const TextInputType.numberWithOptions(
                               decimal: true),
                           inputFormatters: [AmountInputFormatter()],
@@ -678,3 +760,6 @@ class _AddStockSheetState extends State<AddStockSheet> {
     return item.unbookedCost > cost ? cost : item.unbookedCost;
   }
 }
+
+/// Maliyeti belirleyen alan (bkz. `_AddStockSheetState._costDriver`).
+enum _CostDriver { unit, total }

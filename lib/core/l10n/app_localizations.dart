@@ -11356,6 +11356,126 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{name}: sürükleyerek taşı'**
   String kategoriSiralaTutamac(String name);
+
+  /// No description provided for @portfoyVarligaGore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Varlığa göre'**
+  String get portfoyVarligaGore;
+
+  /// No description provided for @portfoyTureGore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Türe göre'**
+  String get portfoyTureGore;
+
+  /// No description provided for @portfoyToplam.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplam'**
+  String get portfoyToplam;
+
+  /// No description provided for @portfoyDiger.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer'**
+  String get portfoyDiger;
+
+  /// No description provided for @portfoyTurAltin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Altın'**
+  String get portfoyTurAltin;
+
+  /// No description provided for @portfoyTurHisse.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hisse'**
+  String get portfoyTurHisse;
+
+  /// No description provided for @portfoyTurOzel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özel'**
+  String get portfoyTurOzel;
+
+  /// No description provided for @portfoyTurNakit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nakit'**
+  String get portfoyTurNakit;
+
+  /// No description provided for @portfoyTumunuGoster.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümünü göster ({count})'**
+  String portfoyTumunuGoster(int count);
+
+  /// No description provided for @portfoyDahaAzGoster.
+  ///
+  /// In tr, this message translates to:
+  /// **'Daha az göster'**
+  String get portfoyDahaAzGoster;
+
+  /// No description provided for @birikimSirala.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sırala'**
+  String get birikimSirala;
+
+  /// No description provided for @birikimSiralaDeger.
+  ///
+  /// In tr, this message translates to:
+  /// **'Değer'**
+  String get birikimSiralaDeger;
+
+  /// No description provided for @birikimSiralaTarih.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih'**
+  String get birikimSiralaTarih;
+
+  /// No description provided for @birikimSiralaAd.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ad'**
+  String get birikimSiralaAd;
+
+  /// No description provided for @kasaBakiyeDuzelt.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye'**
+  String get kasaBakiyeDuzelt;
+
+  /// No description provided for @kasaBakiyeDuzeltYardim.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız rakamı düzeltir; cüzdana ve deftere yansımaz. Para taşımak için Para ekle / Para çek.'**
+  String get kasaBakiyeDuzeltYardim;
+
+  /// No description provided for @lotFiyatiAlis.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lot fiyatı (alış)'**
+  String get lotFiyatiAlis;
+
+  /// No description provided for @lotFiyatiAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lot × lot fiyatı toplam maliyeti doldurur. Toplamı yazarsan lot fiyatı ondan hesaplanır.'**
+  String get lotFiyatiAciklama;
+
+  /// No description provided for @katkiBirimFiyatHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alış fiyatı (1 {unit})'**
+  String katkiBirimFiyatHint(String unit);
+
+  /// No description provided for @katkiBirimFiyatGenel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Birim alış fiyatı'**
+  String get katkiBirimFiyatGenel;
 }
 
 class _AppLocalizationsDelegate

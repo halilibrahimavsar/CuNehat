@@ -6641,4 +6641,70 @@ class AppLocalizationsEn extends AppLocalizations {
   String kategoriSiralaTutamac(String name) {
     return '$name: drag to move';
   }
+
+  @override
+  String get portfoyVarligaGore => 'By asset';
+
+  @override
+  String get portfoyTureGore => 'By type';
+
+  @override
+  String get portfoyToplam => 'Total';
+
+  @override
+  String get portfoyDiger => 'Other';
+
+  @override
+  String get portfoyTurAltin => 'Gold';
+
+  @override
+  String get portfoyTurHisse => 'Stocks';
+
+  @override
+  String get portfoyTurOzel => 'Custom';
+
+  @override
+  String get portfoyTurNakit => 'Cash';
+
+  @override
+  String portfoyTumunuGoster(int count) {
+    return 'Show all ($count)';
+  }
+
+  @override
+  String get portfoyDahaAzGoster => 'Show less';
+
+  @override
+  String get birikimSirala => 'Sort';
+
+  @override
+  String get birikimSiralaDeger => 'Value';
+
+  @override
+  String get birikimSiralaTarih => 'Date';
+
+  @override
+  String get birikimSiralaAd => 'Name';
+
+  @override
+  String get kasaBakiyeDuzelt => 'Balance';
+
+  @override
+  String get kasaBakiyeDuzeltYardim =>
+      'Only corrects the figure; the wallet and ledger are untouched. To move money use Add / Withdraw.';
+
+  @override
+  String get lotFiyatiAlis => 'Price per lot (buy)';
+
+  @override
+  String get lotFiyatiAciklama =>
+      'Lots × price per lot fills the total cost. If you type the total, the price per lot is derived from it.';
+
+  @override
+  String katkiBirimFiyatHint(String unit) {
+    return 'Buy price (per $unit)';
+  }
+
+  @override
+  String get katkiBirimFiyatGenel => 'Buy price per unit';
 }

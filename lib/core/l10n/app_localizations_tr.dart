@@ -6592,4 +6592,70 @@ class AppLocalizationsTr extends AppLocalizations {
   String kategoriSiralaTutamac(String name) {
     return '$name: sürükleyerek taşı';
   }
+
+  @override
+  String get portfoyVarligaGore => 'Varlığa göre';
+
+  @override
+  String get portfoyTureGore => 'Türe göre';
+
+  @override
+  String get portfoyToplam => 'Toplam';
+
+  @override
+  String get portfoyDiger => 'Diğer';
+
+  @override
+  String get portfoyTurAltin => 'Altın';
+
+  @override
+  String get portfoyTurHisse => 'Hisse';
+
+  @override
+  String get portfoyTurOzel => 'Özel';
+
+  @override
+  String get portfoyTurNakit => 'Nakit';
+
+  @override
+  String portfoyTumunuGoster(int count) {
+    return 'Tümünü göster ($count)';
+  }
+
+  @override
+  String get portfoyDahaAzGoster => 'Daha az göster';
+
+  @override
+  String get birikimSirala => 'Sırala';
+
+  @override
+  String get birikimSiralaDeger => 'Değer';
+
+  @override
+  String get birikimSiralaTarih => 'Tarih';
+
+  @override
+  String get birikimSiralaAd => 'Ad';
+
+  @override
+  String get kasaBakiyeDuzelt => 'Bakiye';
+
+  @override
+  String get kasaBakiyeDuzeltYardim =>
+      'Yalnız rakamı düzeltir; cüzdana ve deftere yansımaz. Para taşımak için Para ekle / Para çek.';
+
+  @override
+  String get lotFiyatiAlis => 'Lot fiyatı (alış)';
+
+  @override
+  String get lotFiyatiAciklama =>
+      'Lot × lot fiyatı toplam maliyeti doldurur. Toplamı yazarsan lot fiyatı ondan hesaplanır.';
+
+  @override
+  String katkiBirimFiyatHint(String unit) {
+    return 'Alış fiyatı (1 $unit)';
+  }
+
+  @override
+  String get katkiBirimFiyatGenel => 'Birim alış fiyatı';
 }

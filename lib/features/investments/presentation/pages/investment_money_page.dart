@@ -1,4 +1,8 @@
+import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/services/cash_source.dart';
+import 'package:cunehat/features/investments/data/investment_sort_store.dart';
+import 'package:cunehat/features/investments/domain/investment_sort.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
@@ -51,6 +55,20 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
   /// yalnız eşiğin geçildiği anda olur, her yüklemede değil.
   Set<String>? _reachedGoalIds;
 
+  /// Listelerin sıralama ölçütü (kasalar, hedef üyeleri, bağsız varlıklar);
+  /// cihazda saklanır.
+  InvestmentSort _sort = InvestmentSortStore.fallback;
+
+  InvestmentSortStore? get _sortStore => getIt.isRegistered<SharedPreferences>()
+      ? InvestmentSortStore(getIt<SharedPreferences>())
+      : null;
+
+  void _setSort(InvestmentSort sort) {
+    if (sort == _sort) return;
+    setState(() => _sort = sort);
+    _sortStore?.write(sort);
+  }
+
   /// Kayıt silme onayı: hatalı girişler için, alım gideri iade edilir.
   Future<bool> _confirmDelete(InvestmentEntity investment) {
     return ConfirmDialog.show(
@@ -69,6 +87,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
     super.initState();
     _confettiController =
         ConfettiController(duration: const Duration(seconds: 3));
+    _sort = _sortStore?.read() ?? InvestmentSortStore.fallback;
     _loadInvestments();
   }
 
@@ -402,8 +421,8 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
       );
 
   Future<void> _showPotActions(InvestmentEntity pot) async {
-    final action = await CashPotActionSheet.show(context,
-        pot: pot, currency: _currency);
+    final action =
+        await CashPotActionSheet.show(context, pot: pot, currency: _currency);
     if (action == null || !mounted) return;
     switch (action) {
       case CashPotAction.deposit:
@@ -503,7 +522,10 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
       builder: (context, investmentState) {
         final loaded =
             investmentState is InvestmentLoaded ? investmentState : null;
-        final investments = loaded?.investments ?? const <InvestmentEntity>[];
+        // Sıra TEK yerde uygulanır: hedef üyeleri, kasalar ve bağsız
+        // varlıklar bu listeden türediği için hepsi aynı ölçütü izler.
+        final investments = sortInvestments(
+            loaded?.investments ?? const <InvestmentEntity>[], _sort);
         final goals = loaded?.goals ?? const <GoalEntity>[];
         final goalProgress = buildGoalProgress(goals, investments);
         // Kasalar kendi bölümünde; hedefe bağlı kasa hedefin içinde görünür.
@@ -533,8 +555,8 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                                 goalProgress: goalProgress,
                                 unassigned: unassigned,
                                 freePots: freePots,
-                                hasAnyPot: investments.any(
-                                    (i) => i.type == InvestmentType.cash),
+                                hasAnyPot: investments
+                                    .any((i) => i.type == InvestmentType.cash),
                               ),
                       ),
                     ),
@@ -580,8 +602,12 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
         ),
         const SizedBox(height: 20),
         if (investments.isNotEmpty) ...[
-          InvestmentChart(investments: investments),
+          InvestmentChart(investments: investments, currency: _currency),
           const SizedBox(height: 20),
+        ],
+        if (investments.length > 1) ...[
+          _buildSortRow(context),
+          const SizedBox(height: 12),
         ],
         _sectionHeader(
           context,
@@ -703,6 +729,47 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
             ),
           ),
         ],
+      ],
+    );
+  }
+
+  /// Sıralama seçimi: Değer (büyük→küçük) · Tarih (yeni→eski) · Ad.
+  Widget _buildSortRow(BuildContext context) {
+    final l10n = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Icon(Icons.sort_rounded, size: 18, color: cs.onSurfaceVariant),
+        const SizedBox(width: 6),
+        Text(
+          l10n.birikimSirala,
+          style: TextStyle(fontSize: 12.5, color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (final (sort, label) in [
+                  (InvestmentSort.value, l10n.birikimSiralaDeger),
+                  (InvestmentSort.date, l10n.birikimSiralaTarih),
+                  (InvestmentSort.name, l10n.birikimSiralaAd),
+                ])
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: ChoiceChip(
+                      key: ValueKey('investment-sort-${sort.name}'),
+                      label: Text(label),
+                      selected: _sort == sort,
+                      visualDensity: VisualDensity.compact,
+                      onSelected: (_) => _setSort(sort),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }

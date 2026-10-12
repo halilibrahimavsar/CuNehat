@@ -106,4 +106,40 @@ void main() {
     expect(back.bookedCost, 1000);
     expect(back.unbookedCost, 150);
   });
+
+  group('correctPotBalance (bakiye düzeltme — aktarım DEĞİL)', () {
+    test('artış işlenmemiş kısma yazılır; işlenmiş maliyet değişmez', () {
+      final p = correctPotBalance(pot(balance: 1000), 1400);
+      expect(p.amount, 1400);
+      expect(p.currentValue, 1400);
+      expect(p.bookedCost, 1000);
+      expect(p.unbookedCost, 400);
+    });
+
+    test('azalış önce işlenmemiş kısımdan düşer', () {
+      final p = correctPotBalance(pot(balance: 1000, unbooked: 300), 800);
+      expect(p.amount, 800);
+      expect(p.bookedCost, 700);
+      expect(p.unbookedCost, 100);
+    });
+
+    test('işlenmiş kısmın altına inilirse işlenmiş kısım bakiyeye kenetlenir',
+        () {
+      final p = correctPotBalance(pot(balance: 1000, unbooked: 300), 500);
+      expect(p.amount, 500);
+      expect(p.bookedCost, 500);
+      expect(p.unbookedCost, 0);
+    });
+
+    test('sıfıra çekilebilir; eksi rakam sıfır sayılır', () {
+      expect(correctPotBalance(pot(), 0).amount, 0);
+      final negative = correctPotBalance(pot(), -50);
+      expect(negative.amount, 0);
+      expect(negative.bookedCost, 0);
+    });
+
+    test('kuruşa yuvarlar', () {
+      expect(correctPotBalance(pot(), 123.456).amount, 123.46);
+    });
+  });
 }

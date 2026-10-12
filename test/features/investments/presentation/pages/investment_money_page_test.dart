@@ -1,3 +1,4 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/config/di/injection.dart';
@@ -194,8 +195,9 @@ void main() {
 
     // Verify SummaryCard rendering
     expect(find.text('TOPLAM PORTFÖY DEĞERİ'), findsOneWidget);
-    expect(find.text('3.250,00 ₺'),
-        findsOneWidget); // totalCurrentValue = 1250 + 2000 = 3250
+    // totalCurrentValue = 1250 + 2000 = 3250: özet kartında VE dağılım
+    // halkasının ortasında ("Toplam").
+    expect(find.text('3.250,00 ₺'), findsNWidgets(2));
     expect(find.text('3.000,00 ₺'), findsOneWidget); // totalInvestment = 3000
 
     // Hedefsiz kayıtlar "Bağsız varlıklar" başlığı altında listelenir.
@@ -585,7 +587,8 @@ void main() {
       await pumpPage(tester);
       final card = find
           .descendant(
-              of: find.byType(InvestmentCard), matching: find.text('Gram Altın'))
+              of: find.byType(InvestmentCard),
+              matching: find.text('Gram Altın'))
           .first;
       await tester.ensureVisible(card);
       await tester.tap(card);
@@ -652,8 +655,59 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('cash-pot-move-save')));
       await tester.pumpAndSettle();
       expect(find.textContaining('Kasada yalnız'), findsOneWidget);
-      verifyNever(() => mockInvestmentBloc
-          .add(any(that: isA<PartialSellInvestmentEvent>())));
+      verifyNever(() =>
+          mockInvestmentBloc.add(any(that: isA<PartialSellInvestmentEvent>())));
+    });
+
+    testWidgets(
+        'kasayı düzenlemede bakiye DÜZELTİLİR: deftere hareket yazılmaz',
+        (tester) async {
+      await pumpPage(tester);
+      await tester.tap(find.byKey(const ValueKey('cash-pot-pot_1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('cash-pot-action-edit')));
+      await tester.pumpAndSettle();
+
+      // Alan kasanın bugünkü bakiyesiyle ön dolu.
+      final field = find.byKey(const ValueKey('cash-pot-balance'));
+      expect(tester.widget<TextField>(field).controller!.text, '1.000');
+      expect(
+          find.textContaining('cüzdana ve deftere yansımaz'), findsOneWidget);
+
+      await tester.enterText(field, '1400');
+      await tester.tap(find.byKey(const ValueKey('cash-pot-save')));
+      await tester.pumpAndSettle();
+
+      verify(() => mockInvestmentBloc.add(any(
+            that: isA<UpdateInvestmentEvent>()
+                .having((e) => e.investment.amount, 'bakiye', 1400.0)
+                .having((e) => e.investment.currentValue, 'değer', 1400.0)
+                // Artış cüzdandan çıkmadı: işlenmemiş kısma yazılır.
+                .having((e) => e.investment.unbookedCost, 'işlenmemiş', 400.0)
+                // Defter farkı SIFIR: aktarım değil düzeltme.
+                .having((e) => e.newAmount - e.prevAmount, 'defter farkı', 0.0),
+          ))).called(1);
+    });
+
+    testWidgets('bakiyeye dokunulmazsa yalnız ad değişir', (tester) async {
+      await pumpPage(tester);
+      await tester.tap(find.byKey(const ValueKey('cash-pot-pot_1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('cash-pot-action-edit')));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+          find.byKey(const ValueKey('cash-pot-name')), 'Tatil');
+      await tester.tap(find.byKey(const ValueKey('cash-pot-save')));
+      await tester.pumpAndSettle();
+
+      verify(() => mockInvestmentBloc.add(any(
+            that: isA<UpdateInvestmentEvent>()
+                .having((e) => e.investment.name, 'ad', 'Tatil')
+                .having((e) => e.investment.amount, 'bakiye', 1000.0)
+                .having((e) => e.investment.unbookedCost, 'işlenmemiş', 0.0)
+                .having((e) => e.newAmount - e.prevAmount, 'defter farkı', 0.0),
+          ))).called(1);
     });
 
     testWidgets('kasayı kapatmak bakiyeyi cüzdana aktarır', (tester) async {
@@ -1297,5 +1351,85 @@ void main() {
     await tester.tap(find.text('Kızımın düğünü için altın birikimi'));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+  });
+
+  group('sıralama', () {
+    InvestmentEntity asset(String id, String name, double value, DateTime at) =>
+        InvestmentEntity(
+          id: id,
+          userId: 'user_123',
+          walletId: 'wallet_123',
+          name: name,
+          amount: value,
+          currentValue: value,
+          type: InvestmentType.custom,
+          color: Colors.teal,
+          dateAdded: at,
+        );
+
+    final zeytin = asset('z', 'Zeytin', 100, DateTime(2026, 9, 1));
+    final armut = asset('a', 'Armut', 900, DateTime(2026, 1, 1));
+
+    double cardTop(WidgetTester tester, String name) => tester
+        .getTopLeft(find.descendant(
+            of: find.byType(InvestmentCard), matching: find.text(name)))
+        .dy;
+
+    Future<SharedPreferences> pumpPage(
+      WidgetTester tester, {
+      Map<String, Object> stored = const {},
+    }) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      SharedPreferences.setMockInitialValues(stored);
+      final prefs = await SharedPreferences.getInstance();
+      getIt.registerSingleton<SharedPreferences>(prefs);
+      when(() => mockInvestmentBloc.state).thenReturn(
+        InvestmentLoaded([zeytin, armut], totalAmount: 1000.0),
+      );
+      await tester.pumpWidget(
+        buildTestableWidget(InvestmentMoneyPage(activeWallet: testWallet)),
+      );
+      await tester.pumpAndSettle();
+      return prefs;
+    }
+
+    testWidgets('varsayılan: değere göre büyükten küçüğe', (tester) async {
+      // Depo sırası Zeytin (100), Armut (900).
+      await pumpPage(tester);
+      expect(cardTop(tester, 'Armut'), lessThan(cardTop(tester, 'Zeytin')));
+    });
+
+    testWidgets('çip sırayı değiştirir ve tercih saklanır', (tester) async {
+      final prefs = await pumpPage(tester);
+
+      await tester.tap(find.byKey(const ValueKey('investment-sort-date')));
+      await tester.pumpAndSettle();
+      // Yeniden eskiye: Zeytin (Eylül) üstte.
+      expect(cardTop(tester, 'Zeytin'), lessThan(cardTop(tester, 'Armut')));
+      expect(prefs.getString('investment_sort'), 'date');
+
+      await tester.tap(find.byKey(const ValueKey('investment-sort-name')));
+      await tester.pumpAndSettle();
+      expect(cardTop(tester, 'Armut'), lessThan(cardTop(tester, 'Zeytin')));
+      expect(prefs.getString('investment_sort'), 'name');
+    });
+
+    testWidgets('sayfa saklanan tercihle açılır', (tester) async {
+      await pumpPage(tester, stored: {'investment_sort': 'date'});
+      expect(cardTop(tester, 'Zeytin'), lessThan(cardTop(tester, 'Armut')));
+    });
+
+    testWidgets('tek kayıtta sıralama satırı yoktur', (tester) async {
+      when(() => mockInvestmentBloc.state).thenReturn(
+        InvestmentLoaded([zeytin], totalAmount: 100.0),
+      );
+      await tester.pumpWidget(
+        buildTestableWidget(InvestmentMoneyPage(activeWallet: testWallet)),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('investment-sort-value')), findsNothing);
+    });
   });
 }

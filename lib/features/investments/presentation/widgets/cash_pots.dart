@@ -72,7 +72,10 @@ Future<void> showCreateCashPot(
   ));
 }
 
-/// Kasanın adını / hedefini düzenle. Bakiye burada değişmez.
+/// Kasanın adını / hedefini düzenle; bakiye alanı değiştiyse rakamı DÜZELT.
+///
+/// Bakiye düzeltmesi bir aktarım değildir: cüzdana ve deftere yansımaz
+/// (bkz. [correctPotBalance]). Para taşımak için "Para ekle / Para çek".
 Future<void> showEditCashPot(
   BuildContext context, {
   required InvestmentBloc bloc,
@@ -88,15 +91,23 @@ Future<void> showEditCashPot(
   );
   if (result == null) return;
   final renamed = pot.copyWith(name: result.name);
-  final updated = result.goalId == null
+  final regoaled = result.goalId == null
       ? renamed.clearGoal()
       : renamed.copyWith(goalId: result.goalId);
+  final balance = result.balance;
+  final updated = balance == null || moneyEquals(balance, pot.amount)
+      ? regoaled
+      : correctPotBalance(regoaled, balance);
   bloc.add(UpdateInvestmentEvent(
     investment: updated,
     userId: pot.userId,
     walletId: pot.walletId,
+    // Düzenleme deftere HAREKET YAZMAZ: fark sıfır gönderilir. Bakiye
+    // düzeltmesi işlenmiş kısmı küçültebilir (bakiye onun altına inerse);
+    // o farkı bloc'a bildirmek cüzdana sahte bir "birikimden aktarım"
+    // geliri yazardı.
     prevAmount: pot.bookedCost,
-    newAmount: updated.bookedCost,
+    newAmount: pot.bookedCost,
     bookingDate: pot.dateAdded,
   ));
 }
@@ -319,10 +330,13 @@ class CashPotActionSheet extends StatelessWidget {
 
 // ====================================================== oluştur / düzenle
 
+/// [balance] yalnız DÜZENLEMEDE doludur: bakiye alanındaki rakam (kullanıcı
+/// dokunmadıysa kasanın bugünkü bakiyesi).
 typedef CashPotFormResult = ({
   String name,
   String? goalId,
-  double initialAmount
+  double initialAmount,
+  double? balance,
 });
 
 class CashPotFormSheet extends StatefulWidget {
@@ -374,6 +388,10 @@ class _CashPotFormSheetState extends State<CashPotFormSheet> {
   late final _nameController =
       TextEditingController(text: widget.potToEdit?.name ?? '');
   final _amountController = TextEditingController();
+  late final _balanceController = TextEditingController(
+      text: widget.potToEdit == null
+          ? ''
+          : formatAmountForInput(widget.potToEdit!.amount));
   late String? _goalId =
       _validGoal(widget.potToEdit?.goalId ?? widget.initialGoalId);
   String? _error;
@@ -388,6 +406,7 @@ class _CashPotFormSheetState extends State<CashPotFormSheet> {
   void dispose() {
     _nameController.dispose();
     _amountController.dispose();
+    _balanceController.dispose();
     super.dispose();
   }
 
@@ -398,14 +417,26 @@ class _CashPotFormSheetState extends State<CashPotFormSheet> {
       return;
     }
     final text = _amountController.text.trim();
-    final amount = widget.fixedAmount ??
-        (text.isEmpty ? 0.0 : parseAmountInput(text));
+    final amount =
+        widget.fixedAmount ?? (text.isEmpty ? 0.0 : parseAmountInput(text));
     if (amount == null || amount < 0) {
       setState(() => _error = context.l10n.gecerliTutarGirin);
       return;
     }
-    Navigator.of(context)
-        .pop((name: name, goalId: _goalId, initialAmount: amount));
+    double? balance;
+    if (_isEdit) {
+      balance = parseAmountInput(_balanceController.text.trim());
+      if (balance == null || balance < 0) {
+        setState(() => _error = context.l10n.gecerliTutarGirin);
+        return;
+      }
+    }
+    Navigator.of(context).pop((
+      name: name,
+      goalId: _goalId,
+      initialAmount: amount,
+      balance: balance,
+    ));
   }
 
   @override
@@ -436,9 +467,8 @@ class _CashPotFormSheetState extends State<CashPotFormSheet> {
         if (!_isEdit && widget.fixedAmount != null) ...[
           const SizedBox(height: 12),
           Text(
-            context.l10n.kasaAcilisSatirdan(
-                MoneyWriter(currency: widget.currency, visible: true)(
-                    widget.fixedAmount!)),
+            context.l10n.kasaAcilisSatirdan(MoneyWriter(
+                currency: widget.currency, visible: true)(widget.fixedAmount!)),
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],
@@ -452,6 +482,23 @@ class _CashPotFormSheetState extends State<CashPotFormSheet> {
             decoration: InputDecoration(
               labelText: l10n.kasaAcilisTutari,
               helperText: l10n.kasaAcilisTutariYardim,
+              suffixText: widget.currency,
+              border: const OutlineInputBorder(),
+            ),
+            onChanged: (_) => setState(() => _error = null),
+          ),
+        ],
+        if (_isEdit) ...[
+          const SizedBox(height: 12),
+          TextField(
+            key: const ValueKey('cash-pot-balance'),
+            controller: _balanceController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [AmountInputFormatter()],
+            decoration: InputDecoration(
+              labelText: l10n.kasaBakiyeDuzelt,
+              helperText: l10n.kasaBakiyeDuzeltYardim,
+              helperMaxLines: 3,
               suffixText: widget.currency,
               border: const OutlineInputBorder(),
             ),

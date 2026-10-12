@@ -3809,5 +3809,39 @@
         "type": "String"
       }
     }
-  }
+  },
+  "portfoyVarligaGore": "By asset",
+  "portfoyTureGore": "By type",
+  "portfoyToplam": "Total",
+  "portfoyDiger": "Other",
+  "portfoyTurAltin": "Gold",
+  "portfoyTurHisse": "Stocks",
+  "portfoyTurOzel": "Custom",
+  "portfoyTurNakit": "Cash",
+  "portfoyTumunuGoster": "Show all ({count})",
+  "@portfoyTumunuGoster": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "portfoyDahaAzGoster": "Show less",
+  "birikimSirala": "Sort",
+  "birikimSiralaDeger": "Value",
+  "birikimSiralaTarih": "Date",
+  "birikimSiralaAd": "Name",
+  "kasaBakiyeDuzelt": "Balance",
+  "kasaBakiyeDuzeltYardim": "Only corrects the figure; the wallet and ledger are untouched. To move money use Add / Withdraw.",
+  "lotFiyatiAlis": "Price per lot (buy)",
+  "lotFiyatiAciklama": "Lots × price per lot fills the total cost. If you type the total, the price per lot is derived from it.",
+  "katkiBirimFiyatHint": "Buy price (per {unit})",
+  "@katkiBirimFiyatHint": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "katkiBirimFiyatGenel": "Buy price per unit"
 }

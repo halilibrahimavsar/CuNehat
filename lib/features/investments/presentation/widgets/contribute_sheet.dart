@@ -7,6 +7,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/ledge
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/investments/domain/contribution_calculator.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
@@ -132,6 +133,12 @@ class _ContributeSheetState extends State<ContributeSheet> {
   /// kullanıcı girişinde kalkar.)
   bool _paidEdited = false;
 
+  /// Birim (lot/gram) ALIŞ fiyatı: miktar × birim fiyat ödenen tutarı
+  /// doldurur. Saklanmaz. `true` iken ödenen tutarı o belirler; miktar
+  /// değişince tutar yeniden çarpılır.
+  final _unitPriceController = TextEditingController();
+  bool _unitDriven = false;
+
   /// Katkının ödemesi defterde ZATEN duruyorsa o satır (ekstreden gelen
   /// "MIDAS MENKUL DEGERLER −5.000"): tutar ondan gelir ve kilitlenir, yeni
   /// gider yazılmaz — eskiden aynı para iki kez düşüyordu.
@@ -196,6 +203,7 @@ class _ContributeSheetState extends State<ContributeSheet> {
   void dispose() {
     _amountController.dispose();
     _quantityController.dispose();
+    _unitPriceController.dispose();
     super.dispose();
   }
 
@@ -203,6 +211,24 @@ class _ContributeSheetState extends State<ContributeSheet> {
 
   /// Sheet'teki her tutar cüzdanın biriminde yazılır.
   String _money(double v) => formatMoney(v, currency: widget.walletCurrency);
+
+  /// Ödenen = miktar × birim fiyat (kullanıcının yazdığı alış fiyatı).
+  void _applyUnitPrice() {
+    if (_ledgerTx != null) return;
+    final qty = _parsedQuantity;
+    final unit = parseAmountInput(_unitPriceController.text);
+    if (qty == null || qty <= 0 || unit == null || unit <= 0) return;
+    _amountController.text = _fmt(roundToCents(qty * unit));
+  }
+
+  /// Birim fiyat = ödenen / miktar (bilgi; ödenen elle ya da öneriyle geldi).
+  void _syncUnitFromPaid() {
+    final qty = _parsedQuantity;
+    final paid = _parsedAmount;
+    if (qty == null || qty <= 0 || paid == null || paid <= 0) return;
+    _unitPriceController.text =
+        formatAmountForInput(paid / qty, decimalDigits: 4);
+  }
 
   /// Miktar kipinde ödenen tutarı güncel fiyattan önerir. Kullanıcı alana
   /// dokunduysa dokunulmaz: "hediye" için alan bilerek boş bırakılabilir.
@@ -238,6 +264,7 @@ class _ContributeSheetState extends State<ContributeSheet> {
         _livePrice = quote.convertedPrice;
         _liveCurrency = quote.currency;
         _suggestPaid();
+        if (!_unitDriven) _syncUnitFromPaid();
         setState(() {
           _priceMessage = quote.isSameCurrency
               ? context.l10n.guncelFiyatFormat(
@@ -343,6 +370,9 @@ class _ContributeSheetState extends State<ContributeSheet> {
     setState(() {
       _ledgerTx = picked;
       _amountController.text = _fmt(picked.amount);
+      // Tutar satırdan kilitlendi: birim fiyat ondan türeyen bilgidir.
+      _unitDriven = false;
+      _syncUnitFromPaid();
       _error = null;
     });
   }
@@ -700,11 +730,40 @@ class _ContributeSheetState extends State<ContributeSheet> {
           ),
           onChanged: (_) => setState(() {
             _error = null;
-            _suggestPaid();
+            if (_unitDriven) {
+              _applyUnitPrice();
+            } else {
+              _suggestPaid();
+              _syncUnitFromPaid();
+            }
           }),
         ),
         const SizedBox(height: 12),
         _buildFetchButton(accent),
+        const SizedBox(height: 12),
+        // Aracı kurum lot ve lot fiyatı verir, toplamı değil.
+        TextField(
+          key: const ValueKey('contribute-unit-price'),
+          controller: _unitPriceController,
+          readOnly: _ledgerTx != null,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [AmountInputFormatter(decimalDigits: 4)],
+          decoration: _inputDecoration(
+            cs,
+            accent,
+            hint: unit != null
+                ? context.l10n.katkiBirimFiyatHint(unit)
+                : context.l10n.katkiBirimFiyatGenel,
+            icon: Icons.sell_outlined,
+          ),
+          onChanged: (_) => setState(() {
+            _error = null;
+            _unitDriven = true;
+            // Tutarı kullanıcı belirledi: canlı fiyat önerisi artık ezmesin.
+            _paidEdited = true;
+            _applyUnitPrice();
+          }),
+        ),
         const SizedBox(height: 12),
         TextField(
           controller: _amountController,
@@ -719,7 +778,9 @@ class _ContributeSheetState extends State<ContributeSheet> {
           ),
           onChanged: (_) => setState(() {
             _paidEdited = true;
+            _unitDriven = false;
             _error = null;
+            _syncUnitFromPaid();
           }),
         ),
         const SizedBox(height: 8),
