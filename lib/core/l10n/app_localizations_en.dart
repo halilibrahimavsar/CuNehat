@@ -6874,4 +6874,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kkGecisAyrintilar => 'Details';
+
+  @override
+  String get txKategoriSec => 'Pick a category';
+
+  @override
+  String get transferKaldirildiKategorisiz =>
+      'The row has no category. Edit the transaction to pick one.';
 }

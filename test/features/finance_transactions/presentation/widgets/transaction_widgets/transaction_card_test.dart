@@ -251,6 +251,26 @@ void main() {
     expect(find.textContaining('ödeme'), findsNothing);
   });
 
+  testWidgets('kategorisiz satır boş çip değil "Kategori seç" gösterir',
+      (tester) async {
+    // Transfer bağı kaldırılmış ekstre satırı düz kayda döner ama kategorisi
+    // yoktur; eskiden çip boş çiziliyor, eksiklik görünmüyordu.
+    final tx = createTx(isSystem: false, id: 'no-cat').copyWith(tag: '');
+    when(() => mockTransactionBloc.state).thenReturn(TransactionLoaded(
+      groupedTransactions: {
+        testDate: [tx]
+      },
+      allTransactions: [tx],
+    ));
+
+    await tester.pumpWidget(buildTestableWidget(TransactionCard(
+      item: TransactionWithBalance(transaction: tx, balanceAfter: 0),
+    )));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Kategori seç'), findsOneWidget);
+  });
+
   testWidgets('renders TransactionCard with correct details',
       (WidgetTester tester) async {
     final tx = createTx(isSystem: false, id: 'tx_123');

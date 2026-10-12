@@ -6825,4 +6825,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get kkGecisAyrintilar => 'Ayrıntılar';
+
+  @override
+  String get txKategoriSec => 'Kategori seç';
+
+  @override
+  String get transferKaldirildiKategorisiz =>
+      'Satır kategorisiz kaldı. İşlemi düzenleyerek kategorisini seçebilirsin.';
 }

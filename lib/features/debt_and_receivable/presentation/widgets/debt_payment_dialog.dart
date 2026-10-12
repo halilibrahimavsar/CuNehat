@@ -847,39 +847,35 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                 // Yanlış girilen bir ödemenin tek çıkış yolu, borcun tamamını
                 // silmekti: deftere yazılan karşılığı sistem işlemi olduğu
                 // için işlemler sayfasından da silinemiyordu.
-                PopupMenuButton<String>(
+                // Satır içi İKİ düğme. Eskiden burada bir açılır menü
+                // vardı (uygulamadaki son açılır menü): diyalogun üstüne
+                // alt sayfa açmak iki katmanlı modal olurdu, o yüzden eylem
+                // sayfasına da taşınamıyordu. İki eylem için menü gereksiz —
+                // doğrudan düğme bir dokunuş kısaltır. Silme onay sorar.
+                IconButton(
+                  key: ValueKey('payment-edit-${payment.id}'),
+                  tooltip: context.l10n.duzenle,
+                  visualDensity: VisualDensity.compact,
+                  constraints:
+                      const BoxConstraints(minWidth: 40, minHeight: 40),
                   padding: EdgeInsets.zero,
-                  icon: const Icon(Icons.more_vert_rounded, size: 18),
-                  onSelected: (v) => v == 'edit'
-                      ? _editPayment(payment)
-                      : _deletePayment(payment),
-                  itemBuilder: (_) => [
-                    PopupMenuItem(
-                      value: 'edit',
-                      // Benimsenmiş ödemenin tutarı/tarihi bankanın
-                      // satırından gelir (bloc da reddeder).
-                      enabled: !adopted,
-                      child: Row(
-                        children: [
-                          const Icon(Icons.edit,
-                              size: 18, color: Colors.blueGrey),
-                          const SizedBox(width: 8),
-                          Text(context.l10n.duzenle),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.delete, size: 18, color: Colors.red),
-                          const SizedBox(width: 8),
-                          Text(context.l10n.sil,
-                              style: const TextStyle(color: Colors.red)),
-                        ],
-                      ),
-                    ),
-                  ],
+                  iconSize: 18,
+                  // Benimsenmiş ödemenin tutarı/tarihi bankanın satırından
+                  // gelir (bloc da reddeder).
+                  onPressed: adopted ? null : () => _editPayment(payment),
+                  icon: const Icon(Icons.edit_rounded),
+                ),
+                IconButton(
+                  key: ValueKey('payment-delete-${payment.id}'),
+                  tooltip: context.l10n.sil,
+                  visualDensity: VisualDensity.compact,
+                  constraints:
+                      const BoxConstraints(minWidth: 40, minHeight: 40),
+                  padding: EdgeInsets.zero,
+                  iconSize: 18,
+                  color: Theme.of(context).colorScheme.error,
+                  onPressed: () => _deletePayment(payment),
+                  icon: const Icon(Icons.delete_outline_rounded),
                 ),
               ],
             ),

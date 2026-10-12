@@ -2133,7 +2133,9 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
         ),
         Expanded(
           child: Center(
-            child: Padding(
+            // Kaydırılabilir: bağlama önerisi ve taksit notu eklenince içerik
+            // küçük ekranda ortalanan sütuna sığmayabilir.
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -2202,9 +2204,40 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
-                      child: _categoryControl(context, _step, d),
+                      // Transfer olarak işaretli satırın kategorisi olmaz
+                      // (liste görünümüyle aynı kural). Eskiden bu görünüm
+                      // işaretli satırda da "Kategori seç" gösteriyordu.
+                      child: d.isTransfer
+                          ? _transferChip(context, _step, d)
+                          : _categoryControl(context, _step, d),
                     ),
                   ),
+                  // Liste görünümündeki bağlama önerisi burada YOKTU: kart
+                  // ödemesi satırına adım adım gelen kullanıcı anlamsız bir
+                  // kategori seçmek zorunda kalıyordu.
+                  if (!d.isTransfer && !d.isDuplicate)
+                    if (_transferHintOf(d) case final hint?)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: _transferSuggestion(context, _step, d, hint),
+                      ),
+                  if ((d.installment?.remaining ?? 0) > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        context.l10n.bankImportInstallmentNote(
+                          d.installment!.remaining,
+                          AppFormatters.dateShort.format(
+                              d.installment!.dateOf(d.installment!.count)),
+                        ),
+                        key: ValueKey('review-installment-note-$_step'),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ),
                   if (d.isDuplicate) ...[
                     const SizedBox(height: 8),
                     _duplicatePanel(_step, d),

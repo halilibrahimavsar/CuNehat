@@ -1,3 +1,14 @@
+import '../../support/wallet_category_stub.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_picker_sheet.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
+import 'package:cunehat/core/services/transfer_service.dart';
+import 'package:cunehat/core/services/recent_categories_service.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'dart:async';
 
 import 'package:cunehat/config/di/injection.dart';
@@ -431,8 +442,8 @@ void main() {
       dateAdded: DateTime(2026, 9, 1),
     );
 
-    setUpAll(() => registerFallbackValue(
-        GetInvestmentsEvent(userId: 'u', walletId: 'w')));
+    setUpAll(() =>
+        registerFallbackValue(GetInvestmentsEvent(userId: 'u', walletId: 'w')));
     tearDown(() async => getIt.reset());
 
     Future<_MockInvestmentBloc> start(
@@ -473,9 +484,9 @@ void main() {
             that: isA<UpdateInvestmentEvent>()
                 .having((e) => e.investment.currentValue, 'bakiye', 1250.0)
                 .having((e) => e.newAmount - e.prevAmount, 'fark', 250.0)
-                .having((e) => e.cashSource, 'kaynak',
-                    isA<AdoptedCashMovement>()),
-          ))).called(1);      // Sonuç bekçisinin zaman aşımı sayacı kapanmalı.
+                .having(
+                    (e) => e.cashSource, 'kaynak', isA<AdoptedCashMovement>()),
+          ))).called(1); // Sonuç bekçisinin zaman aşımı sayacı kapanmalı.
       await tester.pump(const Duration(minutes: 2));
     });
 
@@ -495,10 +506,186 @@ void main() {
                 .having((e) => e.investment.type, 'tür', InvestmentType.cash)
                 .having((e) => e.investment.amount, 'tutar', 250.0)
                 .having((e) => e.investment.name, 'ad', 'Tatil')
-                .having((e) => e.cashSource, 'kaynak',
-                    isA<AdoptedCashMovement>()),
-          ))).called(1);      // Sonuç bekçisinin zaman aşımı sayacı kapanmalı.
+                .having(
+                    (e) => e.cashSource, 'kaynak', isA<AdoptedCashMovement>()),
+          ))).called(1); // Sonuç bekçisinin zaman aşımı sayacı kapanmalı.
       await tester.pump(const Duration(minutes: 2));
     });
   });
+
+  // Dünkü plan B5: bağı kaldırılan satır kategorisiz kalmasın.
+  group('transfer bağını kaldır → kategorisiz kalan satıra kategori sorulur',
+      () {
+    late _MockTransferService transfers;
+    late _MockMetrics metrics;
+    late _MockTransactionBloc bloc;
+    late _MockCategoryRepo categories;
+
+    // Ekstreden gelip "karta ödeme" diye bağlanmış satır: benimsenmiş,
+    // özgün kategorisi YOK (incelemede hiç kategori seçilmedi).
+    final adoptedNoCategory = _tx(
+      'leg-bank',
+      isSystem: true,
+      tag: CashMovementTags.transfer,
+      linkedRecordId: 'pair-1',
+      adoptedFromTag: '',
+    );
+    final writtenLeg = _tx(
+      'leg-card',
+      walletId: 'card',
+      income: true,
+      isSystem: true,
+      tag: CashMovementTags.transfer,
+      linkedRecordId: 'pair-1',
+    );
+
+    setUpAll(() {
+      registerFallbackValue(const ChangeTransactionsCategoryEvent(
+          transactions: [], categoryId: 'x'));
+    });
+
+    setUp(() async {
+      getIt.allowReassignment = true;
+      transfers = _MockTransferService();
+      metrics = _MockMetrics();
+      bloc = _MockTransactionBloc();
+      // Akış, kapanmış bir bloc'a olay göndermemek için bunu sorar.
+      when(() => bloc.isClosed).thenReturn(false);
+      categories = _MockCategoryRepo();
+      when(() => transfers.unlinkTransfer(any())).thenAnswer((_) async => true);
+      when(() => categories.getCategories(any()))
+          .thenAnswer((_) async => const [
+                CategoryEntity(
+                    id: 'cat-market',
+                    name: 'Market',
+                    iconName: 'category',
+                    isExpense: true),
+              ]);
+      getIt.registerSingleton<TransferService>(transfers);
+      getIt.registerSingleton<WalletMetricsService>(metrics);
+      getIt.registerSingleton<CategoryRepository>(categories);
+      registerUncuratedWalletCategories(categories);
+      SharedPreferences.setMockInitialValues({});
+      getIt.registerSingleton<RecentCategoriesService>(
+          RecentCategoriesService(await SharedPreferences.getInstance()));
+    });
+
+    tearDown(() async => getIt.reset());
+
+    void legs(List<TransactionEntity> rows) =>
+        when(() => metrics.linkedMovements(recordIds: {'pair-1'}))
+            .thenAnswer((_) async => rows);
+
+    Future<void> removeLink(WidgetTester tester, TransactionEntity leg) async {
+      tester.view.physicalSize = const Size(800, 1400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(BlocProvider<TransactionBloc>.value(
+        value: bloc,
+        child: MaterialApp(
+          scaffoldMessengerKey: appMessengerKey,
+          locale: const Locale('tr'),
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () => confirmAndRemoveTransfer(context, leg),
+                child: const Text('kaldır'),
+              ),
+            ),
+          ),
+        ),
+      ));
+      await tester.tap(find.text('kaldır'));
+      await tester.pumpAndSettle();
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      await tester.tap(find.widgetWithText(FilledButton, l10n.transferiKaldir));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets(
+        'kategorisi olmayan benimsenmiş bacak: seçici açılır, seçim '
+        'serbest bırakılmış satıra yazılır', (tester) async {
+      legs([adoptedNoCategory, writtenLeg]);
+      await removeLink(tester, adoptedNoCategory);
+
+      verify(() => transfers.unlinkTransfer('pair-1')).called(1);
+      expect(find.byType(CategoryPickerSheet), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('category-pick-cat-market')));
+      await tester.pumpAndSettle();
+
+      final event = verify(() => bloc.add(captureAny()))
+          .captured
+          .whereType<ChangeTransactionsCategoryEvent>()
+          .single;
+      expect(event.categoryId, 'cat-market');
+      final row = event.transactions.single;
+      expect(row.id, 'leg-bank');
+      // Serbest bırakılmış hâli: artık sistem satırı değil, bağı ve
+      // benimseme izi yok — toplu kategori yolu onu ATLAMAZ.
+      expect(row.isSystem, isFalse);
+      expect(row.isAdopted, isFalse);
+      expect(row.linkedRecordId, isNull);
+      expect(row.tag, isEmpty);
+    });
+
+    testWidgets('seçiciden vazgeçilirse satırın kategorisiz kaldığı söylenir',
+        (tester) async {
+      legs([adoptedNoCategory, writtenLeg]);
+      await removeLink(tester, adoptedNoCategory);
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CategoryPickerSheet), findsNothing);
+      expect(find.text(l10n.transferKaldirildiKategorisiz), findsOneWidget);
+      verifyNever(
+          () => bloc.add(any(that: isA<ChangeTransactionsCategoryEvent>())));
+    });
+
+    testWidgets(
+        'özgün kategorisi OLAN bacakta seçici açılmaz (kategori geri '
+        'gelir)', (tester) async {
+      legs([
+        _tx('leg-bank',
+            isSystem: true,
+            tag: CashMovementTags.transfer,
+            linkedRecordId: 'pair-1',
+            adoptedFromTag: 'cat-market'),
+        writtenLeg,
+      ]);
+      await removeLink(tester, adoptedNoCategory);
+
+      verify(() => transfers.unlinkTransfer('pair-1')).called(1);
+      expect(find.byType(CategoryPickerSheet), findsNothing);
+    });
+
+    testWidgets('kaldırma başarısızsa kategori sorulmaz', (tester) async {
+      legs([adoptedNoCategory, writtenLeg]);
+      when(() => transfers.unlinkTransfer(any()))
+          .thenAnswer((_) async => false);
+      await removeLink(tester, adoptedNoCategory);
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+
+      expect(find.byType(CategoryPickerSheet), findsNothing);
+      expect(find.text(l10n.transferKaldirilamadi), findsOneWidget);
+    });
+  });
 }
+
+class _MockTransferService extends Mock implements TransferService {}
+
+class _MockMetrics extends Mock implements WalletMetricsService {}
+
+class _MockTransactionBloc extends MockBloc<TransactionEvent, TransactionState>
+    implements TransactionBloc {}
+
+class _MockCategoryRepo extends Mock implements CategoryRepository {}

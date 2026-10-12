@@ -175,8 +175,7 @@ class TransactionCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       onTap: selecting ? toggle : () => _openDetail(context),
-      onLongPress:
-          selecting ? toggle : () => _showActionSheet(context, accent),
+      onLongPress: selecting ? toggle : () => _showActionSheet(context, accent),
       // Satır yazı ölçeğine duyarlı olmalı: ölçek 2.0'da "−18.500,00 ₺"
       // 17px yerine 34px çiziliyor ve başlık sütununu 40dp'ye düşürüp satırı
       // 24px taşırıyordu (ölçüldü). Tutar artık satırın en çok [_amountShare]
@@ -266,26 +265,34 @@ class TransactionCard extends StatelessWidget {
                       final meta = payment ??
                           (wide ? AppFormatters.time.format(t.date) : '');
                       return Row(
-                      children: [
-                        if (t.tag.isNotEmpty)
-                          _categoryChip(context, accent, t.tag),
-                        if (meta.isNotEmpty) ...[
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              meta,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: scheme.onSurfaceVariant
-                                    .withValues(alpha: 0.7),
-                                fontSize: 11,
+                        children: [
+                          if (t.tag.isNotEmpty)
+                            _categoryChip(context, accent, t.tag)
+                          // Kategorisiz düz satır: çip HİÇ çizilmiyordu,
+                          // eksiklik görünmüyordu. Uyarı tonunda çağrı.
+                          else if (!t.isSystem)
+                            _categoryChip(
+                              context,
+                              Theme.of(context).colorScheme.error,
+                              t.tag,
+                            ),
+                          if (meta.isNotEmpty) ...[
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                meta,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: scheme.onSurfaceVariant
+                                      .withValues(alpha: 0.7),
+                                  fontSize: 11,
+                                ),
                               ),
                             ),
-                          ),
+                          ],
                         ],
-                      ],
-                    );
+                      );
                     },
                   ),
                 ],
@@ -359,7 +366,11 @@ class TransactionCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(6),
         ),
         child: Text(
-          categoryLabel ?? context.translateSystemTag(tag),
+          // Kategorisiz satır (ör. transfer bağı kaldırılmış ekstre satırı)
+          // BOŞ bir çip çiziyordu: eksik olduğu görünmüyordu.
+          tag.isEmpty
+              ? context.l10n.txKategoriSec
+              : categoryLabel ?? context.translateSystemTag(tag),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(

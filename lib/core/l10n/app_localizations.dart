@@ -11740,6 +11740,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Ayrıntılar'**
   String get kkGecisAyrintilar;
+
+  /// No description provided for @txKategoriSec.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori seç'**
+  String get txKategoriSec;
+
+  /// No description provided for @transferKaldirildiKategorisiz.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satır kategorisiz kaldı. İşlemi düzenleyerek kategorisini seçebilirsin.'**
+  String get transferKaldirildiKategorisiz;
 }
 
 class _AppLocalizationsDelegate

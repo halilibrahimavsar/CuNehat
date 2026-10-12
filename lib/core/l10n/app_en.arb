@@ -4022,5 +4022,7 @@
   "kkGecisBaslik": "Account and its cards",
   "kkGecisAciklama": "Choose what you are looking at: the account itself or one of its cards.",
   "kkGecisHesap": "Account",
-  "kkGecisAyrintilar": "Details"
+  "kkGecisAyrintilar": "Details",
+  "txKategoriSec": "Pick a category",
+  "transferKaldirildiKategorisiz": "The row has no category. Edit the transaction to pick one."
 }

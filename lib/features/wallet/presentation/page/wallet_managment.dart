@@ -547,18 +547,44 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
 
     final action =
         await WalletQuickStartSheet.show(context, walletName: walletName);
-    if (action == null || !context.mounted) return;
+    if (!context.mounted) return;
 
-    switch (action) {
-      case WalletQuickStartAction.importStatement:
+    switch (quickStartNext(action, firstWalletFlow: widget.createOnOpen)) {
+      case QuickStartNext.importStatement:
         // BankImportPage aktif cüzdanı varsayılan seçer; CreateWalletEvent
         // yeni cüzdanı zaten aktif yaptığı için ek parametre gerekmez.
         _openBankImport(context);
-      case WalletQuickStartAction.addTransaction:
+      case QuickStartNext.addTransactionOnPage:
         _openFirstTransactionSheet(context);
-      case WalletQuickStartAction.skip:
+      case QuickStartNext.closePageThenAddTransaction:
+        _closeThenAddFirstTransaction(context);
+      case QuickStartNext.closePage:
+        Navigator.of(context).pop();
+      case QuickStartNext.stay:
         break;
     }
+  }
+
+  /// İlk cüzdan zincirinin sonu: cüzdan sayfası kapanır, ilk işlem formu
+  /// KABUĞUN bağlamından açılır.
+  ///
+  /// Form bu sayfanın üstünde açılsaydı sayfayı kapatmak formu da (ve
+  /// State'e ait hızlı-başlangıç bloc'larını) götürürdü. Kabukta ise defter
+  /// ve düzenli işlem bloc'ları uygulama düzeyinde sağlanır (`AppProviders`):
+  /// kayıt doğrudan ana sayfanın defterine düşer.
+  void _closeThenAddFirstTransaction(BuildContext context) {
+    final state = context.read<WalletBloc>().state;
+    final wallet = state is WalletLoadedSt ? state.activeWallet : null;
+    final navigator = Navigator.of(context);
+    final host = navigator.context;
+    navigator.pop();
+    if (wallet?.id == null) return;
+    TransactionSheetHandler.showSheet(
+      context: host,
+      userId: widget.userId,
+      walletId: wallet!.id!,
+      type: TransactionTypeModel.expense,
+    );
   }
 
   /// İlk işlem sheet'ini cüzdan yönetimi üstünde açar.

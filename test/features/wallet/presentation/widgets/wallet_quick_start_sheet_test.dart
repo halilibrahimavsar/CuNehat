@@ -61,4 +61,39 @@ void main() {
     expect(closed, isTrue);
     expect(result, WalletQuickStartAction.skip);
   });
+
+  group('quickStartNext — zincir bitince cüzdan sayfası ne yapar', () {
+    test('İLK CÜZDAN akışı: her yol sayfayı kapatır', () {
+      // Eskiden "atla" ve "işlem ekle" boş bir yönetim sayfasında bırakıyor,
+      // kullanıcı onu ayrıca kapatıyordu.
+      expect(quickStartNext(WalletQuickStartAction.skip, firstWalletFlow: true),
+          QuickStartNext.closePage);
+      expect(
+          quickStartNext(null, firstWalletFlow: true), QuickStartNext.closePage,
+          reason: 'sayfayı aşağı çekip kapatmak da "atla"dır');
+      expect(
+          quickStartNext(WalletQuickStartAction.addTransaction,
+              firstWalletFlow: true),
+          QuickStartNext.closePageThenAddTransaction);
+      expect(
+          quickStartNext(WalletQuickStartAction.importStatement,
+              firstWalletFlow: true),
+          QuickStartNext.importStatement);
+    });
+
+    test('olağan "yeni cüzdan" akışı: sayfa açık kalır (davranış aynı)', () {
+      expect(
+          quickStartNext(WalletQuickStartAction.skip, firstWalletFlow: false),
+          QuickStartNext.stay);
+      expect(quickStartNext(null, firstWalletFlow: false), QuickStartNext.stay);
+      expect(
+          quickStartNext(WalletQuickStartAction.addTransaction,
+              firstWalletFlow: false),
+          QuickStartNext.addTransactionOnPage);
+      expect(
+          quickStartNext(WalletQuickStartAction.importStatement,
+              firstWalletFlow: false),
+          QuickStartNext.importStatement);
+    });
+  });
 }

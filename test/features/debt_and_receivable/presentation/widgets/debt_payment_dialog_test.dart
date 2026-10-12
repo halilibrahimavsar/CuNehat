@@ -1,3 +1,4 @@
+import 'package:cunehat/features/debt_and_receivable/presentation/widgets/payment_edit_dialog.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
@@ -237,5 +238,108 @@ void main() {
     expect(event.paymentDate, DateTime(2026, 3, 15));
     expect(event.cashSource, isA<AdoptedCashMovement>());
     expect((event.cashSource as AdoptedCashMovement).transaction.id, 'row-3');
+  });
+
+  group('geçmiş ödeme satırı: satır içi düzenle / sil (açılır menü YOK)', () {
+    final payment = Payment(
+      id: 'p1',
+      date: DateTime(2026, 2, 10),
+      amount: 300,
+    );
+    final paidDebt = testDebt.copyWith(payments: [payment]);
+
+    Future<void> open(WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(BlocProvider<DebtBloc>.value(
+        value: mockDebtBloc,
+        child: MaterialApp(
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('tr'), Locale('en')],
+          locale: const Locale('tr'),
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () =>
+                    DebtPaymentDialog.show(context, paidDebt, currency: 'TRY'),
+                child: const Text('Aç'),
+              ),
+            ),
+          ),
+        ),
+      ));
+      await tester.tap(find.text('Aç'));
+      await tester.pumpAndSettle();
+      // Ödeme geçmişi katlanır bir bölümde: önce açılır.
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      final history = find.text(l10n.odemeGecmisiFormat(1));
+      await tester.ensureVisible(history);
+      await tester.tap(history);
+      await tester.pumpAndSettle();
+    }
+
+    final edit = find.byKey(const ValueKey('payment-edit-p1'));
+    final delete = find.byKey(const ValueKey('payment-delete-p1'));
+
+    testWidgets('iki eylem de satırda, doğrudan dokunulur', (tester) async {
+      await open(tester);
+
+      expect(edit, findsOneWidget);
+      expect(delete, findsOneWidget);
+      expect(find.byType(PopupMenuButton<String>), findsNothing);
+      expect(find.byIcon(Icons.more_vert_rounded), findsNothing);
+      expect(tester.getSize(edit).width, greaterThanOrEqualTo(40));
+      expect(tester.getSize(delete).height, greaterThanOrEqualTo(40));
+    });
+
+    testWidgets('sil ONAY sorar; vazgeçilirse hiçbir şey gönderilmez',
+        (tester) async {
+      await open(tester);
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+
+      await tester.ensureVisible(delete);
+      await tester.tap(delete);
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.odemeSilBaslik), findsOneWidget);
+
+      await tester.tap(find.text(l10n.iptal).last);
+      await tester.pumpAndSettle();
+      verifyNever(
+          () => mockDebtBloc.add(any(that: isA<DeleteDebtPaymentEvent>())));
+    });
+
+    testWidgets('onaylanınca ödeme silme olayı gönderilir', (tester) async {
+      await open(tester);
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+
+      await tester.ensureVisible(delete);
+      await tester.tap(delete);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, l10n.sil));
+      await tester.pumpAndSettle();
+
+      final event = verify(() =>
+              mockDebtBloc.add(captureAny(that: isA<DeleteDebtPaymentEvent>())))
+          .captured
+          .single as DeleteDebtPaymentEvent;
+      expect(event.removedPaymentId, 'p1');
+      expect(event.removedAmount, 300);
+    });
+
+    testWidgets('düzenle ödeme düzenleme diyaloğunu açar', (tester) async {
+      await open(tester);
+
+      await tester.ensureVisible(edit);
+      await tester.tap(edit);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PaymentEditDialog), findsOneWidget);
+    });
   });
 }

@@ -22,6 +22,45 @@ enum WalletQuickStartAction {
 /// kullanıcı cüzdanı yeni kurmuşken önerilir.
 ///
 /// Yalnız YENİ cüzdanda gösterilir — düzenlemede değil.
+/// Hızlı başlangıç kapandıktan sonra cüzdan sayfasının yapacağı şey.
+enum QuickStartNext {
+  /// Hiçbir şey: cüzdan sayfası açık kalır (olağan "yeni cüzdan" akışı).
+  stay,
+
+  /// Cüzdan sayfasını kapat.
+  closePage,
+
+  /// Cüzdan sayfasını kapat, sonra ilk işlem formunu KABUKTAN aç.
+  closePageThenAddTransaction,
+
+  /// İlk işlem formunu cüzdan sayfasının üstünde aç.
+  addTransactionOnPage,
+
+  /// Ekstre içe aktarmaya git (sayfa zaten kapanır).
+  importStatement,
+}
+
+/// [action] (vazgeçildiyse `null`) ve akışın türüne göre sıradaki adım.
+///
+/// [firstWalletFlow]: sayfa "İlk Cüzdanı Oluştur"dan, yalnız bu zincir için
+/// açıldı. O zaman zincir bitince sayfa KAPANIR: kullanıcı cüzdanını kurdu,
+/// cüzdan yönetiminde yapacak bir işi kalmadı — eskiden boş bir yönetim
+/// sayfasında kalıyor, onu da ayrıca kapatması gerekiyordu. Üst çubuktan
+/// açılan olağan sayfada davranış değişmez.
+QuickStartNext quickStartNext(
+  WalletQuickStartAction? action, {
+  required bool firstWalletFlow,
+}) =>
+    switch (action) {
+      WalletQuickStartAction.importStatement => QuickStartNext.importStatement,
+      WalletQuickStartAction.addTransaction => firstWalletFlow
+          ? QuickStartNext.closePageThenAddTransaction
+          : QuickStartNext.addTransactionOnPage,
+      WalletQuickStartAction.skip ||
+      null =>
+        firstWalletFlow ? QuickStartNext.closePage : QuickStartNext.stay,
+    };
+
 class WalletQuickStartSheet extends StatelessWidget {
   final String walletName;
 

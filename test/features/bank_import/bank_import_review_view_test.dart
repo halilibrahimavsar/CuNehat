@@ -1890,6 +1890,80 @@ void main() {
       verify(() => cubit.setDraftTransfer(0, 'c1')).called(1);
     });
 
+    group('adım adım görünümde', () {
+      Future<void> openStepper(WidgetTester tester) async {
+        await tester.tap(find.byIcon(Icons.more_vert_rounded));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Tek tek incele'));
+        await tester.pumpAndSettle();
+      }
+
+      testWidgets('kart ödemesi satırında bağlama önerisi GÖRÜNÜR ve bağlar',
+          (tester) async {
+        // Eskiden öneri yalnız liste görünümündeydi; adım adım gelen
+        // kullanıcı ödeme satırına anlamsız bir kategori seçmek zorundaydı.
+        await pump(
+            tester, review(drafts: [payment(), _draft(description: 'B')]),
+            wallets: [bank, card, other]);
+        final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+        await openStepper(tester);
+
+        final suggestion =
+            find.byKey(const ValueKey('review-transfer-suggest-0'));
+        expect(suggestion, findsOneWidget);
+        expect(
+          find.textContaining(l10n.bankImportTransferLinkTo('Bonus'),
+              findRichText: true),
+          findsOneWidget,
+        );
+        // Kategorisiz ve bağlanmamış: "Ekle" kapalı.
+        expect(
+            tester
+                .widget<FilledButton>(find.widgetWithText(FilledButton, 'Ekle'))
+                .onPressed,
+            isNull);
+
+        await tester.tap(suggestion);
+        await tester.pumpAndSettle();
+        verify(() => cubit.setDraftTransfer(0, 'c1')).called(1);
+      });
+
+      testWidgets('bağlanmış satırda kategori kolu yerine çip; "Ekle" AÇIK',
+          (tester) async {
+        await pump(
+            tester,
+            review(
+                drafts: [payment(transferTo: 'c1'), _draft(description: 'B')]),
+            wallets: [bank, card, other]);
+        final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+        await openStepper(tester);
+
+        expect(find.text(l10n.bankImportTransferChip('Bonus')), findsOneWidget);
+        expect(find.text(l10n.bankImportPickCategoryHint), findsNothing);
+        expect(find.byKey(const ValueKey('review-transfer-suggest-0')),
+            findsNothing);
+        expect(
+            tester
+                .widget<FilledButton>(find.widgetWithText(FilledButton, 'Ekle'))
+                .onPressed,
+            isNotNull);
+      });
+
+      testWidgets('sıradan satırda öneri yok', (tester) async {
+        await pump(
+            tester,
+            review(drafts: [
+              _draft(description: 'ORNEK BUFE', categoryId: 'Market'),
+              _draft(description: 'B'),
+            ]),
+            wallets: [bank, card]);
+        await openStepper(tester);
+
+        expect(find.byKey(const ValueKey('review-transfer-suggest-0')),
+            findsNothing);
+      });
+    });
+
     testWidgets('sıradan harcama satırında bağlama önerisi yok',
         (tester) async {
       await pump(
@@ -1952,6 +2026,24 @@ void main() {
       // Yazınca beş satır daha oluşacak: sürpriz olmamalı.
       await pump(tester, review(drafts: [installment()]));
       final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+
+      expect(find.byKey(const ValueKey('review-installment-note-0')),
+          findsOneWidget);
+      expect(
+        find.text(l10n.bankImportInstallmentNote(5, '06.03.27')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('adım adım görünümde de kalan taksit notu yazar',
+        (tester) async {
+      await pump(
+          tester, review(drafts: [installment(), _draft(description: 'B')]));
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      await tester.tap(find.byIcon(Icons.more_vert_rounded));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tek tek incele'));
+      await tester.pumpAndSettle();
 
       expect(find.byKey(const ValueKey('review-installment-note-0')),
           findsOneWidget);

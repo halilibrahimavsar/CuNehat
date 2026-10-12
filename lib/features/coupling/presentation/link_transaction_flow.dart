@@ -26,6 +26,11 @@ import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'package:cunehat/core/services/cash_source.dart';
 import 'package:cunehat/core/services/transfer_service.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_picker_sheet.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
+import 'package:cunehat/core/services/wallet_metrics_service.dart';
+import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/core/utils/money_math.dart';
@@ -574,6 +579,16 @@ Future<void> confirmAndRemoveTransfer(
   final pairId = leg.linkedRecordId;
   if (pairId == null) return;
   final l10n = context.l10n;
+  // Bağ kalkınca çağıran sayfa (işlem detayı) kapanabilir: sonradan
+  // açılacak kategori seçici için kök bağlam ve bloc ŞİMDİ yakalanır.
+  final host = Navigator.of(context, rootNavigator: true).context;
+  final TransactionBloc? bloc = () {
+    try {
+      return context.read<TransactionBloc>();
+    } on ProviderNotFoundException {
+      return null;
+    }
+  }();
   final confirmed = await ConfirmDialog.show(
     context,
     title: l10n.transferiKaldir,
@@ -582,11 +597,62 @@ Future<void> confirmAndRemoveTransfer(
     danger: true,
   );
   if (!confirmed) return;
+
+  // Kaldırmadan ÖNCE: özgün kategorisi OLMAYAN benimsenmiş bacaklar. Ekstre
+  // incelemesinde "karta ödeme" diye bağlanan satıra hiç kategori
+  // seçilmemiştir; bağ kalkınca düz bir gider/gelir olarak ama KATEGORİSİZ
+  // döner — bütçe ve raporlarda hiçbir kategoriye sayılmaz ve listede boş
+  // etiketle durur.
+  final orphans = <TransactionEntity>[
+    if (getIt.isRegistered<WalletMetricsService>())
+      for (final t in await getIt<WalletMetricsService>()
+          .linkedMovements(recordIds: {pairId}))
+        if (t.isAdopted && (t.adoptedFromTag ?? '').isEmpty) t.released(),
+  ];
+
   final ok = await getIt<TransferService>().unlinkTransfer(pairId);
-  if (ok) {
-    AppMessenger.success(l10n.transferKaldirildi);
-  } else {
+  if (!ok) {
     AppMessenger.error(l10n.transferKaldirilamadi);
+    return;
+  }
+  AppMessenger.success(l10n.transferKaldirildi);
+
+  for (final orphan in orphans) {
+    if (!host.mounted) return;
+    final picked = await showCategoryPickerSheet(
+      context: host,
+      isExpense: orphan.isExpense,
+      walletId: orphan.walletId,
+    );
+    if (picked == null) {
+      // Vazgeçmek serbest; ama satırın kategorisiz kaldığı söylenir.
+      AppMessenger.info(l10n.transferKaldirildiKategorisiz);
+      continue;
+    }
+    await _assignCategory(orphan, picked.id, bloc);
+  }
+}
+
+/// Bağı kalkan satıra kategorisini yazar. Açık bir defter bloc'u varsa onun
+/// toplu kategori yolundan (liste ve dinleyiciler birlikte tazelenir), yoksa
+/// doğrudan depoya.
+Future<void> _assignCategory(
+  TransactionEntity row,
+  String categoryId,
+  TransactionBloc? bloc,
+) async {
+  if (bloc != null && !bloc.isClosed) {
+    bloc.add(ChangeTransactionsCategoryEvent(
+      transactions: [row],
+      categoryId: categoryId,
+    ));
+    return;
+  }
+  final result = await getIt<TransactionsRepository>()
+      .updateTransaction(row.copyWith(tag: categoryId));
+  if (result.isRight() && getIt.isRegistered<TransactionsChangedNotifier>()) {
+    getIt<TransactionsChangedNotifier>()
+        .notify(userId: row.userId, walletId: row.walletId);
   }
 }
 

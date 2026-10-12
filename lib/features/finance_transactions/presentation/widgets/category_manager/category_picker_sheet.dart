@@ -46,6 +46,7 @@ Future<CategoryEntity?> showCategoryPickerSheet({
   String? currentId,
   bool allowTypeSwitch = false,
   ValueChanged<CategoryEntity>? onCreated,
+  String? Function(CategoryEntity category)? lockReasonFor,
 }) {
   return showModalBottomSheet<CategoryEntity>(
     context: context,
@@ -57,6 +58,7 @@ Future<CategoryEntity?> showCategoryPickerSheet({
       currentId: currentId,
       allowTypeSwitch: allowTypeSwitch,
       onCreated: onCreated,
+      lockReasonFor: lockReasonFor,
     ),
   );
 }
@@ -68,6 +70,12 @@ class CategoryPickerSheet extends StatefulWidget {
   final bool allowTypeSwitch;
   final ValueChanged<CategoryEntity>? onCreated;
 
+  /// Bir kategori SEÇİLEMEZSE sebebi; seçilebilirse `null`. Kilitli satır
+  /// listede kalır (kullanıcı neden seçemediğini görsün) ama dokunulmaz ve
+  /// sebep satırın altına yazılır. Bütçe formu kullanır: ana kategoriye
+  /// bütçe konduysa alt kategorilerine konamaz.
+  final String? Function(CategoryEntity category)? lockReasonFor;
+
   const CategoryPickerSheet({
     super.key,
     required this.isExpense,
@@ -75,6 +83,7 @@ class CategoryPickerSheet extends StatefulWidget {
     this.currentId,
     this.allowTypeSwitch = false,
     this.onCreated,
+    this.lockReasonFor,
   });
 
   @override
@@ -147,7 +156,10 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet> {
     final byId = {for (final c in categories) c.id: c};
     final recent = <CategoryEntity>[
       for (final id in _recents.ids(_isExpense))
-        if (byId[id] != null) byId[id]!,
+        // Kilitli kategori kısayol şeridine girmez: çip yalnız "dokun ve
+        // seç" demektir, sebep yazacak yeri yoktur.
+        if (byId[id] case final c? when widget.lockReasonFor?.call(c) == null)
+          c,
     ];
 
     setState(() {
@@ -388,12 +400,23 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet> {
   }) {
     final selected = widget.currentId == category.id;
     final scheme = Theme.of(context).colorScheme;
+    final lockReason = widget.lockReasonFor?.call(category);
+    final locked = lockReason != null;
+    // Kilit sebebi kırıntının (ana kategori adı) yerine geçmez, yanına gelir.
+    final detail = [
+      if (caption != null) caption,
+      if (locked) lockReason,
+    ].join(' · ');
 
     return ListTile(
+      key: ValueKey('category-pick-${category.id}'),
+      enabled: !locked,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14),
       visualDensity: VisualDensity.compact,
       leading: Icon(
-        AppIcons.getIconData(category.iconName),
+        locked
+            ? Icons.lock_outline_rounded
+            : AppIcons.getIconData(category.iconName),
         size: 20,
         color: selected ? accent : scheme.onSurfaceVariant,
       ),
@@ -404,14 +427,14 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet> {
           color: selected ? accent : null,
         ),
       ),
-      subtitle: caption == null
+      subtitle: detail.isEmpty
           ? null
           : Text(
-              caption,
+              detail,
               style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
             ),
       trailing: selected ? Icon(Icons.check, color: accent, size: 18) : null,
-      onTap: () => _select(category),
+      onTap: locked ? null : () => _select(category),
     );
   }
 

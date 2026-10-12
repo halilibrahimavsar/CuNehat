@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_picker_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/money_format.dart';
@@ -687,42 +688,33 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
     return null;
   }
 
-  Widget _categoryItem(CategoryEntity category) {
-    final lockReason = _lockReasonFor(category);
-    final cs = Theme.of(context).colorScheme;
+  /// Seçili kategorinin görünen adı.
+  String get _selectedLabel =>
+      _categories.where((c) => c.id == _selectedCategory).firstOrNull?.name ??
+      '';
 
-    return Padding(
-      padding: EdgeInsets.only(left: category.isRoot ? 0 : 16),
-      child: Row(
-        children: [
-          if (!category.isRoot)
-            Padding(
-              padding: const EdgeInsets.only(right: 4),
-              child: Icon(Icons.subdirectory_arrow_right,
-                  size: 14, color: cs.onSurfaceVariant),
-            ),
-          Flexible(
-            child: Text(
-              category.name,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: lockReason != null ? cs.onSurfaceVariant : null,
-              ),
-            ),
-          ),
-          if (lockReason != null) ...[
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                '· $lockReason',
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
-              ),
-            ),
-          ],
-        ],
-      ),
+  /// Ortak kategori seçici (aranabilir ağaç + son kullanılanlar + "yeni
+  /// kategori"). Eskiden burada düz bir açılır liste vardı: 40 kategorili
+  /// bir cüzdanda aranamayan, kaydırılan tek sütun. Tek seviye kilidi
+  /// ([_lockReasonFor]) seçiciye taşındı — kilitli satır orada görünür ama
+  /// seçilemez.
+  Future<void> _pickCategory(FormFieldState<String> field) async {
+    final picked = await showCategoryPickerSheet(
+      context: context,
+      isExpense: true,
+      walletId: widget.walletId,
+      currentId: _selectedCategory,
+      lockReasonFor: _lockReasonFor,
+      onCreated: (_) => _loadCategories(),
     );
+    if (picked == null || !mounted) return;
+    // Az önce oluşturulan kategori, liste yeniden okunana kadar burada
+    // olmayabilir; etiketi boş kalmasın.
+    if (!_categories.any((c) => c.id == picked.id)) {
+      setState(() => _categories = [..._categories, picked]);
+    }
+    _onCategorySelected(picked.id);
+    field.didChange(picked.id);
   }
 
   void _onCategorySelected(String? value) {
@@ -777,24 +769,32 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
                   child: Text(widget.editingLabel ?? ''),
                 )
               else
-                DropdownButtonFormField<String>(
+                FormField<String>(
                   initialValue: _selectedCategory,
-                  decoration: InputDecoration(
-                    labelText: l10n.labelKategori,
-                    border: const OutlineInputBorder(),
-                  ),
-                  isExpanded: true,
-                  items: [
-                    for (final c in _categories)
-                      DropdownMenuItem(
-                        value: c.id,
-                        enabled: _lockReasonFor(c) == null,
-                        child: _categoryItem(c),
+                  validator: (_) => _selectedCategory == null
+                      ? l10n.kategoriSecmeUyarisi
+                      : null,
+                  builder: (field) => InkWell(
+                    key: const ValueKey('budget-category-field'),
+                    onTap: () => _pickCategory(field),
+                    borderRadius: BorderRadius.circular(4),
+                    child: InputDecorator(
+                      isEmpty: _selectedCategory == null,
+                      decoration: InputDecoration(
+                        labelText: l10n.labelKategori,
+                        border: const OutlineInputBorder(),
+                        errorText: field.errorText,
+                        suffixIcon: const Icon(Icons.arrow_drop_down_rounded),
                       ),
-                  ],
-                  onChanged: _onCategorySelected,
-                  validator: (value) =>
-                      value == null ? l10n.kategoriSecmeUyarisi : null,
+                      child: _selectedCategory == null
+                          ? null
+                          : Text(
+                              _selectedLabel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                    ),
+                  ),
                 ),
               if (!_isEdit && _isUpdate)
                 Padding(

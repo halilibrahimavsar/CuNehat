@@ -4256,5 +4256,7 @@
   "kkGecisBaslik": "Hesap ve kartları",
   "kkGecisAciklama": "Baktığın bağlamı seç: hesabın kendisi ya da kartlarından biri.",
   "kkGecisHesap": "Hesap",
-  "kkGecisAyrintilar": "Ayrıntılar"
+  "kkGecisAyrintilar": "Ayrıntılar",
+  "txKategoriSec": "Kategori seç",
+  "transferKaldirildiKategorisiz": "Satır kategorisiz kaldı. İşlemi düzenleyerek kategorisini seçebilirsin."
 }

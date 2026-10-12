@@ -194,12 +194,11 @@ void main() {
   // Bekçi: satır eylemleri tek dilde kalsın. Yeni bir satır menüsü
   // PopupMenuButton ile yazılırsa bu test düşer; doğru yol RowActionSheet.
   test('lib/ içinde izinli olanlar dışında açılır menü yok', () {
-    // Satır menüsü OLMAYAN iki yer: ekstre inceleme ekranının araç çubuğu
-    // taşma menüsü ve ödeme diyaloğunun İÇİNDEKİ ödeme satırı (diyalogun
-    // üstüne alt sayfa açmak iki katmanlı bir modal yaratırdı).
+    // Satır menüsü OLMAYAN tek yer: ekstre inceleme ekranının araç çubuğu
+    // taşma menüsü. (Ödeme diyaloğundaki ödeme satırı da muaftı; orada menü
+    // satır içi düzenle/sil düğmelerine döndü.)
     const allowed = {
       'lib/features/bank_import/presentation/pages/bank_import_review_view.dart',
-      'lib/features/debt_and_receivable/presentation/widgets/debt_payment_dialog.dart',
     };
     final offenders = <String>[];
     for (final entity in Directory('lib').listSync(recursive: true)) {

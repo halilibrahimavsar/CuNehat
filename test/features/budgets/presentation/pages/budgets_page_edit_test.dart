@@ -1,3 +1,6 @@
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_picker_sheet.dart';
+import 'package:cunehat/core/services/recent_categories_service.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
@@ -33,13 +36,23 @@ class _MockCategoryRepository extends Mock implements CategoryRepository {}
 class _MockWalletCategoryService extends Mock
     implements WalletCategoryService {}
 
-CategoryEntity _cat(String id, String name) => CategoryEntity(
+CategoryEntity _cat(String id, String name, {String? parentId}) =>
+    CategoryEntity(
       id: id,
       name: name,
       iconName: 'category',
       isExpense: true,
+      parentId: parentId,
       sortOrder: 1,
     );
+
+/// Market(Manav) · Fatura · Ulaşım — Market ve Fatura'nın bütçesi var.
+final _categories = [
+  _cat('market', 'Market'),
+  _cat('manav', 'Manav', parentId: 'market'),
+  _cat('fatura', 'Fatura'),
+  _cat('ulasim', 'Ulaşım'),
+];
 
 /// Bütçe limiti düzenleme (UX Tur 4 · D1).
 ///
@@ -55,9 +68,13 @@ void main() {
         const SaveBudgetEvent(BudgetEntity(categoryId: 'x', limitAmount: 1)));
   });
 
-  setUp(() {
+  setUp(() async {
     Intl.defaultLocale = 'tr_TR';
     getIt.allowReassignment = true;
+    // Ortak kategori seçici "son kullanılanlar"ı buradan okur.
+    SharedPreferences.setMockInitialValues({});
+    getIt.registerSingleton<RecentCategoriesService>(
+        RecentCategoriesService(await SharedPreferences.getInstance()));
     budgets = _MockBudgetsBloc();
     wallets = _MockWalletBloc();
     auth = _MockAuthBloc();
@@ -72,17 +89,14 @@ void main() {
     getIt.registerSingleton<CategoriesChangedNotifier>(
         CategoriesChangedNotifier());
     final repo = _MockCategoryRepository();
-    when(() => repo.getCategories(true)).thenAnswer(
-        (_) async => [_cat('market', 'Market'), _cat('fatura', 'Fatura')]);
+    when(() => repo.getCategories(true)).thenAnswer((_) async => _categories);
     getIt.registerSingleton<CategoryRepository>(repo);
     final scope = _MockWalletCategoryService();
     when(() => scope.categoriesFor(
-              walletId: any(named: 'walletId'),
-              isExpense: any(named: 'isExpense'),
-              alwaysInclude: any(named: 'alwaysInclude'),
-            ))
-        .thenAnswer(
-            (_) async => [_cat('market', 'Market'), _cat('fatura', 'Fatura')]);
+          walletId: any(named: 'walletId'),
+          isExpense: any(named: 'isExpense'),
+          alwaysInclude: any(named: 'alwaysInclude'),
+        )).thenAnswer((_) async => _categories);
     getIt.registerSingleton<WalletCategoryService>(scope);
   });
 
@@ -131,7 +145,7 @@ void main() {
 
     expect(find.text(l10n.butceyiDuzenle), findsOneWidget);
     // Kategori seçici YOK: bütçenin kimliği kategorisidir.
-    expect(find.byType(DropdownButtonFormField<String>), findsNothing);
+    expect(find.byKey(const ValueKey('budget-category-field')), findsNothing);
     final field = find.byKey(const ValueKey('budget-limit-field'));
     expect(
       tester
@@ -201,7 +215,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text(l10n.yeniButceEkle), findsOneWidget);
-    expect(find.byType(DropdownButtonFormField<String>), findsOneWidget);
+    expect(find.byKey(const ValueKey('budget-category-field')), findsOneWidget);
+    // Düz açılır liste değil: ortak, aranabilir kategori seçici.
+    expect(find.byType(DropdownButtonFormField<String>), findsNothing);
     expect(find.byType(AlertDialog), findsNothing);
     expect(find.byType(BottomSheet), findsOneWidget);
 
@@ -212,5 +228,112 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(l10n.kategoriSecmeUyarisi), findsOneWidget);
     verifyNever(() => budgets.add(any(that: isA<SaveBudgetEvent>())));
+  });
+
+  group('yeni bütçe: ortak kategori seçici', () {
+    Future<AppLocalizations> openPicker(WidgetTester tester) async {
+      final l10n = await pumpPage(tester);
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('budget-category-field')));
+      await tester.pumpAndSettle();
+      expect(find.byType(CategoryPickerSheet), findsOneWidget);
+      return l10n;
+    }
+
+    /// Seçicinin SOL sütunundaki kök satırı. Aynı ad arkadaki bütçe
+    /// kartında ve (kök etkinse) sağ sütunda da yazar; sol sütun ağaçta önce
+    /// gelir.
+    Finder rootInPicker(String name) => find
+        .descendant(
+            of: find.byType(CategoryPickerSheet), matching: find.text(name))
+        .first;
+
+    testWidgets('seçiciden kategori seçilir ve bütçe o kategoriye yazılır',
+        (tester) async {
+      final l10n = await openPicker(tester);
+
+      // Sol sütunda kök, sağ sütunda seçilebilir satır.
+      await tester.tap(rootInPicker('Ulaşım'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('category-pick-ulasim')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CategoryPickerSheet), findsNothing);
+      expect(
+          find.descendant(
+              of: find.byKey(const ValueKey('budget-category-field')),
+              matching: find.text('Ulaşım')),
+          findsOneWidget);
+
+      await tester.enterText(
+          find.byKey(const ValueKey('budget-limit-field')), '750');
+      await tester.tap(find.widgetWithText(FilledButton, l10n.kaydet));
+      await tester.pumpAndSettle();
+
+      final saved = savedBudget();
+      expect(saved.categoryId, 'ulasim');
+      expect(saved.limitAmount, 750);
+    });
+
+    testWidgets(
+        'TEK SEVİYE KİLİDİ: ana kategorinin bütçesi varken alt kategori '
+        'görünür ama SEÇİLEMEZ; sebebi yazar', (tester) async {
+      final l10n = await openPicker(tester);
+
+      // Market köküne geç: kendisi (bütçesi var → güncelleme, serbest) ve
+      // altındaki Manav (kilitli).
+      await tester.tap(rootInPicker('Market'));
+      await tester.pumpAndSettle();
+
+      final manav = find.byKey(const ValueKey('category-pick-manav'));
+      expect(tester.widget<ListTile>(manav).enabled, isFalse);
+      expect(
+          find.descendant(
+              of: manav,
+              matching:
+                  find.textContaining(l10n.butceUstKategorideVar('Market'))),
+          findsOneWidget);
+
+      await tester.tap(manav, warnIfMissed: false);
+      await tester.pumpAndSettle();
+      // Seçici açık kaldı, hiçbir şey seçilmedi.
+      expect(find.byType(CategoryPickerSheet), findsOneWidget);
+    });
+
+    testWidgets('bütçesi olan kategori seçilirse limit öne dolar (güncelleme)',
+        (tester) async {
+      final l10n = await openPicker(tester);
+
+      await tester.tap(rootInPicker('Fatura'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('category-pick-fatura')));
+      await tester.pumpAndSettle();
+
+      final field = find.byKey(const ValueKey('budget-limit-field'));
+      expect(
+          tester
+              .widget<TextField>(
+                  find.descendant(of: field, matching: find.byType(TextField)))
+              .controller!
+              .text,
+          '2.000');
+      expect(find.text(l10n.buKategorininButcesiVar), findsOneWidget);
+      expect(find.widgetWithText(FilledButton, l10n.guncelle), findsOneWidget);
+    });
+
+    testWidgets('seçiciden vazgeçilirse seçim değişmez', (tester) async {
+      final l10n = await openPicker(tester);
+
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CategoryPickerSheet), findsNothing);
+      await tester.enterText(
+          find.byKey(const ValueKey('budget-limit-field')), '100');
+      await tester.tap(find.widgetWithText(FilledButton, l10n.kaydet));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.kategoriSecmeUyarisi), findsOneWidget);
+    });
   });
 }
