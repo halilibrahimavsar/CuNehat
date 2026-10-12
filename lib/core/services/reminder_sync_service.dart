@@ -264,6 +264,9 @@ class ReminderSyncService {
     );
     final remaining = status.remainingStatementDebt;
     if (!moneyIsPositive(remaining)) return;
+    // Asgarisi ödenmiş ekstre gecikmiş değildir (bkz. [CardStatus.isOverdue]):
+    // son ödeme geçtikten sonra her gün "gecikti" bildirimi kurulmaz.
+    if (status.isCarrying) return;
 
     final l10n = _localizer.l10n;
     final amount = formatMoney(remaining, currency: wallet.currency);

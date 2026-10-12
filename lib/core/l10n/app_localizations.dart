@@ -12028,6 +12028,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'cüzdanlar okunamadı'**
   String get reminderNoteWalletsUnreadable;
+
+  /// No description provided for @kkAsgariOdendi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Asgari ödendi'**
+  String get kkAsgariOdendi;
+
+  /// No description provided for @unlinkPickCategoryExpense.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağı kalkan “{title}” ({amount}) artık bir gider. Kategorisini seç.'**
+  String unlinkPickCategoryExpense(String title, String amount);
+
+  /// No description provided for @unlinkPickCategoryIncome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağı kalkan “{title}” ({amount}) artık bir gelir. Kategorisini seç.'**
+  String unlinkPickCategoryIncome(String title, String amount);
 }
 
 class _AppLocalizationsDelegate

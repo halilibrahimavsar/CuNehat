@@ -617,6 +617,14 @@ void main() {
 
       verify(() => transfers.unlinkTransfer('pair-1')).called(1);
       expect(find.byType(CategoryPickerSheet), findsOneWidget);
+      // Seçiciyi kullanıcı açmadı: hangi satır için, neden sorulduğu yazılır
+      // (cihazda yalnız "Kategori" başlığıyla açılıyordu).
+      final hint = tester.widget<Text>(find.descendant(
+        of: find.byKey(const ValueKey('category-pick-hint')),
+        matching: find.byType(Text),
+      ));
+      expect(hint.data, contains(adoptedNoCategory.title));
+      expect(hint.data, contains('artık bir gider'));
 
       await tester.tap(find.byKey(const ValueKey('category-pick-cat-market')));
       await tester.pumpAndSettle();

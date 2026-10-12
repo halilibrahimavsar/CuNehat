@@ -8,6 +8,7 @@ import 'package:cunehat/features/investments/domain/entities/investment_entity.d
 import 'package:cunehat/features/investments/domain/entities/live_price_quote.dart';
 import 'package:cunehat/features/investments/domain/usecases/get_live_quote_usecase.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_stock_sheet.dart';
+import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/investment_sheet_widgets.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
@@ -251,6 +252,15 @@ void main() {
         widget is TextField &&
         widget.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)');
     await tester.enterText(amountFinder, '2000');
+    // Yeni alımda mevcut değer maliyeti izler; kullanıcı alanı kendi
+    // boşaltırsa doğrulama yine durdurur.
+    await tester.enterText(
+      find.descendant(
+        of: find.byType(InvestmentAmountCard),
+        matching: find.byType(TextField),
+      ),
+      '',
+    );
 
     // Tap Save again, now it fails on currentValue being invalid
     await tester.tap(find.text('Kaydet'));
@@ -701,6 +711,83 @@ void main() {
       await tester.pump();
 
       expect(text(tester, costField), '500');
+    });
+
+    group('mevcut değer maliyeti izler (yeni alım)', () {
+      final valueField = find.descendant(
+        of: find.byType(InvestmentAmountCard),
+        matching: find.byType(TextField),
+      );
+
+      testWidgets(
+          'REGRESYON: lot × lot fiyatı yazınca kayıt mevcut değer '
+          'İSTEMEDEN yazılır', (tester) async {
+        // Cihazda: 10 lot × 42,5 girildi, maliyet 425 doldu, Kaydet
+        // "Geçerli bir mevcut değer girin" diye durdu.
+        tester.view.physicalSize = const Size(400, 2400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        InvestmentEntity? saved;
+        await tester.pumpWidget(buildTestableWidget(AddStockSheet(
+          walletId: 'wallet_123',
+          userId: 'user_123',
+          walletCurrency: 'TRY',
+          onSave: (inv, _) => saved = inv,
+        )));
+        await tester.pump();
+
+        await tester.enterText(lotField, '10');
+        await tester.enterText(unitField, '42,5');
+        await tester.pump();
+        expect(text(tester, costField), '425');
+        expect(text(tester, valueField), '425');
+
+        await tester.tap(find.text('Kaydet'));
+        await tester.pumpAndSettle();
+
+        expect(saved, isNotNull);
+        expect(saved!.amount, 425);
+        expect(saved!.currentValue, 425);
+        expect(saved!.quantity, 10);
+      });
+
+      testWidgets('toplam elle yazılınca da izler; silinince boşalır',
+          (tester) async {
+        await pumpSheet(tester);
+
+        await tester.enterText(costField, '1.000');
+        await tester.pump();
+        expect(text(tester, valueField), '1.000');
+
+        await tester.enterText(costField, '');
+        await tester.pump();
+        expect(text(tester, valueField), isEmpty);
+      });
+
+      testWidgets('kullanıcı mevcut değeri kendi yazdıysa maliyet onu EZMEZ',
+          (tester) async {
+        await pumpSheet(tester);
+
+        await tester.enterText(valueField, '900');
+        await tester.enterText(lotField, '10');
+        await tester.enterText(unitField, '42,5');
+        await tester.pump();
+
+        expect(text(tester, costField), '425');
+        expect(text(tester, valueField), '900');
+      });
+
+      testWidgets('düzenlemede kayıtlı mevcut değer korunur', (tester) async {
+        await pumpSheet(tester,
+            edit: testInvestment.copyWith(
+                amount: 5000, currentValue: 6200, quantity: 16));
+
+        await tester.enterText(unitField, '300');
+        await tester.pump();
+
+        expect(text(tester, costField), '4.800');
+        expect(text(tester, valueField), '6.200');
+      });
     });
 
     testWidgets('düzenlemede lot fiyatı maliyet / lot olarak ön dolar',

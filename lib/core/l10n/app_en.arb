@@ -4276,5 +4276,28 @@
   "reminderNoteTemplatesUnreadable": "could not read the templates",
   "reminderNoteDebtsUnreadable": "could not read the debts",
   "reminderNoteCardFailed": "could not schedule the card reminder",
-  "reminderNoteWalletsUnreadable": "could not read the wallets"
+  "reminderNoteWalletsUnreadable": "could not read the wallets",
+  "kkAsgariOdendi": "Minimum paid",
+  "unlinkPickCategoryExpense": "“{title}” ({amount}) is now a plain expense. Pick its category.",
+  "@unlinkPickCategoryExpense": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "unlinkPickCategoryIncome": "“{title}” ({amount}) is now a plain income. Pick its category.",
+  "@unlinkPickCategoryIncome": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

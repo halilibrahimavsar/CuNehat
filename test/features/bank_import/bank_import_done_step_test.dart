@@ -287,7 +287,8 @@ void main() {
       doneState(withClosing(1250));
       await pump(tester);
 
-      expect(find.text('Ekstreye göre 03.08.26 bakiyesi'), findsOneWidget);
+      // Ay adıyla: "03.08.26" gün/ay sırası belirsiz okunuyordu.
+      expect(find.text('Ekstreye göre 3 Ağu 2026 bakiyesi'), findsOneWidget);
       expect(
           find.text('Cüzdan o gün bankayla birebir tutuyor.'), findsOneWidget);
       expect(find.text('Bankayla eşitle'), findsNothing);

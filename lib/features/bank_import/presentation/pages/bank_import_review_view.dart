@@ -739,7 +739,8 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
           : l10n.bankImportCardPeriod,
       if (facts.last4 case final l?) '•••• $l',
       if (facts.dueDate case final d?)
-        '${l10n.kkSonOdemeTarihi} ${AppFormatters.dateShort.format(d)}',
+        // Ay adıyla: "05.10.26" gün/ay sırası belirsiz okunuyordu.
+        '${l10n.kkSonOdemeTarihi} ${AppFormatters.dayMonth.format(d)}',
       if (facts.statementBalance case final v?) _money(v),
     ];
     return InkWell(
@@ -795,9 +796,9 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     String money(double v) => formatMoney(v, currency: _currency);
     final rows = <(String, String)>[
       if (facts.closingDate case final d?)
-        (l10n.kkKesimTarihi, AppFormatters.dateShort.format(d)),
+        (l10n.kkKesimTarihi, AppFormatters.dayMonthYear.format(d)),
       if (facts.dueDate case final d?)
-        (l10n.kkSonOdemeTarihi, AppFormatters.dateShort.format(d)),
+        (l10n.kkSonOdemeTarihi, AppFormatters.dayMonthYear.format(d)),
       if (facts.statementBalance case final v?) (l10n.kkDonemBorcu, money(v)),
       if (facts.minimumPayment case final v?) (l10n.kkAsgariOdeme, money(v)),
     ];

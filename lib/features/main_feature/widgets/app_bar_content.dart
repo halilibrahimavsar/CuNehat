@@ -9,7 +9,7 @@ import 'package:cunehat/core/services/exchange_rate_service.dart';
 import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/currencies.dart';
-import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/utils/tr_case.dart';
 import 'package:cunehat/features/main_feature/utils/app_constants.dart';
 import 'package:cunehat/features/main_feature/utils/slider_peek_store.dart';
@@ -522,15 +522,21 @@ class _AppBarContentState extends State<AppBarContent> {
           pageIndex: pageIndex,
           pageCount: pageCount,
         );
-    final fxLine = _tryEquivalentLine(context, shown, st, value);
+    // İkincil satır da TUTAR yazar: göz düğmesi başlığı gizlerken hemen
+    // altındaki "Kullanılabilir limit: 33.500 ₺" açıkta kalıyordu (cihaz
+    // turu, 12 Eki 2026).
+    final visible = context.amountsVisible;
+    String money(double v, String currency) =>
+        MoneyWriter(currency: currency, visible: visible)(v);
+    final fxLine = _tryEquivalentLine(context, shown, st, value, visible);
     // Borç sekmesinde toplamın kaynağı: "krediler X · kartlar Y". Yalnız
     // kart borcu varken; yoksa toplam zaten tek kaynaktır.
     if (st == SliderState.debt && account != null) {
       final o = debtOverview(account, state.wallets);
       if (moneyIsPositive(o.cards)) {
         return build(context.l10n.debtBreakdownLine(
-          formatMoney(o.loans, currency: account.currency),
-          formatMoney(o.cards, currency: account.currency),
+          money(o.loans, account.currency),
+          money(o.cards, account.currency),
         ));
       }
     }
@@ -544,7 +550,7 @@ class _AppBarContentState extends State<AppBarContent> {
       return build(limit == null
           ? fxLine
           : context.l10n.kkKullanilabilirLimitSatiri(
-              formatMoney(limit + shown.balance, currency: shown.currency)));
+              money(limit + shown.balance, shown.currency)));
     }
     final cards = cardsOf(shown.id, state.wallets)
         .where((c) => c.currency == shown.currency)
@@ -555,8 +561,8 @@ class _AppBarContentState extends State<AppBarContent> {
       builder: (context, statuses, _) {
         final due = totalRemainingStatementDebt(statuses.values);
         return build(due > 0
-            ? context.l10n.kkKartlarDusulunce(
-                formatMoney(shown.balance - due, currency: shown.currency))
+            ? context.l10n
+                .kkKartlarDusulunce(money(shown.balance - due, shown.currency))
             : fxLine);
       },
     );
@@ -565,12 +571,13 @@ class _AppBarContentState extends State<AppBarContent> {
   /// Döviz cüzdanında bakiyenin son bilinen kurla TL karşılığı; kur yoksa
   /// satır gizlenir.
   String? _tryEquivalentLine(BuildContext context, WalletEntity? wallet,
-      SliderState st, double value) {
+      SliderState st, double value, bool visible) {
     if (st != SliderState.transactions) return null;
     if (wallet == null || wallet.currency == kDefaultCurrency) return null;
     if (getIt<ExchangeRateService>().cachedRateToTry(wallet.currency)
         case final double rate) {
-      return context.l10n.yaklasikKarsilikFormat(formatMoney(value * rate));
+      return context.l10n.yaklasikKarsilikFormat(MoneyWriter(
+          currency: kDefaultCurrency, visible: visible)(value * rate));
     }
     return null;
   }

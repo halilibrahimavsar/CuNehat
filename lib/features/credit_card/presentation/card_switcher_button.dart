@@ -362,9 +362,19 @@ class CardSwitchSheet extends StatelessWidget {
                     Row(
                       children: [
                         const SizedBox(width: 4),
+                        // Çip kalan genişliği alır, "Ayrıntılar" her satırda
+                        // SAĞA yaslanır. (`Flexible` + `Spacer` boşluğu ikiye
+                        // bölüyor, düğme çipin genişliğine göre satırdan
+                        // satıra kayıyordu — cihazda görüldü.)
                         if (statuses[card.id] case final status?)
-                          Flexible(child: CardDueChip(status: status)),
-                        const Spacer(),
+                          Expanded(
+                            child: Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: CardDueChip(status: status),
+                            ),
+                          )
+                        else
+                          const Spacer(),
                         TextButton(
                           key: ValueKey('card-switch-details-${card.id}'),
                           style: TextButton.styleFrom(

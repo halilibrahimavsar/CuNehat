@@ -59,85 +59,93 @@ class MiniCreditCard extends StatelessWidget {
       button: onTap != null,
       selected: active,
       label: [card.name, subtitle].where((s) => s.isNotEmpty).join(', '),
-      child: Material(
-        color: Colors.transparent,
-        child: Ink(
-          height: height,
-          decoration: BoxDecoration(
-            gradient: creditCardGradient(card),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: white.withValues(alpha: active ? 0.85 : 0.12),
-              width: active ? 1.6 : 1,
+      // Gölge Material'in DIŞINDA: `Ink` süslemesi Material'in dikdörtgenine
+      // kırpılır; gölge içeride kalınca yuvarlak köşelerin dışı gri bir
+      // dikdörtgen olarak boyanıyordu (cihaz turu, 12 Eki 2026).
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.18),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.18),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: Ink(
+            height: height,
+            decoration: BoxDecoration(
+              gradient: creditCardGradient(card),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: white.withValues(alpha: active ? 0.85 : 0.12),
+                width: active ? 1.6 : 1,
               ),
-            ],
-          ),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(14),
-            onTap: onTap,
-            onLongPress: onLongPress,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              child: Row(
-                children: [
-                  // Çip
-                  Container(
-                    width: 26,
-                    height: 19,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4),
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFE6C77A), Color(0xFFB8913B)],
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(14),
+              onTap: onTap,
+              onLongPress: onLongPress,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Row(
+                  children: [
+                    // Çip
+                    Container(
+                      width: 26,
+                      height: 19,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFE6C77A), Color(0xFFB8913B)],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          card.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: white,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 14,
-                          ),
-                        ),
-                        if (subtitle.isNotEmpty)
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
-                            subtitle,
+                            card.name,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: white.withValues(alpha: 0.75),
-                              fontSize: 11,
-                              letterSpacing: 0.4,
+                            style: const TextStyle(
+                              color: white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
                             ),
                           ),
-                      ],
+                          if (subtitle.isNotEmpty)
+                            Text(
+                              subtitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: white.withValues(alpha: 0.75),
+                                fontSize: 11,
+                                letterSpacing: 0.4,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  MoneyText(
-                    amount: debt,
-                    currency: card.currency,
-                    style: const TextStyle(
-                      color: white,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 14,
+                    const SizedBox(width: 8),
+                    MoneyText(
+                      amount: debt,
+                      currency: card.currency,
+                      style: const TextStyle(
+                        color: white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

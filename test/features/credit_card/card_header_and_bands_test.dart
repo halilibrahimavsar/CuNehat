@@ -5,6 +5,9 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/credit_card/presentation/card_context_rail.dart';
 import 'package:cunehat/features/credit_card/presentation/card_pay_sheet.dart';
+import 'package:cunehat/features/credit_card/presentation/mini_credit_card.dart';
+import 'package:cunehat/core/services/wallet_metrics_service.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/main_feature/widgets/app_bar_content.dart';
@@ -156,6 +159,48 @@ void main() {
       expect(find.text(l10n.kkKartlarDusulunce('9.000,00 ₺')), findsOneWidget);
     });
 
+    group('REGRESYON: tutarlar gizliyken başlığın İKİNCİL satırı da gizlenir',
+        () {
+      Future<void> hide(WidgetTester tester) async {
+        await tester
+            .element(find.byType(AppBarContent))
+            .read<AmountVisibilityCubit>()
+            .setVisibility(false);
+        await tester.pumpAndSettle();
+      }
+
+      testWidgets('kart bağlamı: kullanılabilir limit', (tester) async {
+        // Göz başlığı gizlerken hemen altındaki limit açıkta kalıyordu
+        // (cihazda görüldü).
+        final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+        final card = _card();
+        when(() => bloc.state)
+            .thenReturn(WalletLoadedSt([_bank(), card], card));
+        await tester.pumpWidget(app(header()));
+        await tester.pumpAndSettle();
+        expect(find.textContaining('36.300'), findsOneWidget);
+
+        await hide(tester);
+        expect(find.textContaining('36.300'), findsNothing);
+        expect(find.text(l10n.kkKullanilabilirLimitSatiri('**** ₺')),
+            findsOneWidget);
+      });
+
+      testWidgets('hesap bağlamı: kart ödemeleri düşülünce', (tester) async {
+        final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+        final bank = _bank();
+        when(() => bloc.state)
+            .thenReturn(WalletLoadedSt([bank, _card()], bank));
+        await tester.pumpWidget(app(header()));
+        await tester.pumpAndSettle();
+        expect(find.textContaining('9.000'), findsOneWidget);
+
+        await hide(tester);
+        expect(find.textContaining('9.000'), findsNothing);
+        expect(find.text(l10n.kkKartlarDusulunce('**** ₺')), findsOneWidget);
+      });
+    });
+
     testWidgets('kartın borcu yoksa satır çıkmaz', (tester) async {
       final bank = _bank();
       final paid = _card(balance: 0);
@@ -239,6 +284,114 @@ void main() {
           .setVisibility(false);
       await tester.pumpAndSettle();
       expect(find.textContaining('1.000,00'), findsNothing);
+    });
+
+    group('asgarisi ödenmiş, son ödemesi geçmiş ekstre', () {
+      // Son ödeme 2 gün önce; dönem borcu 1.000, asgari 300.
+      WalletEntity pastDue() {
+        final card = _card(dueInDays: -2);
+        final info = card.creditCard!;
+        final st = info.lastStatement!;
+        return card.copyWith(
+          creditCard: info.copyWith(
+            lastStatement: CardStatement(
+              closingDate: st.closingDate,
+              dueDate: st.dueDate,
+              statementBalance: st.statementBalance,
+              minimumPayment: 300,
+              recordedAt: st.recordedAt,
+            ),
+          ),
+        );
+      }
+
+      void stubPayment(WalletEntity card, double amount) {
+        final closing = card.creditCard!.lastStatement!.closingDate;
+        when(() => getIt<TransactionsRepository>().getTransactions(
+              userId: any(named: 'userId'),
+              walletId: any(named: 'walletId'),
+            )).thenAnswer((_) async => Right(<TransactionEntity>[
+              TransactionEntity(
+                id: 'pay',
+                userId: 'u',
+                walletId: 'card',
+                title: 'Ödeme',
+                tag: CashMovementTags.transfer,
+                amount: amount,
+                date: closing.add(const Duration(days: 1)),
+                type: TransactionTypeModel.income,
+                isSystem: true,
+              ),
+            ]));
+      }
+
+      testWidgets(
+          'asgari ödendi: hesap ekranında ödeme bandı YOK; kart şeridinde '
+          '"gecikti" değil "Asgari ödendi"', (tester) async {
+        final bank = _bank();
+        final card = pastDue();
+        stubPayment(card, 300);
+
+        when(() => bloc.state).thenReturn(WalletLoadedSt([bank, card], bank));
+        await tester.pumpWidget(app(const CardContextRail()));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const ValueKey('ctx-due-card')), findsNothing);
+
+        when(() => bloc.state).thenReturn(WalletLoadedSt([bank, card], card));
+        await tester.pumpWidget(app(const CardContextRail()));
+        await tester.pumpAndSettle();
+        expect(find.text('Asgari ödendi'), findsOneWidget);
+        expect(find.textContaining('gecikti'), findsNothing);
+        // Kalan tutar yine yazılır: kapatmak faizi önler.
+        expect(find.textContaining('700,00'), findsOneWidget);
+      });
+
+      testWidgets('asgarinin altında ödeme: bant ve "gecikti" çipi SÜRER',
+          (tester) async {
+        final bank = _bank();
+        final card = pastDue();
+        stubPayment(card, 100);
+
+        when(() => bloc.state).thenReturn(WalletLoadedSt([bank, card], bank));
+        await tester.pumpWidget(app(const CardContextRail()));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const ValueKey('ctx-due-card')), findsOneWidget);
+        expect(find.text('2 gün gecikti'), findsOneWidget);
+      });
+    });
+
+    testWidgets(
+        'ödenmiş dönemde çip sonraki kesimi AY ADIYLA yazar ("15 Eki"), '
+        'sayısal tarihle değil', (tester) async {
+      final bank = _bank();
+      final card = _card();
+      final closing = card.creditCard!.lastStatement!.closingDate;
+      when(() => getIt<TransactionsRepository>().getTransactions(
+            userId: any(named: 'userId'),
+            walletId: any(named: 'walletId'),
+          )).thenAnswer((_) async => Right(<TransactionEntity>[
+            TransactionEntity(
+              id: 'pay',
+              userId: 'u',
+              walletId: 'card',
+              title: 'Ödeme',
+              tag: CashMovementTags.transfer,
+              amount: 1000,
+              date: closing.add(const Duration(days: 1)),
+              type: TransactionTypeModel.income,
+              isSystem: true,
+            ),
+          ]));
+      when(() => bloc.state).thenReturn(WalletLoadedSt([bank, card], card));
+      await tester.pumpWidget(app(const CardContextRail()));
+      await tester.pumpAndSettle();
+
+      final next = CardCycle(card.creditCard!).nextClosing(DateTime.now());
+      expect(
+        find.text('Sonraki kesim: ${DateFormat.MMMd('tr_TR').format(next)}'),
+        findsOneWidget,
+      );
+      expect(find.textContaining(RegExp(r'\d{2}\.\d{2}\.\d{2}')), findsNothing);
     });
 
     testWidgets('kart bağlamında bant yerine kartın şeridi', (tester) async {
@@ -501,5 +654,22 @@ void main() {
       expect(find.byKey(const ValueKey('ctx-selected-card')), findsOneWidget);
       expect(find.byKey(const ValueKey('ctx-selected-bank')), findsNothing);
     });
+  });
+
+  testWidgets(
+      'REGRESYON: mini kartın gölgesi Material\'in DIŞINDA çizilir (içeride '
+      'kalınca köşelerin dışı gri dikdörtgen oluyordu)', (tester) async {
+    await tester.pumpWidget(app(MiniCreditCard(card: _card(), onTap: () {})));
+    await tester.pumpAndSettle();
+
+    final ink = tester.widget<Ink>(find.byType(Ink));
+    expect((ink.decoration! as BoxDecoration).boxShadow, isNull,
+        reason: 'Ink süslemesi Material dikdörtgenine kırpılır');
+    final outer = tester.widget<DecoratedBox>(find
+        .ancestor(of: find.byType(Ink), matching: find.byType(DecoratedBox))
+        .first);
+    final decoration = outer.decoration as BoxDecoration;
+    expect(decoration.boxShadow, isNotEmpty);
+    expect(decoration.borderRadius, BorderRadius.circular(14));
   });
 }

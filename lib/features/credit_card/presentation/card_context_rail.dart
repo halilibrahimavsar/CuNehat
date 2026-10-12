@@ -218,9 +218,7 @@ class _ContextPill extends StatelessWidget {
                 : cs.onSurface.withValues(alpha: 0.04),
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: selected
-                  ? tint
-                  : cs.outlineVariant.withValues(alpha: 0.6),
+              color: selected ? tint : cs.outlineVariant.withValues(alpha: 0.6),
               width: selected ? 2 : 1,
             ),
           ),
@@ -417,8 +415,11 @@ class _DueBands extends StatelessWidget {
         final due = [
           for (final c in cards)
             if (statuses[c.id] case final s?
+                // Asgarisi ödenip kalanı devreden ekstre hesap ekranında
+                // ödeme çağrısı YAPMAZ (bkz. [CardStatus.isCarrying]).
                 when s.remainingStatementDebt > 0 &&
-                    (s.isOverdue || s.daysToDue <= dueSoonDays))
+                    (s.isOverdue ||
+                        (s.daysToDue >= 0 && s.daysToDue <= dueSoonDays)))
               (card: c, status: s),
         ];
         if (due.isEmpty) return const SizedBox(width: double.infinity);

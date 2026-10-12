@@ -32,6 +32,7 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
+import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
@@ -618,11 +619,19 @@ Future<void> confirmAndRemoveTransfer(
   AppMessenger.success(l10n.transferKaldirildi);
 
   for (final orphan in orphans) {
+    final amount = formatMoney(
+      orphan.amount,
+      currency: await _currencyOfWallet(orphan.walletId),
+    );
     if (!host.mounted) return;
     final picked = await showCategoryPickerSheet(
       context: host,
       isExpense: orphan.isExpense,
       walletId: orphan.walletId,
+      // Seçiciyi kullanıcı açmadı: hangi satır için sorulduğu yazılır.
+      hint: orphan.isExpense
+          ? l10n.unlinkPickCategoryExpense(orphan.title, amount)
+          : l10n.unlinkPickCategoryIncome(orphan.title, amount),
     );
     if (picked == null) {
       // Vazgeçmek serbest; ama satırın kategorisiz kaldığı söylenir.
@@ -631,6 +640,16 @@ Future<void> confirmAndRemoveTransfer(
     }
     await _assignCategory(orphan, picked.id, bloc);
   }
+}
+
+/// [walletId] cüzdanının birimi; cüzdan okunamazsa varsayılan birim. Tutar
+/// satırın KENDİ cüzdanının biriminde yazılır (aktif cüzdanınkiyle değil:
+/// karşı bacak başka birimde olabilir).
+Future<String> _currencyOfWallet(String walletId) async {
+  if (!getIt.isRegistered<WalletRepository>()) return kDefaultCurrency;
+  final wallet = (await getIt<WalletRepository>().getWalletById(walletId))
+      .fold((_) => null, (w) => w);
+  return wallet?.currency ?? kDefaultCurrency;
 }
 
 /// Bağı kalkan satıra kategorisini yazar. Açık bir defter bloc'u varsa onun

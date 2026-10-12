@@ -90,6 +90,13 @@ class WalletColors {
 class AppFormatters {
   static DateFormat get dateShort => DateFormat('dd.MM.yy', Intl.defaultLocale);
   static DateFormat get dateLong => DateFormat.yMMMMd(Intl.defaultLocale);
+
+  /// "15 Eki" — tek başına okunan tarihler (çip, özet başlığı). Sayısal
+  /// `dd.MM.yy` gün/ay sırası belirsiz okunuyordu.
+  static DateFormat get dayMonth => DateFormat.MMMd(Intl.defaultLocale);
+
+  /// "15 Eki 2026" — [dayMonth]'un yıllı hâli.
+  static DateFormat get dayMonthYear => DateFormat.yMMMd(Intl.defaultLocale);
   static DateFormat get dateTime =>
       DateFormat('dd.MM.yyyy HH:mm', Intl.defaultLocale);
   static DateFormat get time => DateFormat('HH:mm', Intl.defaultLocale);

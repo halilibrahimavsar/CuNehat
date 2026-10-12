@@ -132,6 +132,16 @@ class _AddStockSheetState extends State<AddStockSheet> {
   /// yeniden hesaplanır.
   _CostDriver _costDriver = _CostDriver.total;
 
+  /// Mevcut Değer alanına kullanıcı da "Hesapla" da dokunmadı: yeni alımda
+  /// maliyet yazıldıkça mevcut değer onu İZLER — az önce alınan varlık
+  /// ödenen kadar eder.
+  ///
+  /// Lot × lot fiyatıyla girişte bu alan boş kalıyor, kayıt "Geçerli bir
+  /// mevcut değer girin" diye duruyordu: kullanıcı aynı rakamı ikinci kez
+  /// yazmak ya da "Hesapla"ya basmak zorundaydı (cihaz turu, 12 Eki 2026).
+  /// Düzenlemede kapalı: kayıtlı değer ezilmez.
+  bool _valueFollowsCost = true;
+
   /// Alım tarihi: kayıt açılırken seçilir, gider bu tarihe yazılır.
   DateTime _purchaseDate = DateTime.now();
 
@@ -159,6 +169,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
     super.initState();
     if (widget.investmentToEdit != null) {
       _isEditing = true;
+      _valueFollowsCost = false;
       final item = widget.investmentToEdit!;
       _nameController.text = item.name;
       _amountController.text = _fmt(item.amount);
@@ -188,6 +199,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
       _purchaseDate =
           DateTime(ledgerTx.date.year, ledgerTx.date.month, ledgerTx.date.day);
       _syncUnitFromTotal();
+      _mirrorValueFromCost();
     }
     // Alım özeti ("şu kadarı cüzdandan düşülecek") maliyetten türer.
     _amountController.addListener(() => setState(() {}));
@@ -235,6 +247,21 @@ class _AddStockSheetState extends State<AddStockSheet> {
     _clearError();
     _costDriver = _CostDriver.total;
     _syncUnitFromTotal();
+    _mirrorValueFromCost();
+  }
+
+  /// Kullanıcı Mevcut Değer'i kendi yazdı: artık maliyeti izlemez.
+  void _onValueChanged() {
+    _valueFollowsCost = false;
+    _clearError();
+  }
+
+  /// Mevcut değer = maliyet ([_valueFollowsCost] sürerken). Maliyet
+  /// silinirse alan da boşalır; yarım bir rakam geride kalmasın.
+  void _mirrorValueFromCost() {
+    if (!_valueFollowsCost) return;
+    final cost = _parsedAmount;
+    _currentValueController.text = cost == null || cost <= 0 ? '' : _fmt(cost);
   }
 
   void _onQuantityChanged() {
@@ -254,6 +281,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
     final unit = _parsedUnitCost;
     if (qty == null || qty <= 0 || unit == null || unit <= 0) return;
     _amountController.text = _fmt(roundToCents(qty * unit));
+    _mirrorValueFromCost();
   }
 
   /// Lot fiyatı = toplam maliyet / lot. Bölünemiyorsa alan olduğu gibi kalır.
@@ -329,6 +357,8 @@ class _AddStockSheetState extends State<AddStockSheet> {
         final computed = qty > 0;
         if (computed) {
           final total = quote.convertedPrice * qty;
+          // Piyasa değeri geldi: alan artık maliyeti izlemez.
+          _valueFollowsCost = false;
           _currentValueController.text = _fmt(total);
           if (_amountController.text.isEmpty) {
             _amountController.text = _fmt(total);
@@ -386,6 +416,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
         _amountController.text = _fmt(tx.amount);
         _purchaseDate = DateTime(tx.date.year, tx.date.month, tx.date.day);
         _syncUnitFromTotal();
+        _mirrorValueFromCost();
       }
       _error = null;
     });
@@ -528,7 +559,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
                           accent: _accent,
                           valueColor: Colors.indigo,
                           controller: _currentValueController,
-                          onChanged: _clearError,
+                          onChanged: _onValueChanged,
                           currency: widget.walletCurrency,
                         ),
                       ),

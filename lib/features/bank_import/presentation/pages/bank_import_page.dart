@@ -925,7 +925,7 @@ class _DoneState extends State<_Done> {
         children: [
           Text(
             l10n.bankImportClosingTitle(
-                AppFormatters.dateShort.format(closing.date)),
+                AppFormatters.dayMonthYear.format(closing.date)),
             style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
           ),
           Text(

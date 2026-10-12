@@ -414,6 +414,102 @@ void main() {
       expect(s.isOverdue, isFalse);
       expect(s.currentDebt, 0);
     });
+
+    group('asgarisi ödenen ekstre gecikmiş sayılmaz', () {
+      // Kesim 15 Eyl, son ödeme 25 Eyl; bugün 12 Eki (17 gün geçmiş).
+      // Dönem borcu 5.000; ödeme [paid].
+      CardStatus status({double? minimum, double paid = 0}) =>
+          computeCardStatus(
+            card: _card(
+              statement: CardStatement(
+                closingDate: DateTime(2026, 9, 15),
+                dueDate: DateTime(2026, 9, 25),
+                statementBalance: 5000,
+                minimumPayment: minimum,
+                recordedAt: DateTime(2026, 9, 16),
+              ),
+            ),
+            openingBalance: 0,
+            walletCreatedAt: created,
+            ledger: [
+              _tx(DateTime(2026, 9, 10), 5000),
+              if (paid > 0)
+                _tx(DateTime(2026, 9, 20), paid,
+                    income: true, tag: CashMovementTags.transfer),
+            ],
+            today: DateTime(2026, 10, 12),
+          );
+
+      test('asgari tamamen ödendi → gecikme YOK, kalan DEVREDİYOR', () {
+        final s = status(minimum: 1000, paid: 2500);
+        expect(s.daysToDue, -17);
+        expect(s.remainingStatementDebt, 2500);
+        expect(s.minimumCovered, isTrue);
+        expect(s.isOverdue, isFalse,
+            reason: 'asgarisi ödenen ekstrede gecikme faizi işlemez');
+        expect(s.isCarrying, isTrue);
+      });
+
+      test('asgari TAM tutarıyla ödendi (kuruşu kuruşuna) → gecikme yok', () {
+        final s = status(minimum: 1000, paid: 1000);
+        expect(s.isOverdue, isFalse);
+        expect(s.isCarrying, isTrue);
+      });
+
+      test('asgarinin altında ödeme → GECİKMEDE', () {
+        final s = status(minimum: 1000, paid: 999.99);
+        expect(s.minimumCovered, isFalse);
+        expect(s.isOverdue, isTrue);
+        expect(s.isCarrying, isFalse);
+      });
+
+      test('asgari beyan edilmedi → eski kural: kalan varsa gecikmede', () {
+        final s = status(paid: 2500);
+        expect(s.minimumCovered, isFalse,
+            reason: 'bilinmeyen asgari ödenmiş sayılmaz');
+        expect(s.isOverdue, isTrue);
+      });
+
+      test(
+          'asgari 0 girildi → bilinmiyor sayılır (borçlu ekstrenin asgarisi '
+          '0 olamaz)', () {
+        final s = status(minimum: 0);
+        expect(s.minimumCovered, isFalse);
+        expect(s.isOverdue, isTrue);
+      });
+
+      test('son ödeme GEÇMEDEN asgari ödense de "devrediyor" denmez', () {
+        final s = computeCardStatus(
+          card: _card(
+            statement: CardStatement(
+              closingDate: DateTime(2026, 9, 15),
+              dueDate: DateTime(2026, 9, 25),
+              statementBalance: 5000,
+              minimumPayment: 1000,
+              recordedAt: DateTime(2026, 9, 16),
+            ),
+          ),
+          openingBalance: 0,
+          walletCreatedAt: created,
+          ledger: [
+            _tx(DateTime(2026, 9, 10), 5000),
+            _tx(DateTime(2026, 9, 18), 1000,
+                income: true, tag: CashMovementTags.transfer),
+          ],
+          today: DateTime(2026, 9, 20),
+        );
+        expect(s.daysToDue, 5);
+        expect(s.minimumCovered, isTrue);
+        expect(s.isCarrying, isFalse);
+        expect(s.isOverdue, isFalse);
+      });
+
+      test('tamamı ödendiyse ne gecikme ne devir', () {
+        final s = status(minimum: 1000, paid: 5000);
+        expect(s.isOverdue, isFalse);
+        expect(s.isCarrying, isFalse);
+      });
+    });
   });
 
   group('cardPaymentDate — kart harcaması ÖDENDİĞİ aya sayılır', () {

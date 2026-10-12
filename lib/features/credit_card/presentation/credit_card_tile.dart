@@ -20,8 +20,9 @@ import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 
 /// Son ödeme çipi: "5 gün kaldı" / "Son gün bugün" / "3 gün gecikti" /
-/// ödenecek bir şey kalmadıysa "Sonraki kesim: 15.10.2026". Son 3 gün
-/// turuncu, gecikme kırmızı.
+/// asgarisi ödenip kalanı devreden ekstrede "Asgari ödendi" / ödenecek bir
+/// şey kalmadıysa "Sonraki kesim: 15 Eki". Son 3 gün turuncu, gecikme
+/// kırmızı.
 ///
 /// Ödenmiş dönemde eskiden "Son ödeme: 25.09" yazıyordu: 9 Ekim'de geçmiş
 /// bir tarih, kullanıcıya bir şey kaçırmış gibi okunuyordu. Ödeme bittiyse
@@ -38,15 +39,21 @@ class CardDueChip extends StatelessWidget {
     final s = status;
     final paid = !s.isOverdue && s.remainingStatementDebt <= 0;
     final text = paid
-        ? l10n.kkSonrakiKesim(AppFormatters.dateShort.format(s.nextClosing))
-        : s.daysToDue > 0
-            ? l10n.kkGunKaldi(s.daysToDue)
-            : s.daysToDue == 0
-                ? l10n.kkBugunSonGun
-                : l10n.kkGecikti(-s.daysToDue);
+        // Ay adıyla: "15.10.26" gün/ay sırası belirsiz okunuyordu ve dar
+        // satırda ikiye kırılıyordu.
+        ? l10n.kkSonrakiKesim(AppFormatters.dayMonth.format(s.nextClosing))
+        : s.isCarrying
+            ? l10n.kkAsgariOdendi
+            : s.daysToDue > 0
+                ? l10n.kkGunKaldi(s.daysToDue)
+                : s.daysToDue == 0
+                    ? l10n.kkBugunSonGun
+                    : l10n.kkGecikti(-s.daysToDue);
     final color = s.isOverdue
         ? cs.error
-        : (!paid && s.daysToDue <= 3 ? Colors.orange : cs.primary);
+        : (!paid && !s.isCarrying && s.daysToDue <= 3
+            ? Colors.orange
+            : cs.primary);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -55,6 +62,9 @@ class CardDueChip extends StatelessWidget {
       ),
       child: Text(
         text,
+        maxLines: 1,
+        softWrap: false,
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w700,
@@ -194,7 +204,7 @@ class CreditCardTile extends StatelessWidget {
           _row(
             context,
             l10n.kkSonrakiKesimEtiket,
-            AppFormatters.dateShort.format(status.nextClosing),
+            AppFormatters.dayMonthYear.format(status.nextClosing),
           ),
           ..._interestNotes(context, status),
           ..._notes(context, status),

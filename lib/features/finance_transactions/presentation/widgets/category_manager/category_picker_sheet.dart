@@ -47,6 +47,7 @@ Future<CategoryEntity?> showCategoryPickerSheet({
   bool allowTypeSwitch = false,
   ValueChanged<CategoryEntity>? onCreated,
   String? Function(CategoryEntity category)? lockReasonFor,
+  String? hint,
 }) {
   return showModalBottomSheet<CategoryEntity>(
     context: context,
@@ -59,6 +60,7 @@ Future<CategoryEntity?> showCategoryPickerSheet({
       allowTypeSwitch: allowTypeSwitch,
       onCreated: onCreated,
       lockReasonFor: lockReasonFor,
+      hint: hint,
     ),
   );
 }
@@ -76,6 +78,13 @@ class CategoryPickerSheet extends StatefulWidget {
   /// bütçe konduysa alt kategorilerine konamaz.
   final String? Function(CategoryEntity category)? lockReasonFor;
 
+  /// Seçicinin NEDEN açıldığı (isteğe bağlı): başlığın altında tek açıklama.
+  ///
+  /// Kullanıcının kendi başlatmadığı açılışlarda verilir. Bağı kaldırılan
+  /// transferden sonra seçici yalnız "Kategori" başlığıyla açılıyordu: hangi
+  /// satır için, neden sorulduğu belli değildi (cihaz turu, 12 Eki 2026).
+  final String? hint;
+
   const CategoryPickerSheet({
     super.key,
     required this.isExpense,
@@ -84,6 +93,7 @@ class CategoryPickerSheet extends StatefulWidget {
     this.allowTypeSwitch = false,
     this.onCreated,
     this.lockReasonFor,
+    this.hint,
   });
 
   @override
@@ -241,6 +251,21 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet> {
           child: Column(
             children: [
               _header(accent),
+              if (widget.hint case final String hint)
+                Padding(
+                  key: const ValueKey('category-pick-hint'),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Text(
+                      hint,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ),
+                ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                 child: _searchBox(),

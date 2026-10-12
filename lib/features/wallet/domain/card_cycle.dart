@@ -230,8 +230,33 @@ class CardStatus {
     return min == null ? null : _positive(min - paidSinceClosing);
   }
 
+  /// Beyan edilen asgari tutarın tamamı ödendi mi. Asgari beyan edilmediyse
+  /// (ya da 0 girildiyse — borcu olan ekstrenin asgarisi 0 olamaz) `false`:
+  /// bilinmeyen asgari ödenmiş sayılmaz.
+  bool get minimumCovered {
+    final min = declared?.minimumPayment;
+    if (min == null || !moneyIsPositive(min)) return false;
+    return !moneyIsPositive(min - paidSinceClosing);
+  }
+
+  /// Gecikmede: son ödeme geçti, dönem borcu kaldı VE asgari karşılanmadı.
+  ///
+  /// Asgarisi ödenmiş ekstre gecikmiş DEĞİLDİR: kalan tutar akdi faizle bir
+  /// sonraki döneme devreder, gecikme faizi işlemez. Eskiden bu durumda da
+  /// kırmızı "N gün gecikti" çipi ve her gün gecikme bildirimi çıkıyordu —
+  /// faiz tahmini "asgariyi ödediysen kalan devreder" derken hemen yanındaki
+  /// çip "gecikti" diyordu (cihaz turu, 12 Eki 2026).
   bool get isOverdue =>
-      daysToDue < 0 && moneyIsPositive(remainingStatementDebt);
+      daysToDue < 0 &&
+      moneyIsPositive(remainingStatementDebt) &&
+      !minimumCovered;
+
+  /// Son ödeme geçti, asgari ödendi, kalan tutar bir sonraki döneme
+  /// DEVREDİYOR (bkz. [isOverdue]).
+  bool get isCarrying =>
+      daysToDue < 0 &&
+      moneyIsPositive(remainingStatementDebt) &&
+      minimumCovered;
 
   /// Beyan ile defter arasındaki fark (beyan − defter). Yalnız ikisi de
   /// varken ve defter güvenilirken; yoksa `null`. Pozitifse defterde EKSİK

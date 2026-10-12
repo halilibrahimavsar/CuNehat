@@ -4510,5 +4510,28 @@
   "reminderNoteTemplatesUnreadable": "şablonlar okunamadı",
   "reminderNoteDebtsUnreadable": "borçlar okunamadı",
   "reminderNoteCardFailed": "kart hatırlatması kurulamadı",
-  "reminderNoteWalletsUnreadable": "cüzdanlar okunamadı"
+  "reminderNoteWalletsUnreadable": "cüzdanlar okunamadı",
+  "kkAsgariOdendi": "Asgari ödendi",
+  "unlinkPickCategoryExpense": "Bağı kalkan “{title}” ({amount}) artık bir gider. Kategorisini seç.",
+  "@unlinkPickCategoryExpense": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "unlinkPickCategoryIncome": "Bağı kalkan “{title}” ({amount}) artık bir gelir. Kategorisini seç.",
+  "@unlinkPickCategoryIncome": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

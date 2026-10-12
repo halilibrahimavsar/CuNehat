@@ -7031,4 +7031,17 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get reminderNoteWalletsUnreadable => 'cüzdanlar okunamadı';
+
+  @override
+  String get kkAsgariOdendi => 'Asgari ödendi';
+
+  @override
+  String unlinkPickCategoryExpense(String title, String amount) {
+    return 'Bağı kalkan “$title” ($amount) artık bir gider. Kategorisini seç.';
+  }
+
+  @override
+  String unlinkPickCategoryIncome(String title, String amount) {
+    return 'Bağı kalkan “$title” ($amount) artık bir gelir. Kategorisini seç.';
+  }
 }

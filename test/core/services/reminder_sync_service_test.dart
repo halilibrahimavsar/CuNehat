@@ -586,6 +586,85 @@ void main() {
           ));
     });
 
+    group('asgarisi ödenmiş ekstre', () {
+      WalletEntity declared() => card().copyWith(
+            creditCard: CreditCardInfo(
+              closingDay: 15,
+              dueDay: 25,
+              lastStatement: CardStatement(
+                closingDate: DateTime(2026, 9, 15),
+                dueDate: DateTime(2026, 9, 25),
+                statementBalance: 800,
+                minimumPayment: 200,
+                recordedAt: DateTime(2026, 9, 16),
+              ),
+            ),
+          );
+
+      test('son ödeme geçtiyse her sabah "gecikti" bildirimi KURULMAZ',
+          () async {
+        stubLedger([
+          tx(DateTime(2026, 9, 10), 800),
+          tx(DateTime(2026, 9, 20), 200, income: true),
+        ]);
+
+        await service.syncCard(declared(), now: DateTime(2026, 9, 27, 10));
+
+        verify(() =>
+                notifications.cancelNotification(ReminderIds.cardDue('card')))
+            .called(1);
+        verifyNever(() => notifications.scheduleNotification(
+              id: any(named: 'id'),
+              title: any(named: 'title'),
+              body: any(named: 'body'),
+              scheduledDate: any(named: 'scheduledDate'),
+              payload: any(named: 'payload'),
+              channel: any(named: 'channel'),
+              repeatDaily: any(named: 'repeatDaily'),
+            ));
+      });
+
+      test('asgarinin altında ödendiyse gecikme bildirimi sürer', () async {
+        stubLedger([
+          tx(DateTime(2026, 9, 10), 800),
+          tx(DateTime(2026, 9, 20), 150, income: true),
+        ]);
+
+        await service.syncCard(declared(), now: DateTime(2026, 9, 27, 10));
+
+        verify(() => notifications.scheduleNotification(
+              id: ReminderIds.cardDue('card'),
+              title: any(named: 'title'),
+              body: any(named: 'body'),
+              scheduledDate: any(named: 'scheduledDate'),
+              payload: any(named: 'payload'),
+              channel: any(named: 'channel'),
+              repeatDaily: true,
+            )).called(1);
+      });
+
+      test('son ödemeden ÖNCE kalan tutar için hatırlatma kurulur', () async {
+        stubLedger([
+          tx(DateTime(2026, 9, 10), 800),
+          tx(DateTime(2026, 9, 18), 200, income: true),
+        ]);
+
+        await service.syncCard(declared(), now: DateTime(2026, 9, 20, 10));
+
+        // Asgari ödendi ama kalan 600 için son ödeme günü hâlâ hatırlatılır:
+        // faiz işlemeden kapatma fırsatı.
+        verify(() => notifications.scheduleNotification(
+              id: ReminderIds.cardDue('card'),
+              title: any(named: 'title'),
+              body: any(named: 'body'),
+              scheduledDate: DateTime(2026, 9, 25, kReminderHour),
+              payload: any(named: 'payload'),
+              channel: any(named: 'channel'),
+              repeatDaily: false,
+            )).called(1);
+      });
+    });
+
     test('son ödeme geçtiyse gün hatırlatması her sabah TEKRARLAR', () async {
       stubLedger([tx(DateTime(2026, 9, 10), 800)]);
 

@@ -7080,4 +7080,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reminderNoteWalletsUnreadable => 'could not read the wallets';
+
+  @override
+  String get kkAsgariOdendi => 'Minimum paid';
+
+  @override
+  String unlinkPickCategoryExpense(String title, String amount) {
+    return '“$title” ($amount) is now a plain expense. Pick its category.';
+  }
+
+  @override
+  String unlinkPickCategoryIncome(String title, String amount) {
+    return '“$title” ($amount) is now a plain income. Pick its category.';
+  }
 }
