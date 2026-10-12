@@ -6803,4 +6803,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String kkFaizTahminiOdemeSonrasi(String carried, String interest) {
     return 'The remaining $carried of the statement accrues ≈ $interest interest in a month (before tax, estimate).';
   }
+
+  @override
+  String blocMsgTxGroupUpdated(String baslik, int count) {
+    return '$baslik updated ($count installments)';
+  }
+
+  @override
+  String get installmentEditAll => 'Edit purchase';
+
+  @override
+  String get installmentEditTitle => 'Edit installment purchase';
+
+  @override
+  String get installmentEditHint =>
+      'Total, name and category apply to every installment; dates stay as they are.';
+
+  @override
+  String get installmentEditName => 'Purchase name';
+
+  @override
+  String get installmentEditTotal => 'Total amount';
+
+  @override
+  String get installmentEditCategory => 'Category';
+
+  @override
+  String installmentEditPreview(int count, String amount) {
+    return '$count installments × $amount';
+  }
+
+  @override
+  String installmentEditPreviewUneven(int count, String amount, String last) {
+    return '$count installments: $amount, last one $last';
+  }
+
+  @override
+  String get installmentEditNameRequired => 'Give the purchase a name';
 }

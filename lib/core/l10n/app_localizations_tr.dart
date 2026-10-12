@@ -6754,4 +6754,41 @@ class AppLocalizationsTr extends AppLocalizations {
   String kkFaizTahminiOdemeSonrasi(String carried, String interest) {
     return 'Dönem borcundan kalan $carried için bir ayda ≈ $interest faiz işler (vergiler hariç, tahmin).';
   }
+
+  @override
+  String blocMsgTxGroupUpdated(String baslik, int count) {
+    return '$baslik güncellendi ($count taksit)';
+  }
+
+  @override
+  String get installmentEditAll => 'Alışverişi düzenle';
+
+  @override
+  String get installmentEditTitle => 'Taksitli alışverişi düzenle';
+
+  @override
+  String get installmentEditHint =>
+      'Toplam, ad ve kategori bütün taksitlere uygulanır; tarihler değişmez.';
+
+  @override
+  String get installmentEditName => 'Alışverişin adı';
+
+  @override
+  String get installmentEditTotal => 'Toplam tutar';
+
+  @override
+  String get installmentEditCategory => 'Kategori';
+
+  @override
+  String installmentEditPreview(int count, String amount) {
+    return '$count taksit × $amount';
+  }
+
+  @override
+  String installmentEditPreviewUneven(int count, String amount, String last) {
+    return '$count taksit: $amount, sonuncusu $last';
+  }
+
+  @override
+  String get installmentEditNameRequired => 'Alışverişe bir ad ver';
 }

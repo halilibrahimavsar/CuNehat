@@ -25,6 +25,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
 import 'package:cunehat/features/finance_transactions/domain/installments.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/installment_group_edit_sheet.dart';
 import 'package:cunehat/core/config/feature_flags.dart';
 import 'package:cunehat/features/wallet/domain/card_cycle.dart';
 import 'package:flutter/material.dart';
@@ -335,6 +336,11 @@ class _SingleTransactionDetailPageState
                     group: installmentGroup(tList, groupId),
                     accent: accent,
                     onDeleteAll: (group) => _deleteGroup(context, group),
+                    onEditAll: (group) => _editGroup(
+                      context,
+                      group,
+                      categoryLabel: _categoryLabelOf(context, t),
+                    ),
                   ),
                 ],
 
@@ -463,6 +469,34 @@ class _SingleTransactionDetailPageState
     if (t.id != null) {
       context.read<TransactionBloc>().add(DeleteTransactionEvent(t.id!));
     }
+  }
+
+  /// Taksitli ALIŞVERİŞİ düzenler: toplam, ad ve kategori bütün satırlara
+  /// yazılır (bkz. `redistributeInstallments`). Sistem ve benimsenmiş
+  /// satırlar dışarıda kalır — onlar sahibinden yönetilir.
+  Future<void> _editGroup(
+    BuildContext context,
+    List<TransactionEntity> group, {
+    String? categoryLabel,
+  }) async {
+    final editable = [
+      for (final g in group)
+        if (g.id != null && !g.isSystem && !g.isAdopted) g,
+    ];
+    if (editable.isEmpty) return;
+    final bloc = context.read<TransactionBloc>();
+    final updated = await InstallmentGroupEditSheet.show(
+      context,
+      group: editable,
+      currency: context.walletById(editable.first.walletId)?.currency ??
+          context.activeWalletCurrency,
+      categoryLabel: categoryLabel,
+    );
+    if (updated == null || updated.isEmpty) return;
+    bloc.add(UpdateTransactionsEvent(
+      updated,
+      label: installmentBaseTitle(updated.first.title),
+    ));
   }
 
   /// Taksit grubunun TÜMÜNÜ siler (tek "Geri al" hepsini getirir). Sayfa,
@@ -688,12 +722,14 @@ class _InstallmentGroupCard extends StatelessWidget {
   final List<TransactionEntity> group;
   final Color accent;
   final void Function(List<TransactionEntity> group) onDeleteAll;
+  final void Function(List<TransactionEntity> group) onEditAll;
 
   const _InstallmentGroupCard({
     required this.current,
     required this.group,
     required this.accent,
     required this.onDeleteAll,
+    required this.onEditAll,
   });
 
   @override
@@ -724,9 +760,8 @@ class _InstallmentGroupCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Opacity(
-                opacity: g.date.isBefore(todayEnd) && g.id != current.id
-                    ? 0.55
-                    : 1,
+                opacity:
+                    g.date.isBefore(todayEnd) && g.id != current.id ? 0.55 : 1,
                 child: Row(
                   children: [
                     SizedBox(
@@ -772,18 +807,30 @@ class _InstallmentGroupCard extends StatelessWidget {
                     ?.copyWith(color: scheme.onSurfaceVariant),
               ),
             ),
-          if (group.length > 1)
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                key: const ValueKey('installment-delete-all'),
-                onPressed: () => onDeleteAll(group),
-                icon: const Icon(Icons.delete_sweep_rounded),
-                label: Text(l10n.installmentDeleteAll(group.length)),
-                style: TextButton.styleFrom(
-                    foregroundColor: AppGradients.debt),
+          // Wrap: iki eylem 360dp'de yan yana sığmayabilir.
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: 4,
+            children: [
+              // Alışverişin toplamı/adı/kategorisi tek yerden: alttaki
+              // "Düzenle" yalnız BU taksit satırını değiştirir.
+              TextButton.icon(
+                key: const ValueKey('installment-edit-all'),
+                onPressed: () => onEditAll(group),
+                icon: const Icon(Icons.edit_note_rounded),
+                label: Text(l10n.installmentEditAll),
               ),
-            ),
+              if (group.length > 1)
+                TextButton.icon(
+                  key: const ValueKey('installment-delete-all'),
+                  onPressed: () => onDeleteAll(group),
+                  icon: const Icon(Icons.delete_sweep_rounded),
+                  label: Text(l10n.installmentDeleteAll(group.length)),
+                  style:
+                      TextButton.styleFrom(foregroundColor: AppGradients.debt),
+                ),
+            ],
+          ),
         ],
       ),
     );

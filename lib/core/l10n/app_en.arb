@@ -3949,5 +3949,48 @@
         "type": "String"
       }
     }
-  }
+  },
+  "blocMsgTxGroupUpdated": "{baslik} updated ({count} installments)",
+  "@blocMsgTxGroupUpdated": {
+    "placeholders": {
+      "baslik": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "installmentEditAll": "Edit purchase",
+  "installmentEditTitle": "Edit installment purchase",
+  "installmentEditHint": "Total, name and category apply to every installment; dates stay as they are.",
+  "installmentEditName": "Purchase name",
+  "installmentEditTotal": "Total amount",
+  "installmentEditCategory": "Category",
+  "installmentEditPreview": "{count} installments × {amount}",
+  "@installmentEditPreview": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "installmentEditPreviewUneven": "{count} installments: {amount}, last one {last}",
+  "@installmentEditPreviewUneven": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "last": {
+        "type": "String"
+      }
+    }
+  },
+  "installmentEditNameRequired": "Give the purchase a name"
 }

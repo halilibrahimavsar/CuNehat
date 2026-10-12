@@ -11626,6 +11626,66 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Dönem borcundan kalan {carried} için bir ayda ≈ {interest} faiz işler (vergiler hariç, tahmin).'**
   String kkFaizTahminiOdemeSonrasi(String carried, String interest);
+
+  /// No description provided for @blocMsgTxGroupUpdated.
+  ///
+  /// In tr, this message translates to:
+  /// **'{baslik} güncellendi ({count} taksit)'**
+  String blocMsgTxGroupUpdated(String baslik, int count);
+
+  /// No description provided for @installmentEditAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alışverişi düzenle'**
+  String get installmentEditAll;
+
+  /// No description provided for @installmentEditTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taksitli alışverişi düzenle'**
+  String get installmentEditTitle;
+
+  /// No description provided for @installmentEditHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplam, ad ve kategori bütün taksitlere uygulanır; tarihler değişmez.'**
+  String get installmentEditHint;
+
+  /// No description provided for @installmentEditName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alışverişin adı'**
+  String get installmentEditName;
+
+  /// No description provided for @installmentEditTotal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplam tutar'**
+  String get installmentEditTotal;
+
+  /// No description provided for @installmentEditCategory.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori'**
+  String get installmentEditCategory;
+
+  /// No description provided for @installmentEditPreview.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} taksit × {amount}'**
+  String installmentEditPreview(int count, String amount);
+
+  /// No description provided for @installmentEditPreviewUneven.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} taksit: {amount}, sonuncusu {last}'**
+  String installmentEditPreviewUneven(int count, String amount, String last);
+
+  /// No description provided for @installmentEditNameRequired.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alışverişe bir ad ver'**
+  String get installmentEditNameRequired;
 }
 
 class _AppLocalizationsDelegate

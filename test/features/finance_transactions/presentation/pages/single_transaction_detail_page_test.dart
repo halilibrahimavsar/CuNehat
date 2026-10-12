@@ -560,6 +560,128 @@ void main() {
         ))).called(1);
   });
 
+  testWidgets(
+      'taksit grubu: "Alışverişi düzenle" toplamı bütün taksitlere yeniden '
+      'dağıtır ve tek olayla yazar', (WidgetTester tester) async {
+    // Geniş yüzey: test fontu gerçeğinden ~1,5× geniş, dar yüzeyde sayfanın
+    // bilgi satırları YAPAY taşıyor (ölçüm cihazda yapılır).
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    final rows = [
+      for (var k = 1; k <= 3; k++)
+        TransactionEntity(
+          id: 'i$k',
+          userId: 'user_123',
+          walletId: 'wallet_123',
+          title: 'Laptop ($k/3)',
+          tag: 'Food',
+          amount: 1000,
+          date: DateTime(2026, 5 + k, 10),
+          type: TransactionTypeModel.expense,
+          installmentGroupId: 'g1',
+          installmentNo: k,
+          installmentCount: 3,
+        ),
+    ];
+    when(() => mockTransactionBloc.state).thenReturn(TransactionLoaded(
+      groupedTransactions: const {},
+      allTransactions: rows,
+    ));
+
+    await tester.pumpWidget(buildTestableWidget(SingleTransactionDetailPage(
+      item: TransactionWithBalance(transaction: rows[1], balanceAfter: 0),
+      heroTag: 'hero_i2',
+    )));
+    await tester.pumpAndSettle();
+
+    final editAll = find.byKey(const ValueKey('installment-edit-all'));
+    await tester.ensureVisible(editAll);
+    await tester.tap(editAll);
+    await tester.pumpAndSettle();
+
+    // Sayfa alışverişin TOPLAMI ve adıyla açılır (taksit tutarıyla değil).
+    final total = find.byKey(const ValueKey('installment-edit-total'));
+    final name = find.byKey(const ValueKey('installment-edit-name'));
+    expect(tester.widget<TextField>(total).controller!.text, '3.000');
+    expect(tester.widget<TextField>(name).controller!.text, 'Laptop');
+    expect(find.text('3 taksit × 1.000,00 ₺'), findsOneWidget);
+
+    await tester.enterText(total, '3.100');
+    await tester.pump();
+    expect(find.text('3 taksit: 1.033,33 ₺, sonuncusu 1.033,34 ₺'),
+        findsOneWidget);
+    await tester.enterText(name, 'Dizüstü');
+    await tester.tap(find.byKey(const ValueKey('installment-edit-save')));
+    await tester.pumpAndSettle();
+
+    final event = verify(() => mockTransactionBloc.add(captureAny()))
+        .captured
+        .whereType<UpdateTransactionsEvent>()
+        .single;
+    expect(event.label, 'Dizüstü');
+    expect(event.transactions.map((t) => t.id), ['i1', 'i2', 'i3']);
+    expect(
+        event.transactions.map((t) => t.amount), [1033.33, 1033.33, 1033.34]);
+    expect(event.transactions.map((t) => t.title),
+        ['Dizüstü (1/3)', 'Dizüstü (2/3)', 'Dizüstü (3/3)']);
+    // Tarihler değişmez.
+    expect(event.transactions.map((t) => t.date), rows.map((t) => t.date));
+  });
+
+  testWidgets('alışveriş düzenlemede boş ad ya da sıfır tutar reddedilir',
+      (WidgetTester tester) async {
+    // Geniş yüzey: test fontu gerçeğinden ~1,5× geniş, dar yüzeyde sayfanın
+    // bilgi satırları YAPAY taşıyor (ölçüm cihazda yapılır).
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    final rows = [
+      for (var k = 1; k <= 2; k++)
+        TransactionEntity(
+          id: 'i$k',
+          userId: 'user_123',
+          walletId: 'wallet_123',
+          title: 'Laptop ($k/2)',
+          tag: 'Food',
+          amount: 1000,
+          date: DateTime(2026, 5 + k, 10),
+          type: TransactionTypeModel.expense,
+          installmentGroupId: 'g1',
+          installmentNo: k,
+          installmentCount: 2,
+        ),
+    ];
+    when(() => mockTransactionBloc.state).thenReturn(TransactionLoaded(
+      groupedTransactions: const {},
+      allTransactions: rows,
+    ));
+    await tester.pumpWidget(buildTestableWidget(SingleTransactionDetailPage(
+      item: TransactionWithBalance(transaction: rows[0], balanceAfter: 0),
+      heroTag: 'hero_i1',
+    )));
+    await tester.pumpAndSettle();
+    final editAll = find.byKey(const ValueKey('installment-edit-all'));
+    await tester.ensureVisible(editAll);
+    await tester.tap(editAll);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+        find.byKey(const ValueKey('installment-edit-total')), '0');
+    await tester.tap(find.byKey(const ValueKey('installment-edit-save')));
+    await tester.pumpAndSettle();
+    expect(find.text('Geçerli bir tutar girin'), findsOneWidget);
+
+    await tester.enterText(
+        find.byKey(const ValueKey('installment-edit-name')), '  ');
+    await tester.tap(find.byKey(const ValueKey('installment-edit-save')));
+    await tester.pumpAndSettle();
+    expect(find.text('Alışverişe bir ad ver'), findsOneWidget);
+
+    verifyNever(() =>
+        mockTransactionBloc.add(any(that: isA<UpdateTransactionsEvent>())));
+  });
+
   testWidgets('taksitsiz işlemde grup kartı YOK', (WidgetTester tester) async {
     final tx = TransactionEntity(
       id: 'tx_1',

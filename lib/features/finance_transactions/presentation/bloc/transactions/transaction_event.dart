@@ -83,6 +83,23 @@ class ChangeTransactionsCategoryEvent extends TransactionEvent {
   List<Object?> get props => [transactions, categoryId];
 }
 
+/// Birden çok işlemi TEK eylemde günceller (taksitli alışverişin toplamını,
+/// adını ya da kategorisini düzenlemek — bkz. `redistributeInstallments`).
+/// Sistem ve benimsenmiş satırlar atlanır; bakiye cüzdan başına bir kez
+/// yeniden türetilir.
+class UpdateTransactionsEvent extends TransactionEvent {
+  /// Satırların YENİ hâlleri (kimlikleri var olan kayıtlarınki).
+  final List<TransactionEntity> transactions;
+
+  /// Mesajda görünen ad ("Laptop").
+  final String label;
+
+  const UpdateTransactionsEvent(this.transactions, {required this.label});
+
+  @override
+  List<Object?> get props => [transactions, label];
+}
+
 class DeleteTransactionEvent extends TransactionEvent {
   final String transactionId;
 

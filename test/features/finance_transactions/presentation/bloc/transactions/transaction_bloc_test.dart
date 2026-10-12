@@ -508,6 +508,112 @@ void main() {
     });
   });
 
+  // Taksitli alışverişi düzenle: grubun satırları tek eylemde yazılır.
+  group('UpdateTransactionsEvent', () {
+    TransactionEntity row(int k, double amount) => TransactionEntity(
+          id: 'i$k',
+          userId: 'user_123',
+          walletId: 'wallet_123',
+          title: 'Laptop ($k/2)',
+          tag: 'Food',
+          amount: amount,
+          date: DateTime(2026, 5 + k, 10),
+          type: TransactionTypeModel.expense,
+          installmentGroupId: 'g1',
+          installmentNo: k,
+          installmentCount: 2,
+        );
+
+    TransactionLoaded seed(List<TransactionEntity> list) => TransactionLoaded(
+          groupedTransactions: {DateTime(2026, 6, 13): list},
+          allTransactions: list,
+        );
+
+    blocTest<TransactionBloc, TransactionState>(
+      'her satır yazılır; bakiye cüzdan başına BİR kez eşitlenir',
+      build: () {
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async => true);
+        return transactionBloc;
+      },
+      seed: () => seed([row(1, 500), row(2, 500), testTransaction]),
+      act: (bloc) => bloc.add(UpdateTransactionsEvent(
+        [row(1, 600), row(2, 600)],
+        label: 'Laptop',
+      )),
+      expect: () => [
+        TransactionActionSuccess(
+          'Laptop güncellendi (2 taksit)',
+          transactions: [row(1, 600), row(2, 600), testTransaction],
+        ),
+      ],
+      verify: (_) {
+        verify(() => mockUpdateUseCase(row(1, 600))).called(1);
+        verify(() => mockUpdateUseCase(row(2, 600))).called(1);
+        verify(() => mockMetricsService.syncBalance('wallet_123')).called(1);
+      },
+    );
+
+    blocTest<TransactionBloc, TransactionState>(
+      'sistem ve benimsenmiş satır yazılmaz',
+      build: () {
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async => true);
+        return transactionBloc;
+      },
+      seed: () => seed([row(1, 500), testSystemTransaction]),
+      act: (bloc) => bloc.add(UpdateTransactionsEvent(
+        [row(1, 600), testSystemTransaction.copyWith(amount: 1)],
+        label: 'Laptop',
+      )),
+      verify: (_) {
+        verify(() => mockUpdateUseCase(row(1, 600))).called(1);
+        verifyNever(
+            () => mockUpdateUseCase(testSystemTransaction.copyWith(amount: 1)));
+      },
+    );
+
+    blocTest<TransactionBloc, TransactionState>(
+      'bir satır yazılamazsa yazılabilen kalır ve hata bildirilir',
+      build: () {
+        when(() => mockUpdateUseCase(row(1, 600)))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockUpdateUseCase(row(2, 600)))
+            .thenAnswer((_) async => const Left(ServerFailure('disk')));
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async => true);
+        return transactionBloc;
+      },
+      seed: () => seed([row(1, 500), row(2, 500)]),
+      act: (bloc) => bloc.add(UpdateTransactionsEvent(
+        [row(1, 600), row(2, 600)],
+        label: 'Laptop',
+      )),
+      expect: () => [
+        TransactionActionSuccess(
+          'Laptop güncellendi (1 taksit)',
+          transactions: [row(1, 600), row(2, 500)],
+        ),
+        isA<TransactionError>().having(
+            (s) => s.currentTransactions, 'liste', [row(1, 600), row(2, 500)]),
+      ],
+    );
+
+    blocTest<TransactionBloc, TransactionState>(
+      'yazılacak satır yoksa hiçbir şey olmaz',
+      build: () => transactionBloc,
+      seed: () => seed([testSystemTransaction]),
+      act: (bloc) => bloc
+          .add(UpdateTransactionsEvent([testSystemTransaction], label: 'x')),
+      expect: () => <TransactionState>[],
+      verify: (_) => verifyZeroInteractions(mockMetricsService),
+    );
+  });
+
   // UX Tur 4 · E6 — defterde çoklu seçimle toplu kategori değiştirme.
   group('ChangeTransactionsCategoryEvent', () {
     final second = TransactionEntity(

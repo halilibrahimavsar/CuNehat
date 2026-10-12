@@ -41,6 +41,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     on<AddTransactionsEvent>(_onAddTransactions);
     on<UpdateTransactionEvent>(_onUpdateTransaction);
     on<ChangeTransactionsCategoryEvent>(_onChangeCategory);
+    on<UpdateTransactionsEvent>(_onUpdateTransactions);
     on<DeleteTransactionEvent>(_onDeleteTransaction);
     on<DeleteTransactionsEvent>(_onDeleteTransactions);
 
@@ -291,6 +292,57 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     }
   }
 
+  /// Toplu güncelleme (taksit grubu). Tutarlar değiştiği için bakiye
+  /// yeniden türetilir — cüzdan başına BİR kez, satır başına değil.
+  Future<void> _onUpdateTransactions(
+    UpdateTransactionsEvent event,
+    Emitter<TransactionState> emit,
+  ) async {
+    final currentData = state.currentTransactions;
+    final targets = [
+      for (final t in event.transactions)
+        if (t.id != null && !t.isSystem && !t.isAdopted) t,
+    ];
+    if (targets.isEmpty) return;
+
+    final changed = <String, TransactionEntity>{};
+    String? failure;
+    for (final t in targets) {
+      final result = await updateTransactionUseCase(t);
+      result.fold(
+        (f) => failure ??= f.message,
+        (_) => changed[t.id!] = t,
+      );
+    }
+
+    final after = [for (final t in currentData) changed[t.id] ?? t];
+    if (changed.isNotEmpty) {
+      final wallets = {for (final t in changed.values) t.walletId};
+      var synced = true;
+      for (final walletId in wallets) {
+        synced = await _safeSyncBalance(walletId) && synced;
+      }
+      emit(TransactionActionSuccess(
+        appStrings.blocMsgTxGroupUpdated(event.label, changed.length),
+        transactions: after,
+        warning: synced ? null : _syncWarning,
+      ));
+      final first = changed.values.first;
+      for (final walletId in wallets) {
+        transactionsChangedNotifier.notify(
+          userId: first.userId,
+          walletId: walletId,
+        );
+      }
+    }
+    if (failure != null) {
+      emit(TransactionError(
+        appStrings.blocMsgTxUpdateFailed('$failure'),
+        transactions: after,
+      ));
+    }
+  }
+
   Future<void> _onDeleteTransaction(
     DeleteTransactionEvent event,
     Emitter<TransactionState> emit,
@@ -369,8 +421,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       final t = read.fold((_) => null, (t) => t);
       // Sistem işlemi kayıttan yönetilir; okunamayan satır zaten yok.
       if (t == null || t.isSystem) continue;
-      final result =
-          await deleteTransactionUseCase(id, keepReceiptFile: true);
+      final result = await deleteTransactionUseCase(id, keepReceiptFile: true);
       result.fold((f) => failure ??= f.message, (_) => deleted.add(t));
     }
     if (deleted.isEmpty) {

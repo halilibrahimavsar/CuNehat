@@ -4183,5 +4183,48 @@
         "type": "String"
       }
     }
-  }
+  },
+  "blocMsgTxGroupUpdated": "{baslik} güncellendi ({count} taksit)",
+  "@blocMsgTxGroupUpdated": {
+    "placeholders": {
+      "baslik": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "installmentEditAll": "Alışverişi düzenle",
+  "installmentEditTitle": "Taksitli alışverişi düzenle",
+  "installmentEditHint": "Toplam, ad ve kategori bütün taksitlere uygulanır; tarihler değişmez.",
+  "installmentEditName": "Alışverişin adı",
+  "installmentEditTotal": "Toplam tutar",
+  "installmentEditCategory": "Kategori",
+  "installmentEditPreview": "{count} taksit × {amount}",
+  "@installmentEditPreview": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "installmentEditPreviewUneven": "{count} taksit: {amount}, sonuncusu {last}",
+  "@installmentEditPreviewUneven": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "last": {
+        "type": "String"
+      }
+    }
+  },
+  "installmentEditNameRequired": "Alışverişe bir ad ver"
 }

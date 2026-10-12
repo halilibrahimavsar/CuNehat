@@ -103,3 +103,47 @@ List<InstallmentPlan> activeInstallmentPlans(
 /// ("Laptop (2/6)" → "Laptop"). Kullanıcı başlığı düzenlediyse olduğu gibi.
 String installmentBaseTitle(String title) =>
     title.replaceFirst(RegExp(r' \(\d+/\d+\)$'), '');
+
+/// Taksit grubunu yeniden yazar: ALIŞVERİŞİN toplamı, adı ve kategorisi.
+///
+/// Tek tek satırlar formdan düzenlenebiliyordu ama alışverişin kendisi
+/// düzenlenemiyordu: 12.500 yerine 12.000 yazılmış bir alışverişi düzeltmek
+/// için altı satırın altısına tek tek girip yeni taksit tutarını hesaplamak
+/// gerekiyordu (kullanıcı şikâyeti, 12 Eki 2026).
+///
+/// - [total] satırlara KURUŞ üzerinden eşit bölünür; yuvarlama farkını SON
+///   satır emer ([splitIntoInstallments] ile aynı kural) — toplam kuruşu
+///   kuruşuna tutar.
+/// - [title] verilirse her satır "Ad (k/N)" olur (k ve N satırın kendi taksit
+///   numarası); verilmezse başlıklara dokunulmaz.
+/// - [tag] verilirse bütün satırların kategorisi olur.
+/// - Kimlikler, tarihler, taksit numaraları, fiş ve köken KORUNUR: satırlar
+///   yerinde güncellenir, yeniden yaratılmaz.
+///
+/// Grup eksikse (bir taksit tek başına silinmişse) toplam KALAN satırlara
+/// dağıtılır; [total] onların toplamıdır.
+List<TransactionEntity> redistributeInstallments(
+  List<TransactionEntity> group, {
+  required double total,
+  String? title,
+  String? tag,
+}) {
+  if (group.isEmpty) return const [];
+  final rows = [...group]
+    ..sort((a, b) => (a.installmentNo ?? 0).compareTo(b.installmentNo ?? 0));
+  final totalCents = (total * 100).round();
+  final perCents = totalCents ~/ rows.length;
+  final lastCents = totalCents - perCents * (rows.length - 1);
+  final name = title?.trim();
+  return [
+    for (var k = 0; k < rows.length; k++)
+      rows[k].copyWith(
+        amount: (k == rows.length - 1 ? lastCents : perCents) / 100,
+        title: name == null || name.isEmpty
+            ? null
+            : '$name (${rows[k].installmentNo ?? k + 1}/'
+                '${rows[k].installmentCount ?? rows.length})',
+        tag: tag,
+      ),
+  ];
+}

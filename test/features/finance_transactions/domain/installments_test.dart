@@ -46,8 +46,8 @@ void main() {
     expect(rows.first.receiptFileName, 'fis.jpg');
     expect(rows.last.receiptFileName, isNull);
     expect(rows.every((t) => t.origin == TransactionOrigin.manual), isTrue);
-    expect(rows.every((t) => t.walletId == 'card' && t.tag == 'cat-ev'),
-        isTrue);
+    expect(
+        rows.every((t) => t.walletId == 'card' && t.tag == 'cat-ev'), isTrue);
   });
 
   test('satırlar AYNI grup kimliğini ve açık k/N\'yi taşır', () {
@@ -90,5 +90,85 @@ void main() {
   test('tek çekim olduğu gibi döner', () {
     final p = _purchase();
     expect(splitIntoInstallments(p, 1), [p]);
+  });
+
+  group('redistributeInstallments (alışverişi düzenle)', () {
+    List<TransactionEntity> group() => [
+          for (final (k, t) in splitIntoInstallments(_purchase(), 3).indexed)
+            t.copyWith(id: 'row-${k + 1}'),
+        ];
+
+    int cents(Iterable<TransactionEntity> rows) =>
+        rows.fold<int>(0, (s, t) => s + (t.amount * 100).round());
+
+    test('yeni toplam kuruş üzerinden bölünür; fark SON taksitte', () {
+      final rows = redistributeInstallments(group(), total: 1250);
+      expect(rows.map((t) => t.amount), [416.66, 416.66, 416.68]);
+      expect(cents(rows), 125000);
+    });
+
+    test('tam bölünen toplamda bütün taksitler eşit', () {
+      final rows = redistributeInstallments(group(), total: 900);
+      expect(rows.map((t) => t.amount), [300, 300, 300]);
+    });
+
+    test('kimlik, tarih, taksit numarası, fiş ve köken KORUNUR', () {
+      final before = group();
+      final rows = redistributeInstallments(before, total: 1250);
+      expect(rows.map((t) => t.id), before.map((t) => t.id));
+      expect(rows.map((t) => t.date), before.map((t) => t.date));
+      expect(rows.map((t) => t.installmentNo), [1, 2, 3]);
+      expect(rows.map((t) => t.installmentGroupId).toSet(),
+          {before.first.installmentGroupId});
+      expect(rows.first.receiptFileName, 'fis.jpg');
+      expect(rows.every((t) => t.origin == TransactionOrigin.manual), isTrue);
+    });
+
+    test('ad verilirse her satır "Ad (k/N)" olur; verilmezse dokunulmaz', () {
+      final renamed = redistributeInstallments(group(),
+          total: 1000, title: ' Derin dondurucu ');
+      expect(renamed.map((t) => t.title), [
+        'Derin dondurucu (1/3)',
+        'Derin dondurucu (2/3)',
+        'Derin dondurucu (3/3)',
+      ]);
+
+      // Kullanıcı tek bir taksitin başlığını elle değiştirmiş olabilir.
+      final custom = group()..[1] = group()[1].copyWith(title: 'Özel başlık');
+      final kept = redistributeInstallments(custom, total: 1000);
+      expect(kept[1].title, 'Özel başlık');
+    });
+
+    test('kategori verilirse bütün satırlara yazılır', () {
+      final rows =
+          redistributeInstallments(group(), total: 1000, tag: 'cat-beyaz-esya');
+      expect(rows.map((t) => t.tag).toSet(), {'cat-beyaz-esya'});
+      expect(
+          redistributeInstallments(group(), total: 1000)
+              .map((t) => t.tag)
+              .toSet(),
+          {'cat-ev'});
+    });
+
+    test('eksik grupta toplam KALAN satırlara dağıtılır; k/N korunur', () {
+      // 2. taksit tek başına silinmiş.
+      final partial = [group()[0], group()[2]];
+      final rows =
+          redistributeInstallments(partial, total: 500, title: 'Buzdolabı');
+      expect(rows.map((t) => t.amount), [250, 250]);
+      expect(rows.map((t) => t.title), ['Buzdolabı (1/3)', 'Buzdolabı (3/3)']);
+    });
+
+    test('sırasız verilen grup taksit sırasına dizilir; girdi değişmez', () {
+      final shuffled = group().reversed.toList();
+      final rows = redistributeInstallments(shuffled, total: 1000);
+      expect(rows.map((t) => t.installmentNo), [1, 2, 3]);
+      expect(rows.last.amount, 333.34);
+      expect(shuffled.map((t) => t.installmentNo), [3, 2, 1]);
+    });
+
+    test('boş grup boş döner', () {
+      expect(redistributeInstallments(const [], total: 100), isEmpty);
+    });
   });
 }
