@@ -114,6 +114,7 @@ class AppRoutes {
   static const String bankStatementImport = '/settings/bank-import';
   static const String backupPreview = '/settings/backups';
   static const String restoreBackup = '/restore-backup';
+  static const String backupSetup = '/backup-setup';
   static const String notificationDiagnostics =
       '/settings/notification-diagnostics';
   static const String errorLog = '/settings/error-log';

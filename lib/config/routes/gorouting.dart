@@ -202,6 +202,15 @@ GoRouter createAppRouter(AppAuthBloc authBloc) {
           );
         },
       ),
+      GoRoute(
+        path: AppRoutes.backupSetup,
+        pageBuilder: (context, state) {
+          return MaterialPage(
+            key: state.pageKey,
+            child: const RestoreBackupPage(purpose: BackupPagePurpose.setup),
+          );
+        },
+      ),
     ],
   );
 }

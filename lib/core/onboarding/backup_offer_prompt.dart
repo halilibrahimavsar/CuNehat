@@ -35,10 +35,11 @@ class BackupOfferPrompt {
   }
 }
 
-/// Teklif diyaloğu. "Kur" Ayarlar'a götürür — oturum açma ve sıklık seçimi
-/// zaten yedekleme kartının işi; burada ikinci bir akış kurmak o kartın
-/// hata durumlarını (bağlantı yok, kota dolu, oturum süresi doldu…) yeniden
-/// yazmak olurdu.
+/// Teklif diyaloğu. "Kur" yedekleme sayfasını açar — oturum açma ve sıklık
+/// seçimi zaten yedekleme kartının işi; burada ikinci bir akış kurmak o
+/// kartın hata durumlarını (bağlantı yok, kota dolu, oturum süresi doldu…)
+/// yeniden yazmak olurdu. Sayfa aynı kartı TEK BAŞINA gösterir; eskiden
+/// Ayarlar'ın başına gidiliyor, kart kaydırılıp aranıyordu.
 Future<void> showBackupOfferDialog(BuildContext context) {
   return showDialog<void>(
     context: context,
@@ -60,7 +61,7 @@ Future<void> showBackupOfferDialog(BuildContext context) {
           FilledButton(
             onPressed: () {
               Navigator.of(dialogContext).pop();
-              context.push(AppRoutes.settings);
+              context.push(AppRoutes.backupSetup);
             },
             child: Text(l10n.backupOfferSetup),
           ),
