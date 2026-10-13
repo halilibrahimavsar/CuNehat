@@ -1,52 +1,36 @@
 /// Kullanıcıya **keşfedilemeyeni** gösteren interaktif turlar.
 ///
-/// Küratörlük kuralı: bir adım ancak ekranda yazmayan bir davranışı
-/// anlatıyorsa vardır. Sayfa başlığını tekrar eden ("Geçmiş → geçmişiniz
-/// burada") ya da boş bir listenin üstünde oynayan tur yoktur; o işi
-/// sayfaların kendi boş durum ekranları yapar. Bu yüzden turlar kullanıcının
-/// iş yaptığı yüzeylerde toplanmıştır: kabuk, cüzdan yönetimi ve üç ekleme
-/// formu.
+/// Küratörlük kuralı: bir adım ancak ekranda yazmayan bir JESTİ anlatıyorsa
+/// vardır. Bir alanın ne işe yaradığını anlatan adım tur değildir; o bilgi
+/// alanın altında durur (`FieldHint`, `InvestmentHintCaption`), ilk açılışta
+/// bir kez gösterilip kaybolmaz.
 ///
-/// **Bildirim sırası = öncelik.** Aynı anda birden çok tur oynatılabilir
-/// duruma gelirse [OnboardingCoordinator] bu sırayı izler. Kalıcı bayrak
-/// `flow.name` üzerinden yazıldığından sıra değiştirmek kayıtlı "görüldü"
-/// bilgisini bozmaz.
+/// Eskiden altı tur ve 14 hedef vardı: kabuk (3 adım), cüzdan sayfası (2),
+/// gelir/gider formu (3), borç formu (2), birikim formu (3), kart şeridi (1).
+/// Yeni kullanıcı ilk harcamasını yazmadan önce altı baloncuğu kapatıyordu.
+/// Kalan iki tur birer adımdır.
+///
+/// **Bildirim sırası = öncelik.** Kalıcı bayrak `flow.name` üzerinden
+/// yazıldığından değer çıkarmak ötekilerin kayıtlı "görüldü" bilgisini
+/// bozmaz; çıkarılan turların bayrakları tercihlerde yetim kalır (zararsız).
 enum OnboardingFlow {
-  /// Kabuk: aktif cüzdan alanı → menü → ekle/navigasyon kartı. İlk cüzdan
-  /// oluştuktan SONRA oynar (bkz. AppBarContent'teki `enabled` koşulu);
-  /// cüzdanı olmayan kullanıcıya "işte aktif cüzdanın" demenin anlamı yok.
+  /// Alttaki kaydırıcı: yana = bölüm değiştir, yukarı = alt sayfa, dokun =
+  /// ekle. Yalnız kaydırıcı varken, yani ikinci bölüm (Birikim ya da Borç)
+  /// açıldıktan sonra oynar; yalnız İşlemler açıkken ekranda jest yoktur.
   shell,
 
-  /// Cüzdan sheet'i: cüzdan listesi → yeni cüzdan.
-  walletManagement,
-
-  /// Gelir/gider formu: tutar → kategori → tekrar sıklığı.
-  transactionsAdd,
-
-  /// Borç/alacak formu: tutar kartı → vade tarihi.
-  debtAdd,
-
-  /// Yatırım formu: mevcut değer → toplam maliyet → (altın/hisse) miktar.
-  investmentAdd,
-
-  /// Kredi kartı bağlam şeridi ("Hesap | Kart"): ilk kart eklendikten sonra,
-  /// işlemler ekranında TEK adım — kartın ayrı bir cüzdan değil hesabın
-  /// içinde bir sekme olduğu ekranda yazmıyor. Enum SONUNA eklendi (bayrak
-  /// ada göre saklanır; sıra = öncelik, en düşük).
+  /// Kredi kartı düğmesi: ilk kart eklendikten sonra, işlemler ekranında TEK
+  /// adım — kartın ayrı bir cüzdan değil hesabın içinde olduğu ekranda
+  /// yazmıyor.
   cardRail,
 }
 
 extension OnboardingFlowSurface on OnboardingFlow {
   /// Turun yüzeyi HomePage kabuğunun kendisi mi?
   ///
-  /// Yalnız [OnboardingFlow.shell] için true: hedefleri (appBar, ekle
-  /// kaydırıcısı) kabuğa aittir ve kabuk, alt sayfa açıkken veya geçiş
-  /// animasyonu sürerken bu hedefleri ekranda kaydırır — tur ancak kabuk
-  /// kökte ve durur haldeyken oynayabilir. Diğer turların kendi route'u
-  /// vardır (sheet / itilmiş sayfa); görünürlükleri yalnızca route
-  /// durumundan belirlenir.
-  ///
-  /// [OnboardingFlow.cardRail] de kabuktadır (işlemler ekranının üstü).
-  bool get requiresHomeShellAtRoot =>
-      this == OnboardingFlow.shell || this == OnboardingFlow.cardRail;
+  /// Kalan iki turun ikisi de kabuktadır: hedefleri (kaydırıcı, kart düğmesi)
+  /// kabuğa aittir ve kabuk, alt sayfa açıkken veya geçiş animasyonu sürerken
+  /// bu hedefleri ekranda kaydırır — tur ancak kabuk kökte ve durur haldeyken
+  /// oynayabilir.
+  bool get requiresHomeShellAtRoot => true;
 }

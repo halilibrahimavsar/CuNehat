@@ -5,7 +5,6 @@ import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
-import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivable_bloc/receivable_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/debt_form_preferences.dart';
@@ -34,7 +33,7 @@ void main() {
   late MockOnboardingCoordinator mockOnboardingCoordinator;
 
   setUpAll(() {
-    registerFallbackValue(OnboardingFlow.debtAdd);
+    registerFallbackValue(OnboardingFlow.shell);
     // Showcase scope'u global kayıtla verilir (ShowCaseWidget kullanımdan kalktı).
     ShowcaseView.register(onFinish: () {}, onDismiss: (_) {});
     registerFallbackValue(DebtInitial());
@@ -163,7 +162,10 @@ void main() {
   // mod da doğrulanır.
   for (final isDebt in [true, false]) {
     final mod = isDebt ? 'borç' : 'alacak';
-    testWidgets('$mod modunda turun tüm adımları ağaçta', (tester) async {
+    // Eskiden tarih hapının ne olduğu, formun İLK açılışında bir kez gösterilen
+    // tanıtım baloncuğunda yazıyordu. Artık hapın altında, her açılışta durur.
+    testWidgets('$mod modunda tarihin anlamı alanın altında yazar; tanıtım yok',
+        (tester) async {
       await tester.pumpWidget(buildTestableWidget(
         AddEntrySheet(
           walletId: 'w1',
@@ -174,9 +176,20 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      final showcase = ShowcaseView.get();
-      expect(showcase.isTargetRendered(OnboardingKeys.debtAddForm), isTrue);
-      expect(showcase.isTargetRendered(OnboardingKeys.debtAddDueDate), isTrue);
+      expect(find.byType(Showcase), findsNothing);
+      expect(
+        find.text(isDebt
+            ? 'Taksitler bu tarihten başlayarak her ay ilerler.'
+            : 'Paranı geri almayı beklediğin tarih; yaklaşınca hatırlatırız.'),
+        findsOneWidget,
+      );
+      // Öteki modun açıklaması görünmez.
+      expect(
+        find.text(isDebt
+            ? 'Paranı geri almayı beklediğin tarih; yaklaşınca hatırlatırız.'
+            : 'Taksitler bu tarihten başlayarak her ay ilerler.'),
+        findsNothing,
+      );
     });
   }
 

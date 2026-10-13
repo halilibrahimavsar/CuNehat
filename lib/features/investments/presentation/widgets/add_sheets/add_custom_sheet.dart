@@ -1,9 +1,6 @@
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
-import 'package:cunehat/core/onboarding/onboarding_tour.dart';
-import 'package:cunehat/core/onboarding/onboarding_flow.dart';
-import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
@@ -14,7 +11,6 @@ import 'package:cunehat/core/services/cash_source.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/investment_sheet_widgets.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/purchase_payment.dart';
 import 'package:flutter/material.dart';
-import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 
 class AddCustomSheet extends StatefulWidget {
@@ -254,20 +250,8 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
         Theme.of(context).extension<AppSurface>() ?? AppSurface.light;
     final cs = Theme.of(context).colorScheme;
 
-    return OnboardingTour(
-      flow: OnboardingFlow.investmentAdd,
-      keys: _tourKeys,
-      enabled: !_isEditing,
-      child: _buildContent(context, surface, cs),
-    );
+    return _buildContent(context, surface, cs);
   }
-
-  /// Mevcut değer → toplam maliyet. Özel yatırımda miktar alanı olmadığı için
-  /// üçüncü adım yok; akış bayrağı üç sheet'te ortaktır, adım listesi değil.
-  static final List<GlobalKey> _tourKeys = [
-    OnboardingKeys.investmentAddForm,
-    OnboardingKeys.investmentAddCost,
-  ];
 
   Widget _buildContent(
       BuildContext context, AppSurface surface, ColorScheme cs) {
@@ -303,18 +287,17 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Showcase(
-                        key: OnboardingKeys.investmentAddForm,
-                        title: context.l10n.onboardingInvestmentAddTitle,
-                        description: context.l10n.onboardingInvestmentAddDesc,
-                        child: InvestmentAmountCard(
-                          accent: _accent,
-                          valueColor: Colors.deepPurple,
-                          controller: _currentValueController,
-                          onChanged: _clearError,
-                          currency: widget.walletCurrency,
-                        ),
+                      InvestmentAmountCard(
+                        accent: _accent,
+                        valueColor: Colors.deepPurple,
+                        controller: _currentValueController,
+                        onChanged: _clearError,
+                        currency: widget.walletCurrency,
                       ),
+                      // Altın ve hisse formunda bu açıklamalar zaten vardı;
+                      // özel varlıkta yalnız (kaldırılan) tanıtım turunda
+                      // yazıyordu.
+                      InvestmentHintCaption(context.l10n.ozelDegerAciklama),
                       const SizedBox(height: 20),
                       InvestmentSectionLabel(context.l10n.yatirimDetaylari),
                       const SizedBox(height: 10),
@@ -326,23 +309,18 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
                         onChanged: _clearError,
                       ),
                       const SizedBox(height: 14),
-                      Showcase(
-                        key: OnboardingKeys.investmentAddCost,
-                        title: context.l10n.onboardingInvestmentAddCostTitle,
-                        description:
-                            context.l10n.onboardingInvestmentAddCostDesc,
-                        child: InvestmentFilledField(
-                          controller: _amountController,
-                          readOnly: _payment.isLedgerLocked,
-                          hint: context.l10n.maliyetYatirilanAnaPara,
-                          icon: Icons.payments_rounded,
-                          accent: _accent,
-                          onChanged: _clearError,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
-                          inputFormatters: [AmountInputFormatter()],
-                        ),
+                      InvestmentFilledField(
+                        controller: _amountController,
+                        readOnly: _payment.isLedgerLocked,
+                        hint: context.l10n.maliyetYatirilanAnaPara,
+                        icon: Icons.payments_rounded,
+                        accent: _accent,
+                        onChanged: _clearError,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        inputFormatters: [AmountInputFormatter()],
                       ),
+                      InvestmentHintCaption(context.l10n.ozelMaliyetAciklama),
                       ...?_purchaseRowSlot(),
                       const SizedBox(height: 14),
                       InvestmentSectionLabel(context.l10n.hedefAlaniEtiketi),

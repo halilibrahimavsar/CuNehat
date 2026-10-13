@@ -12,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
-import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -306,8 +305,10 @@ void main() {
     expect(updatedInvestment!.color, Colors.blue);
   });
 
-  // Tur adımları kapanı: altın/hisse sheet'lerinde üç adım da ağaçta olmalı.
-  testWidgets('turun üç adımı da ağaçta', (tester) async {
+  // Alanların anlamı (bugünkü değer, toplam maliyet) alanın ALTINDA yazar;
+  // formun ilk açılışında bir kez gösterilen tanıtım baloncukları kaldırıldı.
+  testWidgets('formda tanıtım yok; açıklamalar alanların altında',
+      (tester) async {
     await tester.pumpWidget(buildTestableWidget(
       AddGoldSheet(
         walletId: 'wallet_123',
@@ -318,11 +319,10 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    final showcase = ShowcaseView.get();
-    expect(showcase.isTargetRendered(OnboardingKeys.investmentAddForm), isTrue);
-    expect(showcase.isTargetRendered(OnboardingKeys.investmentAddCost), isTrue);
-    expect(showcase.isTargetRendered(OnboardingKeys.investmentAddQuantity),
-        isTrue);
+    final l10n = lookupAppLocalizations(const Locale('tr'));
+    expect(find.byType(Showcase), findsNothing);
+    expect(find.text(l10n.mevcutDegerAciklama), findsOneWidget);
+    expect(find.text(l10n.toplamMaliyetAciklama), findsOneWidget);
   });
 
   testWidgets('"zaten bende" seçilince maliyet deftere işlenmez',

@@ -2,17 +2,20 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/notifications/notification_permission_dialog.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
-import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
-import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
+import 'package:cunehat/features/main_feature/utils/section_visibility.dart';
 import 'package:cunehat/features/settings/presentation/page/privacy_policy_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cunehat/core/messaging/app_messenger.dart';
 
-/// Gizlilik/bildirim tanıtımını ve üç ana ekranın interaktif turlarını
-/// istenildiğinde yeniden başlatma imkanı sunan kart. `DataPrivacyCard`
-/// deseni (AppCard + ListTile satırları) taklit edilir.
+/// Yardım kartı: gizlilik/bildirim notunu ve kalan tanıtımları (kaydırıcı,
+/// kart düğmesi) istenildiğinde yeniden gösterir. `DataPrivacyCard` deseni
+/// (AppCard + ListTile satırları) taklit edilir.
+///
+/// Eskiden üç satırdı ve üçüncüsü "tüm turları sıfırla" idi: altı turun beş
+/// bayrağını birden siliyordu. Form ve cüzdan sayfası turları kaldırıldı
+/// (açıklamalar artık alanların altında duruyor); kalan iki tur tek satırdan
+/// yeniden oynatılır.
 class OnboardingHelpCard extends StatelessWidget {
   const OnboardingHelpCard({super.key});
 
@@ -22,73 +25,45 @@ class OnboardingHelpCard extends StatelessWidget {
     await showNotificationPermissionRationale(context);
   }
 
-  /// Kabuk turunu sıfırlayıp HomePage'in (Settings altında canlı kalan)
-  /// [OnboardingTour] dinleyicisini tetikler; sonra Settings'ten geri dönülür
-  /// ki tur ana ekranda görünür olsun.
-  Future<void> _replayShellTour(BuildContext context) async {
-    await getIt<OnboardingCoordinator>().resetAndReplay(OnboardingFlow.shell);
-    if (context.mounted) context.pop();
-  }
-
-  /// Ekleme formlarının (işlem/borç/yatırım) ve cüzdan yönetiminin ayrı bir
-  /// replay satırı yok — o yüzey açıldığında zaten kendiliğinden tetiklenir.
-  /// Bu, beş turun bayrağını birden sıfırlar.
-  Future<void> _resetAll(BuildContext context) async {
-    final confirmed = await ConfirmDialog.show(
-      context,
-      title: context.l10n.tumTurlariSifirla,
-      message: context.l10n.tumTurlariSifirlaOnayMesaji,
-      confirmText: context.l10n.sifirla,
-    );
-    if (!confirmed || !context.mounted) return;
-
+  /// Kalan tanıtımların bayraklarını siler ve Ayarlar'dan geri döner ki
+  /// tanıtım ana ekranda görünür olsun. HomePage (Ayarlar'ın altında canlı)
+  /// isteği yeniden açar.
+  Future<void> _replayTours(BuildContext context) async {
     await getIt<OnboardingCoordinator>().resetAll();
-    if (!context.mounted) return;
-    AppMessenger.success(context.l10n.tumTurlarSifirlandi);
+    if (context.mounted) context.pop();
   }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-
-    Widget divider() =>
-        Divider(height: 1, color: scheme.outline.withValues(alpha: 0.1));
+    final sections = getIt.isRegistered<SectionVisibility>()
+        ? getIt<SectionVisibility>()
+        : null;
 
     return AppCard(
       padding: EdgeInsets.zero,
-      child: Column(
-        children: [
-          ListTile(
-            leading: Icon(Icons.info_outline, color: scheme.primary),
-            title: Text(
-              context.l10n.genelTanitimiTekrarGoster,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+      child: ListenableBuilder(
+        listenable: sections ?? const AlwaysStoppedAnimation<double>(0),
+        builder: (context, _) => Column(
+          children: [
+            ListTile(
+              leading: Icon(Icons.info_outline, color: scheme.primary),
+              title: Text(context.l10n.genelTanitimiTekrarGoster),
+              onTap: () => _replayIntro(context),
             ),
-            onTap: () => _replayIntro(context),
-          ),
-          divider(),
-          ListTile(
-            leading: Icon(Icons.explore_outlined, color: scheme.primary),
-            title: Text(
-              context.l10n.uygulamaTuruTekrarGoster,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            onTap: () => _replayShellTour(context),
-          ),
-          divider(),
-          ListTile(
-            leading: Icon(Icons.replay_outlined, color: scheme.primary),
-            title: Text(
-              context.l10n.tumTurlariSifirla,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text(
-              context.l10n.tumTurlariSifirlaAciklama,
-              style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
-            ),
-            onTap: () => _resetAll(context),
-          ),
-        ],
+            // Anlatılacak jest yalnız kaydırıcıda: yalnız İşlemler açıkken
+            // (sade çubuk) tekrar gösterilecek bir tanıtım yoktur.
+            if (!(sections?.hasOnlyTransactions ?? false)) ...[
+              Divider(height: 1, color: scheme.outlineVariant),
+              ListTile(
+                key: const ValueKey('help-replay-tours'),
+                leading: Icon(Icons.explore_outlined, color: scheme.primary),
+                title: Text(context.l10n.uygulamaTuruTekrarGoster),
+                onTap: () => _replayTours(context),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

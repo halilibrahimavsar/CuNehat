@@ -3,7 +3,6 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
-import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
@@ -56,7 +55,7 @@ void main() {
 
   setUpAll(() {
     ShowcaseView.register(onFinish: () {}, onDismiss: (_) {});
-    registerFallbackValue(OnboardingFlow.walletManagement);
+    registerFallbackValue(OnboardingFlow.shell);
     registerFallbackValue(
         const SetActiveWalletEvent(userId: 'u', walletId: 'x'));
   });
@@ -283,19 +282,14 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('turun iki hedefi de her durumda ağaçta', (tester) async {
+  testWidgets('cüzdan sayfasında tanıtım yok', (tester) async {
     for (final state in <WalletState>[
       WalletLoadedSt([cash, bank], cash),
       NoWalletSt(),
     ]) {
       when(() => bloc.state).thenReturn(state);
       await openSheet(tester);
-      final showcase = ShowcaseView.get();
-      expect(showcase.isTargetRendered(OnboardingKeys.walletManagementHeader),
-          isTrue);
-      expect(
-          showcase.isTargetRendered(OnboardingKeys.walletManagementAddButton),
-          isTrue);
+      expect(find.byType(Showcase), findsNothing);
       await tester.pumpWidget(const SizedBox());
     }
   });

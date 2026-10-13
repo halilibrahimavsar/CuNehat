@@ -24,6 +24,14 @@ void main() {
     coordinator = OnboardingCoordinator(await SharedPreferences.getInstance());
     started = [];
     coordinator.startShowcaseOverride = started.add;
+    // Kalan turların hepsi kabuktadır; kapı "kabuk kökte ve duruyor" ister.
+    // Bu dosyadaki testlerin konusu ROTA kapısı olduğu için kabuk hazır
+    // sayılır ("kabuk turu, alt sayfa açıkken oynamaz" kendi durumunu verir).
+    coordinator.shellStatusProvider = () => const OnboardingShellStatus(
+          stackIndex: 0,
+          isAnimating: false,
+          isTransformed: false,
+        );
     getIt.registerSingleton<OnboardingCoordinator>(coordinator);
     targetKey = GlobalKey(debugLabel: 'target');
   });
@@ -35,7 +43,7 @@ void main() {
 
   Widget tourPage({String label = 'ana sayfa', bool enabled = true}) {
     return OnboardingTour(
-      flow: OnboardingFlow.walletManagement,
+      flow: OnboardingFlow.cardRail,
       keys: [targetKey],
       enabled: enabled,
       child: Showcase(
@@ -75,7 +83,7 @@ void main() {
 
     expect(find.text('banka ekstresi'), findsOneWidget);
     expect(started, isEmpty, reason: 'tur başka sayfanın üstünde açılmamalı');
-    expect(coordinator.isSeen(OnboardingFlow.walletManagement), isFalse,
+    expect(coordinator.isSeen(OnboardingFlow.cardRail), isFalse,
         reason: 'oynatılamayan tur harcanmamalı');
 
     navigator.currentState!.pop();
@@ -111,14 +119,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(started, isEmpty);
-    expect(coordinator.isPending(OnboardingFlow.walletManagement), isFalse);
+    expect(coordinator.isPending(OnboardingFlow.cardRail), isFalse);
   });
 
   testWidgets('hedef ağaçta değilken beklenir', (tester) async {
     // Showcase hedefi olmayan bir ağaç: tur isteği açılır ama oynamaz.
     await tester.pumpWidget(MaterialApp(
       home: OnboardingTour(
-        flow: OnboardingFlow.walletManagement,
+        flow: OnboardingFlow.cardRail,
         keys: [targetKey],
         child: const Scaffold(body: Text('hedefsiz')),
       ),
@@ -126,7 +134,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(started, isEmpty);
-    expect(coordinator.isPending(OnboardingFlow.walletManagement), isTrue);
+    expect(coordinator.isPending(OnboardingFlow.cardRail), isTrue);
   });
 
   testWidgets('sayfa yeniden mount olsa da tur bir kez oynar', (tester) async {
@@ -180,7 +188,7 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: tourPage(enabled: false)));
     await tester.pumpAndSettle();
     expect(started, isEmpty);
-    expect(coordinator.isPending(OnboardingFlow.walletManagement), isFalse);
+    expect(coordinator.isPending(OnboardingFlow.cardRail), isFalse);
 
     await tester.pumpWidget(MaterialApp(home: tourPage()));
     await tester.pumpAndSettle();

@@ -6,9 +6,6 @@ import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/credit_card/presentation/credit_card_setup_sheet.dart';
 import 'package:cunehat/features/credit_card/presentation/credit_card_tile.dart';
 import 'package:cunehat/features/wallet/domain/card_family.dart';
-import 'package:cunehat/core/onboarding/onboarding_flow.dart';
-import 'package:cunehat/core/onboarding/onboarding_keys.dart';
-import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/wallet_category_scope.dart';
@@ -35,7 +32,6 @@ import 'package:cunehat/features/wallet/presentation/widgets/wallet_quick_start_
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'package:cunehat/core/error/error_handling.dart';
 
@@ -140,20 +136,8 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
     // Kendi route'u olan yüzey: turu kabuğun dönüşümüne değil, sheet'in
     // açılış animasyonunun bitmesine bağlıdır. (Eskiden kabuk "dönüşmüş"
     // sayıldığından bu tur hiç oynayamıyordu.)
-    return OnboardingTour(
-      flow: OnboardingFlow.walletManagement,
-      keys: _tourKeys,
-      // Form açıkken tur oynamaz (overlay formun üstüne binerdi); bayrağı da
-      // yazılmaz, sayfa bir sonraki açılışta — cüzdanlar varken — tanıtılır.
-      enabled: !widget.createOnOpen,
-      child: _buildContent(context),
-    );
+    return _buildContent(context);
   }
-
-  static final List<GlobalKey> _tourKeys = [
-    OnboardingKeys.walletManagementHeader,
-    OnboardingKeys.walletManagementAddButton,
-  ];
 
   Widget _buildContent(BuildContext context) {
     return BlocConsumer<WalletBloc, WalletState>(
@@ -250,77 +234,70 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
       fontWeight: FontWeight.w600,
       color: cs.onSurfaceVariant,
     );
-    return Showcase(
-      key: OnboardingKeys.walletManagementHeader,
-      title: context.l10n.onboardingWalletListTitle,
-      description: context.l10n.onboardingWalletListDesc,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 4, 8, 10),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: cs.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.account_balance_wallet,
-                color: cs.primary,
-                size: 22,
-              ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 8, 10),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: cs.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    context.l10n.cuzdanlarim,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+            child: Icon(
+              Icons.account_balance_wallet,
+              color: cs.primary,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.cuzdanlarim,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                   ),
-                  // NET kırılım (hesaplar − kart borcu − krediler +
-                  // alacaklar); döviz cüzdanı varsa ve tüm kurlar
-                  // biliniyorsa TL toplamı; aksi halde standart alt başlık.
-                  if (_netLine(context, state) case final line?)
-                    Text(
-                      line,
-                      key: const ValueKey('wallet-net-breakdown'),
-                      maxLines: 3,
-                      style: subtitleStyle,
-                    )
-                  else if (state is WalletLoadedSt &&
-                      state.wallets
-                          .any((w) => w.currency != kDefaultCurrency) &&
-                      _tlTotal(state.wallets) != null)
-                    Text(
-                      context.l10n.toplamTlKarsilikFormat(
-                          formatMoney(_tlTotal(state.wallets)!)),
-                      style: subtitleStyle,
-                    )
-                  else
-                    Text(
-                      context.l10n.cuzdanlariniziYonetin,
-                      style:
-                          subtitleStyle.copyWith(fontWeight: FontWeight.w400),
-                    ),
-                ],
-              ),
+                ),
+                // NET kırılım (hesaplar − kart borcu − krediler +
+                // alacaklar); döviz cüzdanı varsa ve tüm kurlar
+                // biliniyorsa TL toplamı; aksi halde standart alt başlık.
+                if (_netLine(context, state) case final line?)
+                  Text(
+                    line,
+                    key: const ValueKey('wallet-net-breakdown'),
+                    maxLines: 3,
+                    style: subtitleStyle,
+                  )
+                else if (state is WalletLoadedSt &&
+                    state.wallets.any((w) => w.currency != kDefaultCurrency) &&
+                    _tlTotal(state.wallets) != null)
+                  Text(
+                    context.l10n.toplamTlKarsilikFormat(
+                        formatMoney(_tlTotal(state.wallets)!)),
+                    style: subtitleStyle,
+                  )
+                else
+                  Text(
+                    context.l10n.cuzdanlariniziYonetin,
+                    style: subtitleStyle.copyWith(fontWeight: FontWeight.w400),
+                  ),
+              ],
             ),
-            IconButton(
-              icon: const Icon(Icons.info_outline),
-              onPressed: () => WalletInfoDialog.show(context),
-            ),
-            IconButton(
-              icon: const Icon(Icons.close),
-              tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
-        ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () => WalletInfoDialog.show(context),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close),
+            tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
       ),
     );
   }
@@ -430,17 +407,12 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: Showcase(
-                key: OnboardingKeys.walletManagementAddButton,
-                title: l10n.onboardingWalletManagementTitle,
-                description: l10n.onboardingWalletManagementDesc,
-                child: _SheetAction(
-                  key: const ValueKey('wallet-sheet-create'),
-                  icon: Icons.add_rounded,
-                  label: l10n.yeniCuzdanKisa,
-                  primary: true,
-                  onTap: () => _createWallet(context),
-                ),
+              child: _SheetAction(
+                key: const ValueKey('wallet-sheet-create'),
+                icon: Icons.add_rounded,
+                label: l10n.yeniCuzdanKisa,
+                primary: true,
+                onTap: () => _createWallet(context),
               ),
             ),
           ],

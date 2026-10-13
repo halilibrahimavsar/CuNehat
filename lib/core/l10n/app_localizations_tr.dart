@@ -2373,100 +2373,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get sablonuSilAciklama => 'Şablonu sil (gelecek vadeler de dahil)';
 
   @override
-  String get tumTurlariSifirla => 'Tüm Turları Sıfırla';
-
-  @override
-  String get tumTurlariSifirlaAciklama =>
-      'Alt sayfa turları da dahil, tüm ekranları ziyaret ettiğinizde tekrar gösterilir.';
-
-  @override
-  String get tumTurlarSifirlandi => 'Turlar sıfırlandı';
-
-  @override
-  String get onboardingAppBarMenuTitle => 'Menü';
-
-  @override
-  String get onboardingAppBarMenuDesc =>
-      'Bütçeler, düzenli işlemler, banka ekstresi içe aktarma ve ayarlar bu menüde.';
-
-  @override
-  String get onboardingAppBarWalletTitle => 'Aktif Cüzdanınız';
-
-  @override
-  String get onboardingAppBarWalletDesc =>
-      'Her gelir, gider, borç ve yatırım kaydı SEÇİLİ cüzdana işlenir. Başlığı yana kaydırarak cüzdan değiştirebilir, dokunarak tüm cüzdanlarınızı görebilir veya yenisini ekleyebilirsiniz.';
-
-  @override
-  String get onboardingWalletListTitle => 'Cüzdanlarınız';
-
-  @override
-  String get onboardingWalletListDesc =>
-      'Her cüzdanın kendi para birimi ve bakiyesi vardır. Kartları yana kaydırarak cüzdanlarınıza bakın; ortadaki karta dokununca o cüzdana geçilir. Düzenleme ve silme kartın hemen altındadır.';
-
-  @override
-  String get onboardingWalletManagementTitle => 'Yeni Cüzdan Ekle';
-
-  @override
-  String get onboardingWalletManagementDesc =>
-      'Nakit, banka hesabı ya da döviz için ayrı cüzdan açın — raporlar, bütçeler ve borçlar cüzdan bazlı çalışır.';
-
-  @override
-  String get onboardingTransactionsAddTitle => 'Tutarı Girin';
-
-  @override
-  String get onboardingTransactionsAddDesc =>
-      'Tutarı yazın. Üstteki gelir/gider seçimi işlemin cüzdan bakiyesini artıracağını mı azaltacağını mı belirler.';
-
-  @override
-  String get onboardingTransactionsAddCategoryTitle => 'Kategori Seçin';
-
-  @override
-  String get onboardingTransactionsAddCategoryDesc =>
-      'Kategori zorunludur: raporlar ve bütçe uyarıları bu kategoriye göre hesaplanır.';
-
-  @override
-  String get onboardingTransactionsAddRecurringTitle => 'Tekrar Sıklığı';
-
-  @override
-  String get onboardingTransactionsAddRecurringDesc =>
-      'Kira, maaş, abonelik gibi düzenli işlemleri bir kez tanımlayın; uygulama zamanı gelince hatırlatır.';
-
-  @override
-  String get onboardingDebtAddTitle => 'Tutar ve Geri Ödeme';
-
-  @override
-  String get onboardingDebtAddDesc =>
-      'Tutarı girin, hemen altından borç türünü seçin. Türe göre vade ve taksit alanları açılır; kartın altındaki özet toplam geri ödemeyi anında hesaplar.';
-
-  @override
-  String get onboardingDebtAddDueDateTitle => 'Vade Tarihi';
-
-  @override
-  String get onboardingDebtAddDueDateDesc =>
-      'Alacağını beklediğin tarih. O gün yaklaştığında hatırlatma bildirimi alırsın.';
-
-  @override
-  String get onboardingInvestmentAddTitle => 'Bugünkü Değer';
-
-  @override
-  String get onboardingInvestmentAddDesc =>
-      'Yatırımın şu anki piyasa değeri. Kâr/zararınız bu değerle toplam maliyet arasındaki farktır.';
-
-  @override
-  String get onboardingInvestmentAddCostTitle => 'Toplam Maliyet';
-
-  @override
-  String get onboardingInvestmentAddCostDesc =>
-      'Bu yatırıma bugüne kadar ödediğiniz ana para. Boş bırakırsanız kâr/zarar hesaplanamaz.';
-
-  @override
-  String get onboardingInvestmentAddQuantityTitle => 'Miktar ve Güncel Fiyat';
-
-  @override
-  String get onboardingInvestmentAddQuantityDesc =>
-      'Gram/adet girip güncel fiyatı çekin; bugünkü değer sizin yerinize hesaplanır.';
-
-  @override
   String get fisEkle => 'Fiş/fotoğraf ekle';
 
   @override
@@ -3088,10 +2994,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get sifirla => 'Sıfırla';
 
   @override
-  String get tumTurlariSifirlaOnayMesaji =>
-      'Tüm tanıtım turları sıfırlanacak ve tekrar gösterilecek. Devam edilsin mi?';
-
-  @override
   String get deleteAllDataTitle => 'Tüm veriyi sil';
 
   @override
@@ -3701,13 +3603,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get odemeyiDuzenleBaslik => 'Ödemeyi Düzenle';
-
-  @override
-  String get onboardingDebtAddStartDateTitle => 'Başlangıç Tarihi';
-
-  @override
-  String get onboardingDebtAddStartDateDesc =>
-      'Borcun başladığı tarih; taksitler buradan itibaren aylık ilerler. Hatırlatma bildirimi, sıradaki ödenmemiş taksitin vadesinde gelir.';
 
   @override
   String vadeTaksitIlerleme(int termMonths, int paid) {
@@ -7135,4 +7030,24 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get drawerEnableDebtSubtitle => 'Kredi, borç ve alacaklarını yaz';
+
+  @override
+  String get debtStartDateHint =>
+      'Taksitler bu tarihten başlayarak her ay ilerler.';
+
+  @override
+  String get receivableDueDateHint =>
+      'Paranı geri almayı beklediğin tarih; yaklaşınca hatırlatırız.';
+
+  @override
+  String get recurringRowHint =>
+      'Kira, maaş, abonelik gibi düzenli işlemler için sıklık seç; zamanı gelince hatırlatırız.';
+
+  @override
+  String get ozelDegerAciklama =>
+      'Varlığın bugünkü değeri; değiştikçe buradan güncellersin.';
+
+  @override
+  String get ozelMaliyetAciklama =>
+      'Bu varlığa ödediğin toplam tutar; kâr/zarar bununla hesaplanır.';
 }

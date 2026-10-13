@@ -18,7 +18,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
-import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_event.dart';
@@ -382,9 +381,11 @@ void main() {
     expect(find.text('Kaydet'), findsNothing); // Sheet is closed
   });
 
-  // Tur adımları kapanı: OnboardingTour TÜM hedefleri render edilmiş
-  // bulamazsa tur sessizce hiç oynamaz.
-  testWidgets('turun üç adımı da ağaçta', (WidgetTester tester) async {
+  // Form eskiden ilk açılışta üç adımlı bir tanıtım oynatıyordu; yeni
+  // kullanıcı tutarı yazmadan önce üç baloncuğu kapatmak zorundaydı ve o
+  // yüzden klavye de açılmıyordu.
+  testWidgets('formda tanıtım yok: açılır açılmaz tutar yazılabilir',
+      (WidgetTester tester) async {
     await tester.pumpWidget(
       buildTestableWidget(
         Builder(
@@ -405,12 +406,13 @@ void main() {
     await tester.tap(find.text('Open Form'));
     await tester.pumpAndSettle();
 
-    final showcase = ShowcaseView.get();
+    expect(find.byType(Showcase), findsNothing);
+    // Odak tutarda: klavye açık.
+    expect(tester.testTextInput.isVisible, isTrue);
+    // Tekrar sıklığının ne işe yaradığı satırın altında yazar.
     expect(
-        showcase.isTargetRendered(OnboardingKeys.transactionAddForm), isTrue);
-    expect(showcase.isTargetRendered(OnboardingKeys.transactionAddCategory),
-        isTrue);
-    expect(showcase.isTargetRendered(OnboardingKeys.transactionAddRecurring),
-        isTrue);
+      find.textContaining('Kira, maaş, abonelik gibi düzenli işlemler'),
+      findsOneWidget,
+    );
   });
 }

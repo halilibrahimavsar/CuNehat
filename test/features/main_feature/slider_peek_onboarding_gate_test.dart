@@ -94,16 +94,16 @@ void main() {
   });
 
   testWidgets('kabuk turu dışındaki bir tur kapıyı KİLİTLEMEZ', (tester) async {
-    // Form turları kaydırıcının üstünü örtmüyor; yalnız oynarken bloklanır.
+    // Kart düğmesi turu kaydırıcının üstünü örtmüyor; yalnız oynarken bloklanır.
     coordinator.requestTour(
-      OnboardingFlow.transactionsAdd,
+      OnboardingFlow.cardRail,
       owner: Object(),
       keys: [GlobalKey()],
       isAlive: () => true,
       isReady: () => false,
     );
 
-    expect(coordinator.isPending(OnboardingFlow.transactionsAdd), isTrue);
+    expect(coordinator.isPending(OnboardingFlow.cardRail), isTrue);
     expect(isSliderPeekAllowed(coordinator), isTrue);
   });
 }

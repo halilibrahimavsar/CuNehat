@@ -6,9 +6,6 @@ import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'package:cunehat/core/services/cash_source.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/ledger_transaction_picker.dart';
-import 'package:cunehat/core/onboarding/onboarding_tour.dart';
-import 'package:cunehat/core/onboarding/onboarding_flow.dart';
-import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/date_math.dart';
 import 'package:cunehat/core/utils/money_math.dart';
@@ -32,7 +29,7 @@ import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dar
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:showcaseview/showcaseview.dart';
+import 'package:cunehat/core/shared/widgets/field_hint.dart';
 
 /// Borç / alacak ekleme & düzenleme için sıfırdan tasarlanmış modern sayfa.
 ///
@@ -563,21 +560,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
         Theme.of(context).extension<AppSurface>() ?? AppSurface.light;
     final cs = Theme.of(context).colorScheme;
 
-    return OnboardingTour(
-      flow: OnboardingFlow.debtAdd,
-      keys: _tourKeys,
-      enabled: !_isEditing,
-      child: _buildContent(context, surface, cs),
-    );
+    return _buildContent(context, surface, cs);
   }
-
-  /// Tutar kartı → vade tarihi. İkisi de HEM borç HEM alacak modunda ağaçta;
-  /// yalnız borçta görünen alanlara (tür çipleri, taksit/faiz) adım konursa
-  /// kapı tüm hedefleri arayacağından tur alacak modunda hiç oynamaz.
-  static final List<GlobalKey> _tourKeys = [
-    OnboardingKeys.debtAddForm,
-    OnboardingKeys.debtAddDueDate,
-  ];
 
   Widget _buildContent(
     BuildContext context,
@@ -606,22 +590,17 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Showcase(
-                        key: OnboardingKeys.debtAddForm,
-                        title: context.l10n.onboardingDebtAddTitle,
-                        description: context.l10n.onboardingDebtAddDesc,
-                        child: AddEntryAmountCard(
-                          isDebt: _isDebt,
-                          selectedDebtType: _selectedDebtType,
-                          amountController: _amountController,
-                          interestController: _interestController,
-                          termController: _termController,
-                          installmentController: _installmentController,
-                          mode: _calcMode,
-                          accent: _accent,
-                          onChanged: _clearError,
-                          currency: widget.currency,
-                        ),
+                      AddEntryAmountCard(
+                        isDebt: _isDebt,
+                        selectedDebtType: _selectedDebtType,
+                        amountController: _amountController,
+                        interestController: _interestController,
+                        termController: _termController,
+                        installmentController: _installmentController,
+                        mode: _calcMode,
+                        accent: _accent,
+                        onChanged: _clearError,
+                        currency: widget.currency,
                       ),
                       const SizedBox(height: 16),
                       if (_isDebt) ...[
@@ -805,27 +784,29 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     );
   }
 
-  /// Vade adımı. Borç ve alacak dallarının ikisinde de aynı hedefi kurar;
-  /// aynı anda yalnız biri build edildiğinden GlobalKey çakışmaz.
+  /// Tarih hapı ve altında ne işe yaradığını söyleyen tek satır.
+  ///
+  /// Metin borç ve alacakta AYRIŞIR: borçta bu hap "Başlangıç" tarihidir
+  /// (taksitler buradan ilerler), alacakta gerçekten vadedir. Eskiden bu
+  /// açıklama formun ilk açılışında bir kez gösterilen tanıtım baloncuğunda
+  /// duruyordu; ikinci borcunu yazan kullanıcı onu bir daha göremiyordu.
   Widget _buildDueDateStep(BuildContext context) {
-    // Metin borç ve alacakta AYRIŞIR: borçta bu hap "Başlangıç" tarihidir
-    // (taksitler buradan ilerler), alacakta gerçekten vadedir. Tek metin
-    // kullanıldığında borç tarafı hem yanlış adı hem de var olmayan bir
-    // "her taksit için ayrı bildirim" vaadini gösteriyordu.
-    return Showcase(
-      key: OnboardingKeys.debtAddDueDate,
-      title: _isDebt
-          ? context.l10n.onboardingDebtAddStartDateTitle
-          : context.l10n.onboardingDebtAddDueDateTitle,
-      description: _isDebt
-          ? context.l10n.onboardingDebtAddStartDateDesc
-          : context.l10n.onboardingDebtAddDueDateDesc,
-      child: DueDatePill(
-        isDebt: _isDebt,
-        accent: _accent,
-        date: _selectedDate,
-        onTap: _pickDate,
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        DueDatePill(
+          isDebt: _isDebt,
+          accent: _accent,
+          date: _selectedDate,
+          onTap: _pickDate,
+        ),
+        FieldHint(
+          _isDebt
+              ? context.l10n.debtStartDateHint
+              : context.l10n.receivableDueDateHint,
+        ),
+      ],
     );
   }
 

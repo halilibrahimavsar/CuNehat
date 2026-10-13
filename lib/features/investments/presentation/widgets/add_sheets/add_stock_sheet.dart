@@ -3,9 +3,6 @@ import 'package:http/http.dart' as http;
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
-import 'package:cunehat/core/onboarding/onboarding_tour.dart';
-import 'package:cunehat/core/onboarding/onboarding_flow.dart';
-import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -20,7 +17,6 @@ import 'package:cunehat/features/investments/presentation/widgets/add_sheets/sha
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/purchase_payment.dart';
 import 'package:cunehat/core/utils/money_math.dart';
 import 'package:flutter/material.dart';
-import 'package:showcaseview/showcaseview.dart';
 
 class AddStockSheet extends StatefulWidget {
   final String walletId;
@@ -472,24 +468,8 @@ class _AddStockSheetState extends State<AddStockSheet> {
         Theme.of(context).extension<AppSurface>() ?? AppSurface.light;
     final cs = Theme.of(context).colorScheme;
 
-    return OnboardingTour(
-      flow: OnboardingFlow.investmentAdd,
-      keys: _tourKeys,
-      enabled: !_isEditing,
-      child: _buildContent(context, surface, cs),
-    );
+    return _buildContent(context, surface, cs);
   }
-
-  /// Sembol & lot → mevcut değer → toplam maliyet.
-  ///
-  /// Tur sırası ağaç sırasından DEĞİL bu listeden okunur
-  /// (`OnboardingCoordinator.startShowCase`); yerleşim değişince burası da
-  /// elle güncellenmeli.
-  static final List<GlobalKey> _tourKeys = [
-    OnboardingKeys.investmentAddQuantity,
-    OnboardingKeys.investmentAddForm,
-    OnboardingKeys.investmentAddCost,
-  ];
 
   Widget _buildContent(
       BuildContext context, AppSurface surface, ColorScheme cs) {
@@ -533,35 +513,23 @@ class _AddStockSheetState extends State<AddStockSheet> {
                       const SizedBox(height: 10),
                       _buildSymbolSearch(cs),
                       const SizedBox(height: 14),
-                      Showcase(
-                        key: OnboardingKeys.investmentAddQuantity,
-                        title:
-                            context.l10n.onboardingInvestmentAddQuantityTitle,
-                        description:
-                            context.l10n.onboardingInvestmentAddQuantityDesc,
-                        child: InvestmentQuantityAndFetch(
-                          accent: _accent,
-                          unitLabel: context.l10n.lot,
-                          quantityController: _quantityController,
-                          onQuantityChanged: _onQuantityChanged,
-                          isLoading: _isLoading,
-                          fetchedMessage: _fetchedPriceMessage,
-                          fetchedColor: _fetchedPriceColor,
-                          onFetch: _fetchLivePrice,
-                        ),
+                      InvestmentQuantityAndFetch(
+                        accent: _accent,
+                        unitLabel: context.l10n.lot,
+                        quantityController: _quantityController,
+                        onQuantityChanged: _onQuantityChanged,
+                        isLoading: _isLoading,
+                        fetchedMessage: _fetchedPriceMessage,
+                        fetchedColor: _fetchedPriceColor,
+                        onFetch: _fetchLivePrice,
                       ),
                       const SizedBox(height: 20),
-                      Showcase(
-                        key: OnboardingKeys.investmentAddForm,
-                        title: context.l10n.onboardingInvestmentAddTitle,
-                        description: context.l10n.onboardingInvestmentAddDesc,
-                        child: InvestmentAmountCard(
-                          accent: _accent,
-                          valueColor: Colors.indigo,
-                          controller: _currentValueController,
-                          onChanged: _onValueChanged,
-                          currency: widget.walletCurrency,
-                        ),
+                      InvestmentAmountCard(
+                        accent: _accent,
+                        valueColor: Colors.indigo,
+                        controller: _currentValueController,
+                        onChanged: _onValueChanged,
+                        currency: widget.walletCurrency,
                       ),
                       InvestmentHintCaption(context.l10n.mevcutDegerAciklama),
                       const SizedBox(height: 14),
@@ -585,22 +553,16 @@ class _AddStockSheetState extends State<AddStockSheet> {
                       const SizedBox(height: 14),
                       // Toplam Maliyet: Mevcut Değer'in hemen altında durur ki
                       // "ne ödedim / bugün ne ediyor" yan yana okunabilsin.
-                      Showcase(
-                        key: OnboardingKeys.investmentAddCost,
-                        title: context.l10n.onboardingInvestmentAddCostTitle,
-                        description:
-                            context.l10n.onboardingInvestmentAddCostDesc,
-                        child: InvestmentFilledField(
-                          controller: _amountController,
-                          readOnly: _payment.isLedgerLocked,
-                          hint: context.l10n.maliyetYatirilanAnaPara,
-                          icon: Icons.payments_rounded,
-                          accent: _accent,
-                          onChanged: _onTotalChanged,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
-                          inputFormatters: [AmountInputFormatter()],
-                        ),
+                      InvestmentFilledField(
+                        controller: _amountController,
+                        readOnly: _payment.isLedgerLocked,
+                        hint: context.l10n.maliyetYatirilanAnaPara,
+                        icon: Icons.payments_rounded,
+                        accent: _accent,
+                        onChanged: _onTotalChanged,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        inputFormatters: [AmountInputFormatter()],
                       ),
                       InvestmentHintCaption(context.l10n.toplamMaliyetAciklama),
                       ...?_purchaseRowSlot(),

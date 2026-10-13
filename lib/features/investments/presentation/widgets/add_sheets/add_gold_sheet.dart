@@ -2,9 +2,6 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
-import 'package:cunehat/core/onboarding/onboarding_tour.dart';
-import 'package:cunehat/core/onboarding/onboarding_flow.dart';
-import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/money_format.dart';
@@ -18,7 +15,6 @@ import 'package:cunehat/features/investments/presentation/widgets/add_sheets/sha
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/purchase_payment.dart';
 import 'package:cunehat/features/investments/presentation/widgets/gold_types.dart';
 import 'package:flutter/material.dart';
-import 'package:showcaseview/showcaseview.dart';
 
 class AddGoldSheet extends StatefulWidget {
   final String walletId;
@@ -344,24 +340,8 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
         Theme.of(context).extension<AppSurface>() ?? AppSurface.light;
     final cs = Theme.of(context).colorScheme;
 
-    return OnboardingTour(
-      flow: OnboardingFlow.investmentAdd,
-      keys: _tourKeys,
-      enabled: !_isEditing,
-      child: _buildContent(context, surface, cs),
-    );
+    return _buildContent(context, surface, cs);
   }
-
-  /// Tür & miktar → mevcut değer → toplam maliyet.
-  ///
-  /// Tur sırası ağaç sırasından DEĞİL bu listeden okunur
-  /// (`OnboardingCoordinator.startShowCase`), yani yerleşim değişince burası
-  /// da elle güncellenmeli — yoksa tur ekranda aşağı-yukarı zıplar.
-  static final List<GlobalKey> _tourKeys = [
-    OnboardingKeys.investmentAddQuantity,
-    OnboardingKeys.investmentAddForm,
-    OnboardingKeys.investmentAddCost,
-  ];
 
   Widget _buildContent(
       BuildContext context, AppSurface surface, ColorScheme cs) {
@@ -409,55 +389,37 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                       _buildGoldTypeSelector(),
                       ...?_typeChangeWarningSlot(),
                       const SizedBox(height: 14),
-                      Showcase(
-                        key: OnboardingKeys.investmentAddQuantity,
-                        title:
-                            context.l10n.onboardingInvestmentAddQuantityTitle,
-                        description:
-                            context.l10n.onboardingInvestmentAddQuantityDesc,
-                        child: InvestmentQuantityAndFetch(
-                          accent: _accent,
-                          unitLabel: goldTypeLabel(context, _selectedGoldType),
-                          quantityController: _quantityController,
-                          onQuantityChanged: _clearError,
-                          isLoading: _isLoading,
-                          fetchedMessage: _fetchedPriceMessage,
-                          fetchedColor: _fetchedPriceColor,
-                          onFetch: _fetchLivePrice,
-                        ),
+                      InvestmentQuantityAndFetch(
+                        accent: _accent,
+                        unitLabel: goldTypeLabel(context, _selectedGoldType),
+                        quantityController: _quantityController,
+                        onQuantityChanged: _clearError,
+                        isLoading: _isLoading,
+                        fetchedMessage: _fetchedPriceMessage,
+                        fetchedColor: _fetchedPriceColor,
+                        onFetch: _fetchLivePrice,
                       ),
                       const SizedBox(height: 20),
-                      Showcase(
-                        key: OnboardingKeys.investmentAddForm,
-                        title: context.l10n.onboardingInvestmentAddTitle,
-                        description: context.l10n.onboardingInvestmentAddDesc,
-                        child: InvestmentAmountCard(
-                          accent: _accent,
-                          valueColor: Colors.orange,
-                          controller: _currentValueController,
-                          onChanged: _clearError,
-                          currency: widget.walletCurrency,
-                        ),
+                      InvestmentAmountCard(
+                        accent: _accent,
+                        valueColor: Colors.orange,
+                        controller: _currentValueController,
+                        onChanged: _clearError,
+                        currency: widget.walletCurrency,
                       ),
                       InvestmentHintCaption(context.l10n.mevcutDegerAciklama),
                       const SizedBox(height: 14),
                       // Toplam Maliyet: Mevcut Değer'in hemen altında durur.
-                      Showcase(
-                        key: OnboardingKeys.investmentAddCost,
-                        title: context.l10n.onboardingInvestmentAddCostTitle,
-                        description:
-                            context.l10n.onboardingInvestmentAddCostDesc,
-                        child: InvestmentFilledField(
-                          controller: _amountController,
-                          readOnly: _payment.isLedgerLocked,
-                          hint: context.l10n.maliyetYatirilanAnaPara,
-                          icon: Icons.payments_rounded,
-                          accent: _accent,
-                          onChanged: _clearError,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
-                          inputFormatters: [AmountInputFormatter()],
-                        ),
+                      InvestmentFilledField(
+                        controller: _amountController,
+                        readOnly: _payment.isLedgerLocked,
+                        hint: context.l10n.maliyetYatirilanAnaPara,
+                        icon: Icons.payments_rounded,
+                        accent: _accent,
+                        onChanged: _clearError,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        inputFormatters: [AmountInputFormatter()],
                       ),
                       InvestmentHintCaption(context.l10n.toplamMaliyetAciklama),
                       ...?_purchaseRowSlot(),

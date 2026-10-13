@@ -2372,100 +2372,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Delete template (including future occurrences)';
 
   @override
-  String get tumTurlariSifirla => 'Reset All Tours';
-
-  @override
-  String get tumTurlariSifirlaAciklama =>
-      'Including sub-page tours — they\'ll show again as you revisit each screen.';
-
-  @override
-  String get tumTurlarSifirlandi => 'Tours reset';
-
-  @override
-  String get onboardingAppBarMenuTitle => 'Menu';
-
-  @override
-  String get onboardingAppBarMenuDesc =>
-      'Budgets, recurring transactions, bank statement import, and settings live in this menu.';
-
-  @override
-  String get onboardingAppBarWalletTitle => 'Your Active Wallet';
-
-  @override
-  String get onboardingAppBarWalletDesc =>
-      'Every income, expense, debt, and investment record goes into the SELECTED wallet. Swipe the title sideways to switch wallets, or tap it to see all your wallets and add a new one.';
-
-  @override
-  String get onboardingWalletListTitle => 'Your Wallets';
-
-  @override
-  String get onboardingWalletListDesc =>
-      'Each wallet has its own currency and balance. Swipe the cards sideways to browse your wallets; tap the centered card to switch to it. Edit and delete are right below the card.';
-
-  @override
-  String get onboardingWalletManagementTitle => 'Add a New Wallet';
-
-  @override
-  String get onboardingWalletManagementDesc =>
-      'Create separate wallets for cash, a bank account, or a foreign currency — reports, budgets, and debts are all wallet-scoped.';
-
-  @override
-  String get onboardingTransactionsAddTitle => 'Enter the Amount';
-
-  @override
-  String get onboardingTransactionsAddDesc =>
-      'Type the amount. The income/expense choice above decides whether this raises or lowers your wallet balance.';
-
-  @override
-  String get onboardingTransactionsAddCategoryTitle => 'Pick a Category';
-
-  @override
-  String get onboardingTransactionsAddCategoryDesc =>
-      'A category is required: reports and budget alerts are calculated from it.';
-
-  @override
-  String get onboardingTransactionsAddRecurringTitle => 'Repeat Frequency';
-
-  @override
-  String get onboardingTransactionsAddRecurringDesc =>
-      'Define rent, salary, or subscriptions once; the app reminds you when they\'re due.';
-
-  @override
-  String get onboardingDebtAddTitle => 'Amount and Repayment';
-
-  @override
-  String get onboardingDebtAddDesc =>
-      'Enter the amount, then pick the debt type right below. The term and installment fields follow the type; the summary under the card calculates the total repayment instantly.';
-
-  @override
-  String get onboardingDebtAddDueDateTitle => 'Due Date';
-
-  @override
-  String get onboardingDebtAddDueDateDesc =>
-      'The date you expect to collect. You get a reminder as it approaches.';
-
-  @override
-  String get onboardingInvestmentAddTitle => 'Today\'s Value';
-
-  @override
-  String get onboardingInvestmentAddDesc =>
-      'The investment\'s current market value. Your profit/loss is the difference between this and total cost.';
-
-  @override
-  String get onboardingInvestmentAddCostTitle => 'Total Cost';
-
-  @override
-  String get onboardingInvestmentAddCostDesc =>
-      'The principal you\'ve paid into this investment so far. Leave it empty and profit/loss can\'t be computed.';
-
-  @override
-  String get onboardingInvestmentAddQuantityTitle => 'Quantity and Live Price';
-
-  @override
-  String get onboardingInvestmentAddQuantityDesc =>
-      'Enter grams/shares and fetch the live price; today\'s value is calculated for you.';
-
-  @override
   String get fisEkle => 'Add receipt/photo';
 
   @override
@@ -3095,10 +3001,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sifirla => 'Reset';
 
   @override
-  String get tumTurlariSifirlaOnayMesaji =>
-      'All intro tours will be reset and shown again. Do you want to continue?';
-
-  @override
   String get deleteAllDataTitle => 'Delete all data';
 
   @override
@@ -3710,13 +3612,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get odemeyiDuzenleBaslik => 'Edit Payment';
-
-  @override
-  String get onboardingDebtAddStartDateTitle => 'Start Date';
-
-  @override
-  String get onboardingDebtAddStartDateDesc =>
-      'The date the debt starts; installments run monthly from here. The reminder arrives on the due date of the next unpaid installment.';
 
   @override
   String vadeTaksitIlerleme(int termMonths, int paid) {
@@ -7187,4 +7082,24 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get drawerEnableDebtSubtitle =>
       'Write down your loans, debts and receivables';
+
+  @override
+  String get debtStartDateHint =>
+      'Installments run monthly starting from this date.';
+
+  @override
+  String get receivableDueDateHint =>
+      'The date you expect the money back; we\'ll remind you as it approaches.';
+
+  @override
+  String get recurringRowHint =>
+      'Pick a frequency for regular items like rent, salary or subscriptions; we\'ll remind you when it\'s due.';
+
+  @override
+  String get ozelDegerAciklama =>
+      'What the asset is worth today; update it here as it changes.';
+
+  @override
+  String get ozelMaliyetAciklama =>
+      'The total you paid for this asset; profit/loss is calculated from it.';
 }

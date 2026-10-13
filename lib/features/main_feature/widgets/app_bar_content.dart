@@ -55,14 +55,11 @@ class AppBarContent extends StatefulWidget {
 class _AppBarContentState extends State<AppBarContent> {
   WalletLoadedSt? _cachedLoadedState;
 
-  /// Kabuk turunun adımları, sırasıyla: aktif cüzdan (uygulamanın en önemli
-  /// kavramı) → menü → ekle/navigasyon kartı. Sonuncusu HomePage'te tanımlıdır
-  /// ve turu bir eyleme çağırarak kapatır.
-  static final List<GlobalKey> _tourKeys = [
-    OnboardingKeys.appBarWalletArea,
-    OnboardingKeys.appBarMenuButton,
-    OnboardingKeys.addActionSlider,
-  ];
+  /// Kabuk turunun TEK hedefi alttaki kaydırıcı: yana, yukarı ve dokunma
+  /// jestleri ekranda yazmıyor. Cüzdan başlığı ve menü düğmesi adımları
+  /// kaldırıldı — ikisi de ne olduklarını kendileri söylüyor (cüzdanın adı ve
+  /// bakiyesi; her uygulamadaki menü düğmesi).
+  static final List<GlobalKey> _tourKeys = [OnboardingKeys.addActionSlider];
 
   /// Tur ancak en az bir cüzdan varken istenir.
   static bool _hasWallet(WalletState state) =>
@@ -136,26 +133,21 @@ class _AppBarContentState extends State<AppBarContent> {
   }
 
   Widget _buildMenuButton(BuildContext context) {
-    return Showcase(
-      key: OnboardingKeys.appBarMenuButton,
-      title: context.l10n.onboardingAppBarMenuTitle,
-      description: context.l10n.onboardingAppBarMenuDesc,
-      child: ScaleTransition(
-        scale: widget.scaleAnimation,
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.white.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(AppBorderRadius.medium),
-          ),
-          child: IconButton(
-            onPressed: () {
-              final scaffoldState = context
-                  .findAncestorStateOfType<AnimatedScaffoldWrapperState>();
-              scaffoldState?.openDrawer();
-            },
-            icon: const Icon(Icons.grid_view_rounded,
-                color: AppColors.white, size: AppSizes.buttonSize),
-          ),
+    return ScaleTransition(
+      scale: widget.scaleAnimation,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.white.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(AppBorderRadius.medium),
+        ),
+        child: IconButton(
+          onPressed: () {
+            final scaffoldState =
+                context.findAncestorStateOfType<AnimatedScaffoldWrapperState>();
+            scaffoldState?.openDrawer();
+          },
+          icon: const Icon(Icons.grid_view_rounded,
+              color: AppColors.white, size: AppSizes.buttonSize),
         ),
       ),
     );
@@ -320,30 +312,23 @@ class _AppBarContentState extends State<AppBarContent> {
       );
     }
 
-    return Showcase(
-      key: OnboardingKeys.appBarWalletArea,
-      title: context.l10n.onboardingAppBarWalletTitle,
-      description: context.l10n.onboardingAppBarWalletDesc,
-      child: GestureDetector(
-        onTap: () {
-          final scaffoldState =
-              context.findAncestorStateOfType<AnimatedScaffoldWrapperState>();
-          final authState = context.read<AppAuthBloc>().state;
-          final userId = authState is AppAuthenticated
-              ? authState.user.uid
-              : (authState is AppAuthLocked
-                  ? authState.user.uid
-                  : 'local_user');
+    return GestureDetector(
+      onTap: () {
+        final scaffoldState =
+            context.findAncestorStateOfType<AnimatedScaffoldWrapperState>();
+        final authState = context.read<AppAuthBloc>().state;
+        final userId = authState is AppAuthenticated
+            ? authState.user.uid
+            : (authState is AppAuthLocked ? authState.user.uid : 'local_user');
 
-          scaffoldState?.openWalletDialog(
-            WalletSheetContent(
-              scrollController: _walletSheetScrollController,
-              userId: userId,
-            ),
-          );
-        },
-        child: Container(color: AppColors.transparent, child: content),
-      ),
+        scaffoldState?.openWalletDialog(
+          WalletSheetContent(
+            scrollController: _walletSheetScrollController,
+            userId: userId,
+          ),
+        );
+      },
+      child: Container(color: AppColors.transparent, child: content),
     );
   }
 

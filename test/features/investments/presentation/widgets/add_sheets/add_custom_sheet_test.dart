@@ -7,7 +7,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
-import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -247,10 +246,10 @@ void main() {
     expect(updatedInvestment!.color, Colors.teal);
   });
 
-  // Tur adımları kapanı: OnboardingTour TÜM hedefleri render edilmiş
-  // bulamazsa tur sessizce hiç oynamaz. Özel yatırımda miktar alanı yok, bu
-  // yüzden adım listesi iki adımdır.
-  testWidgets('turun iki adımı ağaçta, miktar adımı yok', (tester) async {
+  // Alanların anlamı (bugünkü değer, toplam maliyet) alanın ALTINDA yazar;
+  // formun ilk açılışında bir kez gösterilen tanıtım baloncukları kaldırıldı.
+  testWidgets('formda tanıtım yok; açıklamalar alanların altında',
+      (tester) async {
     await tester.pumpWidget(buildTestableWidget(
       AddCustomSheet(
         walletId: 'wallet_123',
@@ -261,11 +260,12 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    final showcase = ShowcaseView.get();
-    expect(showcase.isTargetRendered(OnboardingKeys.investmentAddForm), isTrue);
-    expect(showcase.isTargetRendered(OnboardingKeys.investmentAddCost), isTrue);
-    expect(showcase.isTargetRendered(OnboardingKeys.investmentAddQuantity),
-        isFalse);
+    final l10n = lookupAppLocalizations(const Locale('tr'));
+    expect(find.byType(Showcase), findsNothing);
+    // Özel varlıkta "Hesapla" yok; açıklamalar ondan söz etmez.
+    expect(find.text(l10n.ozelDegerAciklama), findsOneWidget);
+    expect(find.text(l10n.ozelMaliyetAciklama), findsOneWidget);
+    expect(find.textContaining('Hesapla'), findsNothing);
   });
 
   // Faz 2 (23 Eyl 2026): ekstreden gelen "MIDAS MENKUL DEGERLER −5.000"

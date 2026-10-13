@@ -47,7 +47,7 @@ void main() {
     getIt.allowReassignment = true;
     registerFallbackValue(GetDebtsEvent('wallet_123'));
     registerFallbackValue(GetReceivablesEvent('wallet_123'));
-    registerFallbackValue(OnboardingFlow.debtAdd);
+    registerFallbackValue(OnboardingFlow.shell);
     // Sayfa Showcase kullanır; kayıtlı bir scope yoksa initState fırlatır.
     ShowcaseView.register(onFinish: () {}, onDismiss: (_) {});
   });

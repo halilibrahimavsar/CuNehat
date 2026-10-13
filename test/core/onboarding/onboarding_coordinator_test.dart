@@ -41,7 +41,7 @@ void main() {
   }
 
   testWidgets('hazır olan istek kare sonunda başlar', (tester) async {
-    request(OnboardingFlow.walletManagement, keys: [keyA]);
+    request(OnboardingFlow.shell, keys: [keyA]);
     expect(started, isEmpty, reason: 'değerlendirme kare sonuna ertelenir');
 
     await tester.pump();
@@ -53,13 +53,12 @@ void main() {
   testWidgets('hazır olmayan istek beklemede kalır, düşürülmez',
       (tester) async {
     var ready = false;
-    request(OnboardingFlow.walletManagement,
-        keys: [keyA], isReady: () => ready);
+    request(OnboardingFlow.shell, keys: [keyA], isReady: () => ready);
 
     await tester.pump();
     await tester.pump();
     expect(started, isEmpty);
-    expect(coordinator.isSeen(OnboardingFlow.walletManagement), isFalse,
+    expect(coordinator.isSeen(OnboardingFlow.shell), isFalse,
         reason: 'oynatılamayan tur "görüldü" sayılmamalı');
 
     // Yüzey görünür hale gelince (ör. üstteki sayfa kapandı) oynar.
@@ -74,34 +73,34 @@ void main() {
   testWidgets('aynı akış iki kez istenirse tur bir kez oynar', (tester) async {
     // Küp geçişinde sayfa iki kez mount olsa bile ikinci istek birincinin
     // üzerine yazılır; tur tekrar etmez.
-    request(OnboardingFlow.walletManagement, keys: [keyA]);
-    request(OnboardingFlow.walletManagement, keys: [keyA]);
+    request(OnboardingFlow.shell, keys: [keyA]);
+    request(OnboardingFlow.shell, keys: [keyA]);
     await tester.pump();
     expect(started.length, 1);
 
     // Tur oynarken gelen üçüncü istek de yutulur.
-    request(OnboardingFlow.walletManagement, keys: [keyA]);
+    request(OnboardingFlow.shell, keys: [keyA]);
     await tester.pump();
     expect(started.length, 1);
 
     coordinator.handleShowcaseIdle();
-    request(OnboardingFlow.walletManagement, keys: [keyA]);
+    request(OnboardingFlow.shell, keys: [keyA]);
     await tester.pump();
     expect(started.length, 1, reason: 'bayrak tur BAŞLARKEN yazılır');
   });
 
   testWidgets('görüldü bayrağı tur başlarken kalıcılaşır', (tester) async {
-    request(OnboardingFlow.walletManagement, keys: [keyA]);
+    request(OnboardingFlow.shell, keys: [keyA]);
     await tester.pump();
 
-    expect(coordinator.isSeen(OnboardingFlow.walletManagement), isTrue);
-    expect(prefs.getBool('onboarding_walletManagement_seen'), isTrue);
+    expect(coordinator.isSeen(OnboardingFlow.shell), isTrue);
+    expect(prefs.getBool('onboarding_shell_seen'), isTrue);
   });
 
   testWidgets('sahibi ağaçtan kalkan istek düşer', (tester) async {
     var alive = true;
     request(
-      OnboardingFlow.walletManagement,
+      OnboardingFlow.shell,
       keys: [keyA],
       isAlive: () => alive,
       isReady: () => true,
@@ -110,21 +109,21 @@ void main() {
 
     await tester.pump();
     expect(started, isEmpty);
-    expect(coordinator.isPending(OnboardingFlow.walletManagement), isFalse);
-    expect(coordinator.isSeen(OnboardingFlow.walletManagement), isFalse);
+    expect(coordinator.isPending(OnboardingFlow.shell), isFalse);
+    expect(coordinator.isSeen(OnboardingFlow.shell), isFalse);
   });
 
   testWidgets('aynı anda tek tur oynar, sırası bildirim sırasıdır',
       (tester) async {
-    request(OnboardingFlow.investmentAdd, keys: [keyB]);
-    request(OnboardingFlow.walletManagement, keys: [keyA]);
+    request(OnboardingFlow.cardRail, keys: [keyB]);
+    request(OnboardingFlow.shell, keys: [keyA]);
 
     await tester.pump();
-    // walletManagement, enum'da investmentAdd'ten önce bildirilmiştir.
+    // shell, enum'da cardRail'den önce bildirilmiştir.
     expect(started, [
       [keyA]
     ]);
-    expect(coordinator.runningFlow, OnboardingFlow.walletManagement);
+    expect(coordinator.runningFlow, OnboardingFlow.shell);
 
     coordinator.handleShowcaseIdle();
     await tester.pump();
@@ -137,11 +136,11 @@ void main() {
   testWidgets('cancelTour yalnız kendi isteğini geri çeker', (tester) async {
     final oldOwner = Object();
     final newOwner = Object();
-    request(OnboardingFlow.walletManagement, keys: [keyA], owner: oldOwner);
+    request(OnboardingFlow.shell, keys: [keyA], owner: oldOwner);
     // Yeniden mount: yeni sahip isteği devralır, ardından eski sahip dispose
     // olur — yeni istek silinmemeli.
-    request(OnboardingFlow.walletManagement, keys: [keyB], owner: newOwner);
-    coordinator.cancelTour(OnboardingFlow.walletManagement, oldOwner);
+    request(OnboardingFlow.shell, keys: [keyB], owner: newOwner);
+    coordinator.cancelTour(OnboardingFlow.shell, oldOwner);
 
     await tester.pump();
     expect(started, [
@@ -196,7 +195,7 @@ void main() {
 
   test('resetAll tüm bayrakları siler ve dinleyicileri uyarır', () async {
     await coordinator.markSeen(OnboardingFlow.shell);
-    await coordinator.markSeen(OnboardingFlow.walletManagement);
+    await coordinator.markSeen(OnboardingFlow.cardRail);
     var notified = 0;
     coordinator.addListener(() => notified++);
 
@@ -208,16 +207,24 @@ void main() {
     expect(notified, 1);
   });
 
-  test('kabuk kapısını yalnız kabuktaki akışlar ister (shell, cardRail)', () {
-    // Kalan turların hepsinin kendi route'u var (sheet); kabuğun konumu
-    // onları hiç ilgilendirmez. Kart şeridi işlemler ekranının üstünde,
-    // yani kabukta.
+  test('kalan turların hepsi kabuktadır: kabuk kökte ve dururken oynarlar', () {
+    // Form ve cüzdan sayfası turları kaldırıldı (alan açıklamaları alanın
+    // altında duruyor). Kalan iki turun hedefi kabuğun kendisinde: alttaki
+    // kaydırıcı ve üst çubuktaki kart düğmesi.
+    expect(
+        OnboardingFlow.values, [OnboardingFlow.shell, OnboardingFlow.cardRail]);
     for (final flow in OnboardingFlow.values) {
-      expect(
-        flow.requiresHomeShellAtRoot,
-        flow == OnboardingFlow.shell || flow == OnboardingFlow.cardRail,
-        reason: flow.name,
-      );
+      expect(flow.requiresHomeShellAtRoot, isTrue, reason: flow.name);
     }
+  });
+
+  // Bayrak anahtarı akışın ADINDAN türer; ad değişirse turu görmüş herkese
+  // yeniden oynar.
+  test('kalan turların bayrak anahtarları değişmedi', () async {
+    await coordinator.markSeen(OnboardingFlow.shell);
+    await coordinator.markSeen(OnboardingFlow.cardRail);
+
+    expect(prefs.getBool('onboarding_shell_seen'), isTrue);
+    expect(prefs.getBool('onboarding_cardRail_seen'), isTrue);
   });
 }

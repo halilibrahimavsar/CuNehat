@@ -1,5 +1,5 @@
+import 'package:cunehat/core/shared/widgets/field_hint.dart';
 import 'package:flutter/material.dart';
-import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
@@ -11,10 +11,6 @@ import 'package:cunehat/features/wallet/domain/card_family.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
-import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
-import 'package:cunehat/core/onboarding/onboarding_flow.dart';
-import 'package:cunehat/core/onboarding/onboarding_keys.dart';
-import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_controller.dart';
@@ -135,23 +131,11 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
     _routeAnimation = null;
     if (!mounted) return;
     _c.loadCategories();
-    // Klavye, tur oynayacaksa açılmaz: açık klavye sheet'i kısaltır ve
-    // Showcase'in hedefe kaydırmasıyla (enableAutoScroll) çakışır. Tur bir
-    // kez gösterildikten sonra her açılışta olduğu gibi odak tutara gider.
-    if (!_isEdit && _tourAlreadySeen) _amountFocus.requestFocus();
+    // Yeni kayıtta odak hep tutara gider. Eskiden form İLK açılışta üç
+    // adımlı bir tanıtım oynatıyor ve o yüzden klavyeyi açmıyordu: yeni
+    // kullanıcı tutarı yazmadan önce üç baloncuğu kapatmak zorundaydı.
+    if (!_isEdit) _amountFocus.requestFocus();
   }
-
-  bool get _tourAlreadySeen =>
-      !getIt.isRegistered<OnboardingCoordinator>() ||
-      getIt<OnboardingCoordinator>().isSeen(OnboardingFlow.transactionsAdd);
-
-  /// Tutar → kategori → tekrar sıklığı. Üçü de aynı Column'da, yani turun
-  /// tüm hedefleri her zaman birlikte ağaçtadır.
-  static final List<GlobalKey> _tourKeys = [
-    OnboardingKeys.transactionAddForm,
-    OnboardingKeys.transactionAddCategory,
-    OnboardingKeys.transactionAddRecurring,
-  ];
 
   @override
   void dispose() {
@@ -322,18 +306,12 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
     final surface =
         Theme.of(context).extension<AppSurface>() ?? AppSurface.light;
 
-    return OnboardingTour(
-      flow: OnboardingFlow.transactionsAdd,
-      keys: _tourKeys,
-      // Düzenleme modunda tanıtım gösterilmez.
-      enabled: !_isEdit,
-      // Tür değişince vurgu rengi, kategori listesi ve türe özgü alanlar
-      // (ödeme yöntemi, taksit) birlikte değişir; nadir bir olay olduğundan
-      // içeriğin tamamı yeniden kurulur.
-      child: ValueListenableBuilder<bool>(
-        valueListenable: _c.isExpense,
-        builder: (context, _, __) => _buildContent(context, surface),
-      ),
+    // Tür değişince vurgu rengi, kategori listesi ve türe özgü alanlar
+    // (ödeme yöntemi, taksit) birlikte değişir; nadir bir olay olduğundan
+    // içeriğin tamamı yeniden kurulur.
+    return ValueListenableBuilder<bool>(
+      valueListenable: _c.isExpense,
+      builder: (context, _, __) => _buildContent(context, surface),
     );
   }
 
@@ -364,19 +342,14 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Showcase(
-                        key: OnboardingKeys.transactionAddForm,
-                        title: context.l10n.onboardingTransactionsAddTitle,
-                        description: context.l10n.onboardingTransactionsAddDesc,
-                        child: AmountHero(
-                          controller: _c,
-                          accent: _accent,
-                          isExpense: _isExpense,
-                          isEdit: _isEdit,
-                          focusNode: _amountFocus,
-                          onClose: widget.onCancel,
-                          onTypeChanged: _c.setExpense,
-                        ),
+                      AmountHero(
+                        controller: _c,
+                        accent: _accent,
+                        isExpense: _isExpense,
+                        isEdit: _isEdit,
+                        focusNode: _amountFocus,
+                        onClose: widget.onCancel,
+                        onTypeChanged: _c.setExpense,
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
@@ -457,15 +430,10 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
         // görünmeli. Not isteğe bağlı ve üstteyken şeridi sabit Kaydet
         // satırının arkasına itiyordu (cihazda görüldü: karolar yarıdan
         // kesikti).
-        Showcase(
-          key: OnboardingKeys.transactionAddCategory,
-          title: context.l10n.onboardingTransactionsAddCategoryTitle,
-          description: context.l10n.onboardingTransactionsAddCategoryDesc,
-          child: CategoryPicker(
-            controller: _c,
-            accent: _accent,
-            isExpense: _isExpense,
-          ),
+        CategoryPicker(
+          controller: _c,
+          accent: _accent,
+          isExpense: _isExpense,
         ),
         const SizedBox(height: 18),
         _TitleField(controller: _c, accent: _accent),
@@ -474,18 +442,12 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
         const SizedBox(height: 22),
         ReceiptRow(controller: _c, accent: _accent),
         const SizedBox(height: 22),
-        Showcase(
-          key: OnboardingKeys.transactionAddRecurring,
-          title: context.l10n.onboardingTransactionsAddRecurringTitle,
-          description: context.l10n.onboardingTransactionsAddRecurringDesc,
-          child: ValueListenableBuilder<int>(
-            valueListenable: _c.installments,
-            // Taksitli alışveriş tekrarlayan işlem olamaz.
-            builder: (context, n, _) => n > 1
-                ? const SizedBox.shrink()
-                : _RecurringRow(
-                    controller: _c, accent: _accent, isEdit: _isEdit),
-          ),
+        ValueListenableBuilder<int>(
+          valueListenable: _c.installments,
+          // Taksitli alışveriş tekrarlayan işlem olamaz.
+          builder: (context, n, _) => n > 1
+              ? const SizedBox.shrink()
+              : _RecurringRow(controller: _c, accent: _accent, isEdit: _isEdit),
         ),
         ValueListenableBuilder<String>(
           valueListenable: _c.targetWalletId,
@@ -925,7 +887,7 @@ class _RecurringRow extends StatelessWidget {
     return ValueListenableBuilder<RecurringFrequency?>(
       valueListenable: controller.recurringFrequency,
       builder: (context, value, _) {
-        return Container(
+        final row = Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           decoration: BoxDecoration(
             color: cs.onSurface.withValues(alpha: 0.04),
@@ -971,6 +933,13 @@ class _RecurringRow extends StatelessWidget {
               ),
             ],
           ),
+        );
+        // Ne işe yaradığı satırın altında yazar. Eskiden bu, formun ilk
+        // açılışında bir kez gösterilen tanıtım baloncuğundaydı.
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [row, FieldHint(context.l10n.recurringRowHint)],
         );
       },
     );

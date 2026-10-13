@@ -4331,168 +4331,6 @@ abstract class AppLocalizations {
   /// **'Şablonu sil (gelecek vadeler de dahil)'**
   String get sablonuSilAciklama;
 
-  /// No description provided for @tumTurlariSifirla.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tüm Turları Sıfırla'**
-  String get tumTurlariSifirla;
-
-  /// No description provided for @tumTurlariSifirlaAciklama.
-  ///
-  /// In tr, this message translates to:
-  /// **'Alt sayfa turları da dahil, tüm ekranları ziyaret ettiğinizde tekrar gösterilir.'**
-  String get tumTurlariSifirlaAciklama;
-
-  /// No description provided for @tumTurlarSifirlandi.
-  ///
-  /// In tr, this message translates to:
-  /// **'Turlar sıfırlandı'**
-  String get tumTurlarSifirlandi;
-
-  /// No description provided for @onboardingAppBarMenuTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Menü'**
-  String get onboardingAppBarMenuTitle;
-
-  /// No description provided for @onboardingAppBarMenuDesc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bütçeler, düzenli işlemler, banka ekstresi içe aktarma ve ayarlar bu menüde.'**
-  String get onboardingAppBarMenuDesc;
-
-  /// No description provided for @onboardingAppBarWalletTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Aktif Cüzdanınız'**
-  String get onboardingAppBarWalletTitle;
-
-  /// No description provided for @onboardingAppBarWalletDesc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Her gelir, gider, borç ve yatırım kaydı SEÇİLİ cüzdana işlenir. Başlığı yana kaydırarak cüzdan değiştirebilir, dokunarak tüm cüzdanlarınızı görebilir veya yenisini ekleyebilirsiniz.'**
-  String get onboardingAppBarWalletDesc;
-
-  /// No description provided for @onboardingWalletListTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Cüzdanlarınız'**
-  String get onboardingWalletListTitle;
-
-  /// No description provided for @onboardingWalletListDesc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Her cüzdanın kendi para birimi ve bakiyesi vardır. Kartları yana kaydırarak cüzdanlarınıza bakın; ortadaki karta dokununca o cüzdana geçilir. Düzenleme ve silme kartın hemen altındadır.'**
-  String get onboardingWalletListDesc;
-
-  /// No description provided for @onboardingWalletManagementTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yeni Cüzdan Ekle'**
-  String get onboardingWalletManagementTitle;
-
-  /// No description provided for @onboardingWalletManagementDesc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Nakit, banka hesabı ya da döviz için ayrı cüzdan açın — raporlar, bütçeler ve borçlar cüzdan bazlı çalışır.'**
-  String get onboardingWalletManagementDesc;
-
-  /// No description provided for @onboardingTransactionsAddTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tutarı Girin'**
-  String get onboardingTransactionsAddTitle;
-
-  /// No description provided for @onboardingTransactionsAddDesc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tutarı yazın. Üstteki gelir/gider seçimi işlemin cüzdan bakiyesini artıracağını mı azaltacağını mı belirler.'**
-  String get onboardingTransactionsAddDesc;
-
-  /// No description provided for @onboardingTransactionsAddCategoryTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kategori Seçin'**
-  String get onboardingTransactionsAddCategoryTitle;
-
-  /// No description provided for @onboardingTransactionsAddCategoryDesc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kategori zorunludur: raporlar ve bütçe uyarıları bu kategoriye göre hesaplanır.'**
-  String get onboardingTransactionsAddCategoryDesc;
-
-  /// No description provided for @onboardingTransactionsAddRecurringTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tekrar Sıklığı'**
-  String get onboardingTransactionsAddRecurringTitle;
-
-  /// No description provided for @onboardingTransactionsAddRecurringDesc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kira, maaş, abonelik gibi düzenli işlemleri bir kez tanımlayın; uygulama zamanı gelince hatırlatır.'**
-  String get onboardingTransactionsAddRecurringDesc;
-
-  /// No description provided for @onboardingDebtAddTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tutar ve Geri Ödeme'**
-  String get onboardingDebtAddTitle;
-
-  /// No description provided for @onboardingDebtAddDesc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tutarı girin, hemen altından borç türünü seçin. Türe göre vade ve taksit alanları açılır; kartın altındaki özet toplam geri ödemeyi anında hesaplar.'**
-  String get onboardingDebtAddDesc;
-
-  /// No description provided for @onboardingDebtAddDueDateTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Vade Tarihi'**
-  String get onboardingDebtAddDueDateTitle;
-
-  /// No description provided for @onboardingDebtAddDueDateDesc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Alacağını beklediğin tarih. O gün yaklaştığında hatırlatma bildirimi alırsın.'**
-  String get onboardingDebtAddDueDateDesc;
-
-  /// No description provided for @onboardingInvestmentAddTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bugünkü Değer'**
-  String get onboardingInvestmentAddTitle;
-
-  /// No description provided for @onboardingInvestmentAddDesc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yatırımın şu anki piyasa değeri. Kâr/zararınız bu değerle toplam maliyet arasındaki farktır.'**
-  String get onboardingInvestmentAddDesc;
-
-  /// No description provided for @onboardingInvestmentAddCostTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Toplam Maliyet'**
-  String get onboardingInvestmentAddCostTitle;
-
-  /// No description provided for @onboardingInvestmentAddCostDesc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bu yatırıma bugüne kadar ödediğiniz ana para. Boş bırakırsanız kâr/zarar hesaplanamaz.'**
-  String get onboardingInvestmentAddCostDesc;
-
-  /// No description provided for @onboardingInvestmentAddQuantityTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Miktar ve Güncel Fiyat'**
-  String get onboardingInvestmentAddQuantityTitle;
-
-  /// No description provided for @onboardingInvestmentAddQuantityDesc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gram/adet girip güncel fiyatı çekin; bugünkü değer sizin yerinize hesaplanır.'**
-  String get onboardingInvestmentAddQuantityDesc;
-
   /// No description provided for @fisEkle.
   ///
   /// In tr, this message translates to:
@@ -5549,12 +5387,6 @@ abstract class AppLocalizations {
   /// **'Sıfırla'**
   String get sifirla;
 
-  /// No description provided for @tumTurlariSifirlaOnayMesaji.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tüm tanıtım turları sıfırlanacak ve tekrar gösterilecek. Devam edilsin mi?'**
-  String get tumTurlariSifirlaOnayMesaji;
-
   /// No description provided for @deleteAllDataTitle.
   ///
   /// In tr, this message translates to:
@@ -6580,18 +6412,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Ödemeyi Düzenle'**
   String get odemeyiDuzenleBaslik;
-
-  /// No description provided for @onboardingDebtAddStartDateTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Başlangıç Tarihi'**
-  String get onboardingDebtAddStartDateTitle;
-
-  /// No description provided for @onboardingDebtAddStartDateDesc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Borcun başladığı tarih; taksitler buradan itibaren aylık ilerler. Hatırlatma bildirimi, sıradaki ödenmemiş taksitin vadesinde gelir.'**
-  String get onboardingDebtAddStartDateDesc;
 
   /// No description provided for @vadeTaksitIlerleme.
   ///
@@ -12220,6 +12040,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kredi, borç ve alacaklarını yaz'**
   String get drawerEnableDebtSubtitle;
+
+  /// No description provided for @debtStartDateHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taksitler bu tarihten başlayarak her ay ilerler.'**
+  String get debtStartDateHint;
+
+  /// No description provided for @receivableDueDateHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paranı geri almayı beklediğin tarih; yaklaşınca hatırlatırız.'**
+  String get receivableDueDateHint;
+
+  /// No description provided for @recurringRowHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kira, maaş, abonelik gibi düzenli işlemler için sıklık seç; zamanı gelince hatırlatırız.'**
+  String get recurringRowHint;
+
+  /// No description provided for @ozelDegerAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Varlığın bugünkü değeri; değiştikçe buradan güncellersin.'**
+  String get ozelDegerAciklama;
+
+  /// No description provided for @ozelMaliyetAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu varlığa ödediğin toplam tutar; kâr/zarar bununla hesaplanır.'**
+  String get ozelMaliyetAciklama;
 }
 
 class _AppLocalizationsDelegate
