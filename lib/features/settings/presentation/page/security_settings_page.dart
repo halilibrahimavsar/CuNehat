@@ -1,3 +1,4 @@
+import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
@@ -65,7 +66,7 @@ class _SecuritySettingsView extends StatelessWidget {
                 // bir başlıktı: sayfa açıldığında boş gradyan çok yer kaplıyor
                 // ve içerik aşağı itiliyordu (kullanıcı şikâyeti, 12 Eki 2026).
                 pinned: true,
-                backgroundColor: scheme.primary,
+                backgroundColor: AppGradients.pageHeaderBase,
                 leading: IconButton(
                   icon:
                       const Icon(Icons.arrow_back_ios_new, color: Colors.white),
@@ -80,11 +81,7 @@ class _SecuritySettingsView extends StatelessWidget {
                 ),
                 flexibleSpace: Container(
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [scheme.primary, scheme.secondary],
-                    ),
+                    gradient: AppGradients.pageHeader,
                   ),
                 ),
               ),

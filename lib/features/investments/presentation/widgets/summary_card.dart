@@ -39,6 +39,8 @@ class SummaryCard extends StatelessWidget {
 
     return AppCard(
       section: AppSection.savings,
+      // Sayfanın kahraman kartı: renkli zemini taşıyan tek kart.
+      emphasized: true,
       padding: const EdgeInsets.all(28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

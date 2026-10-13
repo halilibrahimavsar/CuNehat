@@ -1,5 +1,6 @@
 // lib/features/recurring_transactions/presentation/pages/recurring_templates_page.dart
 
+import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -198,7 +199,7 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage>
       child: Scaffold(
         backgroundColor: scheme.surface,
         appBar: AppBar(
-          backgroundColor: scheme.primary,
+          backgroundColor: AppGradients.pageHeaderBase,
           foregroundColor: Colors.white,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
@@ -213,11 +214,7 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage>
           ),
           flexibleSpace: Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [scheme.primary, scheme.secondary],
-              ),
+              gradient: AppGradients.pageHeader,
             ),
           ),
         ),

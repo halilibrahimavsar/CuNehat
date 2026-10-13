@@ -1,3 +1,4 @@
+import 'package:cunehat/config/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Uygulama bölüm kimliği — beğenilen appbar ile aynı renk dili
@@ -25,6 +26,21 @@ class AppGradients {
     }
   }
 
+  /// İtilmiş sayfaların (Ayarlar, Bütçe, Düzenli İşlemler, Güvenlik) üst
+  /// çubuk zemini: ana ekranın İşlemler gradyanının ailesinden, iki temada da
+  /// AYNI.
+  ///
+  /// Eskiden `[colorScheme.primary, colorScheme.secondary]` idi. Şema rolleri
+  /// temaya göre açılıp koyulaşır; koyu temada `primary` AÇIK bir tondur ve
+  /// üstündeki beyaz başlık okunmuyordu (cihazda görüldü). Çubuk bir kimlik
+  /// öğesi, şema rolü değil: beyaz yazı en açık ucunda 3,7:1 verir.
+  static const Color pageHeaderBase = Color(0xFF1565C0);
+  static const LinearGradient pageHeader = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF1E88E5), Color(0xFF0D47A1)],
+  );
+
   /// Accent renginden temaya uygun yumuşak "aurora" gradyanı (kart zemini).
   /// Blur yok → listelerde performanslı.
   static LinearGradient accentSurface(
@@ -33,9 +49,11 @@ class AppGradients {
     double fill,
   ) {
     // Determine the base color based on brightness
+    // Kart zeminiyle AYNI taban ([AppSurface.baseColor]); ayrı sabit olduğu
+    // dönemde vurgulu kart, yanındaki nötr karttan farklı bir siyaha oturuyordu.
     final base = brightness == Brightness.dark
-        ? const Color(0xFF13151D) // Match the new deep dark / aurora base
-        : Colors.white;
+        ? AppPalette.cardDark
+        : AppPalette.cardLight;
 
     // Aurora effect uses an angled gradient combining the accent color with subtle shifts
     return LinearGradient(

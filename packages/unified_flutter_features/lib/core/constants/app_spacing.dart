@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 class AppSpacing {
   static const double xs = 4.0;
   static const double small = 8.0;
+
+  /// 8 ile 16 arasındaki adım: kart içi satır aralığı, çip dolgusu.
+  static const double compact = 12.0;
   static const double medium = 16.0;
   static const double large = 24.0;
   static const double xl = 32.0;

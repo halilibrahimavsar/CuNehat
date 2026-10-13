@@ -2156,13 +2156,13 @@ abstract class AppLocalizations {
   /// No description provided for @themeSysLight.
   ///
   /// In tr, this message translates to:
-  /// **'Sistem [Açık]'**
+  /// **'Açık'**
   String get themeSysLight;
 
   /// No description provided for @themeSysDark.
   ///
   /// In tr, this message translates to:
-  /// **'Sistem [Kapalı]'**
+  /// **'Koyu'**
   String get themeSysDark;
 
   /// No description provided for @cuzdanOlusturunuz.

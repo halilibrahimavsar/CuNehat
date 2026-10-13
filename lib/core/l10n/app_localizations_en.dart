@@ -1152,10 +1152,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuHistory => 'History';
 
   @override
-  String get themeSysLight => 'System [Light]';
+  String get themeSysLight => 'Light';
 
   @override
-  String get themeSysDark => 'System [Dark]';
+  String get themeSysDark => 'Dark';
 
   @override
   String get cuzdanOlusturunuz => 'Create a wallet';

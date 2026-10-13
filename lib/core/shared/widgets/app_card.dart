@@ -3,12 +3,14 @@ import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/shared/widgets/pressable_scale.dart';
 import 'package:flutter/material.dart';
 
-/// Tüm kartların ortak, tema-duyarlı zemini (Gradient/Aurora dili).
+/// Tüm kartların ortak, tema-duyarlı zemini.
 ///
-/// - [accent] verilirse karta o renkten yumuşak gradyan + hafif glow uygular
-///   (cüzdan rengi, gelir/gider, bölüm rengi vb.). Verilmezse [section]'dan
-///   türetir; o da yoksa nötr taban kullanılır.
-/// - Seçili temaya (light/dark/glass/neo) göre yüzey biçimi otomatik değişir.
+/// - Kart varsayılan olarak NÖTR'dür: beyaz/koyu taban, ince çerçeve, tek
+///   yumuşak gölge. [accent] / [section] zemini BOYAMAZ; yalnız [selected]
+///   çerçevesinin ve [emphasized] zemininin rengini verir. Rengi içerik taşır
+///   (ikon, tutar), kartın kendisi değil.
+/// - [emphasized] true ise accent renginden yumuşak bir gradyan zemin alır:
+///   ekranda öne çıkması gereken tek tük kart için (bölüm özeti).
 /// - [onTap] varsa tap'te hafif küçülme (PressableScale).
 /// Performans: blur kullanmaz; const + tek DecoratedBox.
 class AppCard extends StatelessWidget {
@@ -25,6 +27,9 @@ class AppCard extends StatelessWidget {
   /// çerçeve + hafif glow. Örn. aktif cüzdan kartı. Accent yoksa etkisizdir.
   final bool selected;
 
+  /// Accent renginden gradyan zemin. Accent/section yoksa etkisizdir.
+  final bool emphasized;
+
   const AppCard({
     super.key,
     required this.child,
@@ -36,6 +41,7 @@ class AppCard extends StatelessWidget {
     this.onLongPress,
     this.elevated = true,
     this.selected = false,
+    this.emphasized = false,
   });
 
   @override
@@ -65,10 +71,9 @@ class AppCard extends StatelessWidget {
   }
 
   BoxDecoration _decoration(AppSurface s, Color? acc, BorderRadius radius) {
-    final useGradient = s.gradientFill && acc != null;
-    final baseBorderColor = acc != null
-        ? acc.withValues(alpha: s.gradientFill ? 0.22 : 0.45)
-        : s.borderColor;
+    final tinted = acc != null && (s.gradientFill || emphasized);
+    final baseBorderColor =
+        tinted ? acc.withValues(alpha: 0.22) : s.borderColor;
     // Seçili durumda accent'li, daha kalın çerçeve ile vurgula (tüm temalarda
     // görünsün diye ayrıca hafif accent glow ekleriz).
     final highlight = selected && acc != null;
@@ -76,15 +81,15 @@ class AppCard extends StatelessWidget {
         highlight ? acc.withValues(alpha: 0.9) : baseBorderColor;
 
     return BoxDecoration(
-      color: useGradient ? null : s.baseColor,
-      gradient: useGradient
+      color: tinted ? null : s.baseColor,
+      gradient: tinted
           ? AppGradients.accentSurface(acc, s.brightness, s.accentFill)
           : null,
       borderRadius: radius,
       border: Border.all(color: borderColor, width: highlight ? 2.2 : 1.0),
       boxShadow: [
         if (elevated) ...s.ambientShadow,
-        if (elevated && acc != null && s.glow > 0)
+        if (elevated && tinted && s.glow > 0)
           BoxShadow(
             color: acc.withValues(alpha: s.glow),
             blurRadius: 24,

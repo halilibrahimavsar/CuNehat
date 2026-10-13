@@ -1,3 +1,4 @@
+import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/period_settings_card.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -35,7 +36,7 @@ class SettingsPage extends StatelessWidget {
             // bir başlıktı: sayfa açıldığında boş gradyan çok yer kaplıyor
             // ve içerik aşağı itiliyordu (kullanıcı şikâyeti, 12 Eki 2026).
             pinned: true,
-            backgroundColor: colorScheme.primary,
+            backgroundColor: AppGradients.pageHeaderBase,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
               onPressed: () => Navigator.of(context).pop(),
@@ -49,11 +50,7 @@ class SettingsPage extends StatelessWidget {
             ),
             flexibleSpace: Container(
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [colorScheme.primary, colorScheme.secondary],
-                ),
+                gradient: AppGradients.pageHeader,
               ),
             ),
           ),

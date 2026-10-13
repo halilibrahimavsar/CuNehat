@@ -1,4 +1,4 @@
-import 'package:cunehat/config/theme/app_surface_theme.dart';
+import 'package:cunehat/config/theme/app_theme.dart';
 import 'package:cunehat/core/navigation/predictive_slide_page_transitions_builder.dart';
 import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
@@ -48,15 +48,12 @@ class ThemeNames {
     },
   );
 
+  // ANAHTARLAR değişmez: seçili tema `SharedPreferences`'ta bu metinle saklı
+  // (`ThemeBloc`); yeniden adlandırmak kayıtlı tercihi düşürürdü. Ekranda
+  // görünen ad çeviriden gelir (`themeSysLight` → "Açık").
   static final Map<String, ThemeData> all = {
-    sysLight: ThemeData.light().copyWith(
-      pageTransitionsTheme: _pageTransitions,
-      extensions: const <ThemeExtension<dynamic>>[AppSurface.light],
-    ),
-    sysDark: ThemeData.dark().copyWith(
-      pageTransitionsTheme: _pageTransitions,
-      extensions: const <ThemeExtension<dynamic>>[AppSurface.dark],
-    ),
+    sysLight: AppTheme.light(pageTransitions: _pageTransitions),
+    sysDark: AppTheme.dark(pageTransitions: _pageTransitions),
   };
 }
 
@@ -116,6 +113,7 @@ class AppRoutes {
   static const String privacyPolicy = '/privacy-policy';
   static const String bankStatementImport = '/settings/bank-import';
   static const String backupPreview = '/settings/backups';
-  static const String notificationDiagnostics = '/settings/notification-diagnostics';
+  static const String notificationDiagnostics =
+      '/settings/notification-diagnostics';
   static const String errorLog = '/settings/error-log';
 }

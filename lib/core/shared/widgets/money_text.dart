@@ -101,14 +101,23 @@ class _ObscuredMoney extends StatelessWidget {
     required this.animationCurve,
   });
 
+  /// Tutar rakamları EŞİT genişlikte: alt alta gelen tutarlar basamak
+  /// basamak hizalanır, canlı değişen bir tutar sağa sola oynamaz. Roboto'da
+  /// rakamlar zaten eşit genişlikli; yazı tipi değişirse (çoğu yazı tipinde
+  /// varsayılan orantılıdır) hizanın sessizce bozulmaması için açıkça istenir.
+  static const List<FontFeature> _tabular = [FontFeature.tabularFigures()];
+
   @override
   Widget build(BuildContext context) {
+    final moneyStyle = (style ?? const TextStyle()).copyWith(
+      fontFeatures: [...?style?.fontFeatures, ..._tabular],
+    );
     return AmountVisibilityObfuscator(
       obscureMode: obscureMode,
       alignment: alignment,
       animationCurve: animationCurve,
-      hiddenChild: Text(hiddenText, style: style),
-      child: Text(text, style: style),
+      hiddenChild: Text(hiddenText, style: moneyStyle),
+      child: Text(text, style: moneyStyle),
     );
   }
 }

@@ -1,16 +1,24 @@
+import 'package:cunehat/config/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Tema-duyarlı yüzey token'ları. Her ThemeData'ya bir varyant eklenir
-/// (light/dark/aurora); [AppCard] bunu okuyup accent ile harmanlar.
+/// (açık/koyu); [AppCard] bunu okur.
+///
+/// Görsel yön "kimlik kalsın, gerisi sakinleşsin": kart varsayılan olarak
+/// NÖTR'dür ([gradientFill] false, [glow] 0). Eskiden accent verilen her kart
+/// (75 kartın 44'ü: işlem satırları, rapor kartları, birikim kartları…) renkli
+/// gradyan + parıltıyla çiziliyordu; ekranda hiçbir şey öne çıkmıyordu çünkü
+/// her şey öne çıkıyordu. Renkli zemin artık `AppCard(emphasized: true)` ile
+/// AÇIKÇA istenir (bölüm özeti gibi tek tük kahraman kart).
 @immutable
 class AppSurface extends ThemeExtension<AppSurface> {
   final Brightness brightness;
   final Color baseColor; // accent yokken kart zemini
   final Color borderColor;
   final double radius;
-  final double accentFill; // accent gradyan opaklığı
+  final double accentFill; // vurgulu kartta accent gradyan opaklığı
   final double glow; // accent glow gölge gücü (0..1)
-  final bool gradientFill; // true: opak accent gradyan
+  final bool gradientFill; // true: accent verilen HER kart renkli zemin alır
   final List<BoxShadow> ambientShadow;
 
   const AppSurface({
@@ -26,29 +34,27 @@ class AppSurface extends ThemeExtension<AppSurface> {
 
   static const AppSurface light = AppSurface(
     brightness: Brightness.light,
-    baseColor: Colors.white,
-    borderColor: Color(0x14000000),
-    radius: 32, // Bold radius
-    accentFill: 0.18,
-    glow: 0.35,
-    gradientFill: true,
+    baseColor: AppPalette.cardLight,
+    borderColor: Color(0x12000000),
+    radius: AppRadius.card,
+    accentFill: 0.10,
+    glow: 0,
+    gradientFill: false,
     ambientShadow: [
-      BoxShadow(
-          color: Color(0x15000000), blurRadius: 30, offset: Offset(0, 15)),
+      BoxShadow(color: Color(0x0D0F172A), blurRadius: 12, offset: Offset(0, 4)),
     ],
   );
 
   static const AppSurface dark = AppSurface(
     brightness: Brightness.dark,
-    baseColor: Color(0xFF13151D), // Deeper dark
-    borderColor: Color(0x1FFFFFFF),
-    radius: 32,
-    accentFill: 0.35,
-    glow: 0.40,
-    gradientFill: true,
+    baseColor: AppPalette.cardDark,
+    borderColor: Color(0x14FFFFFF),
+    radius: AppRadius.card,
+    accentFill: 0.22,
+    glow: 0,
+    gradientFill: false,
     ambientShadow: [
-      BoxShadow(
-          color: Color(0x60000000), blurRadius: 40, offset: Offset(0, 20)),
+      BoxShadow(color: Color(0x40000000), blurRadius: 16, offset: Offset(0, 6)),
     ],
   );
 

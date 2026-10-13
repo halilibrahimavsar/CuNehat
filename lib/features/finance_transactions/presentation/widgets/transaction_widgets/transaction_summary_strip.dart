@@ -109,6 +109,8 @@ class TransactionSummaryStrip extends StatelessWidget {
 
     return AppCard(
       section: AppSection.transactions,
+      // Dönem özeti: listedeki nötr satırlardan ayrışan tek renkli zemin.
+      emphasized: true,
       padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -325,8 +327,7 @@ class TransactionSummaryStrip extends StatelessWidget {
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
-          onTap: () =>
-              onModeChanged(selected ? FinanceMode.compare : target),
+          onTap: () => onModeChanged(selected ? FinanceMode.compare : target),
           child: Padding(
             // Dikey dolgu bilerek dar: şerit ekranın ilk yarısında ve her dp
             // bir defter satırından çalınıyor (6dp'de ilk kart 12dp aşağı

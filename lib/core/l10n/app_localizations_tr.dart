@@ -1155,10 +1155,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get menuHistory => 'Geçmiş';
 
   @override
-  String get themeSysLight => 'Sistem [Açık]';
+  String get themeSysLight => 'Açık';
 
   @override
-  String get themeSysDark => 'Sistem [Kapalı]';
+  String get themeSysDark => 'Koyu';
 
   @override
   String get cuzdanOlusturunuz => 'Cüzdan oluşturunuz';
