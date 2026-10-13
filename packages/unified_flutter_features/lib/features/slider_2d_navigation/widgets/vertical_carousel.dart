@@ -16,9 +16,26 @@ class VerticalCarousel extends StatelessWidget {
   /// uygulanmıyordu; artık gerçek yükseklik açıkça geçiliyor.
   final double height;
 
-  /// Silindirin bükülmesi. Küçük değer komşu öğeyi neredeyse dik çevirip
-  /// okunmaz hale getiriyordu.
+  /// Silindirin bükülmesi. Varsayılan [flatDiameterRatio]: çark DÜZDÜR.
+  ///
+  /// `ListWheelScrollView` komşu öğeyi X ekseni etrafında döndürerek çizer.
+  /// Android'de (cihazda ölçüldü, 13 Eki 2026) döndürülmüş metnin altı
+  /// kesiliyor: 2,6 oranında komşu etiket taban çizgisinin ~1 dp altından
+  /// düz bir çizgiyle kırpılıyordu — "İçgörü"nün `ç` ve `g` kuyrukları yoktu.
+  /// Etiketler BÜYÜK HARFKEN inen kuyruk olmadığı için fark edilmemişti.
+  ///
+  /// Kusur test ortamında (Skia da Impeller da) ÜREMİYOR; yalnız cihazda
+  /// görülüyor. Bu yüzden bekçisi piksel değil yapılandırma testidir:
+  /// `vertical_carousel_flat_test.dart`. Perspektifi küçültmek tek başına
+  /// yetmedi (denendi); kesilmeyi dönme açısını sıfıra yaklaştırmak giderdi.
   final double diameterRatio;
+
+  /// Dönme açısını yok sayılır kılan oran: komşu öğenin açısı ~0,4°.
+  static const double flatDiameterRatio = 100;
+
+  /// `ListWheelScrollView` sıfır perspektifi kabul etmiyor; izin verilen en
+  /// küçük değere yakın. Düz çarkta görsel etkisi yoktur.
+  static const double flatPerspective = 0.0001;
 
   const VerticalCarousel({
     super.key,
@@ -26,7 +43,7 @@ class VerticalCarousel extends StatelessWidget {
     required this.children,
     required this.itemExtent,
     required this.height,
-    this.diameterRatio = 2.6,
+    this.diameterRatio = flatDiameterRatio,
     this.onItemTapped,
     this.physics,
   });
@@ -38,7 +55,7 @@ class VerticalCarousel extends StatelessWidget {
       child: ListWheelScrollView.useDelegate(
         controller: controller,
         itemExtent: itemExtent,
-        perspective: 0.004,
+        perspective: flatPerspective,
         diameterRatio: diameterRatio,
         physics: physics ?? const FixedExtentScrollPhysics(),
         childDelegate: ListWheelChildBuilderDelegate(
