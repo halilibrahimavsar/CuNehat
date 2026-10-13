@@ -1,4 +1,3 @@
-import 'package:cunehat/core/shared/motion/app_motion.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/presentation/utils/fresh_entry_marker.dart';
@@ -52,7 +51,12 @@ void main() {
     final start = tester.getTopLeft(row).dy;
     expect(opacity(tester), 0);
 
-    await tester.pump(AppMotion.long ~/ 2);
+    // Kayıt sayfası kapanırken satır görünmez bekler.
+    await tester.pump(FreshEntrance.leadIn);
+    expect(opacity(tester), 0);
+    expect(tester.getTopLeft(row).dy, start);
+
+    await tester.pump(const Duration(milliseconds: 200));
     expect(opacity(tester), inExclusiveRange(0, 1));
     expect(tester.getTopLeft(row).dy, lessThan(start));
 
@@ -61,12 +65,15 @@ void main() {
     expect(start - tester.getTopLeft(row).dy, closeTo(FreshEntrance.rise, 0.5));
   });
 
-  testWidgets('giriş kaydı bekletmez: süresi 400 ms', (tester) async {
+  testWidgets('giriş 650 ms\'de biter (250 bekleme + 400 yükselme)',
+      (tester) async {
     marker.mark([tx()]);
     await tester.pumpWidget(host(tx()));
 
     // Denetleyici TAM süresinde değil, süreyi geçen ilk karede durur.
-    await tester.pump(AppMotion.long + const Duration(milliseconds: 1));
+    await tester.pump(
+      FreshEntrance.total + const Duration(milliseconds: 1),
+    );
     await tester.pump();
 
     expect(opacity(tester), 1);

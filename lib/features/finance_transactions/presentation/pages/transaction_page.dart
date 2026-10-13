@@ -1,3 +1,4 @@
+import 'package:cunehat/features/finance_transactions/presentation/utils/first_record_moment.dart';
 import 'package:cunehat/core/shared/widgets/empty_state.dart';
 import 'package:cunehat/features/main_feature/utils/section_visibility.dart';
 import 'package:cunehat/core/shared/motion/app_motion.dart';
@@ -523,8 +524,13 @@ class _TransactionsViewState extends State<_TransactionsView> {
               if (state.warning != null) {
                 AppMessenger.error(state.warning!);
               } else {
+                // Kurulumun ilk kaydında sıradan "eklendi" bildiriminin
+                // yerini tek cümle alır (bkz. FirstRecordMoment).
+                final message = FirstRecordMoment.takeAnnouncement()
+                    ? context.l10n.firstRecordSaved
+                    : state.message;
                 showDeletionMessage(context,
-                    message: state.message, undo: state.undo);
+                    message: message, undo: state.undo);
               }
               _loadData();
               _loadCategoryIcons();

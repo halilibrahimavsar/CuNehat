@@ -28,4 +28,22 @@ class FirstRecordMoment {
     unawaited(_prefs.setBool(notedKey, true));
     return first;
   }
+
+  /// İlk kayıt yazılmak üzere; defter "eklendi" bildirimini gösterirken
+  /// bunu sorar ([takeAnnouncement]).
+  ///
+  /// Her kayıttan sonra zaten "{başlık} başarıyla eklendi" bildirimi çıkar
+  /// ve tek bildirim alanı vardır: ilk kayıt cümlesi ayrıca gösterilseydi
+  /// hemen ardından gelen o bildirim onu ezerdi (cihazda görüldü). İkisi
+  /// yarışmaz; ilk kayıtta sıradan bildirimin YERİNİ alır.
+  static bool _announcementPending = false;
+
+  static void queueAnnouncement() => _announcementPending = true;
+
+  /// Bekleyen ilk kayıt cümlesi varsa `true` döner ve onu tüketir.
+  static bool takeAnnouncement() {
+    final pending = _announcementPending;
+    _announcementPending = false;
+    return pending;
+  }
 }

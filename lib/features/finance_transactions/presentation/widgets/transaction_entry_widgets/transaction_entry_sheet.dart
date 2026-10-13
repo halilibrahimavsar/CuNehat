@@ -13,8 +13,6 @@ import 'package:cunehat/features/recurring_transactions/domain/usecases/approve_
 import 'package:cunehat/features/recurring_transactions/domain/usecases/save_recurring_transaction_usecase.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_event.dart';
-import 'package:cunehat/core/extensions/context_extensions.dart';
-import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'package:cunehat/features/finance_transactions/presentation/utils/first_record_moment.dart';
 import 'package:cunehat/features/main_feature/utils/section_records.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -52,8 +50,6 @@ class TransactionSheetHandler {
     PendingRecurringBloc pending() =>
         pendingBloc ?? context.read<PendingRecurringBloc>();
 
-    // Sayfa kapandıktan sonra gösterilecek metin şimdi çözülür.
-    final firstRecordMessage = context.l10n.firstRecordSaved;
     bool isFirstRecord() =>
         getIt.isRegistered<SharedPreferences>() &&
         getIt.isRegistered<SectionRecords>() &&
@@ -132,9 +128,8 @@ class TransactionSheetHandler {
               );
             } else {
               // Sayım kayıt yazılmadan ÖNCE alınır (bkz. FirstRecordMoment).
-              final first = isFirstRecord();
+              if (isFirstRecord()) FirstRecordMoment.queueAnnouncement();
               addNew(transaction, recurringFrequency);
-              if (first) AppMessenger.success(firstRecordMessage);
             }
           },
           // Düzenlemede "yeni" yok: tek kayıt güncellenir ve sayfa kapanır.

@@ -3,8 +3,8 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 import 'package:cunehat/features/finance_transactions/presentation/utils/fresh_entry_marker.dart';
 import 'package:flutter/material.dart';
 
-/// Az önce eklenen kaydın satırını listeye yumuşakça alır: aşağıdan hafifçe
-/// yükselir ve belirir.
+/// Az önce eklenen kaydın satırını listeye yumuşakça alır: kayıt sayfası
+/// çekilince aşağıdan hafifçe yükselir ve belirir.
 ///
 /// Kaydetmek uygulamada en sık yapılan iş; eskiden satır listeye bir anda
 /// düşüyordu ve kullanıcı "yazıldı mı?" diye listeyi tarıyordu. Giriş, gözü
@@ -33,6 +33,17 @@ class FreshEntrance extends StatefulWidget {
 
   /// Satırın yükseldiği mesafe.
   static const double rise = 14;
+
+  /// Girişten önceki bekleme: kayıt sayfasının kapanma süresi.
+  ///
+  /// Liste, sayfa daha kapanırken yeniden kurulur. Giriş hemen başlasaydı
+  /// büyük kısmı kapanan sayfanın ARKASINDA oynardı (cihazda ekran kaydıyla
+  /// ölçüldü: sayfa çekildiğinde satır çoktan yerindeydi). Satır bu süre
+  /// boyunca görünmez kalır, sayfa çekilince yükselir.
+  static const Duration leadIn = AppMotion.medium;
+
+  /// Bekleme + yükselme.
+  static const Duration total = Duration(milliseconds: 650);
 
   @override
   State<FreshEntrance> createState() => _FreshEntranceState();
@@ -66,7 +77,7 @@ class _FreshEntranceState extends State<FreshEntrance>
     if (reduceMotion) return;
     final controller = _controller ??= AnimationController(
       vsync: this,
-      duration: AppMotion.long,
+      duration: FreshEntrance.total,
     );
     controller.forward(from: 0);
   }
@@ -82,8 +93,15 @@ class _FreshEntranceState extends State<FreshEntrance>
     final controller = _controller;
     if (controller == null) return widget.child;
 
-    final progress =
-        CurvedAnimation(parent: controller, curve: AppMotion.enter);
+    final progress = CurvedAnimation(
+      parent: controller,
+      curve: Interval(
+        FreshEntrance.leadIn.inMilliseconds /
+            FreshEntrance.total.inMilliseconds,
+        1,
+        curve: AppMotion.enter,
+      ),
+    );
     return AnimatedBuilder(
       animation: progress,
       child: widget.child,

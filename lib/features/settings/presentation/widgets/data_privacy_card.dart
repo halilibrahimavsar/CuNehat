@@ -71,9 +71,11 @@ class DataPrivacyCard extends StatelessWidget {
           ListTile(
             leading:
                 const Icon(Icons.delete_forever_outlined, color: Colors.red),
-            title: const Text(
-              'Tüm Veriyi Sil',
-              style: TextStyle(
+            // Koda gömülü 'Tüm Veriyi Sil' idi: çeviriye girmiyor ve
+            // uygulamanın cümle düzenine uymuyordu.
+            title: Text(
+              context.l10n.deleteAllDataTitle,
+              style: const TextStyle(
                 fontWeight: FontWeight.w600,
                 color: Colors.red,
               ),

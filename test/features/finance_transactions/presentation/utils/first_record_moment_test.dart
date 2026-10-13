@@ -47,4 +47,18 @@ void main() {
     expect(moment.takeIfFirst(), isFalse);
     verifyNever(() => records.transactionCount);
   });
+
+  group('ilk kayıt cümlesi', () {
+    tearDown(FirstRecordMoment.takeAnnouncement);
+
+    test('kuyruğa alınan cümle bir kez verilir', () {
+      expect(FirstRecordMoment.takeAnnouncement(), isFalse);
+
+      FirstRecordMoment.queueAnnouncement();
+
+      expect(FirstRecordMoment.takeAnnouncement(), isTrue);
+      expect(FirstRecordMoment.takeAnnouncement(), isFalse,
+          reason: 'ikinci kayıtta sıradan "eklendi" bildirimi döner');
+    });
+  });
 }
