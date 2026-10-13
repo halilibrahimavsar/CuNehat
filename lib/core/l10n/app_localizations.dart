@@ -11981,6 +11981,24 @@ abstract class AppLocalizations {
   /// **'E-posta uygulaması bulunamadı. Adres kopyalandı: {email}'**
   String feedbackNoMailApp(String email);
 
+  /// No description provided for @txTopCategoriesLead.
+  ///
+  /// In tr, this message translates to:
+  /// **'En çok:'**
+  String get txTopCategoriesLead;
+
+  /// No description provided for @percentValue.
+  ///
+  /// In tr, this message translates to:
+  /// **'%{sayi}'**
+  String percentValue(String sayi);
+
+  /// No description provided for @txTopCategoriesSemantics.
+  ///
+  /// In tr, this message translates to:
+  /// **'En çok harcanan kategoriler: {liste}. Kategori dağılımı için dokun.'**
+  String txTopCategoriesSemantics(String liste);
+
   /// No description provided for @restoreFromDeviceTitle.
   ///
   /// In tr, this message translates to:

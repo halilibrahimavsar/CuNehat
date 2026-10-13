@@ -20,6 +20,80 @@ import 'package:flutter/material.dart';
 /// Analitiğin ağır işi zaten bir kaydırma ötede (İçgörü + Rapor alt
 /// görünümleri); ana ekranın işi "bu dönemde ne oldu"yu tek bakışta vermek.
 ///
+/// Bir kategorinin dönem giderindeki payı (0–1).
+typedef TopCategoryShare = ({String label, double share});
+
+/// "En çok: Market %44 · Fatura %31 · Yemek %13 ›"
+class _TopCategoriesLine extends StatelessWidget {
+  const _TopCategoriesLine({required this.items, required this.onTap});
+
+  final List<TopCategoryShare> items;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final l10n = context.l10n;
+    final muted = theme.textTheme.bodySmall?.copyWith(
+      color: scheme.onSurfaceVariant,
+    );
+    final strong = muted?.copyWith(
+      color: scheme.onSurface,
+      fontWeight: FontWeight.w600,
+    );
+    String percent(double share) => (share * 100).round().toString();
+
+    final line = Row(
+      children: [
+        Expanded(
+          child: Text.rich(
+            TextSpan(
+              style: muted,
+              children: [
+                TextSpan(text: '${l10n.txTopCategoriesLead} '),
+                for (var i = 0; i < items.length; i++) ...[
+                  if (i > 0) const TextSpan(text: ' · '),
+                  TextSpan(text: items[i].label, style: strong),
+                  TextSpan(
+                      text: ' ${l10n.percentValue(percent(items[i].share))}'),
+                ],
+              ],
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        if (onTap != null)
+          Icon(Icons.chevron_right_rounded,
+              size: 18, color: scheme.onSurfaceVariant),
+      ],
+    );
+
+    return Semantics(
+      button: onTap != null,
+      label: l10n.txTopCategoriesSemantics(
+        [
+          for (final item in items)
+            '${item.label} ${l10n.percentValue(percent(item.share))}',
+        ].join(', '),
+      ),
+      excludeSemantics: true,
+      child: InkWell(
+        key: const ValueKey('tx-top-categories'),
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          // Sıkı: bu satır defterin ilk kaydını aşağı iter (bkz. dikey
+          // bütçe testi); 22dp'den fazlasına değmez.
+          padding: const EdgeInsets.only(top: 6),
+          child: line,
+        ),
+      ),
+    );
+  }
+}
+
 /// **Taşmaya karşı sertleştirildi.** Eski takvim özeti yazı ölçeği 1.6'da 6px,
 /// 2.0'da 53px taşıyordu (ölçüldü). Buradaki her para satırı ya `FittedBox`
 /// ile küçülür ya da `Flexible` + ellipsis ile kırpılır; kartın kendisi
@@ -62,7 +136,22 @@ class TransactionSummaryStrip extends StatelessWidget {
     this.onModeChanged,
     this.onToggleCollapseAll,
     this.allDaysCollapsed = false,
+    this.topCategories = const [],
+    this.onOpenBreakdown,
   });
+
+  /// Dönemde en çok harcanan kategoriler (en çok üç), payı büyükten küçüğe.
+  ///
+  /// "Param nereye gidiyor?" sorusunun yanıtı uygulamanın yeni kullanıcıya
+  /// verdiği asıl şey; eskiden yalnız Rapor'un ikinci ekranındaydı (▤ → Rapor
+  /// → kaydır) ve kullanıcı ona tesadüfen ulaşıyordu. Şerit bunu ana ekranda
+  /// TEK SATIRLA söyler; ayrıntısı Rapor'dadır ([onOpenBreakdown]).
+  ///
+  /// Boşsa satır hiç kurulmaz (tek kategoride söylenecek bir şey yoktur).
+  final List<TopCategoryShare> topCategories;
+
+  /// Satıra dokununca: kategori dağılımının tamamı (Rapor).
+  final VoidCallback? onOpenBreakdown;
 
   @override
   Widget build(BuildContext context) {
@@ -145,6 +234,8 @@ class TransactionSummaryStrip extends StatelessWidget {
           ),
           const SizedBox(height: 3),
           _footerRow(context, income, expense, currency),
+          if (topCategories.isNotEmpty)
+            _TopCategoriesLine(items: topCategories, onTap: onOpenBreakdown),
           // Sessizce atmak yerine söylenir: 20.000 ₺'lik bir transferin
           // toplamdan düşmesi açıklanmazsa kullanıcı "giderim nereye gitti"
           // diye sorar. Rapor bunu bir anahtarla, içgörü bir dipnotla

@@ -220,7 +220,6 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     // bayat kalıyordu (kategori yeniden adlandırmada çözülen hatanın aynısı).
     _budgetsSub =
         getIt<BudgetsChangedNotifier>().stream.listen((_) => _loadBudgets());
-
   }
 
   /// Kategori ikon+ad indeksini yükler ve kategoriler değiştikçe TAZELER.
@@ -762,6 +761,24 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   }
 
   /// Gelir–gider evreni boş mu (dönemde yalnız para taşıma ya da kart)?
+  /// "En çok harcanan yerler" kategori dağılımının KOPYASI mı?
+  ///
+  /// Not yazmayan kullanıcıda kaydın başlığı kategorinin adıdır; o zaman
+  /// "yerler" listesi "Market 2.590 ₺, Yemek 780 ₺" diye bir üstteki kategori
+  /// listesini tekrar eder (cihazda görüldü). Tek bir kayıt bile kendi
+  /// başlığını taşıyorsa bölüm gösterilir.
+  bool _payeesMirrorCategories(_ReportDerived derived) {
+    String norm(String text) => text.trim().toLowerCase();
+    for (final group in derived.payeeGroups) {
+      for (final t in group.items) {
+        if (norm(t.title) != norm(_categoryLabels[t.tag] ?? t.tag)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
   bool _hasNoFlow(ReportTotals totals) =>
       totals.totalIncome == 0 && totals.totalExpense == 0;
 
@@ -802,8 +819,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   Widget _buildTrendCard(BuildContext context, _ReportDerived derived) {
     final totals = derived.totals;
     final node = derived.focusNodes.isEmpty ? null : derived.focusNodes.last;
-    final sideTotal =
-        _sideIsExpense ? totals.totalExpense : totals.totalIncome;
+    final sideTotal = _sideIsExpense ? totals.totalExpense : totals.totalIncome;
     final flow = derived.flowSeries;
 
     return ReportTrendCard(
@@ -845,7 +861,6 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: widget.showAppBar
           ? AppBar(
@@ -923,8 +938,9 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                             IconButton(
                               icon: const Icon(Icons.ios_share_rounded),
                               tooltip: context.l10n.reportShareTooltip,
-                              onPressed:
-                                  filteredTransactions.isEmpty ? null : _shareReport,
+                              onPressed: filteredTransactions.isEmpty
+                                  ? null
+                                  : _shareReport,
                             ),
                           ],
                         ),
@@ -982,16 +998,17 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                                       movedCount: split.system.length,
                                       hasCards: linkedCards.isNotEmpty,
                                     ),
-                                  // Sıra kullanıcının sorduğu sırayla: nasıl gidiyor
-                                  // (zaman) → nereye gitti (kategori) → bütçeyi aştım
-                                  // mı → tam olarak nereye (yerler).
-                                  if (_hasTrend(derived)) ...[
-                                    if (_hasNoFlow(totals))
-                                      const SizedBox(height: 16),
-                                    _buildTrendCard(context, derived),
-                                  ],
+                                  // Sıra, uygulamayı yeni açan kişinin sorduğu sırayla:
+                                  // NEREYE gitti (kategori) → nasıl gidiyor (zaman) →
+                                  // bütçeyi aştım mı → tam olarak nereye (yerler).
+                                  //
+                                  // Eskiden zaman grafiği öndeydi. Temiz kurulumda acemi
+                                  // gibi kullanılırken görüldü (13 Eki 2026): "param
+                                  // nereye gidiyor?" sorusunun yanıtı olan kategori
+                                  // dağılımı ikinci ekranda kalıyor, önce anlamı
+                                  // açıklanmayan birikimli bir çizgi çıkıyordu.
                                   if (!_hasNoFlow(totals)) ...[
-                                    const SizedBox(height: 24),
+                                    const SizedBox(height: 8),
                                     ReportSectionHeader(
                                       title: context.l10n.kategoriDagilimi,
                                       trailing: _SideChips(
@@ -1008,12 +1025,20 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                                       nodes: derived.focusNodes,
                                       onPathChanged: _setFocusPath,
                                       onOpenTransactions: (node) =>
-                                          _openCategoryDetails(node,
-                                              _sideIsExpense, ReportSliceMode.pie),
+                                          _openCategoryDetails(
+                                              node,
+                                              _sideIsExpense,
+                                              ReportSliceMode.pie),
                                       budgetProgressFor:
                                           derived.dataBuilder.budgetProgressFor,
                                       categoryLabels: _categoryLabels,
                                     ),
+                                  ],
+                                  if (_hasTrend(derived)) ...[
+                                    const SizedBox(height: 24),
+                                    _buildTrendCard(context, derived),
+                                  ],
+                                  if (!_hasNoFlow(totals)) ...[
                                     // Bütçe limitleri aylık; dönem bir ay değilse limit
                                     // döneme ORANTILANIR ve kart bunu yazar (bkz.
                                     // [computeBudgetStatuses]). Liste boşsa (tüm limitler
@@ -1021,7 +1046,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                                     if (derived.budgetStatuses.isNotEmpty) ...[
                                       const SizedBox(height: 24),
                                       ReportSectionHeader(
-                                          title: context.l10n.reportBudgetSummaryTitle),
+                                          title: context
+                                              .l10n.reportBudgetSummaryTitle),
                                       const SizedBox(height: 12),
                                       ReportBudgetSummaryCard(
                                         statuses: derived.budgetStatuses,
@@ -1031,15 +1057,18 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                                       ),
                                     ],
                                   ],
-                                  if (derived.payeeGroups.isNotEmpty) ...[
+                                  if (derived.payeeGroups.isNotEmpty &&
+                                      !_payeesMirrorCategories(derived)) ...[
                                     const SizedBox(height: 24),
                                     ReportSectionHeader(
-                                        title: context.l10n.reportTopPayeesTitle),
+                                        title:
+                                            context.l10n.reportTopPayeesTitle),
                                     const SizedBox(height: 12),
                                     ReportTopPayeesCard(
                                       groups: derived.payeeGroups,
                                       onGroupTap: _openPayeeGroup,
-                                      periodExpenseTotal: derived.totals.totalExpense,
+                                      periodExpenseTotal:
+                                          derived.totals.totalExpense,
                                     ),
                                   ],
                                 ],
@@ -1074,8 +1103,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     if (day == null) return null;
     final target = periodContainingDay(_range, day);
     return (
-      label: context.l10n
-          .analysisJumpToPeriod(periodLabel(target, context.l10n)),
+      label:
+          context.l10n.analysisJumpToPeriod(periodLabel(target, context.l10n)),
       onTap: () => context.read<TransactionFilterCubit>().setPeriod(target),
     );
   }

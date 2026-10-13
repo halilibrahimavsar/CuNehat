@@ -1,3 +1,5 @@
+import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
 import 'package:cunehat/features/finance_transactions/presentation/utils/first_record_moment.dart';
 import 'package:cunehat/core/shared/widgets/empty_state.dart';
 import 'package:cunehat/features/main_feature/utils/section_visibility.dart';
@@ -109,6 +111,10 @@ class _TransactionsViewState extends State<_TransactionsView> {
   /// Gruplama ve filtre anahtarı hep `tag` kalır.
   Map<String, String> _categoryLabels = {};
 
+  /// `id → kök id`: şeritteki "en çok" satırı KÖK seviyede toplar (Rapor'un
+  /// kategori dağılımıyla aynı kırılım).
+  Map<String, String> _categoryRoots = const {};
+
   StreamSubscription<void>? _categoriesSub;
 
   final ScrollController _scrollController = ScrollController();
@@ -162,6 +168,34 @@ class _TransactionsViewState extends State<_TransactionsView> {
         .listen((_) => _loadCategoryIcons());
   }
 
+  /// Dönemin giderinde en büyük payı alan (en çok üç) kök kategori.
+  ///
+  /// Kırılım burada YENİDEN yazılmaz: evren ve gruplama Rapor'unkiyle aynı
+  /// işlevlerden gelir (sistem hareketleri hariç, kök seviyede) — iki yerde
+  /// hesaplanan kırılım daha önce iki ayrı yanıt vermişti.
+  ///
+  /// Tek kategoride boş döner: "Market %100" bir şey söylemez.
+  List<TopCategoryShare> _topCategories(List<TransactionEntity> visible) {
+    final spending = ReportCategoryDataBuilder.universeOf(
+      visible,
+      includeSystemMovements: false,
+    );
+    final breakdown = const TransactionReportService().buildCategoryBreakdown(
+      spending,
+      isExpense: true,
+      rootIndex: _categoryRoots,
+    );
+    final total = breakdown.fold<double>(0, (sum, b) => sum + b.totalAmount);
+    if (breakdown.length < 2 || total <= 0) return const [];
+    return [
+      for (final b in breakdown.take(3))
+        (
+          label: _categoryLabels[b.name] ?? b.name,
+          share: b.totalAmount / total,
+        ),
+    ];
+  }
+
   /// Kategori ikon+ad indeksini yükler ve kategoriler değiştikçe TAZELER.
   ///
   /// Harita eskiden yalnız initState'te kuruluyordu: sayfa route yığınında
@@ -187,6 +221,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
     setState(() {
       _categoryIcons = index.icons;
       _categoryLabels = index.labels;
+      _categoryRoots = index.roots;
     });
   }
 
@@ -706,6 +741,15 @@ class _TransactionsViewState extends State<_TransactionsView> {
                         ? _collapse.expandAll()
                         : _collapse.collapseAll(days),
                 allDaysCollapsed: _collapse.allCollapsed(days),
+                // "Param nereye gidiyor?" — yalnız gider görünürken.
+                topCategories: mode == FinanceMode.income
+                    ? const []
+                    : _topCategories(
+                        visible.map((e) => e.transaction).toList()),
+                onOpenBreakdown: getIt.isRegistered<HomeNavigationRequests>()
+                    ? () => getIt<HomeNavigationRequests>()
+                        .openSection(TransactionsSection.report)
+                    : null,
               ),
             ),
           ),

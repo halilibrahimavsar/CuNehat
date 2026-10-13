@@ -68,7 +68,8 @@ class CategoryData {
   });
 
   /// Bu dilime inen yol adımı (bkz. [ReportCategoryDataBuilder.resolvePath]).
-  CategoryPathStep get step => (name: name, isOther: isOther, isDirect: isDirect);
+  CategoryPathStep get step =>
+      (name: name, isOther: isOther, isDirect: isDirect);
 
   /// İçine inilebilir mi? Alt kategorisi olan kök ve küçük kalemleri
   /// toplayan "Diğer" kovası; doğrudan dilim ve yaprak İNİLMEZ, işlemleri
@@ -153,7 +154,9 @@ abstract final class ReportCategoryPalette {
     Color(0xFFEA580C), // turuncu
     Color(0xFF4F46E5), // indigo
     Color(0xFF0D9488), // deniz yeşili
-    Color(0xFF9333EA), // menekşe
+    // Eskiden menekşeydi (0xFF9333EA): "mor"dan ayırt edilemiyordu — aynı
+    // halkada Fatura ile Yemek yan yana iki mor dilimdi (cihazda görüldü).
+    Color(0xFF92400E), // kahve
   ];
 
   static int get length => colors.length;
@@ -458,9 +461,8 @@ class ReportCategoryDataBuilder {
         : item.copyWith(children: [
             for (final c in item.children)
               c.copyWith(
-                previousAmount: (c.isDirect ? directByName : childByName)[
-                        c.name] ??
-                    0,
+                previousAmount:
+                    (c.isDirect ? directByName : childByName)[c.name] ?? 0,
               ),
           ]);
 

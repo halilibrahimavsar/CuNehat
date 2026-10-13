@@ -615,18 +615,20 @@ void main() {
 
       double topOf(String title) => tester.getTopLeft(find.text(title)).dy;
 
-      // Kullanıcının sorduğu sıra: nasıl gidiyor (zaman) → nereye gitti →
-      // bütçeyi aştım mı → tam olarak nereye.
+      // Yeni kullanıcının sorduğu sıra: NEREYE gitti (kategori) → nasıl
+      // gidiyor (zaman) → bütçeyi aştım mı → tam olarak nereye.
+      // 13 Eki 2026'ya dek zaman grafiği öndeydi; kategori dağılımı ikinci
+      // ekranda kalıyordu.
       final trend = tester.getTopLeft(find.byType(ReportTrendCard)).dy;
       final kategori = topOf('Kategori dağılımı');
       final butce = topOf('Bütçe durumu');
       final yerler = topOf('En çok harcanan yerler');
 
-      expect(trend, lessThan(kategori));
-      expect(kategori, lessThan(butce));
+      expect(kategori, lessThan(trend));
+      expect(trend, lessThan(butce));
       expect(butce, lessThan(yerler));
-      // Kategori dağılımı İLK ekranda başlamalı.
-      expect(kategori, lessThan(800));
+      // Kategori dağılımı sayfanın İLK bölümü.
+      expect(kategori, lessThan(200));
     });
   });
 

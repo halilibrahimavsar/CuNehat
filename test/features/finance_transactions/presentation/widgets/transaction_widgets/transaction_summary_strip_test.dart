@@ -78,6 +78,82 @@ void main() {
         periodLabel: 'Eylül 2026',
       );
 
+  group('"en çok" satırı: param nereye gidiyor?', () {
+    final line = find.byKey(const ValueKey('tx-top-categories'));
+    const top = <TopCategoryShare>[
+      (label: 'Market', share: 0.438),
+      (label: 'Fatura', share: 0.313),
+      (label: 'Yemek', share: 0.132),
+    ];
+
+    Widget withTop(List<TopCategoryShare> items, {VoidCallback? onTap}) =>
+        wrap(TransactionSummaryStrip(
+          transactions: const [],
+          mode: FinanceMode.compare,
+          filter: filter(),
+          periodLabel: 'Ekim 2026',
+          topCategories: items,
+          onOpenBreakdown: onTap,
+        ));
+
+    testWidgets('kategoriler payı büyükten küçüğe, yüzdeleriyle tek satırda',
+        (tester) async {
+      await tester.pumpWidget(withTop(top));
+
+      expect(line, findsOneWidget);
+      final text = tester
+          .widget<Text>(find.descendant(of: line, matching: find.byType(Text)))
+          .textSpan!
+          .toPlainText();
+      expect(text, 'En çok: Market %44 · Fatura %31 · Yemek %13');
+    });
+
+    testWidgets('kategori yoksa satır hiç kurulmaz (şerit büyümez)',
+        (tester) async {
+      await tester.pumpWidget(withTop(top));
+      final withLine =
+          tester.getSize(find.byType(TransactionSummaryStrip)).height;
+
+      await tester.pumpWidget(withTop(const []));
+
+      expect(line, findsNothing);
+      final without =
+          tester.getSize(find.byType(TransactionSummaryStrip)).height;
+      // Satırın bedeli: defterin ilk kaydını bu kadar aşağı iter.
+      expect(withLine - without, lessThanOrEqualTo(24));
+    });
+
+    testWidgets('dokununca kategori dağılımı açılır', (tester) async {
+      var opened = 0;
+      await tester.pumpWidget(withTop(top, onTap: () => opened++));
+
+      await tester.tap(line);
+
+      expect(opened, 1);
+    });
+
+    testWidgets('dar ekranda taşmaz: satır kısalır', (tester) async {
+      await tester.pumpWidget(wrap(
+        TransactionSummaryStrip(
+          transactions: const [],
+          mode: FinanceMode.compare,
+          filter: filter(),
+          periodLabel: 'Ekim 2026',
+          topCategories: const [
+            (label: 'Ev ve yaşam giderleri', share: 0.5),
+            (label: 'Ulaşım ve akaryakıt', share: 0.3),
+            (label: 'Sağlık ve kişisel bakım', share: 0.2),
+          ],
+          onOpenBreakdown: () {},
+        ),
+        width: 320,
+      ));
+
+      expect(tester.takeException(), isNull);
+      expect(line, findsOneWidget);
+    });
+  });
+
   testWidgets('↑gelir / ↓gider rakamları TÜR seçer; seçiliyken tümüne döner',
       (tester) async {
     // Üst çubuktaki ikon-yalnız segment (↗ ⇄ ↘) kalktı; tür buradan seçilir.

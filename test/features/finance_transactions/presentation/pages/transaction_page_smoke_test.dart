@@ -277,7 +277,10 @@ void main() {
       expect(bar.height, 60);
 
       final strip = tester.getSize(find.byType(TransactionSummaryStrip));
-      expect(strip.height, lessThan(100),
+      // 13 Eki 2026: şeride "En çok: Market %44 · …" satırı eklendi (22dp).
+      // Bilinçli büyüme — yeni kullanıcının asıl sorusunun yanıtı ana
+      // ekrana çıktı; bütçe 100 → 122.
+      expect(strip.height, lessThan(122),
           reason: 'eski özet kartı 191dp idi; şerit yarısından az olmalı');
 
       final rail = tester.getSize(find.byType(TransactionDayRail));
@@ -288,7 +291,8 @@ void main() {
       // ilk kartın üst kenarı 272,6dp (kendi satırıyken 312,7; sekmelerle
       // 372,7). Sessizce büyümesin.
       final firstCard = tester.getRect(find.byType(TransactionCard).first);
-      expect(firstCard.top - page.top, lessThanOrEqualTo(273));
+      // +22dp: şeritteki "en çok" satırı (bkz. yukarı). 273 → 295.
+      expect(firstCard.top - page.top, lessThanOrEqualTo(295));
 
       // En az bir işlem kartı ilk ekranda TAM görünmeli. Eski takvim
       // görünümünde seçili günün kartı y=609'da başlıyor, ikincisi sürgünün

@@ -7057,6 +7057,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get txTopCategoriesLead => 'Most:';
+
+  @override
+  String percentValue(String sayi) {
+    return '$sayi%';
+  }
+
+  @override
+  String txTopCategoriesSemantics(String liste) {
+    return 'Top spending categories: $liste. Tap for the category breakdown.';
+  }
+
+  @override
   String get restoreFromDeviceTitle => 'Backup file on this phone';
 
   @override

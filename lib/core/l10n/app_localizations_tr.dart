@@ -7005,6 +7005,19 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get txTopCategoriesLead => 'En çok:';
+
+  @override
+  String percentValue(String sayi) {
+    return '%$sayi';
+  }
+
+  @override
+  String txTopCategoriesSemantics(String liste) {
+    return 'En çok harcanan kategoriler: $liste. Kategori dağılımı için dokun.';
+  }
+
+  @override
   String get restoreFromDeviceTitle => 'Telefondaki yedek dosyası';
 
   @override
