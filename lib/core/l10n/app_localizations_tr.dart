@@ -6973,6 +6973,34 @@ class AppLocalizationsTr extends AppLocalizations {
       'Google Drive\'daki ya da telefonundaki yedeği seç. Kayıtların olduğu gibi geri gelir.';
 
   @override
+  String get firstRecordSaved =>
+      'İlk kaydın tamam. Yazdıkça paranın nereye gittiğini göreceksin.';
+
+  @override
+  String get backupSetupTitle => 'Yedekleme';
+
+  @override
+  String get backupSetupBody =>
+      'Yedeklemeyi açarsan kayıtlarının kopyası düzenli olarak kendi Google Drive\'ına alınır. İstersen dosya olarak telefonuna da kaydedebilirsin.';
+
+  @override
+  String get feedbackTitle => 'Görüş gönder';
+
+  @override
+  String get feedbackSubtitle =>
+      'Sorun, istek ya da fikir — doğrudan geliştiriciye gider.';
+
+  @override
+  String feedbackMailSubject(String app, String version) {
+    return '$app görüş · v$version';
+  }
+
+  @override
+  String feedbackNoMailApp(String email) {
+    return 'E-posta uygulaması bulunamadı. Adres kopyalandı: $email';
+  }
+
+  @override
   String get restoreFromDeviceTitle => 'Telefondaki yedek dosyası';
 
   @override

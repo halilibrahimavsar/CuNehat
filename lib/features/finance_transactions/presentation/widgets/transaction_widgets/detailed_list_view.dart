@@ -8,6 +8,7 @@ import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/money_text.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/fresh_entrance.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_card.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
@@ -283,12 +284,15 @@ class _TransactionLedgerSliverState extends State<TransactionLedgerSliver> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        TransactionCard(
-                          item: item,
-                          categoryIcon:
-                              widget.categoryIcons[item.transaction.tag],
-                          categoryLabel:
-                              widget.categoryLabels[item.transaction.tag],
+                        FreshEntrance(
+                          transaction: item.transaction,
+                          child: TransactionCard(
+                            item: item,
+                            categoryIcon:
+                                widget.categoryIcons[item.transaction.tag],
+                            categoryLabel:
+                                widget.categoryLabels[item.transaction.tag],
+                          ),
                         ),
                         if (isLast && widget.showDayEndBalance)
                           _DayEndBalance(balance: group.dayEndBalance),

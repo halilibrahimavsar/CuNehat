@@ -7025,6 +7025,34 @@ class AppLocalizationsEn extends AppLocalizations {
       'Pick the backup in Google Drive or on your phone. Your records come back as they were.';
 
   @override
+  String get firstRecordSaved =>
+      'Your first record is in. Keep writing and you\'ll see where your money goes.';
+
+  @override
+  String get backupSetupTitle => 'Backup';
+
+  @override
+  String get backupSetupBody =>
+      'Turn on backup and a copy of your records is saved to your own Google Drive regularly. You can also save it to your phone as a file.';
+
+  @override
+  String get feedbackTitle => 'Send feedback';
+
+  @override
+  String get feedbackSubtitle =>
+      'A problem, a request or an idea — it goes straight to the developer.';
+
+  @override
+  String feedbackMailSubject(String app, String version) {
+    return '$app feedback · v$version';
+  }
+
+  @override
+  String feedbackNoMailApp(String email) {
+    return 'No email app found. Address copied: $email';
+  }
+
+  @override
   String get restoreFromDeviceTitle => 'Backup file on this phone';
 
   @override

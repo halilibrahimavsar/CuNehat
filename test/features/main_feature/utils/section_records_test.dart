@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/receivable_model.dart';
+import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
 import 'package:cunehat/features/investments/data/datasource/goal_local_datasource.dart';
 import 'package:cunehat/features/investments/data/models/goal_model.dart';
 import 'package:cunehat/features/investments/data/models/investment_model.dart';
@@ -171,6 +172,27 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       expect(events.values.any((c) => c.hasListener), isFalse);
+    });
+  });
+
+  group('transactionCount', () {
+    test('defter kutusu açık değilse 0', () {
+      when(() => hive.isBoxOpen(SectionRecords.transactionsBox))
+          .thenReturn(false);
+
+      expect(records.transactionCount, 0);
+    });
+
+    test('açıksa kayıt sayısı — kayıtlar OKUNMADAN', () {
+      final box = _MockBox<TransactionModel>();
+      when(() => hive.isBoxOpen(SectionRecords.transactionsBox))
+          .thenReturn(true);
+      when(() => hive.box<TransactionModel>(SectionRecords.transactionsBox))
+          .thenReturn(box);
+      when(() => box.length).thenReturn(271);
+
+      expect(records.transactionCount, 271);
+      verifyNever(() => box.values);
     });
   });
 }

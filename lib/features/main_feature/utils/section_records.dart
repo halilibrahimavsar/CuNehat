@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/receivable_model.dart';
+import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
 import 'package:cunehat/features/investments/data/datasource/goal_local_datasource.dart';
 import 'package:cunehat/features/investments/data/models/goal_model.dart';
 import 'package:cunehat/features/investments/data/models/investment_model.dart';
@@ -28,6 +29,7 @@ class SectionRecords {
   static const String debtsBox = 'debts';
   static const String receivablesBox = 'receivables';
   static const String walletsBox = 'wallets';
+  static const String transactionsBox = 'transactions';
 
   /// Varlık, nakit kasası ya da hedef.
   bool get savingsHasRecords =>
@@ -39,6 +41,15 @@ class SectionRecords {
       _notEmpty<DebtModel>(debtsBox) ||
       _notEmpty<ReceivableModel>(receivablesBox) ||
       _hasCard;
+
+  /// Defterdeki toplam kayıt sayısı (bütün cüzdanlar).
+  ///
+  /// Kutu henüz açılmadıysa 0: defter ekranı bir kez yüklendikten sonra açık
+  /// kalır, yani kayıt yazılan her yerde gerçek sayıdır. Eşzamanlıdır ve
+  /// kayıtları OKUMAZ (yalnız anahtar sayısı) — her kayıtta çağrılabilir.
+  int get transactionCount => _hive.isBoxOpen(transactionsBox)
+      ? _hive.box<TransactionModel>(transactionsBox).length
+      : 0;
 
   bool _notEmpty<T>(String name) =>
       _hive.isBoxOpen(name) && _hive.box<T>(name).isNotEmpty;

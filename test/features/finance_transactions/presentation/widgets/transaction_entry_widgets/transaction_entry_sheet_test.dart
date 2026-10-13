@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:cunehat/features/finance_transactions/presentation/utils/fresh_entry_marker.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
@@ -15,6 +16,7 @@ import 'package:cunehat/features/recurring_transactions/domain/entities/recurrin
 import 'package:cunehat/features/recurring_transactions/domain/usecases/save_recurring_transaction_usecase.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
@@ -247,6 +249,73 @@ void main() {
     verify(() => mockTransactionBloc.add(any(that: isA<AddTransactionEvent>())))
         .called(1);
     expect(find.text('Kaydet'), findsNothing); // Sheet is closed
+  });
+
+  testWidgets(
+      'kayıt anı: titreşim verir ve yeni satırı listeye girişi için işaretler',
+      (WidgetTester tester) async {
+    FreshEntryMarker.instance.clear();
+    addTearDown(FreshEntryMarker.instance.clear);
+    final haptics = <Object?>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'HapticFeedback.vibrate') {
+          haptics.add(call.arguments);
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, null),
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        Builder(
+          builder: (context) => ElevatedButton(
+            onPressed: () => TransactionSheetHandler.showSheet(
+              context: context,
+              userId: 'user_123',
+              walletId: 'wallet_123',
+              type: TransactionTypeModel.expense,
+            ),
+            child: const Text('Open Form'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open Form'));
+    await tester.pumpAndSettle();
+
+    // Doğrulama geçmeden hiçbir şey olmaz: tutar yok.
+    await tester.ensureVisible(find.text('Kaydet'));
+    await tester.tap(find.text('Kaydet'));
+    await tester.pumpAndSettle();
+    expect(haptics, isEmpty);
+    expect(FreshEntryMarker.instance.isEmpty, isTrue);
+
+    final amountTextField = find.byWidgetPredicate(
+      (widget) => widget is TextField && widget.keyboardType.decimal == true,
+    );
+    await tester.enterText(amountTextField, '250');
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Food'));
+    await tester.tap(find.text('Food'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Kaydet'));
+    await tester.tap(find.text('Kaydet'));
+    await tester.pumpAndSettle();
+
+    expect(haptics, ['HapticFeedbackType.lightImpact']);
+    final event = verify(() => mockTransactionBloc.add(captureAny()))
+        .captured
+        .whereType<AddTransactionEvent>()
+        .single;
+    // Deftere düşen satır, formun bıraktığı imzayla eşleşir — bir kez.
+    expect(FreshEntryMarker.instance.consume(event.transaction), isTrue);
+    expect(FreshEntryMarker.instance.consume(event.transaction), isFalse);
   });
 
   testWidgets(

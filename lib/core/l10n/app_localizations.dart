@@ -11933,6 +11933,48 @@ abstract class AppLocalizations {
   /// **'Google Drive\'daki ya da telefonundaki yedeği seç. Kayıtların olduğu gibi geri gelir.'**
   String get restoreBackupBody;
 
+  /// No description provided for @firstRecordSaved.
+  ///
+  /// In tr, this message translates to:
+  /// **'İlk kaydın tamam. Yazdıkça paranın nereye gittiğini göreceksin.'**
+  String get firstRecordSaved;
+
+  /// No description provided for @backupSetupTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedekleme'**
+  String get backupSetupTitle;
+
+  /// No description provided for @backupSetupBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedeklemeyi açarsan kayıtlarının kopyası düzenli olarak kendi Google Drive\'ına alınır. İstersen dosya olarak telefonuna da kaydedebilirsin.'**
+  String get backupSetupBody;
+
+  /// No description provided for @feedbackTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görüş gönder'**
+  String get feedbackTitle;
+
+  /// No description provided for @feedbackSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sorun, istek ya da fikir — doğrudan geliştiriciye gider.'**
+  String get feedbackSubtitle;
+
+  /// No description provided for @feedbackMailSubject.
+  ///
+  /// In tr, this message translates to:
+  /// **'{app} görüş · v{version}'**
+  String feedbackMailSubject(String app, String version);
+
+  /// No description provided for @feedbackNoMailApp.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-posta uygulaması bulunamadı. Adres kopyalandı: {email}'**
+  String feedbackNoMailApp(String email);
+
   /// No description provided for @restoreFromDeviceTitle.
   ///
   /// In tr, this message translates to:

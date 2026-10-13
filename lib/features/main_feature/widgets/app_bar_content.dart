@@ -523,6 +523,9 @@ class _AppBarContentState extends State<AppBarContent> {
           secondaryLine: line,
           pageIndex: pageIndex,
           pageCount: pageCount,
+          // Aynı cüzdanın aynı bölümdeki tutarı değişince sayar; cüzdan ya
+          // da bölüm değişince yeni tutar doğrudan yazılır.
+          amountIdentity: '${shown?.id}|${st.name}',
         );
     // İkincil satır da TUTAR yazar: göz düğmesi başlığı gizlerken hemen
     // altındaki "Kullanılabilir limit: 33.500 ₺" açıkta kalıyordu (cihaz

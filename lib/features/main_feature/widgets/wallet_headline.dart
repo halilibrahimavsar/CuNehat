@@ -1,4 +1,5 @@
 import 'package:cunehat/core/shared/widgets/amount_eye_button.dart';
+import 'package:cunehat/core/shared/widgets/animated_money_text.dart';
 import 'package:cunehat/core/shared/widgets/money_text.dart';
 import 'package:cunehat/features/main_feature/utils/app_constants.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +35,13 @@ class WalletHeadline extends StatelessWidget {
     this.badgeIcon = Icons.wallet,
     this.pageCount = 1,
     this.pageIndex = 0,
+    this.amountIdentity,
   });
+
+  /// [amount]'ın neye ait olduğu (cüzdan + bölüm). Verilirse tutar, AYNI
+  /// şeyin değeri değiştiğinde sayarak gider (bkz. [AnimatedMoneyText]);
+  /// verilmezse doğrudan yazılır.
+  final Object? amountIdentity;
 
   /// Üst çubuk karuselindeki konum: kaç cüzdan var, bu kaçıncısı. Noktalar
   /// rozetin İÇİNE çizilir — ayrı bir satır yığını 70dp'nin dışına iterdi
@@ -189,26 +196,41 @@ class WalletHeadline extends StatelessWidget {
     );
   }
 
+  static const TextStyle _moneyStyle = TextStyle(
+    fontSize: 34,
+    color: AppColors.white,
+    fontWeight: FontWeight.w900,
+    letterSpacing: -1.0,
+    shadows: [
+      BoxShadow(
+        color: Colors.black26,
+        blurRadius: 16,
+        offset: Offset(0, 8),
+      ),
+    ],
+  );
+
   Widget _buildMoneyText() {
-    return MoneyText(
+    final identity = amountIdentity;
+    if (identity == null) {
+      return MoneyText(
+        amount: amount,
+        currency: currency,
+        animationCurve: Curves.decelerate,
+        obscureMode: AmountObscureMode.blur,
+        alignment: Alignment.center,
+        style: _moneyStyle,
+      );
+    }
+    // Kayıt yazılınca bakiye yeni değerine sayarak gider.
+    return AnimatedMoneyText(
       amount: amount,
       currency: currency,
+      identity: identity,
       animationCurve: Curves.decelerate,
       obscureMode: AmountObscureMode.blur,
       alignment: Alignment.center,
-      style: const TextStyle(
-        fontSize: 34,
-        color: AppColors.white,
-        fontWeight: FontWeight.w900,
-        letterSpacing: -1.0,
-        shadows: [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 16,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
+      style: _moneyStyle,
     );
   }
 }

@@ -1,5 +1,7 @@
 import 'package:cunehat/core/shared/widgets/field_hint.dart';
 import 'package:flutter/material.dart';
+import 'package:cunehat/core/shared/motion/app_haptics.dart';
+import 'package:cunehat/features/finance_transactions/presentation/utils/fresh_entry_marker.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
@@ -220,6 +222,12 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
     final rows = !_isEdit && installments > 1 && onInstallments != null
         ? splitIntoInstallments(transaction, installments)
         : null;
+
+    // Kayıt anı. Doğrulama geçti, kayıt yazılacak: parmak bunu hisseder,
+    // yeni satır da listeye yumuşakça girer (bkz. `FreshEntrance`). İkisi de
+    // kaydı BEKLETMEZ.
+    AppHaptics.confirm();
+    if (!_isEdit) FreshEntryMarker.instance.mark(rows ?? [transaction]);
 
     final onSaveAndNew = widget.onSaveAndNew;
     if (keepOpen && onSaveAndNew != null) {
