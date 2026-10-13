@@ -233,6 +233,11 @@ class SliderKnob extends StatelessWidget {
                     // Punto zaten sığacak şekilde çözülüyor; bu yalnız son
                     // çare (bkz. SliderMetrics.resolve).
                     overflow: TextOverflow.ellipsis,
+                    // `labelStyle` yazı ölçeğini zaten İÇERİR. Ortamdaki
+                    // ölçek bir kez daha uygulanırsa etiket hesaplanandan
+                    // büyük boyanır ve kesilir ("İşle…", ölçek 1,3'ten
+                    // itibaren).
+                    textScaler: TextScaler.noScaling,
                     style: metrics.labelStyle,
                   ),
                 ),
@@ -250,6 +255,8 @@ class SliderKnob extends StatelessWidget {
         label,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
+        // Bkz. çarktaki etiket: punto ölçeği zaten içeriyor.
+        textScaler: TextScaler.noScaling,
         style: metrics.labelStyle.copyWith(
           shadows: [const Shadow(color: Colors.black26, blurRadius: 2)],
         ),

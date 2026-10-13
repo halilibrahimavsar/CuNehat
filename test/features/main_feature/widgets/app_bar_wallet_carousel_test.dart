@@ -151,11 +151,11 @@ void main() {
     when(() => bloc.state).thenReturn(WalletLoadedSt([only], only));
     await pumpHeader(tester);
 
-    expect(find.text('NAKİT'), findsOneWidget);
+    expect(find.text('Nakit'), findsOneWidget);
     expect(dots, findsNothing);
 
     await swipeLeft(tester);
-    expect(find.text('NAKİT'), findsOneWidget);
+    expect(find.text('Nakit'), findsOneWidget);
     verifyNever(() => bloc.add(any()));
   });
 
@@ -167,13 +167,13 @@ void main() {
     when(() => bloc.state).thenReturn(WalletLoadedSt([a, b], a));
     await pumpHeader(tester);
 
-    expect(find.text('NAKİT'), findsOneWidget);
+    expect(find.text('Nakit'), findsOneWidget);
     expect(dots, findsOneWidget);
 
     await swipeLeft(tester);
 
     // Başlık komşu cüzdanı gösteriyor…
-    expect(find.text('BANKA'), findsOneWidget);
+    expect(find.text('Banka'), findsOneWidget);
     expect(find.textContaining('5.000'), findsOneWidget);
     // …ve o cüzdan etkinleştirildi; "Cüzdan seçildi" bildirimi YOK.
     final sent = selections().single;
@@ -193,14 +193,14 @@ void main() {
     await pumpHeader(tester);
 
     await swipeLeft(tester);
-    expect(find.text('BANKA'), findsOneWidget);
+    expect(find.text('Banka'), findsOneWidget);
 
     // Seçim yazılamadı: etkin cüzdan hâlâ Nakit. Başlık yanlış cüzdanı
     // göstermeye devam etmemeli.
     await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
-    expect(find.text('NAKİT'), findsOneWidget);
-    expect(find.text('BANKA'), findsNothing);
+    expect(find.text('Nakit'), findsOneWidget);
+    expect(find.text('Banka'), findsNothing);
   });
 
   testWidgets(
@@ -224,15 +224,15 @@ void main() {
     expect(WalletCarouselHintStore(prefs).seen, isFalse);
 
     await swipeLeft(tester);
-    expect(find.text('BANKA'), findsOneWidget);
+    expect(find.text('Banka'), findsOneWidget);
     expect(WalletCarouselHintStore(prefs).seen, isTrue);
 
     // Tur bitti: ipucu artık serbest ama oynamamalı — başlık yerinde durur.
     when(() => coordinator.runningFlow).thenReturn(null);
-    final before = tester.getTopLeft(find.text('BANKA')).dx;
+    final before = tester.getTopLeft(find.text('Banka')).dx;
     await tester.pump(const Duration(milliseconds: 1500));
     await tester.pump(const Duration(milliseconds: 150));
-    expect(tester.getTopLeft(find.text('BANKA')).dx, before);
+    expect(tester.getTopLeft(find.text('Banka')).dx, before);
 
     await tester.pump(const Duration(seconds: 3));
   });
@@ -250,8 +250,8 @@ void main() {
     );
     await pumpHeader(tester);
 
-    expect(find.text('BANKA'), findsOneWidget);
-    expect(find.text('NAKİT'), findsNothing);
+    expect(find.text('Banka'), findsOneWidget);
+    expect(find.text('Nakit'), findsNothing);
     verifyNever(() => bloc.add(any()));
   });
 
@@ -263,12 +263,12 @@ void main() {
     when(() => bloc.state).thenReturn(WalletLoadedSt([bank, card, cash], card));
     await pumpHeader(tester);
 
-    // Bugünkü kart başlığı: "HESAP › KART • BORÇ".
-    expect(find.textContaining('BANKA › BONUS'), findsOneWidget);
+    // Bugünkü kart başlığı: "Hesap › Kart • Borç".
+    expect(find.textContaining('Banka › Bonus'), findsOneWidget);
 
     // Bir kaydırma doğrudan öteki HESABA götürür (karta değil).
     await swipeLeft(tester);
-    expect(find.text('NAKİT'), findsOneWidget);
+    expect(find.text('Nakit'), findsOneWidget);
     expect(selections().single.walletId, 'cash');
 
     await tester.pump(const Duration(seconds: 3));

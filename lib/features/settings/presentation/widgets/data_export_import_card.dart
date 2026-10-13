@@ -12,19 +12,62 @@ import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
 
 class DataExportImportCard extends StatelessWidget {
-  const DataExportImportCard({super.key});
+  const DataExportImportCard({
+    super.key,
+    this.restoreOnly = false,
+    this.onRestored,
+  });
+
+  /// Yalnız "yedek dosyasından geri yükle" eylemini gösterir.
+  ///
+  /// Karşılama ekranındaki "Yedeğim var" bu kartı açıyor. Tam hâliyle
+  /// gösterildiğinde (cihazda görüldü) geri yüklemeye gelen kişinin önündeki
+  /// DOLU düğme "Tam yedeği cihaza kaydet"ti; aradığı eylem ikinci sıradaki
+  /// çerçeveli düğmeydi ve yanında paylaş + iki CSV düğmesi duruyordu. Henüz
+  /// tek kaydı olmayan biri için kaydetmek, paylaşmak, dışa aktarmak anlamsız.
+  final bool restoreOnly;
+
+  /// Tam yedek başarıyla geri yüklenince çağrılır.
+  final VoidCallback? onRestored;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => getIt<DataExportImportCubit>(),
-      child: const _DataExportImportCardContent(),
+      child: _DataExportImportCardContent(
+        restoreOnly: restoreOnly,
+        onRestored: onRestored,
+      ),
     );
   }
 }
 
 class _DataExportImportCardContent extends StatelessWidget {
-  const _DataExportImportCardContent();
+  const _DataExportImportCardContent({
+    required this.restoreOnly,
+    required this.onRestored,
+  });
+
+  final bool restoreOnly;
+  final VoidCallback? onRestored;
+
+  /// Onay alır, sonra dosya seçiciyi açar. Onay yeni kurulumda da sorulur:
+  /// "cüzdan yok", "silinecek veri yok" demek değildir.
+  Future<void> _confirmAndRestore(BuildContext context) async {
+    final confirmed = await ConfirmDialog.show(
+      context,
+      title: context.l10n.restoreFullBackupTitle,
+      message: context.l10n.restoreFullBackupDesc,
+      confirmText: context.l10n.geriYukle,
+      cancelText: context.l10n.cancelLabel,
+      danger: true,
+    );
+    if (!confirmed || !context.mounted) return;
+
+    context.read<DataExportImportCubit>().importFullBackupFromDevice(
+          userId: _currentUserId(context),
+        );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +98,7 @@ class _DataExportImportCardContent extends StatelessWidget {
                 context.read<WalletBloc>().add(GetWalletsEvent(userId));
               }
               AppMessenger.success(l.fullBackupRestored);
+              onRestored?.call();
             case DataExportMessageType.fullBackupShareSuccess:
               AppMessenger.success(l.fullBackupShared);
             case DataExportMessageType.fullBackupCancelled:
@@ -72,6 +116,66 @@ class _DataExportImportCardContent extends StatelessWidget {
       },
       builder: (context, state) {
         final isLoading = state is DataExportImportLoading;
+
+        if (restoreOnly) {
+          return AppCard(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Icons.folder_open_rounded,
+                        color: colorScheme.onPrimaryContainer,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        context.l10n.restoreFromDeviceTitle,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    if (isLoading)
+                      const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  context.l10n.restoreFromDeviceDesc,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    key: const ValueKey('restore-only-pick'),
+                    onPressed:
+                        isLoading ? null : () => _confirmAndRestore(context),
+                    icon: const Icon(Icons.restore_rounded),
+                    label: Text(context.l10n.restoreFromDevicePick),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
 
         return AppCard(
           padding: const EdgeInsets.all(16.0),
@@ -151,25 +255,8 @@ class _DataExportImportCardContent extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: isLoading
-                      ? null
-                      : () async {
-                          final confirmed = await ConfirmDialog.show(
-                            context,
-                            title: context.l10n.restoreFullBackupTitle,
-                            message: context.l10n.restoreFullBackupDesc,
-                            confirmText: context.l10n.geriYukle,
-                            cancelText: context.l10n.cancelLabel,
-                            danger: true,
-                          );
-                          if (!confirmed || !context.mounted) return;
-
-                          context
-                              .read<DataExportImportCubit>()
-                              .importFullBackupFromDevice(
-                                userId: _currentUserId(context),
-                              );
-                        },
+                  onPressed:
+                      isLoading ? null : () => _confirmAndRestore(context),
                   icon: const Icon(Icons.restore_rounded),
                   label: Text(context.l10n.restoreFullBackupFromDevice),
                   style: OutlinedButton.styleFrom(

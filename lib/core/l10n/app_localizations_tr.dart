@@ -6973,6 +6973,16 @@ class AppLocalizationsTr extends AppLocalizations {
       'Google Drive\'daki ya da telefonundaki yedeği seç. Kayıtların olduğu gibi geri gelir.';
 
   @override
+  String get restoreFromDeviceTitle => 'Telefondaki yedek dosyası';
+
+  @override
+  String get restoreFromDeviceDesc =>
+      'Daha önce kaydettiğin yedek dosyasını seç.';
+
+  @override
+  String get restoreFromDevicePick => 'Yedek dosyasını seç';
+
+  @override
   String get simpleBarMore => 'İçgörü ve rapor';
 
   @override

@@ -139,7 +139,7 @@ void main() {
       await tester.pumpWidget(app(header()));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('BONUS • BORÇ'), findsOneWidget);
+      expect(find.textContaining('Bonus • Borç'), findsOneWidget);
       expect(find.textContaining('-3.700'), findsNothing);
       expect(find.textContaining('3.700'), findsOneWidget);
       expect(find.text(l10n.kkKullanilabilirLimitSatiri('36.300,00 ₺')),

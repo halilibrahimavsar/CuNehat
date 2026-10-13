@@ -11933,6 +11933,24 @@ abstract class AppLocalizations {
   /// **'Google Drive\'daki ya da telefonundaki yedeği seç. Kayıtların olduğu gibi geri gelir.'**
   String get restoreBackupBody;
 
+  /// No description provided for @restoreFromDeviceTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefondaki yedek dosyası'**
+  String get restoreFromDeviceTitle;
+
+  /// No description provided for @restoreFromDeviceDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Daha önce kaydettiğin yedek dosyasını seç.'**
+  String get restoreFromDeviceDesc;
+
+  /// No description provided for @restoreFromDevicePick.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedek dosyasını seç'**
+  String get restoreFromDevicePick;
+
   /// No description provided for @simpleBarMore.
   ///
   /// In tr, this message translates to:

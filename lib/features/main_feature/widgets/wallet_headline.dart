@@ -117,11 +117,13 @@ class WalletHeadline extends StatelessWidget {
           Flexible(
             child: Text(
               badgeLabel,
+              // Cümle düzeni: harf aralığı büyük harf içindi (1,0); karışık
+              // harfte kelimeyi dağıtıyor.
               style: const TextStyle(
                 fontSize: 12,
                 color: AppColors.white,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.0,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.2,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

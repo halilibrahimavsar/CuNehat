@@ -12,7 +12,6 @@ import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
-import 'package:cunehat/core/utils/tr_case.dart';
 import 'package:cunehat/features/main_feature/utils/app_constants.dart';
 import 'package:cunehat/features/main_feature/utils/slider_peek_store.dart';
 import 'package:cunehat/features/main_feature/utils/wallet_carousel_hint_store.dart';
@@ -455,28 +454,31 @@ class _AppBarContentState extends State<AppBarContent> {
       switch (st) {
         case SliderState.savedMoney:
           value = account.investment;
-          valueName = upperTr(context.l10n.drawerInvestment);
+          valueName = context.l10n.drawerInvestment;
         case SliderState.transactions:
           // Kart bağlamında eksi bakiye değil BORÇ dili: "3.700 ₺" borç
           // (eksi işaretli büyük rakam "−3.700" bakiye gibi okunuyordu).
           value = active.isCreditCard && active.id != account.id
               ? -active.balance
               : active.balance;
-          valueName = upperTr(context.l10n.drawerBalance);
+          valueName = context.l10n.drawerBalance;
         case SliderState.debt:
           // Kredi/kişisel borç + bağlı kartların borcu (bkz. [debtOverview]).
           // Eskiden yalnız modül sayılıyordu: kart borcu olan kullanıcı
           // Borç sekmesinde "0,00 ₺" görüyordu.
           value = debtOverview(account, state.wallets).total;
-          valueName = upperTr(context.l10n.drawerDebt);
+          valueName = context.l10n.drawerDebt;
       }
     }
 
+    // Ad, kullanıcının yazdığı gibi gösterilir. Rozet eskiden BÜYÜK HARFE
+    // çeviriyordu ("BANKA KARTM"): uygulamanın geri kalanı cümle düzenine
+    // geçince bağıran tek yer burası kalmıştı.
     final walletName = shown == null
-        ? upperTr(context.l10n.wallet)
+        ? context.l10n.wallet
         : shown.id != account?.id
-            ? '${upperTr(account!.name)} › ${upperTr(shown.name)}'
-            : upperTr(shown.name);
+            ? '${account!.name} › ${shown.name}'
+            : shown.name;
 
     return _headline(
       context,
@@ -486,7 +488,7 @@ class _AppBarContentState extends State<AppBarContent> {
       account: account,
       badge: st == SliderState.transactions
           ? (shown != null && shown.id != account?.id
-              ? '$walletName • ${upperTr(context.l10n.drawerDebt)}'
+              ? '$walletName • ${context.l10n.drawerDebt}'
               : walletName)
           : "$walletName • $valueName",
       value: value,

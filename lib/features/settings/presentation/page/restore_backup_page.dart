@@ -10,12 +10,14 @@ import 'package:unified_flutter_features/unified_flutter_features.dart'
 /// Karşılama ekranındaki "Yedeğim var"ın açtığı sayfa.
 ///
 /// Yeni geri yükleme kodu YOK: Ayarlar'daki iki kart ([GoogleDriveBackupCard],
-/// [DataExportImportCard]) aynen kullanılır. Bu sayfanın tek işi onları,
+/// [DataExportImportCard]) kullanılır. Bu sayfanın tek işi onları,
 /// telefonunu değiştirmiş ve yedeğini geri getirmek isteyen kullanıcının
 /// önüne — upuzun Ayarlar sayfasının dibinden çıkarıp — tek başına koymak.
+/// Cihaz kartı burada yalnız geri yükleme eylemini gösterir
+/// ([DataExportImportCard.restoreOnly]).
 ///
-/// Geri yükleme bitince cüzdanlar deftere düşer ve ana sayfa kendiliğinden
-/// karşılamadan çıkar; kullanıcı geri dönmesi yeter.
+/// Geri yükleme bitince cüzdanlar deftere düşer, ana sayfa kendiliğinden
+/// karşılamadan çıkar ve bu sayfa kapanır.
 class RestoreBackupPage extends StatelessWidget {
   const RestoreBackupPage({super.key});
 
@@ -47,7 +49,12 @@ class RestoreBackupPage extends StatelessWidget {
           const SizedBox(height: AppSpacing.medium),
           const GoogleDriveBackupCard(),
           const SizedBox(height: AppSpacing.medium),
-          const DataExportImportCard(),
+          // Yalnız geri yükleme: kaydet / paylaş / CSV burada yersiz.
+          // Yedek gelince ana sayfa karşılamadan çıkar; bu sayfa da kapanır.
+          DataExportImportCard(
+            restoreOnly: true,
+            onRestored: () => Navigator.of(context).maybePop(),
+          ),
         ],
       ),
     );

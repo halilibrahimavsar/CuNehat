@@ -7025,6 +7025,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Pick the backup in Google Drive or on your phone. Your records come back as they were.';
 
   @override
+  String get restoreFromDeviceTitle => 'Backup file on this phone';
+
+  @override
+  String get restoreFromDeviceDesc => 'Pick the backup file you saved earlier.';
+
+  @override
+  String get restoreFromDevicePick => 'Pick backup file';
+
+  @override
   String get simpleBarMore => 'Insights and report';
 
   @override
