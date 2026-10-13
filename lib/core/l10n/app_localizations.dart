@@ -11999,6 +11999,42 @@ abstract class AppLocalizations {
   /// **'En çok harcanan kategoriler: {liste}. Kategori dağılımı için dokun.'**
   String txTopCategoriesSemantics(String liste);
 
+  /// No description provided for @logReminderOfferTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazmayı hatırlatalım mı?'**
+  String get logReminderOfferTitle;
+
+  /// No description provided for @logReminderOfferBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Harcamayı yazmak en kolay unutulan şey. Günde bir kez, saat {saat} için kısa bir hatırlatma kurabiliriz. İstediğin zaman Ayarlar > Bildirimler\'den kapatırsın.'**
+  String logReminderOfferBody(String saat);
+
+  /// No description provided for @logReminderOfferAccept.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlat'**
+  String get logReminderOfferAccept;
+
+  /// No description provided for @logReminderOfferLater.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şimdi değil'**
+  String get logReminderOfferLater;
+
+  /// No description provided for @logReminderEnabled.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tamam. Hatırlatma her gün saat {saat} için kuruldu.'**
+  String logReminderEnabled(String saat);
+
+  /// No description provided for @logReminderPermissionDenied.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bildirim izni verilmedi. Ayarlar > Bildirimler\'den açabilirsin.'**
+  String get logReminderPermissionDenied;
+
   /// No description provided for @restoreFromDeviceTitle.
   ///
   /// In tr, this message translates to:

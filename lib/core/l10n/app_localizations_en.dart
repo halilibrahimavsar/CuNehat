@@ -7070,6 +7070,29 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get logReminderOfferTitle => 'Want a reminder to log?';
+
+  @override
+  String logReminderOfferBody(String saat) {
+    return 'Logging is the easiest thing to forget. We can set one short reminder a day, at $saat. You can turn it off anytime in Settings > Notifications.';
+  }
+
+  @override
+  String get logReminderOfferAccept => 'Remind me';
+
+  @override
+  String get logReminderOfferLater => 'Not now';
+
+  @override
+  String logReminderEnabled(String saat) {
+    return 'Done. A daily reminder is set for $saat.';
+  }
+
+  @override
+  String get logReminderPermissionDenied =>
+      'Notification permission wasn\'t granted. You can turn it on in Settings > Notifications.';
+
+  @override
   String get restoreFromDeviceTitle => 'Backup file on this phone';
 
   @override

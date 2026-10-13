@@ -1,3 +1,4 @@
+import 'package:cunehat/core/onboarding/log_reminder_offer.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
 import 'package:cunehat/features/finance_transactions/presentation/utils/first_record_moment.dart';
@@ -567,6 +568,9 @@ class _TransactionsViewState extends State<_TransactionsView> {
                     : state.message;
                 showDeletionMessage(context,
                     message: message, undo: state.undo);
+                // Üçüncü kayıtta bir kez: "yazmayı hatırlatalım mı?" (silme
+                // ve düzenlemede sayı eşiği aynı kaldığı için zararsız).
+                unawaited(maybeOfferLogReminder(context));
               }
               _loadData();
               _loadCategoryIcons();

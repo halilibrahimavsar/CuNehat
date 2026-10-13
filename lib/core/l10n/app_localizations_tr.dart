@@ -7018,6 +7018,29 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get logReminderOfferTitle => 'Yazmayı hatırlatalım mı?';
+
+  @override
+  String logReminderOfferBody(String saat) {
+    return 'Harcamayı yazmak en kolay unutulan şey. Günde bir kez, saat $saat için kısa bir hatırlatma kurabiliriz. İstediğin zaman Ayarlar > Bildirimler\'den kapatırsın.';
+  }
+
+  @override
+  String get logReminderOfferAccept => 'Hatırlat';
+
+  @override
+  String get logReminderOfferLater => 'Şimdi değil';
+
+  @override
+  String logReminderEnabled(String saat) {
+    return 'Tamam. Hatırlatma her gün saat $saat için kuruldu.';
+  }
+
+  @override
+  String get logReminderPermissionDenied =>
+      'Bildirim izni verilmedi. Ayarlar > Bildirimler\'den açabilirsin.';
+
+  @override
   String get restoreFromDeviceTitle => 'Telefondaki yedek dosyası';
 
   @override
