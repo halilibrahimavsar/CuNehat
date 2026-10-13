@@ -6584,13 +6584,13 @@ abstract class AppLocalizations {
   /// No description provided for @txSummaryNet.
   ///
   /// In tr, this message translates to:
-  /// **'Net durum'**
+  /// **'Gelir − gider'**
   String get txSummaryNet;
 
   /// No description provided for @txSummaryNetFiltered.
   ///
   /// In tr, this message translates to:
-  /// **'Süzülen net durum'**
+  /// **'Süzülen gelir − gider'**
   String get txSummaryNetFiltered;
 
   /// No description provided for @txSummaryIncomeTotal.

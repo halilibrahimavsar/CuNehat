@@ -108,6 +108,36 @@ void main() {
     expect(find.text('İşlemi sil'), findsOneWidget);
   });
 
+  group('"Bağla…" yalnız bağlanacak bir şey varken', () {
+    testWidgets('varsayılan: sunulur', (tester) async {
+      await tester.pumpWidget(
+        buildTestableWidget(
+          TransactionActionSheet(transaction: txExpense, accent: Colors.red),
+        ),
+      );
+
+      expect(find.text('Bağla…'), findsOneWidget);
+    });
+
+    testWidgets('Birikim ve Borç kapalı, tek cüzdan: satır yok',
+        (tester) async {
+      await tester.pumpWidget(
+        buildTestableWidget(
+          TransactionActionSheet(
+            transaction: txExpense,
+            accent: Colors.red,
+            canLink: false,
+          ),
+        ),
+      );
+
+      expect(find.text('Bağla…'), findsNothing);
+      // Öteki eylemler yerinde.
+      expect(find.text('Düzenle'), findsOneWidget);
+      expect(find.text('İşlemi sil'), findsOneWidget);
+    });
+  });
+
   testWidgets('renders TransactionActionSheet with correct details for income',
       (WidgetTester tester) async {
     await tester.pumpWidget(

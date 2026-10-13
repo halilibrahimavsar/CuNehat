@@ -252,6 +252,49 @@ void main() {
     expect(find.textContaining('ödeme'), findsNothing);
   });
 
+  group('başlık kategorinin adıysa çip onu TEKRARLAMAZ', () {
+    // Not yazılmayan kayıtta başlık kategori adına düşer; satır "Yemek /
+    // Yemek" diye aynı sözcüğü iki kez yazıyordu (cihazda görüldü).
+    Future<void> pumpCard(
+      WidgetTester tester, {
+      required String title,
+      required String label,
+    }) async {
+      final tx = createTx(isSystem: false, id: 'dup').copyWith(title: title);
+      when(() => mockTransactionBloc.state).thenReturn(TransactionLoaded(
+        groupedTransactions: {
+          testDate: [tx]
+        },
+        allTransactions: [tx],
+      ));
+      await tester.pumpWidget(buildTestableWidget(TransactionCard(
+        item: TransactionWithBalance(transaction: tx, balanceAfter: 0),
+        categoryLabel: label,
+      )));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('aynıysa ad bir kez yazar', (tester) async {
+      await pumpCard(tester, title: 'Yemek', label: 'Yemek');
+
+      expect(find.text('Yemek'), findsOneWidget);
+    });
+
+    testWidgets('büyük-küçük harf ve boşluk farkı sayılmaz', (tester) async {
+      await pumpCard(tester, title: ' yemek ', label: 'Yemek');
+
+      expect(find.text('Yemek'), findsNothing);
+      expect(find.text(' yemek '), findsOneWidget);
+    });
+
+    testWidgets('kullanıcı not yazdıysa çip kategoriyi söyler', (tester) async {
+      await pumpCard(tester, title: 'Burger King', label: 'Yemek');
+
+      expect(find.text('Burger King'), findsOneWidget);
+      expect(find.text('Yemek'), findsOneWidget);
+    });
+  });
+
   testWidgets('kategorisiz satır boş çip değil "Kategori seç" gösterir',
       (tester) async {
     // Transfer bağı kaldırılmış ekstre satırı düz kayda döner ama kategorisi

@@ -264,9 +264,15 @@ class TransactionCard extends StatelessWidget {
                       // kısım (ödeme günü) kayboluyordu.
                       final meta = payment ??
                           (wide ? AppFormatters.time.format(t.date) : '');
+                      // Not yazılmayan kayıtta başlık kategorinin adıdır;
+                      // çip aynı sözcüğü ikinci kez yazıyordu ("Yemek / Yemek").
+                      final chipRepeatsTitle =
+                          t.tag.isNotEmpty && _titleRepeatsCategory(context, t);
                       return Row(
                         children: [
-                          if (t.tag.isNotEmpty)
+                          if (chipRepeatsTitle)
+                            const SizedBox.shrink()
+                          else if (t.tag.isNotEmpty)
                             _categoryChip(context, accent, t.tag)
                           // Kategorisiz düz satır: çip HİÇ çizilmiyordu,
                           // eksiklik görünmüyordu. Uyarı tonunda çağrı.
@@ -277,7 +283,7 @@ class TransactionCard extends StatelessWidget {
                               t.tag,
                             ),
                           if (meta.isNotEmpty) ...[
-                            const SizedBox(width: 8),
+                            if (!chipRepeatsTitle) const SizedBox(width: 8),
                             Flexible(
                               child: Text(
                                 meta,
@@ -355,6 +361,12 @@ class TransactionCard extends StatelessWidget {
     final paid = cardPaymentDate(t, card);
     final locale = Localizations.localeOf(context).toLanguageTag();
     return context.l10n.kkOdemeNotu(DateFormat('d MMM', locale).format(paid));
+  }
+
+  /// Başlık, kategori çipinin yazacağı adla aynı mı?
+  bool _titleRepeatsCategory(BuildContext context, TransactionEntity t) {
+    final label = categoryLabel ?? context.translateSystemTag(t.tag);
+    return t.title.trim().toLowerCase() == label.trim().toLowerCase();
   }
 
   Widget _categoryChip(BuildContext context, Color accent, String tag) {

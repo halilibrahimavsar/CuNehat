@@ -3700,10 +3700,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get txFilterCollapseGroup => 'Alt kategorileri gizle';
 
   @override
-  String get txSummaryNet => 'Net durum';
+  String get txSummaryNet => 'Gelir − gider';
 
   @override
-  String get txSummaryNetFiltered => 'Süzülen net durum';
+  String get txSummaryNetFiltered => 'Süzülen gelir − gider';
 
   @override
   String get txSummaryIncomeTotal => 'Toplam gelir';

@@ -1,7 +1,11 @@
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/core/shared/widgets/row_action_sheet.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/features/main_feature/utils/section_visibility.dart';
+import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 
 enum TransactionAction {
@@ -30,6 +34,28 @@ bool isRemovableTransferLeg(TransactionEntity t) =>
     t.tag == CashMovementTags.transfer &&
     t.linkedRecordId != null;
 
+/// "Bağla…" bu kurulumda bir anlam taşıyor mu?
+///
+/// Eylem dört şeyden söz eder: birikim alımı, kasaya aktarım, borç ödemesi,
+/// cüzdanlar arası transfer. Birikim ve Borç bölümleri kapalıyken ve tek
+/// cüzdan varken hiçbiri mümkün değildir — yeni kullanıcı her satırın
+/// menüsünde anlamını bilmediği, hiçbir şeye bağlayamayacağı bir satır
+/// görüyordu (cihazda görüldü). Bölüm açılınca ya da ikinci cüzdan gelince
+/// eylem de gelir.
+///
+/// Bilgi yoksa (bölüm deposu kayıtlı değil, cüzdan bloc'u ağaçta yok) eylem
+/// GÖSTERİLİR: yanlışlıkla gizlemek, gereksiz göstermekten kötüdür.
+bool transactionLinkApplicable(BuildContext context) {
+  if (!getIt.isRegistered<SectionVisibility>()) return true;
+  if (!getIt<SectionVisibility>().hasOnlyTransactions) return true;
+  try {
+    final state = context.read<WalletBloc>().state;
+    return state is! WalletLoadedSt || state.wallets.length >= 2;
+  } on Object {
+    return true;
+  }
+}
+
 class TransactionActionSheet extends StatelessWidget {
   final TransactionEntity transaction;
   final Color accent;
@@ -42,7 +68,11 @@ class TransactionActionSheet extends StatelessWidget {
     required this.transaction,
     required this.accent,
     this.canSelect = false,
+    this.canLink = true,
   });
+
+  /// "Bağla…" sunulsun mu (bkz. [transactionLinkApplicable]).
+  final bool canLink;
 
   static Future<TransactionAction?> show(
     BuildContext context, {
@@ -50,12 +80,14 @@ class TransactionActionSheet extends StatelessWidget {
     required Color accent,
     bool canSelect = false,
   }) {
+    final canLink = transactionLinkApplicable(context);
     return showRowActionSheet<TransactionAction>(
       context,
       builder: (context) => TransactionActionSheet(
         transaction: transaction,
         accent: accent,
         canSelect: canSelect,
+        canLink: canLink,
       ),
     );
   }
@@ -98,7 +130,7 @@ class TransactionActionSheet extends StatelessWidget {
             title: l10n.yenidenEkle,
             subtitle: l10n.yenidenEkleAciklama,
           ),
-          if (transaction.id != null)
+          if (transaction.id != null && canLink)
             RowAction(
               value: TransactionAction.link,
               icon: Icons.link_rounded,
