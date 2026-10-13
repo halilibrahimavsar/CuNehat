@@ -350,7 +350,7 @@ void main() {
     // Düzenle/Sil dokunulabilir satırları hiç render edilmemeli (proaktif
     // kilit — kullanıcı yanlışlıkla "işe yarayacak" bir eylem denemesin).
     expect(find.text('Düzenle'), findsNothing);
-    expect(find.text('İşlemi Sil'), findsNothing);
+    expect(find.text('İşlemi sil'), findsNothing);
 
     // Bunun yerine detay sayfasındakiyle aynı bilgi notu görünmeli.
     expect(
@@ -418,7 +418,7 @@ void main() {
     await tester.longPress(find.text('Normal İşlem'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('İşlemi Sil'));
+    await tester.tap(find.text('İşlemi sil'));
     await tester.pumpAndSettle();
 
     // Eylem sayfası kapandı, onay diyaloğu açıldı: olay HENÜZ yollanmadı.
@@ -476,7 +476,7 @@ void main() {
 
       await tester.longPress(find.text('Normal İşlem'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('İşlemi Sil'));
+      await tester.tap(find.text('İşlemi sil'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('İptal'));
@@ -502,7 +502,7 @@ void main() {
       await tester.longPress(find.text('Sistem İşlemi'));
       await tester.pumpAndSettle();
 
-      expect(find.text('İşlemi Sil'), findsNothing);
+      expect(find.text('İşlemi sil'), findsNothing);
     });
   });
 }

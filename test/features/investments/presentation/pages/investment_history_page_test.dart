@@ -135,9 +135,9 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('Henüz Yatırım Kaydı Yok'), findsOneWidget);
+    expect(find.text('Henüz birikim kaydı yok'), findsOneWidget);
     expect(
-      find.text('Yatırım geçmişiniz burada listelenecektir.'),
+      find.text('Birikim geçmişin burada listelenir.'),
       findsOneWidget,
     );
   });

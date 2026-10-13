@@ -52,7 +52,7 @@ void main() {
   test('nakit uyarı kuyruğu baştaki boşluğu korur ve dile uyar', () {
     Intl.defaultLocale = 'tr';
     expect(CashCouplingMixin.cashWarning,
-        ' (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)');
+        ' (Uyarı: bakiye güncellenemedi, cüzdanı yenile.)');
     Intl.defaultLocale = 'en';
     expect(CashCouplingMixin.cashWarning, startsWith(' (Warning:'));
   });

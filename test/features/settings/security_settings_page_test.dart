@@ -63,12 +63,12 @@ void main() {
     expect(find.text('Güvenlik'), findsWidgets);
     expect(find.text('Kilit'), findsOneWidget);
     expect(find.text('PIN kodu'), findsOneWidget);
-    expect(find.text('Biyometrik Giriş'), findsOneWidget);
+    expect(find.text('Biyometrik giriş'), findsOneWidget);
 
     await scrollToBottom(tester);
     expect(find.text('Gizlilik'), findsOneWidget);
     expect(find.text('Gizlilik perdesi'), findsOneWidget);
-    expect(find.text('Arka Plan Kilidi'), findsOneWidget);
+    expect(find.text('Arka plan kilidi'), findsOneWidget);
     expect(find.text('Kurtarma'), findsOneWidget);
     expect(find.text("PIN'imi unutursam"), findsOneWidget);
   });
@@ -96,18 +96,18 @@ void main() {
   testWidgets('PIN yokken yalnız "PIN Oluştur" sunulur', (tester) async {
     await openPage(tester);
 
-    expect(find.text('PIN Oluştur'), findsOneWidget);
-    expect(find.text('PIN Değiştir'), findsNothing);
-    expect(find.text('PIN Kaldır'), findsNothing);
+    expect(find.text('PIN oluştur'), findsOneWidget);
+    expect(find.text('PIN değiştir'), findsNothing);
+    expect(find.text('PIN kaldır'), findsNothing);
   });
 
   testWidgets('PIN varken değiştir/kaldır sunulur', (tester) async {
     repo.pinSet = true;
     await openPage(tester);
 
-    expect(find.text('PIN Değiştir'), findsOneWidget);
-    expect(find.text('PIN Kaldır'), findsOneWidget);
-    expect(find.text('PIN Oluştur'), findsNothing);
+    expect(find.text('PIN değiştir'), findsOneWidget);
+    expect(find.text('PIN kaldır'), findsOneWidget);
+    expect(find.text('PIN oluştur'), findsNothing);
   });
 
   testWidgets('PIN yokken biyometrik anahtarı kapalı ve pasif', (tester) async {
@@ -117,14 +117,14 @@ void main() {
     expect(toggle.onChanged, isNull, reason: 'PIN olmadan açılamamalı');
     expect(
         find.text(
-            'Biyometrik girişi etkinleştirmek için önce bir PIN oluşturun.'),
+            'Biyometrik girişi açmak için önce bir PIN oluştur.'),
         findsOneWidget);
   });
 
   testWidgets('PIN oluşturma akışı: iki adım, tuş takımıyla', (tester) async {
     await openPage(tester);
 
-    await tester.tap(find.text('PIN Oluştur'));
+    await tester.tap(find.text('PIN oluştur'));
     await tester.pumpAndSettle();
 
     expect(find.byType(PinEntryPage), findsOneWidget);
@@ -151,7 +151,7 @@ void main() {
       (tester) async {
     await openPage(tester);
 
-    await tester.tap(find.text('PIN Oluştur'));
+    await tester.tap(find.text('PIN oluştur'));
     await tester.pumpAndSettle();
 
     for (final digit in ['1', '1', '1', '1', '1', '1']) {

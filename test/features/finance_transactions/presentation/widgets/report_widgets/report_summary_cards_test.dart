@@ -74,7 +74,7 @@ void main() {
         previousTotals: ReportTotals(),
       )));
       await tester.pump();
-      expect(find.textContaining('%30 Birikim'), findsOneWidget);
+      expect(find.textContaining('%30 birikim'), findsOneWidget);
     });
   });
 

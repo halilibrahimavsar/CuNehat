@@ -73,7 +73,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get henuzBorcKaydiYokAciklama =>
-      'You have no active debt records. You can add a new debt using the action button below.';
+      'Write your loans and debts here; track the payments from here.';
 
   @override
   String get odemeYap => 'Make Payment';
@@ -86,7 +86,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get henuzAlacakKaydiYokAciklama =>
-      'You have no active receivable records. You can add a new receivable using the action button below.';
+      'Write down money you lent; mark it when you get it back.';
 
   @override
   String get odendiIsaretle => 'Mark as Paid';
@@ -175,7 +175,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tekrarlamaIstegeBagli => 'Recurring (Optional)';
 
   @override
-  String get tekrarEtme => 'Do Not Repeat';
+  String get tekrarEtme => 'One-time';
 
   @override
   String get vazgec => 'Cancel';
@@ -682,7 +682,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ikonBulunamadi => 'Icon not found';
 
   @override
-  String get butcePlanlama => 'Budget Planning';
+  String get butcePlanlama => 'Budget';
 
   @override
   String get henuzButceYok => 'No budgets yet';
@@ -719,7 +719,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'This category has a budget; limit will be updated.';
 
   @override
-  String get finansalTakip => 'Financial Tracking';
+  String get finansalTakip => 'Debts and receivables';
 
   @override
   String get vADESIGecmis => 'OVERDUE';
@@ -805,11 +805,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Analysis details will be listed here after you save income or expense.';
 
   @override
-  String get henuzIslemYok => 'No transactions yet';
+  String get henuzIslemYok => 'No records yet';
 
   @override
-  String get buDonemIcinKayit =>
-      'No records for this period.\nUse the slider button to add a new transaction.';
+  String get buDonemIcinKayit => 'Write down your first income or expense.';
 
   @override
   String get kategoriDagilimi => 'Category breakdown';
@@ -975,7 +974,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get portfoyDagilimi => 'Portfolio Distribution';
 
   @override
-  String get tOPLAMPortfoyDegeri => 'TOTAL PORTFOLIO VALUE';
+  String get tOPLAMPortfoyDegeri => 'Total savings';
 
   @override
   String get tOPLAMMaliyet => 'TOTAL COST';
@@ -1101,13 +1100,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recurringTransactions => 'Recurring Transactions';
 
   @override
-  String get budgetPlanning => 'Budget Planning';
+  String get budgetPlanning => 'Budget';
 
   @override
   String get drawerBalance => 'Balance';
 
   @override
-  String get drawerInvestment => 'Investment';
+  String get drawerInvestment => 'Savings';
 
   @override
   String get drawerDebt => 'Debt';
@@ -1814,13 +1813,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get systemTagReceivableCollection => 'Receivable Collection';
 
   @override
-  String get systemTagInvestmentBuy => 'Investment Purchase';
+  String get systemTagInvestmentBuy => 'Savings purchase';
 
   @override
-  String get systemTagInvestmentSell => 'Investment Sale';
+  String get systemTagInvestmentSell => 'Savings sale';
 
   @override
-  String get systemTagInvestmentCorrection => 'Investment Adjustment';
+  String get systemTagInvestmentCorrection => 'Savings correction';
 
   @override
   String get systemTagTransfer => 'Transfer';
@@ -1998,13 +1997,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get yardimVeTurlar => 'Help & Tours';
+  String get yardimVeTurlar => 'Help';
 
   @override
-  String get genelTanitimiTekrarGoster => 'Replay Privacy & Notification Intro';
+  String get genelTanitimiTekrarGoster =>
+      'Show the privacy and notification note';
 
   @override
-  String get uygulamaTuruTekrarGoster => 'Replay the App Tour';
+  String get uygulamaTuruTekrarGoster => 'Show the walkthroughs again';
 
   @override
   String get onboardingNavHintHeader => 'How to Navigate';
@@ -2013,22 +2013,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingNavHintSwipeTitle => 'Swipe Left / Right';
 
   @override
-  String get onboardingNavHintSwipeDesc =>
-      'Switch between the Investments, Transactions, and Debts screens.';
+  String get onboardingNavHintSwipeDesc => 'Move between sections.';
 
   @override
   String get onboardingNavHintDragTitle => 'Drag Upward';
 
   @override
-  String get onboardingNavHintDragDesc =>
-      'Reach sub-pages like Details, Report, Pending, and History.';
+  String get onboardingNavHintDragDesc => 'Go to Insights, Report and History.';
 
   @override
-  String get onboardingNavHintAddTitle => 'Tap an Icon';
+  String get onboardingNavHintAddTitle => 'Tap the button';
 
   @override
   String get onboardingNavHintAddDesc =>
-      'Add a new income, expense, investment, debt, or receivable.';
+      'Add a new record: income, expense, savings, debt or receivable.';
 
   @override
   String get notificationSettings => 'Notification Settings';
@@ -3095,10 +3093,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get drawerSectionFinancial => 'FINANCIAL MANAGEMENT';
+  String get drawerSectionFinancial => 'Money';
 
   @override
-  String get drawerSectionSystem => 'SYSTEM & APP';
+  String get drawerSectionSystem => 'App';
 
   @override
   String get drawerBudgetSubtitle =>
@@ -3119,7 +3117,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Theme, currency and general preferences';
 
   @override
-  String get drawerSecurityTitle => 'Security & Biometrics';
+  String get drawerSecurityTitle => 'Security';
 
   @override
   String get drawerSecuritySubtitle => 'App lock and PIN settings';
@@ -7102,4 +7100,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get ozelMaliyetAciklama =>
       'The total you paid for this asset; profit/loss is calculated from it.';
+
+  @override
+  String get txEmptyPeriodTitle => 'No records in this period';
+
+  @override
+  String get txEmptyPeriodBody =>
+      'You haven\'t written any income or expense in this range.';
+
+  @override
+  String get txEmptyShowAll => 'Show all records';
+
+  @override
+  String get privacyDataHeader => 'Privacy and data';
 }

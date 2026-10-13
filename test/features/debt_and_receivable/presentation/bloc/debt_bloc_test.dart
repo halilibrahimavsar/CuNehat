@@ -203,7 +203,7 @@ void main() {
       expect: () => [
         DebtLoading(),
         const DebtOperationSuccess(
-            'Borç başarıyla eklendi. (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'),
+            'Borç başarıyla eklendi. (Uyarı: bakiye güncellenemedi, cüzdanı yenile.)'),
         DebtLoading(),
         DebtLoaded([testDebt]),
       ],
@@ -350,7 +350,7 @@ void main() {
       expect: () => [
         DebtLoading(),
         const DebtOperationSuccess(
-            'Ödeme kaydedildi. (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'),
+            'Ödeme kaydedildi. (Uyarı: bakiye güncellenemedi, cüzdanı yenile.)'),
         DebtLoading(),
         DebtLoaded([testDebt]),
       ],
@@ -548,7 +548,7 @@ void main() {
       expect: () => [
         DebtLoading(),
         const DebtOperationSuccess(
-            'Borç güncellendi. (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'),
+            'Borç güncellendi. (Uyarı: bakiye güncellenemedi, cüzdanı yenile.)'),
         DebtLoading(),
         DebtLoaded([testDebt.copyWith(principalAmount: 1200.0)]),
       ],
@@ -705,7 +705,7 @@ void main() {
       expect: () => [
         DebtLoading(),
         const DebtOperationSuccess(
-            'Borç silindi. (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'),
+            'Borç silindi. (Uyarı: bakiye güncellenemedi, cüzdanı yenile.)'),
         DebtLoading(),
         const DebtLoaded([]),
       ],

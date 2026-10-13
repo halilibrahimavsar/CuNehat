@@ -77,7 +77,7 @@ void main() {
       expect(find.text('Şu an ne kadar paran var?'), findsOneWidget);
       expect(find.text('Başla'), findsOneWidget);
       expect(find.text('Yedeğim var'), findsOneWidget);
-      expect(find.text('Gizlilik Politikası'), findsOneWidget);
+      expect(find.text('Gizlilik politikası'), findsOneWidget);
       // Birim, sorulmadan gösterilir.
       expect(find.text('₺'), findsOneWidget);
       // Ad, renk, ikon, kategori SORULMAZ.

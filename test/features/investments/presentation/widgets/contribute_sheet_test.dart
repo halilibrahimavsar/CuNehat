@@ -117,14 +117,14 @@ void main() {
       ),
     );
 
-    expect(find.text('Bireysel Emeklilik · Para Ekle'), findsOneWidget);
+    expect(find.text('Bireysel Emeklilik · Para ekle'), findsOneWidget);
     expect(find.text('Miktar'),
         findsNothing); // Quantity field not rendered in cash mode
 
     // Tap Ekle without input to verify validation error
     await tester.tap(find.text('Ekle'));
     await tester.pumpAndSettle();
-    expect(find.text('Geçerli bir tutar girin'), findsOneWidget);
+    expect(find.text('Geçerli bir tutar gir'), findsOneWidget);
 
     // Enter valid amount
     final amountField = find.byType(TextField);
@@ -169,7 +169,7 @@ void main() {
       ),
     );
 
-    expect(find.text('Gram Altın · Varlık Ekle'), findsOneWidget);
+    expect(find.text('Gram Altın · Varlık ekle'), findsOneWidget);
 
     // Alanlar: miktar, birim alış fiyatı, ödenen tutar.
     final textFields = find.byType(TextField);
@@ -181,14 +181,14 @@ void main() {
     await tester.enterText(quantityField, '0');
     await tester.tap(find.text('Ekle'));
     await tester.pumpAndSettle();
-    expect(find.text('Geçerli bir miktar girin'), findsOneWidget);
+    expect(find.text('Geçerli bir miktar gir'), findsOneWidget);
 
     // Enter valid quantity: 0.5 units
     await tester.enterText(quantityField, '0.5');
     await tester.pumpAndSettle();
 
     // Tap Live Price Button
-    await tester.tap(find.text('Güncel Fiyatı Getir'));
+    await tester.tap(find.text('Güncel fiyatı getir'));
     await tester.pump(); // Start fetching
 
     // Check loading indicator
@@ -240,7 +240,7 @@ void main() {
     );
 
     // Tap Live Price Button
-    await tester.tap(find.text('Güncel Fiyatı Getir'));
+    await tester.tap(find.text('Güncel fiyatı getir'));
     await tester.pumpAndSettle();
 
     expect(find.text('Fiyat alınamadı.'), findsOneWidget);
@@ -359,7 +359,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField).first, '5.000');
-    await tester.tap(find.text('Güncel Fiyatı Getir'));
+    await tester.tap(find.text('Güncel fiyatı getir'));
     await tester.pumpAndSettle();
 
     // 5.000 / 2.500 = 2 gram eklenecek.
@@ -434,7 +434,7 @@ void main() {
     );
 
     // Kullanıcının doğal sırası: önce fiyata bak, sonra miktarı yaz.
-    await tester.tap(find.text('Güncel Fiyatı Getir'));
+    await tester.tap(find.text('Güncel fiyatı getir'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).first, '2');
     await tester.pumpAndSettle();

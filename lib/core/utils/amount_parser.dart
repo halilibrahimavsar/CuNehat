@@ -45,7 +45,7 @@ String? validateAmount(
   assert(max == null || maxExceededMessage != null,
       'max verildiğinde maxExceededMessage zorunlu');
   final amount = parseAmount(input);
-  if (amount == null) return 'Geçerli bir tutar girin';
+  if (amount == null) return 'Geçerli bir tutar gir';
   if (amount < 0 || (!allowZero && amount == 0)) {
     return 'Tutar sıfırdan büyük olmalı';
   }

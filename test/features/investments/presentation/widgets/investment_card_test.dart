@@ -63,9 +63,9 @@ void main() {
     expect(find.byIcon(Icons.monetization_on), findsOneWidget); // Gold icon
 
     // Verify Current Value & Profit details
-    expect(find.text('Mevcut Değer'), findsOneWidget);
+    expect(find.text('Mevcut değer'), findsOneWidget);
     expect(find.text('6.000,00 ₺'), findsOneWidget);
-    expect(find.text('Kar/Zarar'), findsOneWidget);
+    expect(find.text('Kâr/zarar'), findsOneWidget);
     expect(find.text('1.000,00 ₺'), findsOneWidget);
     // Türkçe biçim: işaret + % önde, virgül ayraç.
     expect(find.text('+%20,00'), findsOneWidget);
@@ -95,7 +95,7 @@ void main() {
 
     // Verify Name, Type, and Symbol
     expect(find.text('Apple Inc.'), findsOneWidget);
-    expect(find.text('Hisse Senedi · 01.01.26'), findsOneWidget);
+    expect(find.text('Hisse senedi · 01.01.26'), findsOneWidget);
     expect(find.text('AAPL'), findsOneWidget);
 
     // Verify Stock Icon

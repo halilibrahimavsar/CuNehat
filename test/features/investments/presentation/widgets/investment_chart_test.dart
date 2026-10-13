@@ -44,7 +44,7 @@ void main() {
     );
 
     // Verify empty state text
-    expect(find.text('Grafik için yatırım bulunmuyor'), findsOneWidget);
+    expect(find.text('Grafik için varlık yok'), findsOneWidget);
     expect(find.byType(PieChart), findsNothing);
   });
 
@@ -66,7 +66,7 @@ void main() {
         id: 'inv_2',
         userId: 'user_123',
         walletId: 'wallet_123',
-        name: 'Hisse Senedi',
+        name: 'Hisse senedi',
         amount: 1000.0,
         currentValue: 1000.0,
         type: InvestmentType.stock,
@@ -82,14 +82,14 @@ void main() {
     );
 
     // Verify Title
-    expect(find.text('Portföy Dağılımı'), findsOneWidget);
+    expect(find.text('Birikim dağılımı'), findsOneWidget);
 
     // Verify PieChart presence
     expect(find.byType(PieChart), findsOneWidget);
 
     // Verify Legend items: name and percentage
     expect(find.text('Altın'), findsOneWidget);
-    expect(find.text('Hisse Senedi'), findsOneWidget);
+    expect(find.text('Hisse senedi'), findsOneWidget);
 
     // Yüzde TÜRKÇE ayraçla: virgül, ve % önde. Eskiden burada '%75.0'
     // bekleniyordu — nokta `toStringAsFixed`'ten geliyordu ve aynı ekranda

@@ -176,7 +176,7 @@ void main() {
       expect: () => [
         ReceivableLoading(),
         const ReceivableOperationSuccess(
-            'Alacak başarıyla eklendi. (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'),
+            'Alacak başarıyla eklendi. (Uyarı: bakiye güncellenemedi, cüzdanı yenile.)'),
         ReceivableLoading(),
         ReceivableLoaded([testReceivable]),
       ],
@@ -472,7 +472,7 @@ void main() {
       expect: () => [
         ReceivableLoading(),
         const ReceivableOperationSuccess(
-            'Alacak güncellendi. (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'),
+            'Alacak güncellendi. (Uyarı: bakiye güncellenemedi, cüzdanı yenile.)'),
         ReceivableLoading(),
         ReceivableLoaded([testReceivable.copyWith(amount: 1500.0)]),
       ],
@@ -634,7 +634,7 @@ void main() {
       expect: () => [
         ReceivableLoading(),
         const ReceivableOperationSuccess(
-            'Alacak silindi. (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'),
+            'Alacak silindi. (Uyarı: bakiye güncellenemedi, cüzdanı yenile.)'),
         ReceivableLoading(),
         const ReceivableLoaded([]),
       ],
@@ -760,7 +760,7 @@ void main() {
       expect: () => [
         ReceivableLoading(),
         const ReceivableOperationSuccess(
-            'Alacak ödendi olarak işaretlendi. (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'),
+            'Alacak ödendi olarak işaretlendi. (Uyarı: bakiye güncellenemedi, cüzdanı yenile.)'),
         ReceivableLoading(),
         ReceivableLoaded([testReceivable.copyWith(isPaid: true)]),
       ],

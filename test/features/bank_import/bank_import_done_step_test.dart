@@ -305,7 +305,9 @@ void main() {
       expect(find.textContaining('100,00'), findsWidgets);
       await tester.tap(find.widgetWithText(FilledButton, 'Bankayla eşitle'));
       await tester.pumpAndSettle();
-      expect(find.text('Bakiyeyi Eşitle'), findsOneWidget);
+      // Onay başlığı, arkasındaki düğmeyle aynı adı taşır ("Bakiyeyi eşitle"):
+      // sayfadaki düğme + onayın başlığı.
+      expect(find.text('Bakiyeyi eşitle'), findsNWidgets(2));
       await tester
           .tap(find.widgetWithText(FilledButton, 'Bankayla eşitle').last);
       await tester.pumpAndSettle();

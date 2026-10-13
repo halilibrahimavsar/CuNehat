@@ -19,7 +19,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// Üretilen dosyalar (`*.g.dart`, çeviri sınıfları, DI yapılandırması) sayılmaz.
 void main() {
   // Tabanlar — 13 Eki 2026, `feat/basit-premium` başlangıcı.
-  const rawPaletteBaseline = 282;
+  const rawPaletteBaseline = 281;
   const offScaleFontSizeBaseline = 252;
   const offScaleRadiusBaseline = 167;
   const heavyWeightBaseline = 119;

@@ -116,7 +116,7 @@ void main() {
     // "Henüz kategori yok" demek yanlış bilgi olurdu.
     expect(find.text('Henüz kategori yok'), findsNothing);
 
-    await tester.tap(find.text('Tekrar Dene'));
+    await tester.tap(find.text('Tekrar dene'));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Kategoriler yüklenemedi'), findsNothing);

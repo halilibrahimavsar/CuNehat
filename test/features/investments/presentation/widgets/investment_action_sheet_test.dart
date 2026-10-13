@@ -95,15 +95,15 @@ void main() {
     //    ? context.l10n.varlikEkle
     //    : (investment.isGoal ? context.l10n.hedefeParaEkle : context.l10n.paraEkle),
     // Since symbol is NOT null (XAU), it should render varlikEkle ("Varlık Ekle")
-    expect(find.text('Varlık Ekle'), findsOneWidget);
+    expect(find.text('Varlık ekle'), findsOneWidget);
 
     // Verify action: Fiyatı Güncelle (since canRefreshPrice is true)
-    expect(find.text('Fiyatı Güncelle'), findsOneWidget);
+    expect(find.text('Fiyatı güncelle'), findsOneWidget);
 
     // Verify other options
     expect(find.text('Düzenle'), findsOneWidget);
     expect(find.text('Sat'), findsOneWidget);
-    expect(find.text('Kaydı Sil'), findsOneWidget);
+    expect(find.text('Kaydı sil'), findsOneWidget);
   });
 
   testWidgets('renders action sheet options for stock without symbol',
@@ -118,10 +118,10 @@ void main() {
     expect(find.byIcon(Icons.trending_up_rounded), findsOneWidget);
 
     // Since symbol is null and isGoal is false, it should show context.l10n.paraEkle ("Para Ekle")
-    expect(find.text('Para Ekle'), findsOneWidget);
+    expect(find.text('Para ekle'), findsOneWidget);
 
     // Since canRefreshPrice is false, it should NOT show Fiyatı Güncelle
-    expect(find.text('Fiyatı Güncelle'), findsNothing);
+    expect(find.text('Fiyatı güncelle'), findsNothing);
   });
 
   testWidgets('tapping options pops with correct InvestmentAction',

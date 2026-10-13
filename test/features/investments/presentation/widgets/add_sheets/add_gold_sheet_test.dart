@@ -124,7 +124,7 @@ void main() {
     );
 
     // Header validation
-    expect(find.text('Yeni Altın Ekle'), findsOneWidget);
+    expect(find.text('Yeni altın ekle'), findsOneWidget);
 
     // Locate quantity textfield (hint: 'Adet')
     final quantityFinder = find.byWidgetPredicate((widget) =>
@@ -162,7 +162,7 @@ void main() {
 
     final amountFinder = find.byWidgetPredicate((widget) =>
         widget is TextField &&
-        widget.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)');
+        widget.decoration?.hintText == 'Maliyet (ödediğin tutar)');
     expect(amountFinder, findsOneWidget);
     expect(tester.widget<TextField>(amountFinder).controller?.text, '3.000');
 
@@ -218,18 +218,18 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify validation error
-    expect(find.text('Geçerli bir yatırım miktarı girin'), findsOneWidget);
+    expect(find.text('Geçerli bir miktar gir'), findsOneWidget);
 
     // Enter valid amount but clear current value
     final amountFinder = find.byWidgetPredicate((widget) =>
         widget is TextField &&
-        widget.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)');
+        widget.decoration?.hintText == 'Maliyet (ödediğin tutar)');
     await tester.enterText(amountFinder, '1000');
 
     // Tap Save again, now it fails on currentValue being invalid
     await tester.tap(find.text('Kaydet'));
     await tester.pumpAndSettle();
-    expect(find.text('Geçerli bir mevcut değer girin'), findsOneWidget);
+    expect(find.text('Geçerli bir mevcut değer gir'), findsOneWidget);
 
     // Now test Live Price fetch failure
     final quantityFinder = find.byWidgetPredicate((widget) =>
@@ -267,7 +267,7 @@ void main() {
     );
 
     // Header validation
-    expect(find.text('Altın Yatırımını Düzenle'), findsOneWidget);
+    expect(find.text('Altını düzenle'), findsOneWidget);
 
     // Verify initial values in TextFields
     final nameFinder = find.byWidgetPredicate((widget) =>
@@ -279,7 +279,7 @@ void main() {
 
     final amountFinder = find.byWidgetPredicate((widget) =>
         widget is TextField &&
-        widget.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)');
+        widget.decoration?.hintText == 'Maliyet (ödediğin tutar)');
     expect(tester.widget<TextField>(amountFinder).controller?.text, '2.000');
 
     // Goal category warning should be rendered
@@ -349,7 +349,7 @@ void main() {
     // Mevcut değer ve maliyet.
     await tester.enterText(fieldByHint('0'), '5.000');
     await tester.enterText(
-        fieldByHint('Maliyet (Yatırılan Ana Para)'), '4.000');
+        fieldByHint('Maliyet (ödediğin tutar)'), '4.000');
     await tester.pumpAndSettle();
 
     // Varsayılan: tamamı cüzdandan düşülür.
@@ -461,7 +461,7 @@ void main() {
     );
 
     await tester.enterText(fieldByHint('0'), '0');
-    await tester.enterText(fieldByHint('Maliyet (Yatırılan Ana Para)'), '0');
+    await tester.enterText(fieldByHint('Maliyet (ödediğin tutar)'), '0');
     await tester.pumpAndSettle();
 
     final saveButton = find.text('Kaydet');
@@ -546,7 +546,7 @@ void main() {
     );
 
     // Bugün seçiliyken uyarı yok.
-    expect(find.textContaining('BUGÜNKÜ değerdir'), findsNothing);
+    expect(find.textContaining('bugünkü değerdir'), findsNothing);
 
     // Takvimden geçmiş bir tarih seç.
     final dateField = find.textContaining('Alım tarihi:');
@@ -563,7 +563,7 @@ void main() {
     await tester.tap(find.text('Tamam'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('BUGÜNKÜ değerdir'), findsOneWidget);
+    expect(find.textContaining('bugünkü değerdir'), findsOneWidget);
 
     // Kısayol miktar × güncel fiyattan bugünkü değeri yazar.
     final quantityField = find.byWidgetPredicate((widget) =>
@@ -612,7 +612,7 @@ void main() {
         (w) => w is TextField && w.decoration?.hintText == '0'));
     final cost = topOf(find.byWidgetPredicate((w) =>
         w is TextField &&
-        w.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)'));
+        w.decoration?.hintText == 'Maliyet (ödediğin tutar)'));
 
     expect(typeSelector, lessThan(currentValue),
         reason: 'altın türü değeri belirliyor, altında duramaz');
@@ -707,7 +707,7 @@ void main() {
     // Fiyat bilgisi yine gösterilir — ama neden hesaplanmadığı da yazar.
     expect(find.textContaining('1.500,00 ₺'), findsOneWidget);
     expect(
-        find.textContaining('miktar girin, değer hesaplansın'), findsOneWidget);
+        find.textContaining('miktar gir, değer hesaplansın'), findsOneWidget);
 
     // Mevcut değer kutusu boş KALDI; mesaj bunu gizlememeli.
     final currentValue = tester.widget<TextField>(find.byWidgetPredicate(
@@ -716,7 +716,7 @@ void main() {
 
     // Ve renk yeşil (başarı) DEĞİL.
     final message = tester
-        .widget<Text>(find.textContaining('miktar girin, değer hesaplansın'));
+        .widget<Text>(find.textContaining('miktar gir, değer hesaplansın'));
     expect(message.style?.color, isNot(Colors.green));
   });
 

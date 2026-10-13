@@ -31,6 +31,7 @@ import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cunehat/features/main_feature/utils/section_visibility.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
@@ -190,23 +191,25 @@ void main() {
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(
-      BlocProvider<TransactionFilterCubit>(create: (_) => TransactionFilterCubit(), child: BlocProvider<AmountVisibilityCubit>(
-        create: (_) => AmountVisibilityCubit(),
-        child: MaterialApp(
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: const [Locale('tr'), Locale('en')],
-          locale: const Locale('tr'),
-          home: BlocProvider<TransactionBloc>.value(
-            value: bloc,
-            child: TransactionsPage(userId: 'u', wallet: wallet),
-          ),
-        ),
-      )),
+      BlocProvider<TransactionFilterCubit>(
+          create: (_) => TransactionFilterCubit(),
+          child: BlocProvider<AmountVisibilityCubit>(
+            create: (_) => AmountVisibilityCubit(),
+            child: MaterialApp(
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [Locale('tr'), Locale('en')],
+              locale: const Locale('tr'),
+              home: BlocProvider<TransactionBloc>.value(
+                value: bloc,
+                child: TransactionsPage(userId: 'u', wallet: wallet),
+              ),
+            ),
+          )),
     );
     await tester.pumpAndSettle();
   }
@@ -333,7 +336,7 @@ void main() {
       seed(const []);
       await pumpPage(tester);
 
-      expect(find.text('Henüz işlem yok'), findsOneWidget);
+      expect(find.text('Henüz kayıt yok'), findsOneWidget);
       expect(find.text('Filtreleri temizle'), findsNothing);
     });
 
@@ -343,7 +346,8 @@ void main() {
       seed(const []);
       await pumpPage(tester);
 
-      expect(find.byKey(const ValueKey('tx-empty-add-expense')), findsOneWidget);
+      expect(
+          find.byKey(const ValueKey('tx-empty-add-expense')), findsOneWidget);
       expect(find.byKey(const ValueKey('tx-empty-add-income')), findsOneWidget);
     });
 
@@ -365,8 +369,82 @@ void main() {
       await tester.enterText(await openSearch(tester), 'zzzz');
       await tester.pumpAndSettle();
 
-      expect(find.text('Henüz işlem yok'), findsNothing);
+      expect(find.text('Henüz kayıt yok'), findsNothing);
       expect(find.text('Filtreleri temizle'), findsOneWidget);
+    });
+
+    // Üçüncü durum: kayıt var, süzgeç YOK, yalnız bu dönem boş. Eskiden bu da
+    // arama diliyle konuşuyordu: "Bu dönemde sonuç yok · Tüm geçmişte 160
+    // eşleşme var · Filtreleri temizle" (cihazda görüldü). Hiçbir şey aramamış
+    // kullanıcıya "eşleşme" ve "filtre" demek yanlış yere gönderir.
+    group('süzgeçsiz boş dönem', () {
+      Future<void> pumpEmptyPeriod(WidgetTester tester) async {
+        seed([txOldMarket]); // yalnız GEÇEN ayda kayıt var
+        await pumpPage(tester);
+      }
+
+      testWidgets('arama/filtre dili kullanılmaz', (tester) async {
+        await pumpEmptyPeriod(tester);
+
+        expect(find.text('Bu dönemde kayıt yok'), findsOneWidget);
+        expect(find.text('Bu dönemde sonuç yok'), findsNothing);
+        expect(find.textContaining('eşleşme'), findsNothing);
+        expect(find.text('Filtreleri temizle'), findsNothing);
+        expect(find.text('Tüm geçmişte ara'), findsNothing);
+        // "Henüz kayıt yok" da değil: cüzdan boş değil.
+        expect(find.text('Henüz kayıt yok'), findsNothing);
+      });
+
+      testWidgets('yeni kayıt eklenebilir', (tester) async {
+        await pumpEmptyPeriod(tester);
+
+        expect(
+            find.byKey(const ValueKey('tx-empty-add-expense')), findsOneWidget);
+        expect(
+            find.byKey(const ValueKey('tx-empty-add-income')), findsOneWidget);
+      });
+
+      testWidgets('"Tüm kayıtları göster" dönemi veriye genişletir',
+          (tester) async {
+        await pumpEmptyPeriod(tester);
+
+        await tester.tap(find.byKey(const ValueKey('tx-empty-show-all')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Geçen ay marketi'), findsOneWidget);
+      });
+    });
+
+    // Yalnız İşlemler bölümü açıkken ekranın altında "+ Gelir / − Gider"
+    // çubuğu durur; aynı düğmeleri boş ekranda yinelemeye gerek yok.
+    group('sade çubuk varken', () {
+      setUp(() async {
+        SharedPreferences.setMockInitialValues({});
+        final sections =
+            SectionVisibility(await SharedPreferences.getInstance());
+        await sections.ensureInitialized(existingInstall: false);
+        getIt.registerSingleton<SectionVisibility>(sections);
+      });
+
+      testWidgets('boş cüzdanda ekle düğmeleri yinelenmez', (tester) async {
+        seed(const []);
+        await pumpPage(tester);
+
+        expect(find.text('Henüz kayıt yok'), findsOneWidget);
+        expect(
+            find.byKey(const ValueKey('tx-empty-add-expense')), findsNothing);
+        expect(find.byKey(const ValueKey('tx-empty-add-income')), findsNothing);
+      });
+
+      testWidgets('boş dönemde "Tüm kayıtları göster" yine sunulur',
+          (tester) async {
+        seed([txOldMarket]);
+        await pumpPage(tester);
+
+        expect(
+            find.byKey(const ValueKey('tx-empty-add-expense')), findsNothing);
+        expect(find.byKey(const ValueKey('tx-empty-show-all')), findsOneWidget);
+      });
     });
   });
 
@@ -707,7 +785,7 @@ void main() {
       expect(find.byType(SingleTransactionDetailPage), findsNothing);
       expect(find.byType(TransactionActionSheet), findsOneWidget);
       expect(find.text('Düzenle'), findsOneWidget);
-      expect(find.text('İşlemi Sil'), findsOneWidget);
+      expect(find.text('İşlemi sil'), findsOneWidget);
     });
   });
 
@@ -754,8 +832,8 @@ void main() {
 
       // Yazmadan önce kaç işlemin neye döneceği söylenir.
       expect(find.text('Kategori değiştirilsin mi?'), findsOneWidget);
-      expect(find.textContaining('2 işlemin kategorisi “Fatura”'),
-          findsOneWidget);
+      expect(
+          find.textContaining('2 işlemin kategorisi “Fatura”'), findsOneWidget);
       await tester.tap(find.text('Değiştir'));
       await tester.pumpAndSettle();
 
@@ -783,8 +861,8 @@ void main() {
       await tester.tap(find.text('İptal'));
       await tester.pumpAndSettle();
 
-      verifyNever(() =>
-          bloc.add(any(that: isA<ChangeTransactionsCategoryEvent>())));
+      verifyNever(
+          () => bloc.add(any(that: isA<ChangeTransactionsCategoryEvent>())));
       expect(find.text('1 seçili'), findsOneWidget);
     });
 
@@ -935,8 +1013,8 @@ void main() {
           .tap(find.byKey(ValueKey('tx-day-add-${now.year}-$month-03')));
       await tester.pumpAndSettle();
 
-      final form =
-          tester.widget<TransactionFormSheet>(find.byType(TransactionFormSheet));
+      final form = tester
+          .widget<TransactionFormSheet>(find.byType(TransactionFormSheet));
       expect(form.initialTransaction, isNull);
       expect(
           DateTime(form.initialDate!.year, form.initialDate!.month,
@@ -1075,8 +1153,7 @@ void main() {
       seed([txMarket, txFatura]);
       await pumpPage(tester);
 
-      await tester.tap(find.text(periodLabel(
-          monthRangeOf(DateTime.now()),
+      await tester.tap(find.text(periodLabel(monthRangeOf(DateTime.now()),
           lookupAppLocalizations(const Locale('tr')))));
       await tester.pumpAndSettle();
       expect(find.text('Dönem'), findsOneWidget);
@@ -1087,7 +1164,7 @@ void main() {
       expect(find.byType(PeriodUnitEditor), findsNothing);
       expect(find.text('DÖNEM BİRİMİ'), findsNothing);
       expect(find.text('2 Hafta'), findsNothing);
-      expect(find.text('HAZIR ARALIKLAR'), findsOneWidget);
+      expect(find.text('Hazır aralıklar'), findsOneWidget);
 
       final footer = find.byKey(const ValueKey('period-unit-settings'));
       await tester.ensureVisible(footer);
@@ -1102,7 +1179,7 @@ void main() {
       // Yönlendiricisiz ağaçta dokunuş sayfayı kapatır, hata vermez.
       await tester.tap(footer);
       await tester.pumpAndSettle();
-      expect(find.text('HAZIR ARALIKLAR'), findsNothing);
+      expect(find.text('Hazır aralıklar'), findsNothing);
       expect(tester.takeException(), isNull);
     });
   });

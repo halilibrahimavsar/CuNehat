@@ -144,7 +144,7 @@ void main() {
     );
 
     // Header validation
-    expect(find.text('Yeni Hisse Ekle'), findsOneWidget);
+    expect(find.text('Yeni hisse ekle'), findsOneWidget);
 
     // Enters symbol
     final symbolFinder = find.byWidgetPredicate((widget) =>
@@ -188,7 +188,7 @@ void main() {
 
     final amountFinder = find.byWidgetPredicate((widget) =>
         widget is TextField &&
-        widget.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)');
+        widget.decoration?.hintText == 'Maliyet (ödediğin tutar)');
     expect(amountFinder, findsOneWidget);
     expect(tester.widget<TextField>(amountFinder).controller?.text, '3.000');
 
@@ -245,12 +245,12 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify validation error
-    expect(find.text('Geçerli bir yatırım miktarı girin'), findsOneWidget);
+    expect(find.text('Geçerli bir miktar gir'), findsOneWidget);
 
     // Enter valid amount but clear current value
     final amountFinder = find.byWidgetPredicate((widget) =>
         widget is TextField &&
-        widget.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)');
+        widget.decoration?.hintText == 'Maliyet (ödediğin tutar)');
     await tester.enterText(amountFinder, '2000');
     // Yeni alımda mevcut değer maliyeti izler; kullanıcı alanı kendi
     // boşaltırsa doğrulama yine durdurur.
@@ -265,12 +265,12 @@ void main() {
     // Tap Save again, now it fails on currentValue being invalid
     await tester.tap(find.text('Kaydet'));
     await tester.pumpAndSettle();
-    expect(find.text('Geçerli bir mevcut değer girin'), findsOneWidget);
+    expect(find.text('Geçerli bir mevcut değer gir'), findsOneWidget);
 
     // Now test Live Price fetch warning on empty symbol
     await tester.tap(find.text('Hesapla'));
     await tester.pumpAndSettle();
-    expect(find.text('Sembol girin!'), findsOneWidget);
+    expect(find.text('Sembol gir'), findsOneWidget);
 
     // Enters symbol
     final symbolFinder = find.byWidgetPredicate((widget) =>
@@ -309,7 +309,7 @@ void main() {
     );
 
     // Header validation
-    expect(find.text('Hisse Yatırımını Düzenle'), findsOneWidget);
+    expect(find.text('Hisseyi düzenle'), findsOneWidget);
 
     // Verify initial values in TextFields
     final nameFinder = find.byWidgetPredicate((widget) =>
@@ -320,7 +320,7 @@ void main() {
 
     final amountFinder = find.byWidgetPredicate((widget) =>
         widget is TextField &&
-        widget.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)');
+        widget.decoration?.hintText == 'Maliyet (ödediğin tutar)');
     expect(tester.widget<TextField>(amountFinder).controller?.text, '5.000');
 
     // Goal category warning should be rendered
@@ -398,12 +398,12 @@ void main() {
     // karşılığını gösterir.
     expect(find.text('Güncel Fiyat: 150,00 \$ (≈4.875,00 ₺)'), findsOneWidget);
 
-    // Save should succeed with name field empty (which uses localized fallback "Hisse Yatırımı")
+    // Save should succeed with name field empty (which uses localized fallback "Hisse")
     await tester.tap(find.text('Kaydet'));
     await tester.pumpAndSettle();
 
     expect(savedInvestment, isNotNull);
-    expect(savedInvestment!.name, 'Hisse Yatırımı');
+    expect(savedInvestment!.name, 'Hisse');
     expect(savedInvestment!.amount, 9750.0);
     expect(savedInvestment!.currentValue, 9750.0);
     expect(savedInvestment!.currency, 'USD');
@@ -531,7 +531,7 @@ void main() {
         (w) => w is TextField && w.decoration?.hintText == '0'));
     final cost = topOf(find.byWidgetPredicate((w) =>
         w is TextField &&
-        w.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)'));
+        w.decoration?.hintText == 'Maliyet (ödediğin tutar)'));
 
     expect(symbol, lessThan(currentValue));
     expect(lot, lessThan(currentValue));
@@ -644,7 +644,7 @@ void main() {
         (w) => w is TextField && w.decoration?.hintText == 'lot');
     final costField = find.byWidgetPredicate((w) =>
         w is TextField &&
-        w.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)');
+        w.decoration?.hintText == 'Maliyet (ödediğin tutar)');
 
     String text(WidgetTester tester, Finder field) =>
         tester.widget<TextField>(field).controller!.text;
@@ -723,7 +723,7 @@ void main() {
           'REGRESYON: lot × lot fiyatı yazınca kayıt mevcut değer '
           'İSTEMEDEN yazılır', (tester) async {
         // Cihazda: 10 lot × 42,5 girildi, maliyet 425 doldu, Kaydet
-        // "Geçerli bir mevcut değer girin" diye durdu.
+        // "Geçerli bir mevcut değer gir" diye durdu.
         tester.view.physicalSize = const Size(400, 2400);
         tester.view.devicePixelRatio = 1.0;
         addTearDown(tester.view.reset);

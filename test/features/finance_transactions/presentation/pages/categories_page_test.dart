@@ -121,7 +121,7 @@ void main() {
 
     expect(find.text('Maaş'), findsNothing);
 
-    await tester.tap(find.text('Gelir Kategorileri'));
+    await tester.tap(find.text('Gelir kategorileri'));
     await tester.pumpAndSettle();
 
     expect(find.text('Maaş'), findsOneWidget);
@@ -152,7 +152,7 @@ void main() {
     // kaydedemez, boş bir liste göstermek kullanıcıyı yanıltırdı.
     await pump(tester, state: const NoWalletSt());
 
-    expect(find.text('Cüzdan oluşturunuz'), findsOneWidget);
+    expect(find.text('Bir cüzdan oluştur'), findsOneWidget);
     expect(find.byType(Switch), findsNothing);
   });
 }

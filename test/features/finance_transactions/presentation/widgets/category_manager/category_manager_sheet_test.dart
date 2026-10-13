@@ -206,7 +206,7 @@ void main() {
       await pump(tester);
       await swipeToDelete(tester, 'Market');
 
-      expect(find.text('Kategori Sil'), findsOneWidget);
+      expect(find.text('Kategori sil'), findsOneWidget);
       await tester.tap(find.text('Sil').last);
       await tester.pumpAndSettle();
 
@@ -302,7 +302,7 @@ void main() {
       await swipeToDelete(tester, 'Elektrik');
 
       expect(find.text('İşlemleri taşı'), findsOneWidget);
-      expect(find.text('Kategori Sil'), findsNothing);
+      expect(find.text('Kategori sil'), findsNothing);
     });
 
     testWidgets('taşınacak hedef yoksa silme engellenir', (tester) async {
@@ -328,7 +328,7 @@ void main() {
       await pump(tester);
       await swipeToDelete(tester, 'Market');
 
-      expect(find.text('Kategori Sil'), findsNothing);
+      expect(find.text('Kategori sil'), findsNothing);
       verifyNever(() => deleteCategory(
             categoryId: any(named: 'categoryId'),
             reassignToId: any(named: 'reassignToId'),

@@ -1,3 +1,4 @@
+import 'package:cunehat/features/main_feature/utils/section_visibility.dart';
 import 'package:cunehat/core/shared/motion/app_motion.dart';
 import 'package:cunehat/core/shared/motion/period_transition.dart';
 import 'dart:async';
@@ -476,6 +477,11 @@ class _TransactionsViewState extends State<_TransactionsView> {
   }
 
   /// Aramanın/filtrenin dönem dışında da eşleşme bulup bulmadığı.
+  /// Ekranın altında sade çubuk mu var (yalnız İşlemler bölümü açık)?
+  bool get _simpleBarVisible =>
+      getIt.isRegistered<SectionVisibility>() &&
+      getIt<SectionVisibility>().hasOnlyTransactions;
+
   int _matchesOutsidePeriod(
       List<TransactionWithBalance> ledger, CombinedFilter filter) {
     return filterLedger(
@@ -549,9 +555,9 @@ class _TransactionsViewState extends State<_TransactionsView> {
                   children: [
                     // Cüzdan ↔ bağlı kartları (yalnız kartı olan cüzdanda).
                     // Hap satırı YOK: hesap ↔ kart geçişi üst çubuktaki kart
-                  // düğmesinde. Burada yalnız borç/öde şeridi ve son ödeme
-                  // bantları kalır.
-                  const CardContextRail(showPills: false),
+                    // düğmesinde. Burada yalnız borç/öde şeridi ve son ödeme
+                    // bantları kalır.
+                    const CardContextRail(showPills: false),
                     // Seçim kipinde üst çubuğun yerini seçim çubuğu alır:
                     // süzgeç/dönem o sırada değişmez, seçili satırlar ekrandan
                     // kaybolup "görünmeyen satırlara uygulandı" olmaz.
@@ -632,9 +638,18 @@ class _TransactionsViewState extends State<_TransactionsView> {
           hasScrollBody: false,
           child: _EmptyState(
             mode: mode,
-            // Cüzdanda hiç kayıt yoksa sorun filtre değildir; "filtreleri
-            // temizle" önermek kullanıcıyı yanlış yere gönderir.
-            isFiltered: !walletIsEmpty,
+            walletIsEmpty: walletIsEmpty,
+            // "Sonuç yok / filtreleri temizle" yalnız GERÇEKTEN bir süzgeç
+            // varken söylenir. Eskiden ölçüt "cüzdan boş değil" idi: süzgeçsiz
+            // boş bir ay da "Bu dönemde sonuç yok · Tüm geçmişte 160 eşleşme
+            // var · Filtreleri temizle" diyordu (cihazda görüldü) — hiçbir şey
+            // aramamış kullanıcıya arama diliyle konuşuyordu.
+            isFiltered: !walletIsEmpty &&
+                (filterState.dataFilter.hasActiveFilters ||
+                    mode != FinanceMode.compare),
+            // Alt çubukta "+ Gelir / − Gider" duruyorsa aynı düğmeleri boş
+            // ekranda yinelemeye gerek yok.
+            showAddButtons: !_simpleBarVisible,
             query: filterState.dataFilter.searchQuery,
             // Dönem penceresi artık HER ZAMAN uygulanıyor (eski takvim
             // görünümü onu yok sayıyordu). Bu yüzden "bu ayda yok ama
@@ -843,7 +858,16 @@ class _SelectionBar extends StatelessWidget {
 /// diyen kullanıcının çıkış yolu ekranda yazılı olmalı.
 class _EmptyState extends StatelessWidget {
   final FinanceMode mode;
+
+  /// Cüzdanda hiç kayıt yok (ilk kullanım).
+  final bool walletIsEmpty;
+
+  /// Bir süzgeç ya da arama etkin. false + [walletIsEmpty] false ise durum
+  /// yalnızca "bu dönem boş"tur.
   final bool isFiltered;
+
+  /// Boş ekranda "Gider ekle / Gelir ekle" gösterilsin mi.
+  final bool showAddButtons;
   final String? query;
   final int outsidePeriodMatches;
   final VoidCallback onWidenPeriod;
@@ -856,7 +880,9 @@ class _EmptyState extends StatelessWidget {
 
   const _EmptyState({
     required this.mode,
+    required this.walletIsEmpty,
     required this.isFiltered,
+    required this.showAddButtons,
     required this.query,
     required this.outsidePeriodMatches,
     required this.onWidenPeriod,
@@ -872,15 +898,18 @@ class _EmptyState extends StatelessWidget {
     final hasQuery = query != null && query!.trim().isNotEmpty;
     final hasElsewhere = isFiltered && outsidePeriodMatches > 0;
 
+    // Süzgeçsiz boş dönem: kayıt var ama bu aralıkta değil.
+    final emptyPeriod = !isFiltered && !walletIsEmpty;
+
     final title = !isFiltered
-        ? l10n.henuzIslemYok
+        ? (emptyPeriod ? l10n.txEmptyPeriodTitle : l10n.henuzIslemYok)
         : hasElsewhere
             ? l10n.txSearchWidenTitle
             : hasQuery
                 ? l10n.txSearchNoResultTitle(query!.trim())
                 : l10n.txEmptyFilteredTitle;
     final body = !isFiltered
-        ? l10n.buDonemIcinKayit
+        ? (emptyPeriod ? l10n.txEmptyPeriodBody : l10n.buDonemIcinKayit)
         : hasElsewhere
             ? l10n.txSearchWidenBody(outsidePeriodMatches)
             : l10n.txEmptyFilteredBody;
@@ -937,7 +966,7 @@ class _EmptyState extends StatelessWidget {
               color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
             ),
           ),
-          if (!isFiltered) ...[
+          if (!isFiltered && showAddButtons) ...[
             const SizedBox(height: 20),
             Wrap(
               alignment: WrapAlignment.center,
@@ -957,6 +986,14 @@ class _EmptyState extends StatelessWidget {
                   label: Text(l10n.gelirEkle),
                 ),
               ],
+            ),
+          ],
+          if (emptyPeriod) ...[
+            const SizedBox(height: 12),
+            TextButton(
+              key: const ValueKey('tx-empty-show-all'),
+              onPressed: onWidenPeriod,
+              child: Text(l10n.txEmptyShowAll),
             ),
           ],
           if (isFiltered) ...[

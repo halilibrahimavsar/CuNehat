@@ -85,7 +85,7 @@ void main() {
     await tester.tap(find.text('aç'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Bu Ay'));
+    await tester.tap(find.text('Bu ay'));
     await tester.pumpAndSettle();
 
     expect(find.byType(DateRangePickerDialog), findsNothing);

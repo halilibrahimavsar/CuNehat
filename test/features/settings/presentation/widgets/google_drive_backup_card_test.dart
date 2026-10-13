@@ -129,7 +129,7 @@ void main() {
     await tester.pumpWidget(wrap(const GoogleDriveBackupCard()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Google Drive\'a Bağlan'), findsOneWidget);
+    expect(find.text('Google Drive\'a bağlan'), findsOneWidget);
     // "Bağlı değil" beklenen durum: arıza bandı çıkmamalı.
     expect(find.byIcon(Icons.error_outline_rounded), findsNothing);
   });
@@ -175,7 +175,7 @@ void main() {
     expect(find.text('Hiç yedekleme yapılmadı'), findsOneWidget);
     final restore = tester.widget<OutlinedButton>(
       find.ancestor(
-        of: find.text('Geri Yükle'),
+        of: find.text('Geri yükle'),
         matching: find.byType(OutlinedButton),
       ),
     );
@@ -223,7 +223,7 @@ void main() {
     await tester.tap(find.text('Yedekle'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('depolama alanınız dolu'), findsOneWidget);
+    expect(find.textContaining('depolama alanın dolu'), findsOneWidget);
     expect(find.textContaining('Yedek dosyası bulunamadı'), findsNothing);
   });
 
@@ -282,7 +282,7 @@ void main() {
       await tester.pumpWidget(wrap(const GoogleDriveBackupCard()));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Bağlantıyı Kes'));
+      await tester.tap(find.text('Bağlantıyı kes'));
       await tester.pump();
 
       expect(find.text('Bağlantı kesilsin mi?'), findsOneWidget);
@@ -290,7 +290,7 @@ void main() {
       expect(find.textContaining('kullanici@ornek.com hesabından çıkılacak'),
           findsOneWidget);
       // Yedeklerin silinmediği açıkça söylenmeli.
-      expect(find.textContaining('SİLİNMEZ'), findsOneWidget);
+      expect(find.textContaining('yedeklerin silinmez'), findsOneWidget);
       verifyNever(() => drive.signOut());
     });
 
@@ -299,13 +299,13 @@ void main() {
 
       await tester.pumpWidget(wrap(const GoogleDriveBackupCard()));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Bağlantıyı Kes'));
+      await tester.tap(find.text('Bağlantıyı kes'));
       await tester.pump();
 
       // Geri sayım etiketi + devre dışı düğme.
-      expect(find.textContaining('Bağlantıyı Kes (5)'), findsOneWidget);
+      expect(find.textContaining('Bağlantıyı kes (5)'), findsOneWidget);
       await waitOutCountdown(tester, 2);
-      expect(find.textContaining('Bağlantıyı Kes (3)'), findsOneWidget);
+      expect(find.textContaining('Bağlantıyı kes (3)'), findsOneWidget);
 
       await waitOutCountdown(tester, 3);
       await tester.pumpAndSettle();
@@ -317,7 +317,7 @@ void main() {
 
       await tester.pumpWidget(wrap(const GoogleDriveBackupCard()));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Bağlantıyı Kes'));
+      await tester.tap(find.text('Bağlantıyı kes'));
       await tester.pump();
       await tester.tap(find.text('İptal'));
       await tester.pumpAndSettle();
@@ -344,14 +344,14 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('30.07.2026 14:05'), findsOneWidget);
 
-      await tester.tap(find.text('Bağlantıyı Kes'));
+      await tester.tap(find.text('Bağlantıyı kes'));
       await tester.pump();
       await waitOutCountdown(tester);
-      await tester.tap(find.text('Bağlantıyı Kes').last);
+      await tester.tap(find.text('Bağlantıyı kes').last);
       await tester.pumpAndSettle();
 
       expect(find.text('30.07.2026 14:05'), findsNothing);
-      expect(find.text('Google Drive\'a Bağlan'), findsOneWidget);
+      expect(find.text('Google Drive\'a bağlan'), findsOneWidget);
       expect(autoBackup.lastSuccessAt, isNull);
     });
 
@@ -371,14 +371,14 @@ void main() {
 
       await tester.pumpWidget(wrap(const GoogleDriveBackupCard()));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Bağlantıyı Kes'));
+      await tester.tap(find.text('Bağlantıyı kes'));
       await tester.pump();
       await waitOutCountdown(tester);
-      await tester.tap(find.text('Bağlantıyı Kes').last);
+      await tester.tap(find.text('Bağlantıyı kes').last);
       await tester.pumpAndSettle();
 
       expect(
-        find.text('İnternet bağlantısı yok. Bağlanıp tekrar deneyin.'),
+        find.text('İnternet bağlantısı yok. Bağlanıp tekrar dene.'),
         findsOneWidget,
       );
       // Hesap değişmedi: kart bağlı kalır, otomatik yedek geçmişi silinmez.
@@ -386,7 +386,7 @@ void main() {
       expect(autoBackup.lastSuccessAt, isNotNull);
 
       // Düğme yeniden kullanılabilir: yükleme durumu takılı kalmadı.
-      await tester.tap(find.text('Bağlantıyı Kes'));
+      await tester.tap(find.text('Bağlantıyı kes'));
       await tester.pump();
       expect(find.text('Bağlantı kesilsin mi?'), findsOneWidget);
     });
@@ -404,7 +404,7 @@ void main() {
       await tester.pumpWidget(wrap(const GoogleDriveBackupCard()));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Tüm Yedekleri Sil'));
+      await tester.tap(find.text('Tüm yedekleri sil'));
       await tester.pump();
 
       // 1. adım
@@ -414,7 +414,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // 2. adım: geri sayımlı, kopya sayısını söyleyen uyarı
-      expect(find.text('Bu İşlem Geri Alınamaz'), findsOneWidget);
+      expect(find.text('Bu işlem geri alınamaz'), findsOneWidget);
       expect(find.textContaining('2 yedek kopyasının tamamı'), findsOneWidget);
       expect(find.textContaining('Sil (5)'), findsOneWidget);
       verifyNever(() => drive.deleteAllBackups());
@@ -435,13 +435,13 @@ void main() {
       await tester.pumpWidget(wrap(const GoogleDriveBackupCard()));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Tüm Yedekleri Sil'));
+      await tester.tap(find.text('Tüm yedekleri sil'));
       await tester.pump();
       await tester.tap(find.text('İptal'));
       await tester.pumpAndSettle();
 
       verifyNever(() => drive.deleteAllBackups());
-      expect(find.text('Bu İşlem Geri Alınamaz'), findsNothing);
+      expect(find.text('Bu işlem geri alınamaz'), findsNothing);
     });
   });
 

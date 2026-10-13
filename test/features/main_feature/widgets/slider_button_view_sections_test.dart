@@ -78,8 +78,8 @@ void main() {
       expect(find.byType(SimpleActionBar), findsOneWidget);
       expect(find.byType(DynamicSlider), findsNothing);
       // Jest öğreten hiçbir şey yok: bölüm etiketleri de çizilmez.
-      expect(find.text('BİRİKİM'), findsNothing);
-      expect(find.text('BORÇ'), findsNothing);
+      expect(find.text('Birikim'), findsNothing);
+      expect(find.text('Borç'), findsNothing);
     });
 
     testWidgets('ikinci bölüm açıkken kaydırıcı; kapalı bölüm çizilmez',

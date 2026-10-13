@@ -393,7 +393,7 @@ void main() {
         (tester) async {
       await pumpSettings(tester, _wallet('c', balance: -3700, card: info));
 
-      expect(find.text('TUTARLAR'), findsOneWidget);
+      expect(find.text('Tutarlar'), findsOneWidget);
       expect(fieldText(tester, 'kk-debt'), '3.700');
       expect(fieldText(tester, 'kk-limit'), '20.000');
       // Borç, limitin ÜSTÜNDE ve ikisi de banka/son 4'ten önce.
@@ -560,7 +560,7 @@ void main() {
 
       await pumpSettings(tester, stale);
 
-      expect(find.text('SON EKSTRE'), findsOneWidget);
+      expect(find.text('Son ekstre'), findsOneWidget);
       expect(
           tester
               .widget<Text>(find.byKey(const ValueKey('kk-statement-summary')))

@@ -136,7 +136,7 @@ void main() {
     when(service.openSystemNotificationSettings).thenAnswer((_) async => true);
     await open(tester, diagnostics(appLevelEnabled: false));
 
-    final button = find.widgetWithText(TextButton, 'Ayarları Aç');
+    final button = find.widgetWithText(TextButton, 'Ayarları aç');
     expect(button, findsWidgets);
 
     await tester.tap(button.first);

@@ -45,9 +45,9 @@ void main() {
     );
 
     // Verify Titles
-    expect(find.text('TOPLAM PORTFÖY DEĞERİ'), findsOneWidget);
-    expect(find.text('TOPLAM MALİYET'), findsOneWidget);
-    expect(find.text('KAZANÇ / ZARAR'), findsOneWidget);
+    expect(find.text('Toplam birikim'), findsOneWidget);
+    expect(find.text('Toplam maliyet'), findsOneWidget);
+    expect(find.text('Kazanç / zarar'), findsOneWidget);
     // Verify Formatted Values
     expect(find.text('12.500,00 ₺'), findsOneWidget); // Total Current Value
     expect(find.text('10.000,00 ₺'), findsOneWidget); // Total Investment
@@ -114,8 +114,8 @@ void main() {
 
     expect(tester.takeException(), isNull);
     // Etiketler kırpılmadan durur; tutarlar sığmazsa küçülür.
-    expect(find.text('TOPLAM MALİYET'), findsOneWidget);
-    expect(find.text('KAZANÇ / ZARAR'), findsOneWidget);
+    expect(find.text('Toplam maliyet'), findsOneWidget);
+    expect(find.text('Kazanç / zarar'), findsOneWidget);
     expect(find.text('1.234.567,89 ₺'), findsOneWidget);
     expect(find.text('265.432,66 ₺'), findsOneWidget);
   });

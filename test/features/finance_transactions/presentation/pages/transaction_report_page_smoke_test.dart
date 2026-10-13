@@ -364,7 +364,7 @@ void main() {
         matching: find.byType(InkWell),
       ));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Son 3 Ay'));
+      await tester.tap(find.text('Son 3 ay'));
       await tester.pumpAndSettle();
 
       // Üç ay otomatik olarak HAFTALIK çizilir; elle aylığa geç.

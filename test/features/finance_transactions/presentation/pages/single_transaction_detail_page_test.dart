@@ -265,7 +265,7 @@ void main() {
     expect(find.text('Otomatik işlem'), findsOneWidget);
     expect(
         find.text(
-            'Bu işlem otomatik oluşturuldu. İlgili borç/yatırım/alacak kaydından düzenleyin veya silin.'),
+            'Bu işlem otomatik oluşturuldu. İlgili borç, birikim ya da alacak kaydından düzenle ya da sil.'),
         findsOneWidget);
 
     // Verify Action buttons (Sil & Düzenle) are NOT shown
@@ -670,7 +670,7 @@ void main() {
         find.byKey(const ValueKey('installment-edit-total')), '0');
     await tester.tap(find.byKey(const ValueKey('installment-edit-save')));
     await tester.pumpAndSettle();
-    expect(find.text('Geçerli bir tutar girin'), findsOneWidget);
+    expect(find.text('Geçerli bir tutar gir'), findsOneWidget);
 
     await tester.enterText(
         find.byKey(const ValueKey('installment-edit-name')), '  ');
@@ -805,7 +805,7 @@ void main() {
 
       await tester.tap(find.text('AÇ'));
       await tester.pumpAndSettle();
-      expect(find.text('İşlem Detayı'), findsOneWidget);
+      expect(find.text('İşlem detayı'), findsOneWidget);
     }
 
     testWidgets('silme sonrası sayfa KENDİNİ KAPATIR', (tester) async {
@@ -827,7 +827,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.text('İşlem Detayı'), findsNothing);
+      expect(find.text('İşlem detayı'), findsNothing);
       expect(find.text('AÇ'), findsOneWidget);
     });
 
@@ -849,7 +849,7 @@ void main() {
       states.add(const TransactionError('boom'));
       await tester.pumpAndSettle();
 
-      expect(find.text('İşlem Detayı'), findsOneWidget);
+      expect(find.text('İşlem detayı'), findsOneWidget);
     });
 
     testWidgets('düzenleme kategoriyi ANINDA yansıtır', (tester) async {
@@ -1007,12 +1007,12 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('AÇ'));
       await tester.pumpAndSettle();
-      expect(find.text('İşlem Detayı'), findsOneWidget);
+      expect(find.text('İşlem detayı'), findsOneWidget);
 
       await tester.tap(find.text('Sil'));
       await tester.pumpAndSettle();
 
-      expect(find.text('İşlem Detayı'), findsNothing);
+      expect(find.text('İşlem detayı'), findsNothing);
       expect(find.text('AÇ'), findsOneWidget);
     });
   });

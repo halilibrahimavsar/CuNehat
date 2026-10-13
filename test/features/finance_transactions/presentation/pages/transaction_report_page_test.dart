@@ -202,7 +202,7 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('Rapor Oluşturmak İçin Veri Yok'), findsOneWidget);
+    expect(find.text('Rapor için kayıt yok'), findsOneWidget);
   });
 
   testWidgets('renders charts and summary cards when transactions are present',

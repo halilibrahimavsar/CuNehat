@@ -86,7 +86,7 @@ void main() {
 
     expect(
       find.text(
-          'Görsel alınamadı. Kamera ve fotoğraf izinlerini kontrol edin.'),
+          'Görsel alınamadı. Kamera ve fotoğraf izinlerini kontrol et.'),
       findsOneWidget,
     );
     expect(controller.pickedReceipt.value, isNull);

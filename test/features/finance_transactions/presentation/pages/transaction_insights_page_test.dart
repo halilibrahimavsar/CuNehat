@@ -184,7 +184,7 @@ void main() {
     seed(const []);
     await pumpPage(tester);
 
-    expect(find.text('Henüz İçgörü Yok'), findsOneWidget);
+    expect(find.text('Henüz içgörü yok'), findsOneWidget);
   });
 
   testWidgets('gelir giderden fazlayken günlük harcanabilir tutar çizilir',
@@ -222,7 +222,7 @@ void main() {
 
     expect(find.byType(DailySafeToSpendCard), findsNothing);
     expect(find.byType(InsightOverspentCard), findsOneWidget);
-    expect(find.text('Bu Dönem Açıktasınız'), findsOneWidget);
+    expect(find.text('Bu dönem açıktasın'), findsOneWidget);
   });
 
   testWidgets('göz düğmesi kapalıyken sayfada AÇIK rakam kalmaz',

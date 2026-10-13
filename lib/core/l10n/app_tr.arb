@@ -4,8 +4,8 @@
   "turkish": "Türkçe",
   "english": "İngilizce",
   "hataDetayi": "Hata detayı",
-  "tekrarDene": "Tekrar Dene",
-  "islemGecmisiCsv": "İşlem Geçmişi (CSV)",
+  "tekrarDene": "Tekrar dene",
+  "islemGecmisiCsv": "İşlem geçmişi (CSV)",
   "duzenle": "Düzenle",
   "sil": "Sil",
   "geriAl": "Geri al",
@@ -18,39 +18,39 @@
       "message": {}
     }
   },
-  "yeniButceEkle": "Yeni Bütçe Ekle",
+  "yeniButceEkle": "Yeni bütçe ekle",
   "labelKategori": "Kategori",
-  "labelAylikLimit": "Aylık Limit",
+  "labelAylikLimit": "Aylık limit",
   "iptal": "İptal",
   "borclarim": "Borçlarım",
   "alacaklarim": "Alacaklarım",
-  "henuzBorcKaydiYok": "Henüz borç kaydı yok.",
-  "henuzBorcKaydiYokAciklama": "Henüz kaydedilmiş aktif bir borcunuz bulunmuyor. Yeni borç eklemek için ekleme butonunu kullanabilirsiniz.",
-  "odemeYap": "Ödeme Yap",
+  "henuzBorcKaydiYok": "Henüz borcun yok",
+  "henuzBorcKaydiYokAciklama": "Kredi ya da borcun olunca buraya yaz; ödemelerini buradan takip edersin.",
+  "odemeYap": "Ödeme yap",
   "ode": "Öde",
-  "henuzAlacakKaydiYok": "Henüz alacak kaydı yok.",
-  "henuzAlacakKaydiYokAciklama": "Henüz kaydedilmiş aktif bir alacağınız bulunmuyor. Yeni alacak eklemek için ekleme butonunu kullanabilirsiniz.",
-  "odendiIsaretle": "Ödendi İşaretle",
+  "henuzAlacakKaydiYok": "Henüz alacağın yok",
+  "henuzAlacakKaydiYokAciklama": "Birine verdiğin parayı buraya yaz; geri aldığında işaretlersin.",
+  "odendiIsaretle": "Ödendi işaretle",
   "gecmis": "Geçmiş",
-  "borcGecmisi": "Borç Geçmişi",
-  "alacakGecmisi": "Alacak Geçmişi",
+  "borcGecmisi": "Borç geçmişi",
+  "alacakGecmisi": "Alacak geçmişi",
   "aylikTaksitiBiliyorum": "Aylık taksiti biliyorum",
   "faizOraniIle": "Faiz oranı ile",
-  "esitTaksitAmortisman": "Eşit Taksit (Amortisman)",
-  "basitVadeFarki": "Basit Vade Farkı",
-  "odemeyiKaydet": "Ödemeyi Kaydet",
-  "labelOdemeTutari": "Ödeme Tutarı *",
+  "esitTaksitAmortisman": "Eşit taksit (amortisman)",
+  "basitVadeFarki": "Basit vade farkı",
+  "odemeyiKaydet": "Ödemeyi kaydet",
+  "labelOdemeTutari": "Ödeme tutarı *",
   "maksimumFormatmoneyRemaining": "Maksimum: {remaining}",
   "@maksimumFormatmoneyRemaining": {
     "placeholders": {
       "remaining": {}
     }
   },
-  "labelOdemeTarihi": "Ödeme Tarihi",
-  "labelNotOpsiyonel": "Not (Opsiyonel)",
+  "labelOdemeTarihi": "Ödeme tarihi",
+  "labelNotOpsiyonel": "Not (isteğe bağlı)",
   "hintOdemeIleIlgiliNotlar": "Ödeme ile ilgili notlar...",
-  "islemDetayi": "İşlem Detayı",
-  "islemRaporu": "İşlem Raporu",
+  "islemDetayi": "İşlem detayı",
+  "islemRaporu": "İşlem raporu",
   "oncekiDonemeGorePercent": "%{percent} önceki döneme göre",
   "@oncekiDonemeGorePercent": {
     "placeholders": {
@@ -59,21 +59,21 @@
   },
   "msgSecilenTarihAraligindaIslem": "Seçilen tarih aralığında işlem yok",
   "degistir": "Değiştir",
-  "labelKategoriAdi": "Kategori Adı",
+  "labelKategoriAdi": "Kategori adı",
   "hintOrnMarketKiraMaas": "Örn: Market, Kira, Maaş",
-  "yeniKategoriEkle": "Yeni Kategori Ekle",
+  "yeniKategoriEkle": "Yeni kategori ekle",
   "temizle": "Temizle",
   "labelMin": "Min",
   "labelMax": "Max",
   "hintNotIstegeBagliOrn": "Not (İsteğe bağlı) · örn. Market alışverişi",
-  "tekrarlamaIstegeBagli": "Tekrarlama (İsteğe Bağlı)",
-  "tekrarEtme": "Tekrar Etme",
+  "tekrarlamaIstegeBagli": "Tekrar (isteğe bağlı)",
+  "tekrarEtme": "Tek seferlik",
   "vazgec": "Vazgeç",
   "sat": "Sat",
-  "kaydiSil": "Kaydı Sil",
-  "tooltipFiyatlariGuncelle": "Fiyatları Güncelle",
+  "kaydiSil": "Kaydı sil",
+  "tooltipFiyatlariGuncelle": "Fiyatları güncelle",
   "hintSembolOrnAaplThyao": "Sembol (Örn: AAPL, THYAO.IS)",
-  "sablonuSil": "Şablonu Sil",
+  "sablonuSil": "Şablonu sil",
   "hataError": "Hata: {error}",
   "@hataError": {
     "placeholders": {
@@ -83,20 +83,20 @@
   "tooltipBuVadeyiAtla": "Bu vadeyi atla",
   "onayla": "Onayla",
   "kapat": "Kapat",
-  "islemiDuzenle": "İşlemi Düzenle",
-  "labelYeniTutar": "Yeni Tutar",
-  "kaydetVeOnayla": "Kaydet ve Onayla",
-  "guvenlikAyarlari": "Güvenlik Ayarları",
-  "iceAktarCsv": "Yedekten İçe Aktar (CSV)",
-  "disaAktarCsv": "Dışa Aktar (CSV)",
-  "geriYukle": "Geri Yükle",
+  "islemiDuzenle": "İşlemi düzenle",
+  "labelYeniTutar": "Yeni tutar",
+  "kaydetVeOnayla": "Kaydet ve onayla",
+  "guvenlikAyarlari": "Güvenlik ayarları",
+  "iceAktarCsv": "Yedekten içe aktar (CSV)",
+  "disaAktarCsv": "Dışa aktar (CSV)",
+  "geriYukle": "Geri yükle",
   "yedekle": "Yedekle",
-  "labelUygulamaTemasi": "Uygulama Teması",
-  "labelCuzdanAdi": "Cüzdan Adı *",
+  "labelUygulamaTemasi": "Uygulama teması",
+  "labelCuzdanAdi": "Cüzdan adı *",
   "hintOrnAnaCuzdanTatil": "Örn: Ana Cüzdan, Tatil Fonu",
   "tamam": "Tamam",
   "beklenmeyenDurum": "Beklenmeyen durum",
-  "aktifCuzdaniniziDegistirmekIcin": "• Aktif cüzdanınızı değiştirmek için bir cüzdana tıklayın.",
+  "aktifCuzdaniniziDegistirmekIcin": "• Aktif cüzdanını değiştirmek için bir cüzdana dokun.",
   "cuzdanBakiyeleriOtomatikOlarak": "• Cüzdan bakiyeleri otomatik olarak güncellenir.",
   "herCuzdaninKendiGelir": "• Her cüzdanın kendi gelir/gider kayıtları vardır.",
   "msgTextsCheckfailedprefixETostring": "{checkFailedPrefix}: {error}",
@@ -112,26 +112,26 @@
       "error": {}
     }
   },
-  "msgCreateAPinFirst": "Önce bir PIN oluşturun",
+  "msgCreateAPinFirst": "Önce bir PIN oluştur",
   "msgBiometricAuthenticationIsNot": "Biyometrik kimlik doğrulama desteklenmiyor",
   "msgBiometricAuthenticationFailed": "Biyometrik kimlik doğrulama başarısız",
   "msgBiometricLoginEnabled": "Biyometrik giriş etkinleştirildi",
   "msgBiometricLoginDisabled": "Biyometrik giriş devre dışı bırakıldı",
-  "msgPINAlreadyExistsUse": "PIN zaten mevcut, bunun yerine PIN değiştirmeyi kullanın",
+  "msgPINAlreadyExistsUse": "PIN zaten var; PIN değiştirmeyi kullan",
   "msgPINsDoNotMatch": "PIN'ler eşleşmiyor",
   "msgPINSavedSuccessfully": "PIN başarıyla kaydedildi",
   "msgNewPinValuesDo": "Yeni PIN değerleri eşleşmiyor",
   "msgCurrentPinIsIncorrect": "Mevcut PIN hatalı",
   "msgPINUpdatedSuccessfully": "PIN başarıyla güncellendi",
   "msgPINRemoved": "PIN kaldırıldı",
-  "msgBackgroundLockAndPrivacy": "Arka plan kilidi ve Ekran Koruması etkinleştirildi",
-  "securitySettings": "Güvenlik Ayarları",
-  "manageYourAppSecurity": "Uygulama güvenliğinizi yönetin",
-  "createPin": "PIN Oluştur",
-  "changePin": "PIN Değiştir",
-  "removePin": "PIN Kaldır",
+  "msgBackgroundLockAndPrivacy": "Arka plan kilidi ve ekran koruması etkinleştirildi",
+  "securitySettings": "Güvenlik ayarları",
+  "manageYourAppSecurity": "Uygulama güvenliğini yönet",
+  "createPin": "PIN oluştur",
+  "changePin": "PIN değiştir",
+  "removePin": "PIN kaldır",
   "msgBiometricAuthenticationCannotBe": "Biyometrik kimlik doğrulama bu cihazda kullanılamaz.",
-  "msgCreateAPinFirst2": "Biyometrik girişi etkinleştirmek için önce bir PIN oluşturun.",
+  "msgCreateAPinFirst2": "Biyometrik girişi açmak için önce bir PIN oluştur.",
   "unifiedFeaturesDemo": "Birleşik Özellikler Demosu",
   "tarihSec": "Tarih Seç",
   "dialog": "Dialog",
@@ -140,42 +140,42 @@
   "basarili": "Başarılı",
   "yuklemeButonu": "Yükleme Butonu",
   "onayDialog": "Onay Dialog",
-  "logoutLabel": "Çıkış Yap",
-  "welcomeTitle": "Hoş Geldiniz",
-  "enterPinPrompt": "Devam etmek için PIN girin",
-  "lockedOutPromptPrefix": "Çok fazla başarısız deneme. Lütfen",
-  "lockedOutPromptSuffix": "saniye bekleyin.",
-  "invalidPinFallback": "Hatalı PIN, tekrar deneyin.",
-  "biometricReason": "Devam etmek için kimliğinizi doğrulayın",
-  "settingsTitle": "Güvenlik Ayarları",
-  "createPinTitle": "PIN Oluştur",
-  "changePinTitle": "PIN Değiştir",
-  "deletePinTitle": "PIN Kaldır",
-  "verifyPinTitle": "PIN Doğrula",
+  "logoutLabel": "Çıkış yap",
+  "welcomeTitle": "Hoş geldin",
+  "enterPinPrompt": "Devam etmek için PIN'ini gir",
+  "lockedOutPromptPrefix": "Çok fazla hatalı deneme.",
+  "lockedOutPromptSuffix": "saniye bekle.",
+  "invalidPinFallback": "Hatalı PIN, tekrar dene.",
+  "biometricReason": "Devam etmek için kimliğini doğrula",
+  "settingsTitle": "Güvenlik ayarları",
+  "createPinTitle": "PIN oluştur",
+  "changePinTitle": "PIN değiştir",
+  "deletePinTitle": "PIN kaldır",
+  "verifyPinTitle": "PIN doğrula",
   "deletePinConfirmMessage": "PIN kaldırma biyometrik girişi de devre dışı bırakır. Devam edilsin mi?",
   "saveLabel": "Kaydet",
   "changeLabel": "Değiştir",
   "removeLabel": "Kaldır",
   "cancelLabel": "İptal",
   "pinMismatchMessage": "PIN'ler eşleşmiyor",
-  "pinValidationMessage": "6 haneli bir PIN girin",
+  "pinValidationMessage": "6 haneli bir PIN gir",
   "pinFieldLabel": "PIN (6 hane)",
   "confirmPinFieldLabel": "PIN'i doğrula",
   "currentPinFieldLabel": "Mevcut PIN",
   "newPinFieldLabel": "Yeni PIN",
   "confirmNewPinFieldLabel": "Yeni PIN'i doğrula",
   "verifyLabel": "Doğrula",
-  "pinLockTitle": "PIN Kilidi",
+  "pinLockTitle": "PIN kilidi",
   "pinEnabledSubtitle": "PIN etkin",
   "pinNotSetSubtitle": "PIN ayarlanmamış",
-  "biometricLoginTitle": "Biyometrik Giriş",
+  "biometricLoginTitle": "Biyometrik giriş",
   "biometricNotAvailableSubtitle": "Biyometrik kimlik doğrulama bu cihazda kullanılamaz",
   "biometricEnabledSubtitle": "Biyometrik giriş etkin",
   "biometricDisabledSubtitle": "Biyometrik giriş devre dışı",
-  "biometricAuthTileTitle": "Biyometrik Kimlik Doğrulama",
-  "biometricAuthTileSubtitleOn": "Açık - Parmak izi veya yüz tanıma ile giriş yapın",
+  "biometricAuthTileTitle": "Biyometrik kimlik doğrulama",
+  "biometricAuthTileSubtitleOn": "Açık · Parmak izi ya da yüz tanımayla gir",
   "biometricAuthTileSubtitleOff": "Kapalı",
-  "privacyGuardTitle": "Gizlilik Koruması",
+  "privacyGuardTitle": "Gizlilik koruması",
   "stateOnLabel": "Açık",
   "stateOffLabel": "Kapalı",
   "stateUnsupportedLabel": "Desteklenmiyor",
@@ -185,14 +185,14 @@
   "unitMinutesLabel": "dakika",
   "privacyGuardEnabledSubtitle": "Ekran koruması etkin",
   "privacyGuardDisabledSubtitle": "Ekran koruması devre dışı",
-  "screenProtectionTileTitle": "Ekran Koruması",
-  "screenProtectionTileSubtitleOn": "Açık - Uygulama arka plandayken içeriği gizle",
+  "screenProtectionTileTitle": "Ekran koruması",
+  "screenProtectionTileSubtitleOn": "Açık · Uygulama arka plandayken içerik gizlenir",
   "screenProtectionTileSubtitleOff": "Kapalı",
-  "backgroundLockTitle": "Arka Plan Kilidi",
+  "backgroundLockTitle": "Arka plan kilidi",
   "backgroundLockSubtitlePrefix": "Şu süre sonunda kilitler: ",
   "backgroundLockSubtitleOff": "Kapalı",
   "backgroundLockTileTitle": "Uygulama arka planda kaldığında kimlik doğrulama gerektir",
-  "backgroundLockTileSubtitle": "Arka plan kilidini etkinleştirmek için bir PIN ayarlayın veya biyometrik girişi açın.",
+  "backgroundLockTileSubtitle": "Arka plan kilidi için bir PIN ayarla ya da biyometrik girişi aç.",
   "backgroundLockTileInfo": "Not: Uygulamaya dönerken kimlik doğrulama ekranı görünür.",
   "msgIncorrectPinRemainingTries": "Hatalı PIN. Kalan deneme: {newAttempts}",
   "@msgIncorrectPinRemainingTries": {
@@ -201,25 +201,25 @@
     }
   },
   "settings": "Ayarlar",
-  "appearance": "GÖRÜNÜM",
-  "security": "GÜVENLİK",
-  "dataBackupTransfer": "VERİ YEDEKLEME / AKTARIM",
-  "about": "HAKKINDA",
-  "googleDriveBackup": "Google Drive Yedekleme",
-  "googleDriveBackupDesc": "Verilerinizin güvenliği için kendi kişisel Google Drive hesabınıza yedekleme yapın.",
-  "connectGoogleDrive": "Google Drive'a Bağlan",
+  "appearance": "Görünüm",
+  "security": "Güvenlik",
+  "dataBackupTransfer": "Yedekleme ve aktarım",
+  "about": "Hakkında",
+  "googleDriveBackup": "Google Drive yedekleme",
+  "googleDriveBackupDesc": "Kayıtlarını kendi Google Drive hesabına yedekle.",
+  "connectGoogleDrive": "Google Drive'a bağlan",
   "account": "Hesap:",
-  "lastBackup": "Son Yedekleme:",
-  "disconnect": "Bağlantıyı Kes",
-  "deleteBackup": "Yedeği Sil",
-  "deleteBackupDesc": "Google Drive'daki yedek dosyası kalıcı olarak silinecek. Yerel veriniz etkilenmez.",
+  "lastBackup": "Son yedekleme:",
+  "disconnect": "Bağlantıyı kes",
+  "deleteBackup": "Yedeği sil",
+  "deleteBackupDesc": "Google Drive'daki yedek dosyası kalıcı olarak silinecek. Telefonundaki kayıtlar etkilenmez.",
   "backupDeleted": "Yedek silindi.",
   "deleteBackupFailed": "Yedek silinemedi.",
   "version": "Sürüm",
   "developer": "Geliştirici",
   "noBackupsYet": "Hiç yedekleme yapılmadı",
-  "restoreDataTitle": "Verileri Geri Yükle?",
-  "restoreDataDesc": "Buluttaki verileriniz cihazınızdaki mevcut verilerin üzerine yazılacaktır. Bu işlem geri alınamaz.",
+  "restoreDataTitle": "Verileri geri yükle?",
+  "restoreDataDesc": "Buluttaki kayıtlar telefonundaki kayıtların üzerine yazılacak. Bu işlem geri alınamaz.",
   "googleDriveConnected": "Google Drive başarıyla bağlandı.",
   "googleDriveConnectionFailed": "Google Drive bağlantısı başarısız oldu.",
   "googleDriveDisconnected": "Google Drive bağlantısı kesildi.",
@@ -228,12 +228,12 @@
   "dataRestoredSuccess": "Veriler başarıyla geri yüklendi.",
   "restoreFailedNoBackup": "Geri yükleme başarısız oldu. Yedek dosyası bulunamadı.",
   "defaultUser": "Kullanıcı",
-  "dataExportImport": "Cihaz Yedeği / CSV",
-  "dataExportImportDesc": "Tam uygulama yedeği kaydedip geri yükleyin veya mevcut cüzdan işlemleri için CSV kullanın.",
+  "dataExportImport": "Cihaz yedeği / CSV",
+  "dataExportImportDesc": "Tam yedeği kaydet ya da geri yükle; tek cüzdanın işlemleri için CSV kullan.",
   "fullBackup": "Tam yedek",
-  "saveFullBackupToDevice": "Tam Yedeği Cihaza Kaydet",
-  "restoreFullBackupFromDevice": "Tam Yedeği Cihazdan Geri Yükle",
-  "shareFullBackup": "Tam Yedeği Paylaş",
+  "saveFullBackupToDevice": "Tam yedeği cihaza kaydet",
+  "restoreFullBackupFromDevice": "Tam yedeği cihazdan geri yükle",
+  "shareFullBackup": "Tam yedeği paylaş",
   "transactionCsv": "İşlem CSV",
   "restoreFullBackupTitle": "Tam yedek geri yüklensin mi?",
   "restoreFullBackupDesc": "Bu işlem bu cihazdaki cüzdanları, işlemleri, birikimleri, borçları, alacakları, bütçeleri, tekrar eden işlem şablonlarını, kullanıcıları ve kategorileri değiştirir.",
@@ -244,12 +244,12 @@
   "fullBackupShareText": "ÇuHat tam yedeği",
   "activeWalletRequiredForExport": "Dışa aktarım için aktif bir cüzdan gereklidir.",
   "uygulamaBaslatilamadi": "Uygulama başlatılamadı",
-  "verilerinizSilinmediTekrarDeneyin": "Verileriniz silinmedi. Tekrar deneyin; sorun sürerse ",
+  "verilerinizSilinmediTekrarDeneyin": "Kayıtların silinmedi. Tekrar dene; sorun sürerse ",
   "ikonBulunamadi": "İkon bulunamadı",
-  "butcePlanlama": "Bütçe Planlama",
+  "butcePlanlama": "Bütçe",
   "henuzButceYok": "Henüz bütçe yok",
-  "kategorilerinizeAylikHarcamaLimiti": "Kategorilerinize aylık harcama limiti koyun,\nharcamalarınızı buradan takip edin.",
-  "bUAyToplamHarcama": "BU AY TOPLAM HARCAMA",
+  "kategorilerinizeAylikHarcamaLimiti": "Kategorilerine aylık harcama sınırı koy,\nharcamalarını buradan takip et.",
+  "bUAyToplamHarcama": "Bu ay toplam harcama",
   "toplamLimitAppformattersCurrency": "Toplam limit: {totalLimit}",
   "@toplamLimitAppformattersCurrency": {
     "placeholders": {
@@ -275,23 +275,23 @@
     }
   },
   "buKategorininButcesiVar": "Bu kategorinin bütçesi var; limit güncellenecek.",
-  "finansalTakip": "Finansal Takip",
-  "vADESIGecmis": "VADESİ GEÇMİŞ",
-  "oDENDI": "ÖDENDİ",
+  "finansalTakip": "Borç ve alacak",
+  "vADESIGecmis": "Vadesi geçmiş",
+  "oDENDI": "Ödendi",
   "vadeDateformatDdMmm": "Vade: {dueDate}",
   "@vadeDateformatDdMmm": {
     "placeholders": {
       "dueDate": {}
     }
   },
-  "msgOdemesiTamamlanipKapatilanBorclarinizin": "Ödemesi tamamlanıp kapatılan borçlarınızın geçmişi burada görüntülenecektir.",
+  "msgOdemesiTamamlanipKapatilanBorclarinizin": "Ödemesi biten borçların burada görünür.",
   "paidDebtsLengthBorcKapandi": "{length} borç kapandı",
   "@paidDebtsLengthBorcKapandi": {
     "placeholders": {
       "length": {}
     }
   },
-  "msgOdendiOlarakIsaretlenenAlacaklarinizin": "Ödendi olarak işaretlenen alacaklarınızın geçmişi burada görüntülenecektir.",
+  "msgOdendiOlarakIsaretlenenAlacaklarinizin": "Geri aldığın alacaklar burada görünür.",
   "paidReceivablesLengthAlacakTahsil": "{length} alacak tahsil edildi",
   "@paidReceivablesLengthAlacakTahsil": {
     "placeholders": {
@@ -328,14 +328,14 @@
     }
   },
   "otomatikIslem": "Otomatik işlem",
-  "buIslemOtomatikOlusturuldu": "Bu işlem otomatik oluşturuldu. İlgili borç/yatırım/alacak kaydından düzenleyin veya silin.",
-  "nakitAkisi": "Nakit Akışı",
+  "buIslemOtomatikOlusturuldu": "Bu işlem otomatik oluşturuldu. İlgili borç, birikim ya da alacak kaydından düzenle ya da sil.",
+  "nakitAkisi": "Nakit akışı",
   "grafikIcinYeterliVeri": "Grafik için yeterli veri yok",
   "cizgiGrafikIcinEnAzIkiGun": "Çizgi grafik oluşturmak için en az iki farklı güne ait işlem olmalıdır",
-  "detayGosterilecekIslemYok": "Henüz İçgörü Yok",
+  "detayGosterilecekIslemYok": "Henüz içgörü yok",
   "gelirVeyaGiderKaydettikten": "Gelir veya gider kaydettikten sonra analiz detayları burada listelenecektir.",
-  "henuzIslemYok": "Henüz işlem yok",
-  "buDonemIcinKayit": "Bu dönem için kayıt bulunmuyor.\nYeni bir işlem eklemek için sürgü butonunu kullanın.",
+  "henuzIslemYok": "Henüz kayıt yok",
+  "buDonemIcinKayit": "İlk gelirini ya da giderini yaz.",
   "kategoriDagilimi": "Kategori dağılımı",
   "titleIcinVeriYok": "{title} için veri yok",
   "@titleIcinVeriYok": {
@@ -351,17 +351,17 @@
       "toStringAsFixed": {}
     }
   },
-  "buDonemIcinHenuz": "Bu dönem için henüz işlem verisi bulunamadı. Raporlar veri girildikten sonra derlenecektir.",
-  "ikonSecin": "İkon Seçin",
+  "buDonemIcinHenuz": "Bu dönemde kayıt yok. Kayıt girdikçe rapor burada oluşur.",
+  "ikonSecin": "İkon seç",
   "ikonDegistirmekIcinDokun": "İkon değiştirmek için dokun",
-  "asagidakiButondanEkleyebilirsiniz": "Aşağıdaki butondan ekleyebilirsiniz",
+  "asagidakiButondanEkleyebilirsiniz": "Aşağıdaki düğmeden ekleyebilirsin",
   "filtreler": "Filtreler",
   "uygula": "Uygula",
-  "tARIHAraligi": "TARİH ARALIĞI",
-  "seciliAralik": "Seçili Aralık",
-  "kATEGORIFiltresi": "KATEGORİ FİLTRESİ",
+  "tARIHAraligi": "Tarih aralığı",
+  "seciliAralik": "Seçili aralık",
+  "kATEGORIFiltresi": "Kategori filtresi",
   "kategoriBulunamadi": "Kategori bulunamadı",
-  "fIYATAraligi": "FİYAT ARALIĞI",
+  "fIYATAraligi": "Fiyat aralığı",
   "yeni": "Yeni",
   "appFormattersDateshortFormatStartdate": "{startDate} - {endDate}",
   "@appFormattersDateshortFormatStartdate": {
@@ -370,7 +370,7 @@
       "endDate": {}
     }
   },
-  "filterSelectedcategoriesLengthKategori": "{length} Kategori",
+  "filterSelectedcategoriesLengthKategori": "{length} kategori",
   "@filterSelectedcategoriesLengthKategori": {
     "placeholders": {
       "length": {}
@@ -388,7 +388,7 @@
   "takvimAy": "Ay",
   "takvimHafta": "Hafta",
   "buGuneAitIslemYok": "Bu güne ait işlem yok",
-  "dataFilterSelectedcategoriesLengthKategori": "{length} Kategori",
+  "dataFilterSelectedcategoriesLengthKategori": "{length} kategori",
   "@dataFilterSelectedcategoriesLengthKategori": {
     "placeholders": {
       "length": {}
@@ -401,29 +401,29 @@
       "countLabel": {}
     }
   },
-  "portfoyDetayi": "Portföy Detayı",
-  "henuzYatirimKaydiYok": "Henüz Yatırım Kaydı Yok",
-  "yatirimlariniziEklediktenSonraDetayli": "Yatırımlarınızı ekledikten sonra detaylı analizler burada görünecektir.",
+  "portfoyDetayi": "Birikim ayrıntısı",
+  "henuzYatirimKaydiYok": "Henüz birikim kaydı yok",
+  "yatirimlariniziEklediktenSonraDetayli": "Birikimlerini ekledikçe ayrıntılı analiz burada görünür.",
   "guncelDegerFormatmoneyInvestment": "Güncel değer ({currentValue}) cüzdana gelir olarak işlenir ve kayıt kapatılır.",
   "@guncelDegerFormatmoneyInvestment": {
     "placeholders": {
       "currentValue": {}
     }
   },
-  "hataliGirislerIcinAlim": "Hatalı girişler için: alım gideri ({amount}) düzeltme kaydıyla iade edilir, bakiye yatırım öncesine döner.\n\nGerçekten sattıysanız bunun yerine \"Sat\" kullanın.",
+  "hataliGirislerIcinAlim": "Hatalı girişler için: alım gideri ({amount}) düzeltme kaydıyla iade edilir, bakiye alım öncesine döner.\n\nGerçekten sattıysan bunun yerine \"Sat\"ı kullan.",
   "@hataliGirislerIcinAlim": {
     "placeholders": {
       "amount": {}
     }
   },
   "portfoyum": "Portföyüm",
-  "investmentsLengthYatirim": "{length} yatırım",
+  "investmentsLengthYatirim": "{length} varlık",
   "@investmentsLengthYatirim": {
     "placeholders": {
       "length": {}
     }
   },
-  "mevcutDeger": "Mevcut Değer",
+  "mevcutDeger": "Mevcut değer",
   "maliyetiDegistirirsenizFarkCuzdana": "Maliyeti değiştirirseniz fark, cüzdana düzeltme hareketi olarak işlenir.",
   "hesapla": "Hesapla",
   "birikmisFormatmoneyInvCurrentvalue": "Birikmiş: {currentValue} / ",
@@ -432,31 +432,31 @@
       "currentValue": {}
     }
   },
-  "guncelFiyatiGetir": "Güncel Fiyatı Getir",
+  "guncelFiyatiGetir": "Güncel fiyatı getir",
   "ekle": "Ekle",
-  "karZarar": "Kar/Zarar",
+  "karZarar": "Kâr/zarar",
   "hedefCurrencyformatFormatInvestment": "Hedef: {targetAmount}",
   "@hedefCurrencyformatFormatInvestment": {
     "placeholders": {
       "targetAmount": {}
     }
   },
-  "grafikIcinYatirimBulunmuyor": "Grafik için yatırım bulunmuyor",
-  "portfoyDagilimi": "Portföy Dağılımı",
-  "tOPLAMPortfoyDegeri": "TOPLAM PORTFÖY DEĞERİ",
-  "tOPLAMMaliyet": "TOPLAM MALİYET",
-  "kAZANCZarar": "KAZANÇ / ZARAR",
+  "grafikIcinYatirimBulunmuyor": "Grafik için varlık yok",
+  "portfoyDagilimi": "Birikim dağılımı",
+  "tOPLAMPortfoyDegeri": "Toplam birikim",
+  "tOPLAMMaliyet": "Toplam maliyet",
+  "kAZANCZarar": "Kazanç / zarar",
   "templateTitleDuzenliIslemi": "\"{title}\" düzenli işlemi silinsin mi?\n\nDeftere işlenmiş geçmiş işlemler silinmez.",
   "@templateTitleDuzenliIslemi": {
     "placeholders": {
       "title": {}
     }
   },
-  "duzenliIslemler": "Düzenli İşlemler",
+  "duzenliIslemler": "Düzenli işlemler",
   "henuzDuzenliIslemYok": "Henüz düzenli işlem yok",
-  "islemEklerkenTekrarSikligi": "+ ile doğrudan şablon oluşturun\nya da işlem eklerken tekrar sıklığı seçin.",
-  "bekleyenDuzenliIslemler": "Bekleyen Düzenli İşlemler",
-  "vadesiGelmisIslemlerinizVar": "Vadesi gelmiş işlemleriniz var. Onaylayarak deftere işlenmesini sağlayabilirsiniz.",
+  "islemEklerkenTekrarSikligi": "+ ile doğrudan şablon oluştur\nya da işlem eklerken tekrar sıklığı seç.",
+  "bekleyenDuzenliIslemler": "Bekleyen düzenli işlemler",
+  "vadesiGelmisIslemlerinizVar": "Zamanı gelmiş işlemlerin var. Onaylarsan deftere yazılır.",
   "titleTarihDatestrNtutarTx": "Tarih: {dateStr}\nTutar: {amount}",
   "@titleTarihDatestrNtutarTx": {
     "placeholders": {
@@ -465,18 +465,18 @@
     }
   },
   "ibo": "İbo",
-  "uygulamaKilidi": "Uygulama Kilidi",
-  "pINBiyometrikVeGizlilik": "PIN, Biyometrik ve Gizlilik Ayarları",
+  "uygulamaKilidi": "Uygulama kilidi",
+  "pINBiyometrikVeGizlilik": "PIN, biyometrik ve gizlilik ayarları",
   "otomatikHesaplananDegerler": "Otomatik hesaplanan değerler:",
-  "borcAlacakYatirimKayitlarindan": "Borç/alacak/yatırım kayıtlarından türetilir; buradan düzenlenemez.",
-  "renkSecin": "Renk Seçin:",
-  "ikonSecin2": "İkon Seçin:",
-  "ikonDegistir": "İkon Değiştir",
+  "borcAlacakYatirimKayitlarindan": "Borç, alacak ve birikim kayıtlarından türetilir; buradan düzenlenemez.",
+  "renkSecin": "Renk seç:",
+  "ikonSecin2": "İkon seç:",
+  "ikonDegistir": "İkon değiştir",
   "cuzdanlarim": "Cüzdanlarım",
-  "cuzdanlariniziYonetin": "Cüzdanlarınızı yönetin",
-  "yeniCuzdanOlustur": "Yeni Cüzdan Oluştur",
-  "finansalNyolculugunuzBasliyor": "Finansal\nYolculuğunuz Başlıyor",
-  "ilkCuzdaniOlustur": "İlk Cüzdanı Oluştur",
+  "cuzdanlariniziYonetin": "Cüzdanlarını yönet",
+  "yeniCuzdanOlustur": "Yeni cüzdan oluştur",
+  "finansalNyolculugunuzBasliyor": "Finansal\nyolculuğun başlıyor",
+  "ilkCuzdaniOlustur": "İlk cüzdanı oluştur",
   "olusturulmaAppformattersDateshortFormat": "Oluşturulma: {createdAt}",
   "@olusturulmaAppformattersDateshortFormat": {
     "placeholders": {
@@ -484,25 +484,25 @@
     }
   },
   "aktif": "Aktif",
-  "aktifOlanCuzdanSilinemez": "• Aktif olan cüzdan silinemez. Silmek için önce başka bir cüzdanı aktif yapmalısınız.",
-  "cuzdanlarinizaAitBorcAlacak": "• Cüzdanlarınıza ait Borç, Alacak ve Birikim tutarlarını düzenle sayfasından manuel olarak yönetebilirsiniz.",
+  "aktifOlanCuzdanSilinemez": "• Aktif cüzdan silinemez. Silmek için önce başka bir cüzdanı aktif yap.",
+  "cuzdanlarinizaAitBorcAlacak": "• Cüzdanlarının borç, alacak ve birikim tutarlarını düzenleme sayfasından elle yönetebilirsin.",
   "msgPINOrBiometricLogin": "PIN veya biyometrik giriş arka plan kilidi için gereklidir",
   "sharedFeatures": "Paylaşılan Özellikler",
-  "tarihAraligi": "Tarih Aralığı",
+  "tarihAraligi": "Tarih aralığı",
   "butonGalerisi": "Buton Galerisi",
   "taksit1": "1 taksit",
   "taksit2": "2 taksit",
   "tamaminiOde": "Tamamını öde",
-  "sliderSavings": "BİRİKİM",
-  "sliderTransactions": "İŞLEMLER",
-  "sliderDebt": "BORÇ",
-  "recurringTransactions": "Düzenli İşlemler",
-  "budgetPlanning": "Bütçe Planlama",
+  "sliderSavings": "Birikim",
+  "sliderTransactions": "İşlemler",
+  "sliderDebt": "Borç",
+  "recurringTransactions": "Düzenli işlemler",
+  "budgetPlanning": "Bütçe",
   "drawerBalance": "Bakiye",
-  "drawerInvestment": "Yatırım",
+  "drawerInvestment": "Birikim",
   "drawerDebt": "Borç",
-  "createWallet": "Cüzdan Oluştur",
-  "selectWallet": "Cüzdan Seçin",
+  "createWallet": "Cüzdan oluştur",
+  "selectWallet": "Cüzdan seç",
   "wallet": "Cüzdan",
   "menuGold": "Altın",
   "menuStock": "Hisse",
@@ -516,11 +516,11 @@
   "menuHistory": "Geçmiş",
   "themeSysLight": "Açık",
   "themeSysDark": "Koyu",
-  "cuzdanOlusturunuz": "Cüzdan oluşturunuz",
-  "cuzdanSeciniz": "Cüzdan seçiniz",
-  "yerelMod": "Yerel Mod",
-  "henuzCuzdanOlusturmadiniz": "Henüz cüzdan oluşturmadınız",
-  "cuzdanOlusturuldu": "Cüzdan oluşturuldu!",
+  "cuzdanOlusturunuz": "Bir cüzdan oluştur",
+  "cuzdanSeciniz": "Bir cüzdan seç",
+  "yerelMod": "Yerel mod",
+  "henuzCuzdanOlusturmadiniz": "Henüz cüzdanın yok",
+  "cuzdanOlusturuldu": "Cüzdan oluşturuldu",
   "cuzdanGuncellendi": "Cüzdan güncellendi!",
   "cuzdanSilindi": "Cüzdan silindi!",
   "cuzdanSecildi": "Cüzdan seçildi",
@@ -545,15 +545,15 @@
   "weekly": "Haftalık",
   "monthly": "Aylık",
   "yearly": "Yıllık",
-  "kategoriDuzenle": "Kategori Düzenle",
-  "yeniKategori": "Yeni Kategori",
+  "kategoriDuzenle": "Kategori düzenle",
+  "yeniKategori": "Yeni kategori",
   "kategoriAdiBosOlamaz": "Kategori adı boş olamaz",
   "enAz2KarakterOlmali": "En az 2 karakter olmalı",
   "kategoriOlusturuldu": "Kategori oluşturuldu!",
   "kategoriGuncellendi": "Kategori güncellendi!",
   "kategoriSilindi": "Kategori silindi!",
-  "kategoriSilTitle": "Kategori Sil",
-  "kategoriSilConfirmMessage": "\"{id}\" kategorisini silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.",
+  "kategoriSilTitle": "Kategori sil",
+  "kategoriSilConfirmMessage": "\"{id}\" kategorisini silmek istediğine emin misin?\n\nBu işlem geri alınamaz.",
   "@kategoriSilConfirmMessage": {
     "placeholders": {
       "id": {}
@@ -565,8 +565,8 @@
       "error": {}
     }
   },
-  "giderKategorileri": "Gider Kategorileri",
-  "gelirKategorileri": "Gelir Kategorileri",
+  "giderKategorileri": "Gider kategorileri",
+  "gelirKategorileri": "Gelir kategorileri",
   "categoryErrorDuplicateName": "Bu isimde bir kategori zaten var",
   "categoryErrorParentNotFound": "Üst kategori bulunamadı",
   "categoryErrorParentIsNotRoot": "Alt kategorinin altına kategori eklenemez",
@@ -594,7 +594,7 @@
       "count": {}
     }
   },
-  "kategoriSilHedefYok": "Taşınacak başka kategori yok. Önce yeni bir kategori oluşturun.",
+  "kategoriSilHedefYok": "Taşınacak başka kategori yok. Önce yeni bir kategori oluştur.",
   "dogrudanKategoriSec": "Doğrudan \"{name}\"",
   "@dogrudanKategoriSec": {
     "placeholders": {
@@ -633,8 +633,8 @@
   },
   "butceAltKategorideVar": "Alt kategorilerinde bütçe var",
   "duzenleSubtitle": "Tutar, tarih, kategori ve diğer detaylar",
-  "islemiSil": "İşlemi Sil",
-  "islemSilOnayMesaji": "{baslik} işlemini silmek istediğinizden emin misiniz? Cüzdan bakiyesine etkisi de geri alınır.",
+  "islemiSil": "İşlemi sil",
+  "islemSilOnayMesaji": "{baslik} işlemini silmek istediğine emin misin? Cüzdan bakiyesine etkisi de geri alınır.",
   "@islemSilOnayMesaji": {
     "placeholders": {
       "baslik": {
@@ -664,47 +664,47 @@
       "converted": {}
     }
   },
-  "gecerliYatirimMiktariGirin": "Geçerli bir yatırım miktarı girin",
-  "gecerliMevcutDegerGirin": "Geçerli bir mevcut değer girin",
-  "altinYatirimi": "Altın Yatırımı",
-  "altinTuruVeOtomatikFiyat": "Altın Türü & Otomatik Fiyat",
-  "yatirimDetaylari": "Yatırım Detayları",
+  "gecerliYatirimMiktariGirin": "Geçerli bir miktar gir",
+  "gecerliMevcutDegerGirin": "Geçerli bir mevcut değer gir",
+  "altinYatirimi": "Altın",
+  "altinTuruVeOtomatikFiyat": "Altın türü ve güncel fiyat",
+  "yatirimDetaylari": "Ayrıntılar",
   "altinNotHint": "Not (İsteğe bağlı) · örn. Düğün Altınları",
-  "maliyetYatirilanAnaPara": "Maliyet (Yatırılan Ana Para)",
-  "hedefTutarIstegeBagli": "Hedef Tutar (İsteğe Bağlı)",
-  "hedefKategorisi": "Hedef Kategorisi",
-  "renkSecimi": "Renk Seçimi",
-  "altinYatiriminiDuzenle": "Altın Yatırımını Düzenle",
-  "yeniAltinEkle": "Yeni Altın Ekle",
+  "maliyetYatirilanAnaPara": "Maliyet (ödediğin tutar)",
+  "hedefTutarIstegeBagli": "Hedef tutar (isteğe bağlı)",
+  "hedefKategorisi": "Hedef kategorisi",
+  "renkSecimi": "Renk seçimi",
+  "altinYatiriminiDuzenle": "Altını düzenle",
+  "yeniAltinEkle": "Yeni altın ekle",
   "adet": "Adet",
-  "sembolGirin": "Sembol girin!",
-  "hisseYatirimi": "Hisse Yatırımı",
-  "hisseSenediBul": "Hisse Senedi Bul",
+  "sembolGirin": "Sembol gir",
+  "hisseYatirimi": "Hisse",
+  "hisseSenediBul": "Hisse senedi bul",
   "hisseNotHint": "Not (İsteğe bağlı) · örn. Uzun vade alım",
-  "hisseYatiriminiDuzenle": "Hisse Yatırımını Düzenle",
-  "yeniHisseEkle": "Yeni Hisse Ekle",
-  "gecerliHedefTutarGirin": "Geçerli bir hedef tutar girin",
-  "ozelYatirimi": "Özel Yatırım",
+  "hisseYatiriminiDuzenle": "Hisseyi düzenle",
+  "yeniHisseEkle": "Yeni hisse ekle",
+  "gecerliHedefTutarGirin": "Geçerli bir hedef tutar gir",
+  "ozelYatirimi": "Özel varlık",
   "customNotHint": "Not (İsteğe bağlı) · örn. Arsa, Kripto, Döviz",
-  "ozelYatiriminiDuzenle": "Özel Yatırımını Düzenle",
-  "yeniOzelYatirimEkle": "Yeni Özel Yatırım Ekle",
-  "varlikEkle": "Varlık Ekle",
-  "hedefeParaEkle": "Hedefe Para Ekle",
-  "paraEkle": "Para Ekle",
+  "ozelYatiriminiDuzenle": "Özel varlığı düzenle",
+  "yeniOzelYatirimEkle": "Yeni özel varlık",
+  "varlikEkle": "Varlık ekle",
+  "hedefeParaEkle": "Hedefe para ekle",
+  "paraEkle": "Para ekle",
   "yeniAlimMiktarVeOdenenTutar": "Yeni alım: miktar ve ödenen tutar",
   "maliyeteVeDegereEklenir": "Maliyete ve değere eklenir, cüzdandan düşer",
-  "fiyatiGuncelle": "Fiyatı Güncelle",
+  "fiyatiGuncelle": "Fiyatı güncelle",
   "canliFiyatGuncellemeAciklamasi": "Güncel değer = miktar × canlı fiyat; bakiyeyi etkilemez",
   "duzenleYatirimSubtitle": "İsim, maliyet, hedef ve diğer detaylar",
   "satSubtitle": "Güncel değer cüzdana gelir olarak işlenir",
   "kaydiSilSubtitle": "Hatalı giriş düzeltme; alım gideri iade edilir",
-  "varlikEkleTitle": "{name} · Varlık Ekle",
+  "varlikEkleTitle": "{name} · Varlık ekle",
   "@varlikEkleTitle": {
     "placeholders": {
       "name": {}
     }
   },
-  "paraEkleTitle": "{name} · Para Ekle",
+  "paraEkleTitle": "{name} · Para ekle",
   "@paraEkleTitle": {
     "placeholders": {
       "name": {}
@@ -714,26 +714,26 @@
   "alinanAdetHisseHint": "Alınan adet (lot)",
   "odenenTutarHint": "Ödenen tutar · hediye ise 0",
   "tutarHint": "Tutar",
-  "gecerliMiktarGirin": "Geçerli bir miktar girin",
-  "gecerliOdenenTutarGirin": "Geçerli bir ödenen tutar girin",
-  "gecerliTutarGirin": "Geçerli bir tutar girin",
-  "baslikGirin": "Başlık girin",
-  "borcluKisiAdiGirin": "Borçlu kişi adını girin",
-  "kurumKisiGirin": "Kurum/kişi girin",
-  "aylikTaksitTutariniGirin": "Aylık taksit tutarını girin",
+  "gecerliMiktarGirin": "Geçerli bir miktar gir",
+  "gecerliOdenenTutarGirin": "Geçerli bir ödenen tutar gir",
+  "gecerliTutarGirin": "Geçerli bir tutar gir",
+  "baslikGirin": "Başlık gir",
+  "borcluKisiAdiGirin": "Borçlu kişinin adını gir",
+  "kurumKisiGirin": "Kurum ya da kişi gir",
+  "aylikTaksitTutariniGirin": "Aylık taksit tutarını gir",
   "aylikTaksitKrediTutarindanKucuk": "Aylık taksit × vade, kredi tutarından küçük olamaz",
   "krediHesaplamaInfoBaslik": "Banka kredisi hesaplaması",
-  "krediHesaplamaInfoGovde": "• Aylık taksiti biliyorum: Bankanın söylediği aylık taksiti yazın. Toplam geri ödeme = aylık taksit × vade. Kolaylık için alan, faizsiz bir başlangıç olarak kredi tutarı ÷ vade değerini önerir; kendi taksitinize göre değiştirin.\n\n• Faiz oranı ile: Bankanın aylık faiz oranını yazın. Taksit ve toplam, eşit taksitli kredi (amortisman) yöntemiyle hesaplanır.",
+  "krediHesaplamaInfoGovde": "• Aylık taksiti biliyorum: Bankanın söylediği aylık taksiti yaz. Toplam geri ödeme = aylık taksit × vade. Kolaylık için alan, faizsiz bir başlangıç olarak kredi tutarı ÷ vade değerini önerir; kendi taksitine göre değiştir.\n\n• Faiz oranı ile: Bankanın aylık faiz oranını yaz. Taksit ve toplam, eşit taksitli kredi (amortisman) yöntemiyle hesaplanır.",
   "borcTuruLabel": "Borç türü",
   "borcBaslikHint": "Başlık (isteğe bağlı)",
   "kurumKisiHint": "Kurum / Kişi · örn. Ziraat Bankası",
-  "kisiAdiHint": "Kişi Adı",
+  "kisiAdiHint": "Kişi adı",
   "vadeVeDetaylarLabel": "Vade & detaylar",
   "borcluKisiAdiHint": "Borçlu kişi adı",
-  "borcDuzenleTitle": "Borç Düzenle",
-  "alacakDuzenleTitle": "Alacak Düzenle",
-  "yeniBorcTitle": "Yeni Borç",
-  "yeniAlacakTitle": "Yeni Alacak",
+  "borcDuzenleTitle": "Borç düzenle",
+  "alacakDuzenleTitle": "Alacak düzenle",
+  "yeniBorcTitle": "Yeni borç",
+  "yeniAlacakTitle": "Yeni alacak",
   "krediTutariAnaPara": "Kredi tutarı (ana para)",
   "borcTutariAnaPara": "Borç tutarı (ana para)",
   "alacakTutari": "Alacak tutarı",
@@ -741,28 +741,28 @@
   "vadeFarkiLabel": "Vade farkı",
   "toplamFaizLabel": "Toplam faiz",
   "aylikTaksitLabel": "Aylık taksit (≈)",
-  "debtTypeBankLoan": "Banka Kredisi",
+  "debtTypeBankLoan": "Banka kredisi",
   "debtTypeInstallment": "Taksitli",
   "debtTypePersonal": "Kişisel",
   "debtTypeOther": "Diğer",
   "vadeAyHint": "Vade (ay)",
-  "aylikTaksitHint": "Aylık Taksit",
-  "vadeFarkiYuzdeHint": "Vade Farkı %",
-  "aylikFaizYuzdeHint": "Aylık Faiz %",
+  "aylikTaksitHint": "Aylık taksit",
+  "vadeFarkiYuzdeHint": "Vade farkı %",
+  "aylikFaizYuzdeHint": "Aylık faiz %",
   "gecikmeFaiziYuzdeHint": "Gecikme faizi (%)",
   "baslangicLabel": "Başlangıç",
   "vadeLabel": "Vade",
-  "toplamBorcLabel": "Toplam Borç:",
+  "toplamBorcLabel": "Toplam borç:",
   "odenenLabel": "Ödenen:",
   "kalanLabel": "Kalan:",
   "kalanTutardanFazlaOlamaz": "Kalan tutardan fazla olamaz",
-  "taksitPlaniFormat": "Taksit Planı ({months} ay)",
+  "taksitPlaniFormat": "Taksit planı ({months} ay)",
   "@taksitPlaniFormat": {
     "placeholders": {
       "months": {}
     }
   },
-  "odemeGecmisiFormat": "Ödeme Geçmişi ({count})",
+  "odemeGecmisiFormat": "Ödeme geçmişi ({count})",
   "@odemeGecmisiFormat": {
     "placeholders": {
       "count": {}
@@ -770,48 +770,48 @@
   },
   "gecikmis": "Gecikmiş",
   "bekleniyor": "Bekleniyor",
-  "cuzdanDuzenleTitle": "Cüzdanı Düzenle",
-  "yeniCuzdanEkleTitle": "Yeni Cüzdan Ekle",
+  "cuzdanDuzenleTitle": "Cüzdanı düzenle",
+  "yeniCuzdanEkleTitle": "Yeni cüzdan ekle",
   "cuzdanAdiBosOlamaz": "Cüzdan adı boş olamaz",
   "cuzdanAdiEnAz2Karakter": "Cüzdan adı en az 2 karakter olmalı",
   "bakiyeLabel": "Bakiye *",
-  "baslangicBakiyesiLabel": "Başlangıç Bakiyesi *",
+  "baslangicBakiyesiLabel": "Başlangıç bakiyesi *",
   "bakiyeBosOlamaz": "Bakiye boş olamaz",
-  "gecerliBirSayiGirin": "Geçerli bir sayı girin",
+  "gecerliBirSayiGirin": "Geçerli bir sayı gir",
   "tutarCokBuyuk": "Tutar çok büyük",
   "borcLabel": "Borç",
   "alacakLabel": "Alacak",
   "birikimLabel": "Birikim",
   "olustur": "Oluştur",
-  "ozelRenkSecin": "Özel Renk Seçin",
-  "cuzdanYonetimiTitle": "Cüzdan Yönetimi",
-  "infoTransferDesc": "Cüzdanlarınız arasında para transferi yapabilirsiniz. Transfer edilen tutar kur farklılıkları gözetilerek kaynak cüzdandan düşülür ve hedefe eklenir.",
-  "infoBankImportDesc": "Bankanızın mobil uygulamasından kopyaladığınız hesap hareketlerini hızlıca içe aktararak işlemlerinizi kolaylaştırabilirsiniz.",
+  "ozelRenkSecin": "Özel renk seç",
+  "cuzdanYonetimiTitle": "Cüzdan yönetimi",
+  "infoTransferDesc": "Cüzdanların arasında para taşıyabilirsin. Tutar, kur farkı gözetilerek kaynak cüzdandan düşülür ve hedefe eklenir.",
+  "infoBankImportDesc": "Bankanın uygulamasından aldığın hesap hareketlerini içe aktararak kayıtlarını hızlıca doldurabilirsin.",
   "categoryFinans": "Finans",
   "categoryGrafikler": "Grafikler",
-  "categoryIsVeOfis": "İş & Ofis",
+  "categoryIsVeOfis": "İş ve ofis",
   "categoryAlisveris": "Alışveriş",
-  "categoryYemekVeIcecek": "Yemek & İçecek",
+  "categoryYemekVeIcecek": "Yemek ve içecek",
   "categoryUlasim": "Ulaşım",
-  "categoryEvVeYasam": "Ev & Yaşam",
+  "categoryEvVeYasam": "Ev ve yaşam",
   "categoryEglence": "Eğlence",
-  "categorySaglikVeSpor": "Sağlık & Spor",
+  "categorySaglikVeSpor": "Sağlık ve spor",
   "categoryEgitim": "Eğitim",
-  "categoryKisiselBakim": "Kişisel Bakım",
+  "categoryKisiselBakim": "Kişisel bakım",
   "categoryHayvanlar": "Hayvanlar",
   "categorySeyahat": "Seyahat",
   "categoryTeknoloji": "Teknoloji",
   "categoryIletisim": "İletişim",
-  "categoryHediyeVeBagis": "Hediye & Bağış",
+  "categoryHediyeVeBagis": "Hediye ve bağış",
   "categoryHizmetler": "Hizmetler",
   "categoryDiger": "Diğer",
   "systemTagDebt": "Borç",
-  "systemTagDebtPayment": "Borç Ödemesi",
+  "systemTagDebtPayment": "Borç ödemesi",
   "systemTagReceivable": "Alacak",
-  "systemTagReceivableCollection": "Alacak Tahsilatı",
-  "systemTagInvestmentBuy": "Yatırım Alımı",
-  "systemTagInvestmentSell": "Yatırım Satışı",
-  "systemTagInvestmentCorrection": "Yatırım Düzeltmesi",
+  "systemTagReceivableCollection": "Alacak tahsilatı",
+  "systemTagInvestmentBuy": "Birikim alımı",
+  "systemTagInvestmentSell": "Birikim satışı",
+  "systemTagInvestmentCorrection": "Birikim düzeltmesi",
   "systemTagTransfer": "Transfer",
   "kategorisiz": "Kategorisiz",
   "detailLabelTarih": "Tarih",
@@ -820,9 +820,9 @@
   "detailLabelGelir": "Gelir",
   "detailLabelGider": "Gider",
   "detailLabelIslemSonrasiBakiye": "İşlem sonrası bakiye",
-  "akilliIcgoruler": "Akıllı İçgörüler",
+  "akilliIcgoruler": "Akıllı içgörüler",
   "gunlukOrtalamaHarcama": "Günlük ortalama harcama",
-  "enCokHarcananGun": "En çok harcadığınız gün",
+  "enCokHarcananGun": "En çok harcadığın gün",
   "enCokHarcananKategori": "En çok harcanan kategori",
   "enBuyukHarcama": "En büyük harcama",
   "birikimOrani": "Birikim oranı",
@@ -844,7 +844,7 @@
       }
     }
   },
-  "duzenliOdemeOlarakEkle": "Düzenli Ödeme olarak ekle",
+  "duzenliOdemeOlarakEkle": "Düzenli ödeme olarak ekle",
   "duzenliOdemeEklendi": "'{title}' düzenli ödemelere eklendi",
   "@duzenliOdemeEklendi": {
     "placeholders": {
@@ -870,9 +870,9 @@
   "devamEt": "Devam et",
   "bugun": "Bugün",
   "islemBuguneAyarliIpucu": "Tarih bugüne ayarlı — başka bir güne eklemek için tarihe dokun.",
-  "mevcutDegerAciklama": "Yatırımın bugünkü piyasa değeri; 'Hesapla' ile güncel fiyattan güncellenir.",
-  "toplamMaliyetAciklama": "Bu yatırıma ödediğin toplam tutar (maliyetin). 'Hesapla' bunu değiştirmez; kâr/zarar bununla hesaplanır.",
-  "paraBirimiLabel": "Para Birimi",
+  "mevcutDegerAciklama": "Varlığın bugünkü piyasa değeri; 'Hesapla' ile güncel fiyattan güncellenir.",
+  "toplamMaliyetAciklama": "Bu varlığa ödediğin toplam tutar. 'Hesapla' bunu değiştirmez; kâr/zarar bununla hesaplanır.",
+  "paraBirimiLabel": "Para birimi",
   "paraBirimiKilitliHint": "İşlem geçmişi olan cüzdanın para birimi değiştirilemez",
   "yaklasikKarsilikFormat": "≈ {tutar}",
   "@yaklasikKarsilikFormat": {
@@ -890,8 +890,8 @@
       }
     }
   },
-  "cuzdanlarArasiTransfer": "Cüzdanlar Arası Transfer",
-  "transferEt": "Transfer Et",
+  "cuzdanlarArasiTransfer": "Cüzdanlar arası transfer",
+  "transferEt": "Transfer et",
   "transferHedefCuzdan": "Hedef cüzdan",
   "transferOnizlemeFormat": "Hedefe ≈ {tutar} geçecek",
   "@transferOnizlemeFormat": {
@@ -902,10 +902,10 @@
     }
   },
   "transferKurAliniyor": "Kur alınıyor…",
-  "transferKurYok": "Kur bilgisi alınamadı — internete bağlanınca tekrar deneyin",
+  "transferKurYok": "Kur bilgisi alınamadı — internete bağlanınca tekrar dene",
   "transferBasarili": "Transfer tamamlandı",
   "transferBasarisiz": "Transfer başarısız oldu",
-  "transferIadeBasarisiz": "Transfer tamamlanamadı ve iade de yazılamadı. Lütfen cüzdan defterinizi kontrol edin.",
+  "transferIadeBasarisiz": "Transfer tamamlanamadı ve iade de yazılamadı. Cüzdan defterini kontrol et.",
   "transferGeriAlindi": "Transfer geri alındı",
   "transferGeriAlinamadi": "Transfer geri alınamadı",
   "transferTarih": "Transfer tarihi",
@@ -918,35 +918,35 @@
       }
     }
   },
-  "yardimVeTurlar": "Yardım & Turlar",
-  "genelTanitimiTekrarGoster": "Gizlilik ve Bildirim Tanıtımını Tekrar Göster",
-  "uygulamaTuruTekrarGoster": "Uygulama Turunu Tekrar Göster",
-  "onboardingNavHintHeader": "Nasıl Gezinilir?",
-  "onboardingNavHintSwipeTitle": "Sağa / Sola Kaydırın",
-  "onboardingNavHintSwipeDesc": "Yatırım, İşlemler ve Borç ekranları arasında geçiş yapın.",
-  "onboardingNavHintDragTitle": "Yukarı Sürükleyin",
-  "onboardingNavHintDragDesc": "Detay, Rapor, Bekleyen ve Geçmiş gibi alt sayfalara ulaşın.",
-  "onboardingNavHintAddTitle": "Simgelere Dokunun",
-  "onboardingNavHintAddDesc": "Yeni gelir, gider, yatırım, borç veya alacak ekleyin.",
-  "notificationSettings": "Bildirim Ayarları",
-  "notificationSettingsDesc": "Kritik hatırlatmaları ve günlük bildirim sıklığınızı yönetin.",
-  "randomReminders": "Motive Edici Hatırlatıcılar",
+  "yardimVeTurlar": "Yardım",
+  "genelTanitimiTekrarGoster": "Gizlilik ve bildirim notunu göster",
+  "uygulamaTuruTekrarGoster": "Tanıtımları tekrar göster",
+  "onboardingNavHintHeader": "Nasıl gezinilir?",
+  "onboardingNavHintSwipeTitle": "Sağa ya da sola kaydır",
+  "onboardingNavHintSwipeDesc": "Bölümler arasında geç.",
+  "onboardingNavHintDragTitle": "Yukarı sürükle",
+  "onboardingNavHintDragDesc": "İçgörü, Rapor ve Geçmiş sayfalarına geç.",
+  "onboardingNavHintAddTitle": "Düğmeye dokun",
+  "onboardingNavHintAddDesc": "Yeni kayıt ekle: gelir, gider, birikim, borç ya da alacak.",
+  "notificationSettings": "Bildirimler",
+  "notificationSettingsDesc": "Hatırlatmaları ve günlük bildirim sıklığını yönet.",
+  "randomReminders": "Motive edici hatırlatıcılar",
   "randomRemindersOff": "Kapalı",
-  "randomRemindersLow": "Az (Günde 1)",
-  "randomRemindersMedium": "Orta (Günde 2)",
-  "randomRemindersHigh": "Çok (Günde 3)",
-  "criticalNotifications": "Kritik Bildirimler",
-  "debtReminders": "Borç/Alacak Hatırlatıcıları",
-  "recurringReminders": "Düzenli İşlem Hatırlatıcıları",
-  "budgetAlerts": "Bütçe Uyarıları",
+  "randomRemindersLow": "Az (günde 1)",
+  "randomRemindersMedium": "Orta (günde 2)",
+  "randomRemindersHigh": "Çok (günde 3)",
+  "criticalNotifications": "Kritik bildirimler",
+  "debtReminders": "Borç/alacak hatırlatıcıları",
+  "recurringReminders": "Düzenli işlem hatırlatıcıları",
+  "budgetAlerts": "Bütçe uyarıları",
   "notificationRationaleTitle": "Bildirimler",
-  "notificationRationaleBody": "ÇuHat; borç/alacak vade tarihleri yaklaştığında ve tekrarlayan işlemler onay beklediğinde size hatırlatma gönderebilir. Bunun için bildirim izni gerekir. İzin vermeseniz de uygulamayı kullanmaya devam edebilirsiniz; sadece hatırlatmalar gösterilmez.",
-  "notificationRationaleLater": "Şimdi Değil",
+  "notificationRationaleBody": "ÇuHat, borcunun ya da alacağının vadesi yaklaşınca ve düzenli işlemlerin onay beklerken sana hatırlatma gönderebilir. Bunun için bildirim izni gerekir. İzin vermesen de uygulamayı kullanabilirsin; yalnız hatırlatma gelmez.",
+  "notificationRationaleLater": "Şimdi değil",
   "notificationPermissionOffTitle": "Bildirim izni kapalı",
   "notificationPermissionOffDesc": "Aşağıdaki hatırlatmalar ancak sistem izni verildiğinde ulaşabilir.",
-  "notificationPermissionGrant": "İzin Ver",
-  "notificationPermissionOpenSettings": "İzin daha önce reddedildiği için sistem bir daha sormuyor. Bildirimleri sistem ayarlarından açabilirsiniz.",
-  "notificationPermissionOpenSettingsAction": "Ayarları Aç",
+  "notificationPermissionGrant": "İzin ver",
+  "notificationPermissionOpenSettings": "İzin daha önce reddedildiği için sistem bir daha sormuyor. Bildirimleri sistem ayarlarından açabilirsin.",
+  "notificationPermissionOpenSettingsAction": "Ayarları aç",
   "notificationSendTest": "Test bildirimi gönder",
   "notificationTestSent": "Test bildirimi gönderildi",
   "notificationTestFailedNoPermission": "Test bildirimi gönderilemedi: bildirim izni kapalı",
@@ -965,7 +965,7 @@
     }
   },
   "notificationDiagnosticsTitle": "Bildirim tanılama",
-  "notificationDiagnosticsSubtitle": "Bildirim gelmiyorsa sebebini burada görün",
+  "notificationDiagnosticsSubtitle": "Bildirim gelmiyorsa nedenini burada gör",
   "notificationDiagnosticsIntro": "Aşağıdaki satırlar bildirimlerin şu anki durumunu gösterir. Bir şey kapalıysa bildirimler o yüzden ulaşmıyor demektir.",
   "notificationDiagnosticsAppPermission": "Uygulama bildirim izni",
   "notificationDiagnosticsChannelsTitle": "Bildirim türleri",
@@ -997,50 +997,50 @@
     }
   },
   "notificationTestTitle": "ÇuHat test bildirimi",
-  "notificationTestBody": "Bildirimler çalışıyor. Hatırlatmalarınız bu şekilde görünecek.",
-  "notifChannelCriticalName": "Kritik Hatırlatmalar",
+  "notificationTestBody": "Bildirimler çalışıyor. Hatırlatmaların böyle görünecek.",
+  "notifChannelCriticalName": "Kritik hatırlatmalar",
   "notifChannelCriticalDesc": "Borç vadeleri ve bütçe aşımları",
-  "notifChannelRecurringName": "Düzenli İşlemler",
+  "notifChannelRecurringName": "Düzenli işlemler",
   "notifChannelRecurringDesc": "Onay bekleyen düzenli işlem hatırlatmaları",
-  "notifChannelMotivationalName": "Motive Edici Hatırlatıcılar",
+  "notifChannelMotivationalName": "Motive edici hatırlatıcılar",
   "notifChannelMotivationalDesc": "Harcama girmeyi hatırlatan günlük mesajlar",
-  "notifRecurringDueTitle": "Düzenli İşlem Vakti",
-  "notifRecurringDueBody": "{title} onayınızı bekliyor.",
+  "notifRecurringDueTitle": "Düzenli işlem vakti",
+  "notifRecurringDueBody": "{title} onayını bekliyor.",
   "@notifRecurringDueBody": {
     "placeholders": {
       "title": {}
     }
   },
-  "notifDebtUpcomingTitle": "Borç Hatırlatması",
-  "notifDebtUpcomingBody": "{title} borcunuzun sıradaki taksit ödeme tarihi yaklaştı.",
+  "notifDebtUpcomingTitle": "Borç hatırlatması",
+  "notifDebtUpcomingBody": "{title} borcunun sıradaki taksit günü yaklaştı.",
   "@notifDebtUpcomingBody": {
     "placeholders": {
       "title": {}
     }
   },
-  "notifDebtDueTitle": "Borç Son Ödeme Tarihi!",
-  "notifDebtDueBody": "{title} borcunuzun sıradaki taksit ödeme tarihi bugün.",
+  "notifDebtDueTitle": "Borcun son ödeme günü",
+  "notifDebtDueBody": "{title} borcunun sıradaki taksiti bugün.",
   "@notifDebtDueBody": {
     "placeholders": {
       "title": {}
     }
   },
-  "notifBudgetWarningTitle": "Bütçe Uyarısı",
-  "notifBudgetWarningBody": "{category} bütçenizin %80'ine ulaştınız.",
+  "notifBudgetWarningTitle": "Bütçe uyarısı",
+  "notifBudgetWarningBody": "{category} bütçenin %80'ine ulaştın.",
   "@notifBudgetWarningBody": {
     "placeholders": {
       "category": {}
     }
   },
-  "notifBudgetExceededTitle": "Bütçe Aşıldı!",
-  "notifBudgetExceededBody": "{category} bütçenizi aştınız.",
+  "notifBudgetExceededTitle": "Bütçe aşıldı",
+  "notifBudgetExceededBody": "{category} bütçeni aştın.",
   "@notifBudgetExceededBody": {
     "placeholders": {
       "category": {}
     }
   },
-  "notifBudgetFilledTitle": "Bütçe Doldu",
-  "notifBudgetFilledBody": "{category} bütçe limitinizin tamamına ulaştınız (%100).",
+  "notifBudgetFilledTitle": "Bütçe doldu",
+  "notifBudgetFilledBody": "{category} bütçenin tamamını kullandın (%100).",
   "@notifBudgetFilledBody": {
     "placeholders": {
       "category": {}
@@ -1067,7 +1067,7 @@
   },
   "sonra": "Sonra",
   "incele": "İncele",
-  "onayBekleyenler": "Onay Bekleyenler",
+  "onayBekleyenler": "Onay bekleyenler",
   "sablonlar": "Şablonlar",
   "yaklasanlar": "Yaklaşanlar",
   "duraklatilmislar": "Duraklatılmış",
@@ -1094,7 +1094,7 @@
       "count": {}
     }
   },
-  "tumunuOnayla": "Tümünü Onayla",
+  "tumunuOnayla": "Tümünü onayla",
   "tumunuOnaylaBaslik": "Birikmiş vadeleri onayla",
   "tumunuOnaylaAciklama": "\"{title}\" için birikmiş {count} vadenin tümü deftere işlenecek.",
   "@tumunuOnaylaAciklama": {
@@ -1113,13 +1113,13 @@
   "fisKaldir": "Kaldır",
   "fisGoruntule": "Fişi görüntüle",
   "fisOcrTaraniyor": "Fiş taranıyor…",
-  "fisOcrDolduruldu": "Bilgiler fişten dolduruldu — lütfen kontrol edin",
+  "fisOcrDolduruldu": "Bilgiler fişten dolduruldu — kontrol et",
   "fisCihazdaYok": "Görsel bu cihazda yok",
   "bankImportSettingsEntry": "Banka ekstresi içe aktar",
   "bankImportSettingsSubtitle": "CSV/Excel/PDF ekstresini işlemlere dönüştür",
-  "bankImportTitle": "Banka Ekstresi İçe Aktar",
+  "bankImportTitle": "Banka ekstresi içe aktar",
   "bankImportParsing": "Dosya taranıyor…",
-  "bankImportNoWallet": "Önce bir cüzdan oluşturun.",
+  "bankImportNoWallet": "Önce bir cüzdan oluştur.",
   "bankImportSetupHint": "Bankandan dışa aktardığın hesap hareketleri dosyasını (CSV, Excel ya da PDF) seç; biçimi otomatik algılarız. Hareketler tarih/tutar/kategori otomatik algılanmış olarak önce incelemene sunulur — bu algılama hatalı olabilir, onaylamadan önce mutlaka kontrol et.",
   "bankImportTargetWallet": "Hedef cüzdan",
   "bankImportPickFile": "Dosya seç ve tara",
@@ -1194,7 +1194,7 @@
   "bankImportPdfRawHint": "Metni çıkardık ama hareket satırlarını tanıyamadık. Aşağıdaki metni kopyalayıp paylaş; ayrıştırıcı bankanın düzenine göre ayarlanacak.",
   "bankImportScannedPdfTitle": "Bu PDF taranmış bir görüntü",
   "bankImportScannedPdfHint": "Dosyanın içinde metin yok, yalnızca fotoğraf/tarama var. Görüntüden okumayı denedik ama hareket satırı çıkaramadık. Bankanın internet şubesinden ekstreyi Excel (.xls/.xlsx) ya da CSV olarak indirirsen çok daha isabetli sonuç alırsın.",
-  "bankImportOcrWarning": "Bu hareketler bir GÖRÜNTÜDEN okundu. Görüntü tanımada rakamlar sık karışır (virgül/nokta, 1/7, 0/O) ve doğrulayacak bakiye sütunu genelde yoktur — eklemeden önce her tutarı tek tek kontrol et.",
+  "bankImportOcrWarning": "Bu hareketler bir görüntüden okundu. Görüntü tanımada rakamlar sık karışır (virgül/nokta, 1/7, 0/O) ve doğrulayacak bakiye sütunu genelde yoktur — eklemeden önce her tutarı tek tek kontrol et.",
   "bankImportPickAnother": "Başka dosya seç",
   "bankImportSharedSetupHint": "Paylaştığın ekstre alındı. Hedef cüzdanı seçip taramayı başlat — hiçbir hareket eklenmeden önce hepsini incelemene sunacağız.",
   "bankImportSharedFileTitle": "Paylaşılan dosya",
@@ -1301,7 +1301,7 @@
   "bankImportDoneBalanceLabel": "Güncel cüzdan bakiyesi",
   "bankImportDoneBalanceHint": "Bu bakiye, içe aktarılan hareketler dahil hesaplandı. Banka hesabındaki güncel bakiyeyle karşılaştır; farklıysa aşağıdan eşitleyebilirsin.",
   "bankImportSyncButton": "Bakiyeyi eşitle",
-  "bankImportSyncDialogTitle": "Bakiyeyi Eşitle",
+  "bankImportSyncDialogTitle": "Bakiyeyi eşitle",
   "bankImportSyncDialogHint": "Bankandaki gerçek güncel bakiyeni gir; cüzdanın buna göre ayarlanır. Geçmiş hareketlerin değişmez, yalnızca başlangıç bakiyesi düzeltilir.",
   "bankImportSyncDialogLabel": "Gerçek bakiye",
   "bankImportCategorySuggestionTitle": "Yeni kategori önerileri",
@@ -1331,7 +1331,7 @@
   "bankImportAssignTypeMismatch": "Seçilen kategori bu satırların türüne uymuyor; hiçbir satır değişmedi.",
   "bankImportGroupSimilar": "Benzerleri grupla",
   "bankImportGroupSimilarTitle": "Benzer hareketler",
-  "bankImportGroupSimilarHint": "Açıklaması birbirine benzeyen satırlar tek grupta toplandı. Bir gruba kategori seçmek gruptaki TÜM satırlara uygulanır.",
+  "bankImportGroupSimilarHint": "Açıklaması birbirine benzeyen satırlar tek grupta toplandı. Bir gruba kategori seçmek gruptaki bütün satırlara uygulanır.",
   "bankImportGroupScopeUncategorized": "Yalnız kategorisiz",
   "bankImportGroupScopeAll": "Tümü",
   "bankImportGroupRows": "{count} satır",
@@ -1432,7 +1432,7 @@
   "bankImportDupWithinFile": "Bu dosyada ikinci kez geçiyor",
   "bankImportDupApproxStrong": "Büyük olasılıkla elle girdiğin kayıt",
   "bankImportDupApproxPossible": "Elle girdiğin bir kayda benziyor",
-  "bankImportDupSystem": "Borç/yatırım kaydınla eşleşiyor",
+  "bankImportDupSystem": "Borç ya da birikim kaydınla eşleşiyor",
   "bankImportDupReasonSameAmount": "tutar aynı",
   "bankImportDupReasonCents": "{delta} fark · kuruşsuz yazılmış",
   "@bankImportDupReasonCents": {
@@ -1530,16 +1530,16 @@
       }
     }
   },
-  "bankStatementSectionHeader": "BANKA EKSTRESİ",
+  "bankStatementSectionHeader": "Banka ekstresi",
   "sifirla": "Sıfırla",
   "deleteAllDataTitle": "Tüm veriyi sil",
-  "deleteAllDataMessage": "Tüm cüzdanlar, işlemler, yatırımlar, borçlar, alacaklar, bütçeler ve tekrarlayan şablonlar cihazdan kalıcı olarak silinecek. Bu işlem geri alınamaz. Drive yedeğiniz (varsa) etkilenmez.",
-  "irreversibleActionTitle": "Bu İşlem Geri Alınamaz",
-  "deleteAllDataDangerMessage": "Onayladığınızda tüm yerel veriler kalıcı olarak silinir ve kurtarılamaz.",
+  "deleteAllDataMessage": "Tüm cüzdanlar, işlemler, birikimler, borçlar, alacaklar, bütçeler ve düzenli işlem şablonları telefondan kalıcı olarak silinecek. Bu işlem geri alınamaz. Drive yedeğin (varsa) etkilenmez.",
+  "irreversibleActionTitle": "Bu işlem geri alınamaz",
+  "deleteAllDataDangerMessage": "Onaylarsan telefondaki bütün kayıtlar kalıcı olarak silinir ve kurtarılamaz.",
   "dataDeletedSuccess": "Tüm yerel veri silindi.",
-  "dataDeleteError": "Veri silinemedi. Lütfen tekrar deneyin.",
-  "deleteWalletTitle": "Cüzdan Sil",
-  "deleteWalletConfirmMessage": "{ad} cüzdanını silmek istediğinizden emin misiniz?",
+  "dataDeleteError": "Kayıtlar silinemedi. Tekrar dene.",
+  "deleteWalletTitle": "Cüzdan sil",
+  "deleteWalletConfirmMessage": "{ad} cüzdanını silmek istediğine emin misin?",
   "@deleteWalletConfirmMessage": {
     "placeholders": {
       "ad": {
@@ -1555,8 +1555,8 @@
       }
     }
   },
-  "transferOnayBasligi": "Transferi Onayla",
-  "transferOnayMesaji": "{tutar} tutarını {kaynak} cüzdanından {hedef} cüzdanına transfer etmek istediğinizden emin misiniz?",
+  "transferOnayBasligi": "Transferi onayla",
+  "transferOnayMesaji": "{tutar} tutarını {kaynak} cüzdanından {hedef} cüzdanına taşımak istediğine emin misin?",
   "@transferOnayMesaji": {
     "placeholders": {
       "tutar": {
@@ -1570,8 +1570,8 @@
       }
     }
   },
-  "budgetDeleteConfirmTitle": "Bütçeyi Sil",
-  "budgetDeleteConfirmMessage": "{kategori} bütçesini silmek istediğinizden emin misiniz?",
+  "budgetDeleteConfirmTitle": "Bütçeyi sil",
+  "budgetDeleteConfirmMessage": "{kategori} bütçesini silmek istediğine emin misin?",
   "@budgetDeleteConfirmMessage": {
     "placeholders": {
       "kategori": {
@@ -1579,8 +1579,8 @@
       }
     }
   },
-  "borcSilBaslik": "Borcu Sil",
-  "borcSilOnayMesaji": "{baslik} borcunu silmek istediğinizden emin misiniz? Bu borcun cüzdan bakiyesine etkisi de geri alınır.",
+  "borcSilBaslik": "Borcu sil",
+  "borcSilOnayMesaji": "{baslik} borcunu silmek istediğine emin misin? Bu borcun cüzdan bakiyesine etkisi de geri alınır.",
   "@borcSilOnayMesaji": {
     "placeholders": {
       "baslik": {
@@ -1588,8 +1588,8 @@
       }
     }
   },
-  "alacakSilBaslik": "Alacağı Sil",
-  "alacakSilOnayMesaji": "{isim} alacağını silmek istediğinizden emin misiniz? Bu alacağın cüzdan bakiyesine etkisi de geri alınır.",
+  "alacakSilBaslik": "Alacağı sil",
+  "alacakSilOnayMesaji": "{isim} alacağını silmek istediğine emin misin? Bu alacağın cüzdan bakiyesine etkisi de geri alınır.",
   "@alacakSilOnayMesaji": {
     "placeholders": {
       "isim": {
@@ -1614,7 +1614,7 @@
       }
     }
   },
-  "insightDailyLimitTitle": "Günlük Harcama Limiti (Hedef)",
+  "insightDailyLimitTitle": "Günlük harcama limiti (hedef)",
   "insightDailyLimitDesc": "Kalan {gun} gün boyunca bütçenizi korumak için tavsiye edilen günlük limit.",
   "@insightDailyLimitDesc": {
     "placeholders": {
@@ -1623,8 +1623,8 @@
       }
     }
   },
-  "insightSpikeTitle": "Harcama Sıçraması Uyarısı",
-  "insightSpikeDesc": "Önceki {gun} günde {tutar} harcamıştınız.",
+  "insightSpikeTitle": "Harcama sıçraması uyarısı",
+  "insightSpikeDesc": "Önceki {gun} günde {tutar} harcamıştın.",
   "@insightSpikeDesc": {
     "placeholders": {
       "gun": {
@@ -1635,19 +1635,19 @@
       }
     }
   },
-  "drawerSectionFinancial": "FİNANSAL YÖNETİM",
-  "drawerSectionSystem": "SİSTEM & UYGULAMA",
-  "drawerBudgetSubtitle": "Kategori bazlı bütçe takibi ve harcama limitleri",
-  "drawerRecurringSubtitle": "Otomatik gelir ve gider şablonları",
-  "drawerBankImportSubtitle": "PDF/Excel hesap ekstresi içe aktarma",
-  "drawerBankImportTitle": "Banka Ekstresi",
+  "drawerSectionFinancial": "Para yönetimi",
+  "drawerSectionSystem": "Uygulama",
+  "drawerBudgetSubtitle": "Kategorilere aylık harcama sınırı koy",
+  "drawerRecurringSubtitle": "Kira, maaş gibi yinelenen gelir ve giderler",
+  "drawerBankImportSubtitle": "PDF ya da Excel hesap ekstresini içe aktar",
+  "drawerBankImportTitle": "Banka ekstresi",
   "drawerSettingsSubtitle": "Tema, para birimi ve genel tercihler",
-  "drawerSecurityTitle": "Güvenlik & Biyometrik",
-  "drawerSecuritySubtitle": "Uygulama kilidi ve PIN ayarları",
-  "drawerActiveWalletLabel": "AKTİF CÜZDAN",
+  "drawerSecurityTitle": "Güvenlik",
+  "drawerSecuritySubtitle": "Uygulama kilidi ve PIN",
+  "drawerActiveWalletLabel": "Aktif cüzdan",
   "reportExpensesTitle": "Giderler",
   "reportIncomesTitle": "Gelirler",
-  "reportNoDataTitle": "Rapor Oluşturmak İçin Veri Yok",
+  "reportNoDataTitle": "Rapor için kayıt yok",
   "reportNetLabel": "Net",
   "reportNoPreviousPeriod": "Önceki dönem yok",
   "reportCompareOverspend": "Gelirin %{oran} üzerinde",
@@ -1658,11 +1658,11 @@
       }
     }
   },
-  "debtHistoryEmptyTitle": "Henüz Kapanan Borç Yok",
-  "receivableHistoryEmptyTitle": "Henüz Tahsil Edilen Alacak Yok",
+  "debtHistoryEmptyTitle": "Henüz kapanan borç yok",
+  "receivableHistoryEmptyTitle": "Henüz geri alınan alacak yok",
   "badgeOdendi": "Ödendi",
-  "badgeTahsilEdildi": "Tahsil Edildi",
-  "reportSavingsSubtitle": "%{oran} Birikim",
+  "badgeTahsilEdildi": "Tahsil edildi",
+  "reportSavingsSubtitle": "%{oran} birikim",
   "@reportSavingsSubtitle": {
     "placeholders": {
       "oran": {
@@ -1678,7 +1678,7 @@
       }
     }
   },
-  "privacyPolicyTitle": "Gizlilik Politikası",
+  "privacyPolicyTitle": "Gizlilik politikası",
   "privacyIntro": "ÇuHat, finansal kayıtlarınızı takip etmenize yardımcı olan bir kişisel finans uygulamasıdır. \"Önce-çevrimdışı\" tasarlandı: bulut yedeklemeyi açıkça etkinleştirmediğiniz sürece verileriniz cihazınızda kalır. Sunucumuz yoktur.",
   "privacyLocalDataTitle": "Cihazınızda saklanan veriler",
   "privacyLocalDataBody": "Cüzdanlar, işlemler, yatırımlar, borçlar, alacaklar, bütçeler, tekrarlayan şablonlar ve uygulama tercihleri (tema, dil, kategoriler) yalnızca cihazınızda saklanır ve bize iletilmez.",
@@ -1688,8 +1688,8 @@
   "privacyMarketDataBody": "Canlı fiyat göstermek için yalnızca varlık sembolü (örn. hisse kodu) herkese açık uç noktalara (Yahoo Finance, Truncgil) gönderilir. Hiçbir kişisel veya finansal kayıt paylaşılmaz.",
   "backupOfferTitle": "Verilerin yalnızca bu cihazda",
   "backupOfferBody": "ÇuHat kayıtlarını bir sunucuda tutmaz. Telefonunu kaybeder, sıfırlar ya da uygulamayı kaldırırsan bu veriler geri gelmez. Otomatik yedeklemeyi açarsan kayıtlarının kopyası düzenli olarak kendi Google Drive'ındaki özel bir klasöre alınır.",
-  "backupOfferSetup": "Yedeklemeyi Kur",
-  "backupOfferLater": "Şimdi Değil",
+  "backupOfferSetup": "Yedeklemeyi kur",
+  "backupOfferLater": "Şimdi değil",
   "privacyReceiptsTitle": "Fiş fotoğrafları ve metin tanıma",
   "privacyReceiptsBody": "İşleme fiş fotoğrafı eklemek isteğe bağlıdır. Fotoğraf sistem seçicisiyle alınır; uygulama kalıcı kamera veya depolama izni istemez. Görseller yalnızca cihazınızın özel depolama alanında tutulur; hiçbir yere yüklenmez ve Drive yedeğine girmez. Fişten tutar/tarih okuma, uygulamanın içine gömülü çevrimdışı Google ML Kit modeliyle yapılır — görsel hiçbir sunucuya gönderilmez. İşlemi silmek ekli görseli de siler.",
   "privacyStatementTitle": "Banka ekstresi içe aktarma",
@@ -1709,13 +1709,13 @@
     }
   },
   "privacyLastUpdated": "Son güncelleme: 4 Ağustos 2026",
-  "privacyConsentTitle": "Gizliliğiniz",
-  "privacyConsentBody": "ÇuHat verilerinizi yalnızca cihazınızda saklar; sunucumuz yoktur. İsteğe bağlı Google Drive yedeği yalnızca siz açarsanız, kendi Drive'ınızdaki özel bir klasöre yazılır. Verileriniz üçüncü taraflarla paylaşılmaz; reklam veya izleme yoktur.",
+  "privacyConsentTitle": "Gizliliğin",
+  "privacyConsentBody": "ÇuHat kayıtlarını yalnız telefonunda saklar; sunucumuz yok. Google Drive yedeği isteğe bağlıdır ve yalnız sen açarsan, kendi Drive'ındaki özel bir klasöre yazılır. Kayıtların kimseyle paylaşılmaz; reklam ya da izleme yok.",
   "privacyConsentAcknowledge": "Anladım",
   "secenekler": "Seçenekler",
-  "tarihAraligiSecBaslik": "Tarih Aralığı Seç",
+  "tarihAraligiSecBaslik": "Tarih aralığı seç",
   "takvimdenSec": "Takvimden seç",
-  "kategoriSecmeUyarisi": "Bir kategori seçin",
+  "kategoriSecmeUyarisi": "Bir kategori seç",
   "yatirimSatOnayBaslik": "{name} satılsın mı?",
   "@yatirimSatOnayBaslik": {
     "placeholders": {
@@ -1746,18 +1746,18 @@
       }
     }
   },
-  "driveErrNotSignedIn": "Google Drive'a bağlı değilsiniz.",
+  "driveErrNotSignedIn": "Google Drive'a bağlı değilsin.",
   "driveErrCancelled": "İşlem iptal edildi.",
-  "driveErrNoNetwork": "İnternet bağlantısı yok. Bağlanıp tekrar deneyin.",
-  "driveErrTimeout": "Google Drive zamanında yanıt vermedi. Bağlantınızı kontrol edip tekrar deneyin.",
-  "driveErrAuthExpired": "Google oturumunuzun süresi doldu. Bağlantıyı kesip yeniden bağlanın.",
+  "driveErrNoNetwork": "İnternet bağlantısı yok. Bağlanıp tekrar dene.",
+  "driveErrTimeout": "Google Drive zamanında yanıt vermedi. Bağlantını kontrol edip tekrar dene.",
+  "driveErrAuthExpired": "Google oturumunun süresi doldu. Bağlantıyı kesip yeniden bağlan.",
   "driveErrScopeDenied": "Drive uygulama klasörü izni verilmedi. Yedekleme bu izin olmadan çalışamaz.",
   "driveErrConfigError": "Google Drive bu uygulama sürümünde yapılandırılmamış (OAuth istemcisi paket adı/imza ile eşleşmiyor). Bu bir kurulum hatası; yedekleme şimdilik kullanılamıyor.",
-  "driveErrTokenFailed": "Google hesabınızdan Drive erişim izni alınamadı. Ayarlar’dan bağlantıyı kesip yeniden bağlanın; sorun sürerse Google hesabınızın izinlerini kontrol edin.",
-  "driveErrQuotaExceeded": "Google Drive depolama alanınız dolu. Yer açıp tekrar deneyin.",
-  "driveErrServerError": "Google Drive şu anda yanıt veremiyor. Daha sonra tekrar deneyin.",
-  "driveErrEmptyLocalData": "Cihazda yedeklenecek kayıt yok. Boş bir yedek, Drive'daki dolu yedeğinizin yerini alırdı.",
-  "driveErrVerificationFailed": "Yükleme doğrulanamadı; yedek eksik yazılmış olabilir. Yeni kopya geri alındı, önceki yedeğiniz duruyor.",
+  "driveErrTokenFailed": "Google hesabından Drive erişim izni alınamadı. Ayarlar’dan bağlantıyı kesip yeniden bağlan; sorun sürerse Google hesabının izinlerini kontrol et.",
+  "driveErrQuotaExceeded": "Google Drive depolama alanın dolu. Yer açıp tekrar dene.",
+  "driveErrServerError": "Google Drive şu anda yanıt veremiyor. Daha sonra tekrar dene.",
+  "driveErrEmptyLocalData": "Telefonda yedeklenecek kayıt yok. Boş bir yedek, Drive'daki dolu yedeğinin yerini alırdı.",
+  "driveErrVerificationFailed": "Yükleme doğrulanamadı; yedek eksik yazılmış olabilir. Yeni kopya geri alındı, önceki yedeğin duruyor.",
   "driveErrNotFound": "Google Drive'da yedek bulunamadı.",
   "driveErrVersionMismatch": "Bu yedek farklı bir uygulama sürümüne ait (yedek şeması {found}, bu sürüm {expected}). Geri yüklenemez.",
   "@driveErrVersionMismatch": {
@@ -1771,14 +1771,14 @@
     }
   },
   "driveErrCorrupt": "Yedek dosyası okunamadı; bozuk ya da eksik yazılmış.",
-  "driveErrWriteFailure": "Geri yükleme sırasında yazma hatası oldu. Cihazdaki eski verileriniz geri alındı.",
+  "driveErrWriteFailure": "Geri yükleme sırasında yazma hatası oldu. Telefondaki eski kayıtların geri alındı.",
   "driveUnchanged": "Veriler son yedekten beri değişmedi; yeni yedek alınmadı.",
   "backupEmptyConfirmTitle": "Boş yedek alınsın mı?",
   "backupEmptyConfirmDesc": "Cihazda hiç kayıt yok. Devam ederseniz Drive'daki en yeni yedeğin yerine boş bir yedek yazılır.",
   "backupEmptyConfirmAction": "Boş yedek al",
-  "viewBackups": "Yedekleri Görüntüle",
-  "deleteAllBackups": "Tüm Yedekleri Sil",
-  "deleteAllBackupsDesc": "Google Drive'daki tüm yedek kopyaları kalıcı olarak silinecek. Cihazınızdaki veriler etkilenmez.",
+  "viewBackups": "Yedekleri görüntüle",
+  "deleteAllBackups": "Tüm yedekleri sil",
+  "deleteAllBackupsDesc": "Google Drive'daki tüm yedek kopyaları kalıcı olarak silinecek. Telefonundaki kayıtlar etkilenmez.",
   "backupGenerationsKept": "{count} kopya saklanıyor",
   "@backupGenerationsKept": {
     "placeholders": {
@@ -1794,7 +1794,7 @@
   "autoBackupDaily": "Günlük",
   "autoBackupWeekly": "Haftalık",
   "autoBackupLimitNote": "Uygulamayı hiç açmazsanız otomatik yedek çalışmaz.",
-  "autoBackupFailureWarning": "Son {count} otomatik yedekleme denemesi başarısız oldu. Elle yedekleyerek sebebini görebilirsiniz.",
+  "autoBackupFailureWarning": "Son {count} otomatik yedekleme denemesi başarısız oldu. Elle yedekleyerek nedenini görebilirsin.",
   "@autoBackupFailureWarning": {
     "placeholders": {
       "count": {
@@ -1837,16 +1837,16 @@
       }
     }
   },
-  "backupPreviewEmptyWarning": "Bu yedek boş. Geri yüklerseniz cihazınızdaki tüm kayıtlar silinir.",
+  "backupPreviewEmptyWarning": "Bu yedek boş. Geri yüklersen telefonundaki tüm kayıtlar silinir.",
   "backupPreviewRestoreButton": "Bu yedeği geri yükle",
   "backupPreviewDeleteButton": "Bu kopyayı sil",
-  "backupPreviewDeleteConfirmDesc": "Bu yedek kopyası Google Drive'dan kalıcı olarak silinecek. Cihazınızdaki veriler etkilenmez.",
+  "backupPreviewDeleteConfirmDesc": "Bu yedek kopyası Google Drive'dan kalıcı olarak silinecek. Telefonundaki kayıtlar etkilenmez.",
   "backupPreviewRestoreConfirmTitle": "Bu yedek geri yüklensin mi?",
-  "backupPreviewRestoreConfirmDesc": "Cihazdaki tüm cüzdanlar, işlemler, birikimler, borçlar, alacaklar, bütçeler ve düzenli işlem şablonları bu yedektekilerle DEĞİŞTİRİLİR. Bu işlem geri alınamaz.",
+  "backupPreviewRestoreConfirmDesc": "Telefondaki tüm cüzdanlar, işlemler, birikimler, borçlar, alacaklar, bütçeler ve düzenli işlem şablonları bu yedektekilerle değiştirilir. Bu işlem geri alınamaz.",
   "backupPreviewNoTransactions": "Bu yedekte işlem yok.",
   "backupPreviewUnknownCount": "?",
   "disconnectConfirmTitle": "Bağlantı kesilsin mi?",
-  "disconnectConfirmDesc": "{email} hesabından çıkılacak. Google Drive'daki yedekleriniz SİLİNMEZ — aynı hesapla tekrar bağlandığınızda erişebilirsiniz. Otomatik yedekleme duracak.",
+  "disconnectConfirmDesc": "{email} hesabından çıkılacak. Google Drive'daki yedeklerin silinmez — aynı hesapla yeniden bağlandığında onlara erişirsin. Otomatik yedekleme duracak.",
   "@disconnectConfirmDesc": {
     "placeholders": {
       "email": {
@@ -1854,7 +1854,7 @@
       }
     }
   },
-  "deleteAllBackupsDangerDesc": "Onayladığınızda Google Drive'daki {count} yedek kopyasının tamamı kalıcı olarak silinir. Cihazınızdaki veriler bozulur ya da silinirse geri dönebileceğiniz hiçbir kopya kalmaz.",
+  "deleteAllBackupsDangerDesc": "Onaylarsan Google Drive'daki {count} yedek kopyasının tamamı kalıcı olarak silinir. Telefonundaki kayıtlar bozulur ya da silinirse geri dönebileceğin hiçbir kopya kalmaz.",
   "@deleteAllBackupsDangerDesc": {
     "placeholders": {
       "count": {
@@ -1912,14 +1912,14 @@
       "faiz": {}
     }
   },
-  "odemeSilBaslik": "Ödemeyi Sil",
+  "odemeSilBaslik": "Ödemeyi sil",
   "odemeSilOnayMesaji": "{tutar} tutarındaki ödeme kaydı silinecek. Bu ödemenin cüzdan bakiyesine etkisi de geri alınır.",
   "@odemeSilOnayMesaji": {
     "placeholders": {
       "tutar": {}
     }
   },
-  "odemeyiDuzenleBaslik": "Ödemeyi Düzenle",
+  "odemeyiDuzenleBaslik": "Ödemeyi düzenle",
   "vadeTaksitIlerleme": "Vade: {termMonths} Ay | {paid}/{termMonths} taksit",
   "@vadeTaksitIlerleme": {
     "placeholders": {
@@ -1966,7 +1966,7 @@
     }
   },
   "txFilterNoResult": "Eşleşen işlem yok",
-  "txFilterAmountRange": "TUTAR ARALIĞI",
+  "txFilterAmountRange": "Tutar aralığı",
   "txFilterMinMaxError": "En düşük tutar, en yüksek tutardan büyük olamaz",
   "txFilterCategorySearchHint": "Kategori ara…",
   "txFilterCategoryNoMatch": "Eşleşen kategori yok",
@@ -1991,25 +1991,25 @@
   },
   "txFilterExpandGroup": "Alt kategorileri göster",
   "txFilterCollapseGroup": "Alt kategorileri gizle",
-  "txSummaryNet": "NET DURUM",
-  "txSummaryNetFiltered": "FİLTRELENEN NET DURUM",
-  "txSummaryIncomeTotal": "TOPLAM GELİR",
-  "txSummaryIncomeFiltered": "FİLTRELENEN GELİR",
-  "txSummaryExpenseTotal": "TOPLAM GİDER",
-  "txSummaryExpenseFiltered": "FİLTRELENEN GİDER",
-  "txSummaryIncome": "GELİR",
-  "txSummaryExpense": "GİDER",
+  "txSummaryNet": "Net durum",
+  "txSummaryNetFiltered": "Süzülen net durum",
+  "txSummaryIncomeTotal": "Toplam gelir",
+  "txSummaryIncomeFiltered": "Süzülen gelir",
+  "txSummaryExpenseTotal": "Toplam gider",
+  "txSummaryExpenseFiltered": "Süzülen gider",
+  "txSummaryIncome": "Gelir",
+  "txSummaryExpense": "Gider",
   "txSummaryCount": "İşlem",
-  "txSummaryCountFiltered": "Filtrelenen İşlem",
+  "txSummaryCountFiltered": "Süzülen işlem",
   "txModeIncome": "Gelirler",
   "txModeExpense": "Giderler",
   "txModeCompare": "Karşılaştırma",
   "txSwipeHintLocked": "Otomatik oluşturulan işlem düzenlenemez",
-  "dateRangeLast7Days": "Son 7 Gün",
-  "dateRangeThisMonth": "Bu Ay",
-  "dateRangeLastMonth": "Geçen Ay",
-  "dateRangeLast3Months": "Son 3 Ay",
-  "dateRangeThisYear": "Bu Yıl",
+  "dateRangeLast7Days": "Son 7 gün",
+  "dateRangeThisMonth": "Bu ay",
+  "dateRangeLastMonth": "Geçen ay",
+  "dateRangeLast3Months": "Son 3 ay",
+  "dateRangeThisYear": "Bu yıl",
   "txPeriodToday": "Bugün",
   "txPeriodYesterday": "Dün",
   "lot": "lot",
@@ -2078,7 +2078,7 @@
       "unit": {}
     }
   },
-  "yatirimTuruHisse": "Hisse Senedi",
+  "yatirimTuruHisse": "Hisse senedi",
   "yatirimTuruAltin": "Altın",
   "yatirimTuruOzel": "Özel",
   "satisSheetBaslik": "{name} · Sat",
@@ -2124,16 +2124,16 @@
       "value": {}
     }
   },
-  "gecerliSatisMiktariGirin": "Geçerli bir satış miktarı girin",
+  "gecerliSatisMiktariGirin": "Geçerli bir satış miktarı gir",
   "satisMiktariAsim": "Elindekinden fazlasını satamazsın (en çok {max})",
   "@satisMiktariAsim": {
     "placeholders": {
       "max": {}
     }
   },
-  "gecerliAlinanTutarGirin": "Geçerli bir alınan tutar girin",
+  "gecerliAlinanTutarGirin": "Geçerli bir alınan tutar gir",
   "satisFiyatTazeleIpucu": "Kayıttaki değer eskimiş olabilir; güncel fiyatı getirip alınan tutarı tazeleyebilirsin.",
-  "kismiSatisBasarili": "Yatırımın bir kısmı satıldı",
+  "kismiSatisBasarili": "Varlığın bir kısmı satıldı",
   "kismiSatisGeriAlindi": "Kısmi satış geri alındı",
   "alimTarihi": "Alım tarihi",
   "zatenBendeBaslik": "Bu varlık zaten bende",
@@ -2147,13 +2147,13 @@
   },
   "alimCuzdandanDusulmeyecek": "Cüzdandan para düşülmeyecek; kayıt yalnız portföye eklenir.",
   "birikimBosBaslik": "Henüz birikimin yok",
-  "birikimBosAciklama": "Altın, hisse ya da kendi tanımladığın bir varlığı ekleyerek portföyünü oluştur. Alım tutarı cüzdanından gider olarak düşülür.",
-  "yatirimEklendiMesaji": "Yatırım başarıyla eklendi",
-  "yatirimGuncellendiMesaji": "Yatırım güncellendi",
-  "yatirimSatildiMesaji": "Yatırım satıldı",
-  "yatirimKismenSatildiMesaji": "Yatırımın bir kısmı satıldı",
+  "birikimBosAciklama": "Altın, hisse ya da kendi tanımladığın bir varlığı ekle. Alım tutarı cüzdanından düşülür.",
+  "yatirimEklendiMesaji": "Varlık eklendi",
+  "yatirimGuncellendiMesaji": "Varlık güncellendi",
+  "yatirimSatildiMesaji": "Varlık satıldı",
+  "yatirimKismenSatildiMesaji": "Varlığın bir kısmı satıldı",
   "yatirimSilindiDuzeltildiMesaji": "Kayıt silindi, alım kaydı düzeltildi",
-  "fiyatlarGuncellendiMesaji": "{count} yatırımın fiyatı güncellendi",
+  "fiyatlarGuncellendiMesaji": "{count} varlığın fiyatı güncellendi",
   "@fiyatlarGuncellendiMesaji": {
     "placeholders": {
       "count": {}
@@ -2166,10 +2166,10 @@
       "failed": {}
     }
   },
-  "yenilenebilirYatirimYokMesaji": "Yenilenebilir yatırım yok (sembol ve miktar gerekli)",
+  "yenilenebilirYatirimYokMesaji": "Fiyatı güncellenebilecek varlık yok (sembol ve miktar gerekli)",
   "fiyatlarAlinamadiMesaji": "Fiyatlar alınamadı, değerler değiştirilmedi",
-  "bakiyeGuncellenemediUyarisi": " (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)",
-  "yatirimGecmisiBuradaListelenecek": "Yatırım geçmişiniz burada listelenecektir.",
+  "bakiyeGuncellenemediUyarisi": " (Uyarı: bakiye güncellenemedi, cüzdanı yenile.)",
+  "yatirimGecmisiBuradaListelenecek": "Birikim geçmişin burada listelenir.",
   "hedefKategoriEv": "Ev",
   "hedefKategoriDugun": "Düğün",
   "hedefKategoriAraba": "Araba",
@@ -2177,7 +2177,7 @@
   "hedefKategoriEgitim": "Eğitim",
   "hedefKategoriDiger": "Diğer",
   "hedefKategoriOzel": "Özel",
-  "miktarGirinDegerHesaplanmadi": "miktar girin, değer hesaplansın",
+  "miktarGirinDegerHesaplanmadi": "miktar gir, değer hesaplansın",
   "hedefKategoriOzelHint": "Kendi kategorin (ör. Tekne)",
   "hedefKategoriOzelBos": "Özel kategori adı boş olamaz",
   "kartMaliyet": "Maliyet {amount}",
@@ -2198,7 +2198,7 @@
       "name": {}
     }
   },
-  "hedefSilOnayMesaj": "Hedef silinir. İçindeki {count} varlık SİLİNMEZ, bağsız listeye düşer.",
+  "hedefSilOnayMesaj": "Hedef silinir. İçindeki {count} varlık silinmez; bağsız listeye düşer.",
   "@hedefSilOnayMesaj": {
     "placeholders": {
       "count": {}
@@ -2206,7 +2206,7 @@
   },
   "hedefAdiHint": "Hedef adı · örn. Ev peşinatı",
   "hedefTutariHint": "Hedef tutar",
-  "hedefAdiGirin": "Hedef adı girin",
+  "hedefAdiGirin": "Hedef adı gir",
   "hedefAlaniEtiketi": "Hedef",
   "hedefeBagliDegil": "Hedefe bağlı değil",
   "hedefeVarlikEkle": "Bu hedefe varlık ekle",
@@ -2234,7 +2234,7 @@
   "hedefKaydedildiMesaji": "Hedef kaydedildi",
   "hedefSilindiMesaji": "Hedef silindi, varlıklar bağsız listeye taşındı",
   "varlikTuruSec": "Ne eklemek istersin?",
-  "gecmisAlimUyarisi": "{date} tarihli alım. \"Mevcut Değer\" BUGÜNKÜ değerdir, alım günündeki değil; maliyet ise o gün ödediğin tutardır.",
+  "gecmisAlimUyarisi": "{date} tarihli alım. \"Mevcut değer\" bugünkü değerdir, alım günündeki değil; maliyet ise o gün ödediğin tutardır.",
   "@gecmisAlimUyarisi": {
     "placeholders": {
       "date": {}
@@ -2254,7 +2254,7 @@
       "count": {}
     }
   },
-  "reportFlowChartSemantics": "Gelir–gider grafiği: {count} dönem, toplam gelir {income}, toplam gider {expense}. Değerler için sütunlara dokunun.",
+  "reportFlowChartSemantics": "Gelir–gider grafiği: {count} dönem, toplam gelir {income}, toplam gider {expense}. Değerler için sütunlara dokun.",
   "@reportFlowChartSemantics": {
     "placeholders": {
       "count": {},
@@ -2262,7 +2262,7 @@
       "expense": {}
     }
   },
-  "reportBalanceChartSemantics": "Bakiye grafiği: dönem başı {start}, dönem sonu {end}. Ara değerler için çizgiye dokunun.",
+  "reportBalanceChartSemantics": "Bakiye grafiği: dönem başı {start}, dönem sonu {end}. Ara değerler için çizgiye dokun.",
   "@reportBalanceChartSemantics": {
     "placeholders": {
       "start": {},
@@ -2286,7 +2286,7 @@
       }
     }
   },
-  "reportSystemMovementsHint": "Cüzdanlar arası transfer, borç ödemesi ve yatırım alım/satımı harcama değildir: para harcanmaz, yalnızca yer değiştirir. Bakiye çizgisi bunları her zaman içerir.",
+  "reportSystemMovementsHint": "Cüzdanlar arası transfer, borç ödemesi ve birikim alım/satımı harcama değildir: para harcanmaz, yalnızca yer değiştirir. Bakiye çizgisi bunları her zaman içerir.",
   "reportShareTooltip": "İşlemleri CSV olarak paylaş",
   "reportNoIncomeForRate": "Bu dönemde gelir yok",
   "reportViewBars": "Çubuk görünümü",
@@ -2345,8 +2345,8 @@
       }
     }
   },
-  "insightOverspentTitle": "Bu Dönem Açıktasınız",
-  "insightOverspentDesc": "Kalan {gun} gün için harcanacak tutar kalmadı; {tutar} açıktasınız.",
+  "insightOverspentTitle": "Bu dönem açıktasın",
+  "insightOverspentDesc": "Kalan {gun} gün için harcanacak tutar kalmadı; {tutar} açıktasın.",
   "@insightOverspentDesc": {
     "placeholders": {
       "gun": {
@@ -2373,9 +2373,9 @@
       }
     }
   },
-  "insightTapForTransactions": "İşlemleri görmek için dokunun",
+  "insightTapForTransactions": "İşlemleri görmek için dokun",
   "insightTopExpensesTitle": "En büyük harcamalar",
-  "insightSystemMovementsNote": "{sayi} para taşıma hareketi (transfer, borç, yatırım) sayılmadı",
+  "insightSystemMovementsNote": "{sayi} para taşıma hareketi (transfer, borç, birikim) sayılmadı",
   "@insightSystemMovementsNote": {
     "placeholders": {
       "sayi": {
@@ -2577,7 +2577,7 @@
     }
   },
   "errorLogTitle": "Hata günlüğü",
-  "errorLogSubtitle": "Sorun bildirirken paylaşabileceğiniz tanı kaydı",
+  "errorLogSubtitle": "Sorun bildirirken paylaşabileceğin tanı kaydı",
   "errorLogEmpty": "Kayıtlı hata yok.",
   "errorLogPrivacyNote": "Bu günlük yalnız bu cihazda tutulur ve siz paylaşmadıkça hiçbir yere gönderilmez. Uygulama beklenmedik davrandığında geliştiriciye iletmek sorunu bulmayı hızlandırır.",
   "errorLogCopy": "Kopyala",
@@ -2585,8 +2585,8 @@
   "errorLogCopied": "Hata günlüğü panoya kopyalandı",
   "errorLogClearConfirmTitle": "Hata günlüğü temizlensin mi?",
   "errorLogClearConfirmDesc": "Kayıtlı tüm hatalar bu cihazdan silinir.",
-  "driveErrLocalReadFailure": "Cihazdaki veriler okunamadı. Uygulamayı yeniden başlatıp tekrar deneyin.",
-  "fisGorselAlinamadi": "Görsel alınamadı. Kamera ve fotoğraf izinlerini kontrol edin.",
+  "driveErrLocalReadFailure": "Telefondaki kayıtlar okunamadı. Uygulamayı yeniden başlatıp tekrar dene.",
+  "fisGorselAlinamadi": "Görsel alınamadı. Kamera ve fotoğraf izinlerini kontrol et.",
   "bankImportDupLinkedByUser": "Senin eşleştirdiğin kayıt",
   "bankImportDupReasonNear": "{delta} fark · kategori aynı",
   "@bankImportDupReasonNear": {
@@ -3047,7 +3047,7 @@
   "bankImportUndoNothing": "Geri alınacak bir şey kalmamıştı.",
   "bankImportSynced": "Bankayla eşitlendi",
   "bankImportRawEmpty": "(boş)",
-  "bankImportAccountOnCard": "Bu bir HESAP ekstresi (satır satır bakiye var) ama hedef bir kredi kartı. Hesap hareketleri kartın defterine yazılırsa kart borcu yanlış görünür.",
+  "bankImportAccountOnCard": "Bu bir hesap ekstresi (satır satır bakiye var) ama hedef bir kredi kartı. Hesap hareketleri kartın defterine yazılırsa kart borcu yanlış görünür.",
   "bankImportAllKnownTitle": "Bu ekstrede yeni hareket yok",
   "bankImportAllKnownBody": "{count} hareketin hepsi bu cüzdanda zaten kayıtlı. Ekstre büyük olasılıkla daha önce aktarıldı.",
   "@bankImportAllKnownBody": {
@@ -3198,7 +3198,7 @@
     }
   },
   "analysisNoFlowTitle": "Bu dönemde gelir ya da gider yok",
-  "analysisNoFlowMoved": "{count} para taşıma hareketi var (transfer, borç, yatırım). Bunlar gelir–gidere sayılmaz.",
+  "analysisNoFlowMoved": "{count} para taşıma hareketi var (transfer, borç, birikim). Bunlar gelir–gidere sayılmaz.",
   "@analysisNoFlowMoved": {
     "placeholders": {
       "count": {
@@ -3220,7 +3220,7 @@
   "analysisPeriodEmptyBody": "Bu aralıkta kayıt yok. Başka bir döneme geçebilirsin.",
   "reportModeExpense": "Gider",
   "reportModeIncome": "Gelir",
-  "filterTypeSection": "TÜR",
+  "filterTypeSection": "Tür",
   "filterTypeAll": "Tümü",
   "insightPeriodLinkTitle": "{period} özeti",
   "@insightPeriodLinkTitle": {
@@ -3283,14 +3283,14 @@
   },
   "txSearchOpen": "İşlem ara",
   "txSearchClose": "Aramayı kapat",
-  "filterMovedSection": "PARA TAŞIMA HAREKETLERİ",
-  "filterMovedHint": "Transfer, kart ödemesi, borç ve yatırım hareketleri. Harcama sayılmazlar ama bakiyeyi değiştirirler.",
+  "filterMovedSection": "Para taşıma hareketleri",
+  "filterMovedHint": "Transfer, kart ödemesi, borç ve birikim hareketleri. Harcama sayılmazlar ama bakiyeyi değiştirirler.",
   "filterMovedShow": "Göster",
   "filterMovedHide": "Gizle",
   "filterMovedOnly": "Yalnız bunlar",
   "filterMovedHiddenChip": "Para taşıma gizli",
   "filterMovedOnlyChip": "Yalnız para taşıma",
-  "filterMoreSection": "DİĞER",
+  "filterMoreSection": "Diğer",
   "filterReceiptToggle": "Yalnız fişi olanlar",
   "filterImportedToggle": "Yalnız ekstreden gelenler",
   "filterImportedHint": "Banka ekstresinden içe aktarılan kayıtlar.",
@@ -3316,7 +3316,7 @@
       }
     }
   },
-  "periodQuickSection": "HAZIR ARALIKLAR",
+  "periodQuickSection": "Hazır aralıklar",
   "periodChooseDate": "Seç",
   "settingsPeriodHeader": "Dönem",
   "reportBudgetProrated": "Aylık limitler bu {days} günlük döneme orantılandı.",
@@ -3487,7 +3487,7 @@
     }
   },
   "reportFocusClear": "Kategori odağını kaldır",
-  "reportTrendSemantics": "{metric} çizgisi, {period}: {amount}. Ara değerler için çizgiye dokunun.",
+  "reportTrendSemantics": "{metric} çizgisi, {period}: {amount}. Ara değerler için çizgiye dokun.",
   "@reportTrendSemantics": {
     "placeholders": {
       "metric": {},
@@ -3820,7 +3820,7 @@
       }
     }
   },
-  "blocMsgTxSyncWarning": "Bakiye senkronizasyonu başarısız; cüzdan ekranına dönüp tekrar deneyin.",
+  "blocMsgTxSyncWarning": "Bakiye eşitlenemedi; cüzdan ekranına dönüp tekrar dene.",
   "blocMsgWalletCreateFailed": "Cüzdan oluşturulamadı: {hata}",
   "@blocMsgWalletCreateFailed": {
     "placeholders": {
@@ -3862,7 +3862,7 @@
       }
     }
   },
-  "blocMsgCashWarningSuffix": " (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)",
+  "blocMsgCashWarningSuffix": " (Uyarı: bakiye güncellenemedi, cüzdanı yenile.)",
   "blocMsgDebtAdded": "Borç başarıyla eklendi.",
   "blocMsgDebtPaymentSaved": "Ödeme kaydedildi.",
   "blocMsgDebtPaymentUpdated": "Ödeme güncellendi.",
@@ -4082,9 +4082,9 @@
       }
     }
   },
-  "kkBolumTutarlar": "TUTARLAR",
-  "kkBolumFaiz": "FAİZ ORANLARI (İSTEĞE BAĞLI)",
-  "kkBolumEkstre": "SON EKSTRE",
+  "kkBolumTutarlar": "Tutarlar",
+  "kkBolumFaiz": "Faiz oranları (isteğe bağlı)",
+  "kkBolumEkstre": "Son ekstre",
   "kkGuncelBorcDuzeltAciklama": "Kartın bugünkü toplam borcu. Değiştirirsen fark açılış bakiyesine yansır; deftere işlem yazılmaz.",
   "kkAylikFaiz": "Aylık akdi faiz",
   "kkGecikmeFaizi": "Aylık gecikme faizi",
@@ -4537,5 +4537,9 @@
   "receivableDueDateHint": "Paranı geri almayı beklediğin tarih; yaklaşınca hatırlatırız.",
   "recurringRowHint": "Kira, maaş, abonelik gibi düzenli işlemler için sıklık seç; zamanı gelince hatırlatırız.",
   "ozelDegerAciklama": "Varlığın bugünkü değeri; değiştikçe buradan güncellersin.",
-  "ozelMaliyetAciklama": "Bu varlığa ödediğin toplam tutar; kâr/zarar bununla hesaplanır."
+  "ozelMaliyetAciklama": "Bu varlığa ödediğin toplam tutar; kâr/zarar bununla hesaplanır.",
+  "txEmptyPeriodTitle": "Bu dönemde kayıt yok",
+  "txEmptyPeriodBody": "Bu aralıkta gelir ya da gider yazmadın.",
+  "txEmptyShowAll": "Tüm kayıtları göster",
+  "privacyDataHeader": "Gizlilik ve veri"
 }

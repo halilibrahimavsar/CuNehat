@@ -92,9 +92,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(AppDialogSurface), findsOneWidget);
-    expect(find.text('Ödeme Yap'), findsOneWidget);
+    expect(find.text('Ödeme yap'), findsOneWidget);
     expect(find.text('Araba Kredisi'), findsOneWidget);
-    expect(find.text('Ödemeyi Kaydet'), findsOneWidget);
+    expect(find.text('Ödemeyi kaydet'), findsOneWidget);
   });
 
   testWidgets('geçerli tutarla PayDebtEvent gönderir ve diyaloğu kapatır',
@@ -107,7 +107,7 @@ void main() {
     await tester.enterText(find.byType(TextFormField).first, '100');
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Ödemeyi Kaydet'));
+    await tester.tap(find.text('Ödemeyi kaydet'));
     await tester.pumpAndSettle();
 
     verify(() => mockDebtBloc.add(any(that: isA<PayDebtEvent>()))).called(1);
@@ -227,7 +227,7 @@ void main() {
     expect(amount.readOnly, isTrue);
     expect(amount.controller!.text, '250');
 
-    await tester.tap(find.text('Ödemeyi Kaydet'));
+    await tester.tap(find.text('Ödemeyi kaydet'));
     await tester.pumpAndSettle();
 
     final event =

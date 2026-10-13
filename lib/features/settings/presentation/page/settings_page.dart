@@ -108,7 +108,7 @@ class SettingsPage extends StatelessWidget {
                   const SizedBox(height: 8),
                   const BankImportCard(),
                   const SizedBox(height: 24),
-                  SettingsHeader(title: 'Gizlilik & Veri'),
+                  SettingsHeader(title: context.l10n.privacyDataHeader),
                   const SizedBox(height: 8),
                   const DataPrivacyCard(),
                   const SizedBox(height: 24),

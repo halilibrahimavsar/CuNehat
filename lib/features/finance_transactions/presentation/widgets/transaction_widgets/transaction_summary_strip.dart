@@ -2,7 +2,6 @@ import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/money_text.dart';
-import 'package:cunehat/core/utils/tr_case.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
@@ -199,7 +198,7 @@ class TransactionSummaryStrip extends StatelessWidget {
         ],
         Flexible(
           child: Text(
-            '$label · ${upperTr(periodLabel)}',
+            '$label · $periodLabel',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(

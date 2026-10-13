@@ -78,8 +78,8 @@ void main() {
     id: 'tx_789',
     userId: 'user_123',
     walletId: 'wallet_123',
-    title: 'Borç Ödemesi',
-    tag: 'Borç Ödemesi',
+    title: 'Borç ödemesi',
+    tag: 'Borç ödemesi',
     amount: 300.0,
     date: DateTime(2026, 6, 13),
     type: TransactionTypeModel.expense,
@@ -105,7 +105,7 @@ void main() {
 
     // Verify actions are rendered with correct Turkish titles
     expect(find.text('Düzenle'), findsOneWidget);
-    expect(find.text('İşlemi Sil'), findsOneWidget);
+    expect(find.text('İşlemi sil'), findsOneWidget);
   });
 
   testWidgets('renders TransactionActionSheet with correct details for income',
@@ -139,11 +139,11 @@ void main() {
     );
 
     // Verify title is still rendered
-    expect(find.text('Borç Ödemesi'), findsWidgets);
+    expect(find.text('Borç ödemesi'), findsWidgets);
 
     // Düzenle/Sil dokunulabilir satırları hiç render edilmemeli.
     expect(find.text('Düzenle'), findsNothing);
-    expect(find.text('İşlemi Sil'), findsNothing);
+    expect(find.text('İşlemi sil'), findsNothing);
 
     // Bunun yerine bilgi notu görünmeli (detay sayfasıyla aynı l10n metni).
     expect(
@@ -222,7 +222,7 @@ void main() {
     expect(find.byType(TransactionActionSheet), findsOneWidget);
 
     // Tap delete
-    await tester.tap(find.text('İşlemi Sil'));
+    await tester.tap(find.text('İşlemi sil'));
     await tester.pumpAndSettle();
 
     // Verify sheet is closed and action is delete

@@ -3,7 +3,6 @@ import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/l10n/category_seed_names.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
-import 'package:cunehat/core/utils/tr_case.dart';
 import 'package:cunehat/features/finance_transactions/domain/category_starter_pack.dart';
 import 'package:cunehat/features/finance_transactions/domain/usecases/install_starter_pack_usecase.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_error_text.dart';
@@ -208,7 +207,7 @@ class _CategoryStarterPackSheetState extends State<CategoryStarterPackSheet> {
   Widget _sectionLabel(String text, ColorScheme cs) => Padding(
         padding: const EdgeInsets.fromLTRB(4, 8, 4, 4),
         child: Text(
-          upperTr(text),
+          text,
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w700,

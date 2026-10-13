@@ -215,7 +215,7 @@ void main() {
     // Kartın uzun basış menüsü → Sil → onay.
     await tester.longPress(find.byType(TransactionCard).first);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('İşlemi Sil'));
+    await tester.tap(find.text('İşlemi sil'));
     await tester.pumpAndSettle();
     // Onay düğmesi geri sayımlı; sayaç bitene kadar pasif.
     await tester.pump(const Duration(seconds: 6));
@@ -285,7 +285,7 @@ void main() {
 
     await tester.longPress(find.byType(TransactionCard).first);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('İşlemi Sil'));
+    await tester.tap(find.text('İşlemi sil'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Sil'));
     await tester.pumpAndSettle();

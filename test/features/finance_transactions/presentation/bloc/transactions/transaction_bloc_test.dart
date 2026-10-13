@@ -200,7 +200,7 @@ void main() {
           'Grocery başarıyla eklendi',
           transactions: [testTransaction],
           warning:
-              'Bakiye senkronizasyonu başarısız; cüzdan ekranına dönüp tekrar deneyin.',
+              'Bakiye eşitlenemedi; cüzdan ekranına dönüp tekrar dene.',
         ),
       ],
     );
@@ -220,7 +220,7 @@ void main() {
           'Grocery başarıyla eklendi',
           transactions: [testTransaction],
           warning:
-              'Bakiye senkronizasyonu başarısız; cüzdan ekranına dönüp tekrar deneyin.',
+              'Bakiye eşitlenemedi; cüzdan ekranına dönüp tekrar dene.',
         ),
       ],
     );
@@ -357,7 +357,7 @@ void main() {
           'Grocery başarıyla güncellendi',
           transactions: [],
           warning:
-              'Bakiye senkronizasyonu başarısız; cüzdan ekranına dönüp tekrar deneyin.',
+              'Bakiye eşitlenemedi; cüzdan ekranına dönüp tekrar dene.',
         ),
       ],
     );
@@ -467,7 +467,7 @@ void main() {
           'Grocery diğer cüzdana taşındı',
           transactions: [],
           warning:
-              'Bakiye senkronizasyonu başarısız; cüzdan ekranına dönüp tekrar deneyin.',
+              'Bakiye eşitlenemedi; cüzdan ekranına dönüp tekrar dene.',
         ),
       ],
     );
@@ -812,7 +812,7 @@ void main() {
           'Grocery silindi',
           transactions: const [],
           warning:
-              'Bakiye senkronizasyonu başarısız; cüzdan ekranına dönüp tekrar deneyin.',
+              'Bakiye eşitlenemedi; cüzdan ekranına dönüp tekrar dene.',
           undo: TransactionDeletionUndo(
             transaction: testTransaction,
             userId: 'user_123',

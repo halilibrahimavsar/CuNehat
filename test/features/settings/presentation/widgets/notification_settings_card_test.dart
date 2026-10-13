@@ -79,12 +79,12 @@ void main() {
       NotificationSettingsState(
         testNotificationSentAt: DateTime(2026, 9, 10),
         testNotificationFailure: NotificationFailure.channelBlocked,
-        testNotificationDetail: 'Kritik Hatırlatmalar',
+        testNotificationDetail: 'Kritik hatırlatmalar',
       ),
     );
 
     // Kullanıcı hangi türü açacağını bilmeden sistem ayarlarında kaybolur.
-    expect(find.textContaining('Kritik Hatırlatmalar'), findsOneWidget);
+    expect(find.textContaining('Kritik hatırlatmalar'), findsOneWidget);
   });
 
   testWidgets('platform hatasında istisna metnini gösterir', (tester) async {
@@ -128,7 +128,7 @@ void main() {
   });
 
   testWidgets('sıklık seçiliyken hatırlatma SAATLERİ yazılır', (tester) async {
-    // "Çok (Günde 3)" ne zaman geleceğini söylemiyordu; saatler ekranda
+    // "Çok (günde 3)" ne zaman geleceğini söylemiyordu; saatler ekranda
     // durmayınca kullanıcı bildirimin hiç gelmediğini sanıyor.
     whenListen(
       bloc,

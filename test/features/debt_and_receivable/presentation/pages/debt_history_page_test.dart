@@ -161,22 +161,22 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify Debt empty state
-    expect(find.text('Henüz Kapanan Borç Yok'), findsOneWidget);
+    expect(find.text('Henüz kapanan borç yok'), findsOneWidget);
     expect(
       find.text(
-          'Ödemesi tamamlanıp kapatılan borçlarınızın geçmişi burada görüntülenecektir.'),
+          'Ödemesi biten borçların burada görünür.'),
       findsOneWidget,
     );
 
     // Switch to Receivables Tab
-    await tester.tap(find.text('Alacak Geçmişi'));
+    await tester.tap(find.text('Alacak geçmişi'));
     await tester.pumpAndSettle();
 
     // Verify Receivable empty state
-    expect(find.text('Henüz Tahsil Edilen Alacak Yok'), findsOneWidget);
+    expect(find.text('Henüz geri alınan alacak yok'), findsOneWidget);
     expect(
       find.text(
-          'Ödendi olarak işaretlenen alacaklarınızın geçmişi burada görüntülenecektir.'),
+          'Geri aldığın alacaklar burada görünür.'),
       findsOneWidget,
     );
   });
@@ -210,12 +210,12 @@ void main() {
     expect(find.text('150.000,00 ₺'), findsWidgets);
 
     // Switch to Receivables Tab
-    await tester.tap(find.text('Alacak Geçmişi'));
+    await tester.tap(find.text('Alacak geçmişi'));
     await tester.pumpAndSettle();
 
     // Verify Receivable history summary and card
     expect(find.text('Ahmet Yılmaz'), findsOneWidget);
-    expect(find.text('Tahsil Edildi'), findsWidgets);
+    expect(find.text('Tahsil edildi'), findsWidgets);
     expect(find.text('5.000,00 ₺'), findsWidgets);
   });
 
@@ -241,7 +241,7 @@ void main() {
     expect(find.text('150.000,00 \$'), findsNWidgets(2));
     expect(find.textContaining('₺'), findsNothing);
 
-    await tester.tap(find.text('Alacak Geçmişi'));
+    await tester.tap(find.text('Alacak geçmişi'));
     await tester.pumpAndSettle();
 
     expect(find.text('5.000,00 \$'), findsNWidgets(2));

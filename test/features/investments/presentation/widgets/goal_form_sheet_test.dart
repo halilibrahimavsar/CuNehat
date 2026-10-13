@@ -35,13 +35,13 @@ void main() {
 
     await tester.tap(find.text('Kaydet'));
     await tester.pumpAndSettle();
-    expect(find.text('Hedef adı girin'), findsOneWidget);
+    expect(find.text('Hedef adı gir'), findsOneWidget);
     expect(saved, isNull);
 
     await tester.enterText(find.byType(TextField).first, 'Ev peşinatı');
     await tester.tap(find.text('Kaydet'));
     await tester.pumpAndSettle();
-    expect(find.text('Geçerli bir hedef tutar girin'), findsOneWidget);
+    expect(find.text('Geçerli bir hedef tutar gir'), findsOneWidget);
     expect(saved, isNull);
   });
 

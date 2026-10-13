@@ -175,7 +175,7 @@ void main() {
     expect(find.text('Bağsız varlıklar'), findsNothing);
     // İki yol da ekranda: hedefle başla ya da doğrudan varlık ekle.
     expect(find.text('Yeni hedef oluştur'), findsOneWidget);
-    expect(find.text('Varlık Ekle'), findsOneWidget);
+    expect(find.text('Varlık ekle'), findsOneWidget);
   });
 
   testWidgets('renders loaded state with metrics, chart and cards',
@@ -194,7 +194,7 @@ void main() {
     );
 
     // Verify SummaryCard rendering
-    expect(find.text('TOPLAM PORTFÖY DEĞERİ'), findsOneWidget);
+    expect(find.text('Toplam birikim'), findsOneWidget);
     // totalCurrentValue = 1250 + 2000 = 3250: özet kartında VE dağılım
     // halkasının ortasında ("Toplam").
     expect(find.text('3.250,00 ₺'), findsNWidgets(2));
@@ -202,7 +202,7 @@ void main() {
 
     // Hedefsiz kayıtlar "Bağsız varlıklar" başlığı altında listelenir.
     expect(find.text('Bağsız varlıklar'), findsOneWidget);
-    expect(find.text('2 yatırım'), findsOneWidget); // investments.length = 2
+    expect(find.text('2 varlık'), findsOneWidget); // investments.length = 2
 
     // Verify investment cards render name
     expect(find.text('Gram Altın'), findsWidgets);
@@ -284,14 +284,14 @@ void main() {
     expect(find.byType(InvestmentActionSheet), findsOneWidget);
 
     // Tap on contribute option (Varlık Ekle because Gram Altın has a symbol XAU)
-    final contributeTileFinder = find.text('Varlık Ekle');
+    final contributeTileFinder = find.text('Varlık ekle');
     expect(contributeTileFinder, findsOneWidget);
     await tester.tap(contributeTileFinder);
     await tester.pumpAndSettle();
 
     // Verify Action Sheet is closed and ContributeSheet is shown
     expect(find.byType(InvestmentActionSheet), findsNothing);
-    expect(find.text('Gram Altın · Varlık Ekle'), findsOneWidget);
+    expect(find.text('Gram Altın · Varlık ekle'), findsOneWidget);
   });
 
   testWidgets(
@@ -393,16 +393,16 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap Kaydı Sil tile in action sheet
-    await tester.tap(find.text('Kaydı Sil'));
+    await tester.tap(find.text('Kaydı sil'));
     await tester.pumpAndSettle();
 
     // Verify dialog title
     expect(find.text('Gram Altın kaydı silinsin mi?'), findsOneWidget);
 
-    // Tap Kaydi Sil confirmation button (FilledButton with text 'Kaydı Sil')
+    // Tap Kaydi Sil confirmation button (FilledButton with text 'Kaydı sil')
     final deleteButtonFinder = find.descendant(
       of: find.byType(FilledButton),
-      matching: find.text('Kaydı Sil'),
+      matching: find.text('Kaydı sil'),
     );
     expect(deleteButtonFinder, findsOneWidget);
     await tester.tap(deleteButtonFinder);
@@ -436,7 +436,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify snackbar/success text is shown
-    expect(find.text('Yatırım başarıyla eklendi'), findsOneWidget);
+    expect(find.text('Varlık eklendi'), findsOneWidget);
     // Verify reload was triggered
     verify(() => mockInvestmentBloc.add(any(that: isA<GetInvestmentsEvent>())))
         .called(2);
@@ -482,8 +482,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.text('Yatırım satıldı (Uyarı: bakiye güncellenemedi, '
-          'cüzdanı yenileyin.)'),
+      find.text('Varlık satıldı (Uyarı: bakiye güncellenemedi, '
+          'cüzdanı yenile.)'),
       findsOneWidget,
     );
   });
@@ -893,7 +893,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap Kaydı Sil tile in action sheet
-    await tester.tap(find.text('Kaydı Sil'));
+    await tester.tap(find.text('Kaydı sil'));
     await tester.pumpAndSettle();
 
     // Verify dialog title
@@ -990,7 +990,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify AddCustomSheet is shown by checking its header text
-    expect(find.text('Özel Yatırımını Düzenle'), findsOneWidget);
+    expect(find.text('Özel varlığı düzenle'), findsOneWidget);
   });
 
   testWidgets('tapping edit on gold investment opens AddGoldSheet',
@@ -1033,7 +1033,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify AddGoldSheet is shown by checking its header text
-    expect(find.text('Altın Yatırımını Düzenle'), findsOneWidget);
+    expect(find.text('Altını düzenle'), findsOneWidget);
   });
 
   testWidgets('tapping edit on stock investment opens AddStockSheet',
@@ -1090,7 +1090,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify AddStockSheet is shown by checking its header text
-    expect(find.text('Hisse Yatırımını Düzenle'), findsOneWidget);
+    expect(find.text('Hisseyi düzenle'), findsOneWidget);
   });
 
   testWidgets(
@@ -1130,7 +1130,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap Fiyatı Güncelle tile in action sheet
-    await tester.tap(find.text('Fiyatı Güncelle'));
+    await tester.tap(find.text('Fiyatı güncelle'));
     await tester.pumpAndSettle();
 
     // Verify event dispatched
@@ -1233,7 +1233,7 @@ void main() {
     // Maliyeti 2.000 → 1.500 düşür.
     final costField = find.byWidgetPredicate((widget) =>
         widget is TextField &&
-        widget.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)');
+        widget.decoration?.hintText == 'Maliyet (ödediğin tutar)');
     await tester.ensureVisible(costField);
     await tester.enterText(costField, '1.500');
     await tester.pumpAndSettle();
@@ -1367,7 +1367,7 @@ void main() {
     // Kullanıcı varlıklarının silinmeyeceğini onay ekranında görür.
     expect(find.text('Ev peşinatı hedefi silinsin mi?'), findsOneWidget);
     expect(
-      find.textContaining('İçindeki 1 varlık SİLİNMEZ'),
+      find.textContaining('İçindeki 1 varlık silinmez'),
       findsOneWidget,
     );
 

@@ -344,7 +344,7 @@ void main() {
       review(drafts: [_draft(description: 'X')], fromOcr: true),
     );
     expect(find.byIcon(Icons.image_search_rounded), findsOneWidget);
-    expect(find.textContaining('GÖRÜNTÜDEN'), findsOneWidget);
+    expect(find.textContaining('bir görüntüden okundu'), findsOneWidget);
   });
 
   testWidgets('kaynak dosya bütünlüğü şüpheliyse uyarılır', (tester) async {
@@ -507,7 +507,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Seçim sayfası: yeni kategori kurma girişi + mevcut kategoriler.
-    expect(find.byTooltip('Yeni Kategori Ekle'), findsOneWidget);
+    expect(find.byTooltip('Yeni kategori ekle'), findsOneWidget);
     // Seçici iki sütun: ana kategorinin adı SOLDA (gezinme) ve SAĞDA
     // (seçilebilir satır) görünür. Seçen satır sağdaki, yani sonuncusu.
     await tester.tap(find.text('Fatura').last);
@@ -522,7 +522,7 @@ void main() {
 
     await tester.tap(find.text('Kategori seç'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Yeni Kategori Ekle'));
+    await tester.tap(find.byTooltip('Yeni kategori ekle'));
     await tester.pumpAndSettle();
 
     // Form: ad alanı (üst kategori seçicisi dropdown'dır, TextFormField değil).
@@ -1152,7 +1152,7 @@ void main() {
 
     testWidgets('sistem kaydıyla eşleşmede düzeltme önerilmez', (tester) async {
       await pump(tester, review(drafts: [approx(system: true)]));
-      expect(find.text('Borç/yatırım kaydınla eşleşiyor'), findsOneWidget);
+      expect(find.text('Borç ya da birikim kaydınla eşleşiyor'), findsOneWidget);
       expect(find.textContaining('Tutarı '), findsNothing);
     });
 
@@ -1349,7 +1349,7 @@ void main() {
         entry: entry.copyWith(
           id: 'sys-1',
           title: 'Ödeme: İhtiyaç kredisi (Garanti BBVA)',
-          tag: 'Borç Ödemesi',
+          tag: 'Borç ödemesi',
           isSystem: true,
         ),
         isCoupling: true,
@@ -1453,7 +1453,7 @@ void main() {
           accountStatementOnCard: true,
         ),
       );
-      expect(find.textContaining('HESAP ekstresi'), findsOneWidget);
+      expect(find.textContaining('Bu bir hesap ekstresi'), findsOneWidget);
     });
 
     testWidgets(

@@ -137,7 +137,7 @@ void main() {
     await tester.pumpWidget(page());
     await tester.pumpAndSettle();
 
-    expect(find.text('Henüz borç kaydı yok.'), findsNothing);
+    expect(find.text('Henüz borcun yok'), findsNothing);
     expect(find.text('Kredi kartları'), findsOneWidget);
     expect(find.text('Bonus ••5690'), findsOneWidget);
     expect(find.text('1.200,00 ₺'), findsOneWidget);
@@ -151,7 +151,7 @@ void main() {
     await tester.pumpWidget(page());
     await tester.pumpAndSettle();
 
-    expect(find.text('Henüz borç kaydı yok.'), findsOneWidget);
+    expect(find.text('Henüz borcun yok'), findsOneWidget);
     expect(find.text('Kredi kartları'), findsNothing);
   });
 

@@ -130,7 +130,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify error banner is visible
-    expect(find.text('Geçerli bir tutar girin'), findsOneWidget);
+    expect(find.text('Geçerli bir tutar gir'), findsOneWidget);
   });
 
   testWidgets(
@@ -181,13 +181,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(saveCalled, isFalse);
-    expect(find.text('Bir kategori seçin'), findsOneWidget);
+    expect(find.text('Bir kategori seç'), findsOneWidget);
 
     // Kategoriye dokunmak uyarıyı kaldırır ve kayıt geçer.
     await tester.ensureVisible(find.text('Market'));
     await tester.tap(find.text('Market'));
     await tester.pumpAndSettle();
-    expect(find.text('Bir kategori seçin'), findsNothing);
+    expect(find.text('Bir kategori seç'), findsNothing);
 
     await tester.ensureVisible(find.text('Kaydet'));
     await tester.tap(find.text('Kaydet'));
@@ -456,7 +456,7 @@ void main() {
       await tester.ensureVisible(find.text('Kaydet'));
       await tester.tap(find.text('Kaydet'));
       await tester.pumpAndSettle();
-      expect(find.text('Bir kategori seçin'), findsNothing);
+      expect(find.text('Bir kategori seç'), findsNothing);
     });
 
     testWidgets('alt kategoriye dokunmak seçimi ona taşır', (tester) async {

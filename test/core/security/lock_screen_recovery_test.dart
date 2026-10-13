@@ -90,7 +90,7 @@ void main() {
 
     expect(find.byType(BiometricAuthPage), findsOneWidget);
     // Eski düğme hiçbir şey yapmıyordu; PIN'ini unutan kullanıcı ona basıyordu.
-    expect(find.text('Çıkış Yap'), findsNothing);
+    expect(find.text('Çıkış yap'), findsNothing);
     expect(find.byIcon(Icons.logout_rounded), findsNothing);
     expect(find.text("PIN'imi unuttum"), findsOneWidget);
   });
