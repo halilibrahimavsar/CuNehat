@@ -1615,8 +1615,8 @@
       }
     }
   },
-  "insightDailyLimitTitle": "Günlük harcama limiti (hedef)",
-  "insightDailyLimitDesc": "Kalan {gun} gün boyunca bütçeni korumak için önerilen günlük limit.",
+  "insightDailyLimitTitle": "Günde harcayabileceğin",
+  "insightDailyLimitDesc": "Bu dönemin gelirinden kalanı, kalan {gun} güne bölünce.",
   "@insightDailyLimitDesc": {
     "placeholders": {
       "gun": {
@@ -2358,7 +2358,7 @@
       }
     }
   },
-  "insightWeekdayHint": "Gün başına ortalama · dönemde {kez} kez",
+  "insightWeekdayHint": "Dönemdeki {kez} günün ortalaması",
   "@insightWeekdayHint": {
     "placeholders": {
       "kez": {
@@ -2366,7 +2366,7 @@
       }
     }
   },
-  "insightDailyAverageHint": "Yaşanan {gun} gün üzerinden",
+  "insightDailyAverageHint": "{gun} günün ortalaması",
   "@insightDailyAverageHint": {
     "placeholders": {
       "gun": {

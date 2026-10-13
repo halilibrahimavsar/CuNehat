@@ -1594,8 +1594,8 @@
       }
     }
   },
-  "insightDailyLimitTitle": "Daily Spending Limit (Target)",
-  "insightDailyLimitDesc": "Recommended daily limit to stay on budget for the remaining {gun} day(s).",
+  "insightDailyLimitTitle": "What you can spend per day",
+  "insightDailyLimitDesc": "What's left of this period's income, split over the remaining {gun} day(s).",
   "@insightDailyLimitDesc": {
     "placeholders": {
       "gun": {
@@ -2337,7 +2337,7 @@
       }
     }
   },
-  "insightWeekdayHint": "Average per day · {kez} times this period",
+  "insightWeekdayHint": "Average of {kez} day(s) in the period",
   "@insightWeekdayHint": {
     "placeholders": {
       "kez": {
@@ -2345,7 +2345,7 @@
       }
     }
   },
-  "insightDailyAverageHint": "Over the {gun} days elapsed",
+  "insightDailyAverageHint": "Average of {gun} day(s)",
   "@insightDailyAverageHint": {
     "placeholders": {
       "gun": {

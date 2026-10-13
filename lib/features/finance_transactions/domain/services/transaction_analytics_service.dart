@@ -94,6 +94,7 @@ class TransactionAnalyticsService {
     bool rangeIsBudgetPeriod = false,
     Map<String, String> rootIndex = const {},
     double upcomingObligations = 0,
+    DateTime? trackingSince,
   }) {
     final startDay = _dayOnly(rangeStart);
     final endDay = _dayOnly(rangeEnd);
@@ -158,8 +159,28 @@ class TransactionAnalyticsService {
     // Yaşanmış gün sayısı. Aralık tamamen gelecekteyse henüz yaşanmış gün
     // yoktur; bölen olarak 1 kullanılır (pay da 0 olacağı için sonuç 0).
     final elapsedSpan = elapsedEnd.difference(startDay).inDays + 1;
-    final elapsedDays = elapsedSpan < 1 ? 1 : (elapsedSpan > days ? days : elapsedSpan);
+    final elapsedDays =
+        elapsedSpan < 1 ? 1 : (elapsedSpan > days ? days : elapsedSpan);
     final hasElapsed = !elapsedEnd.isBefore(startDay);
+
+    // ORTALAMALARIN penceresi, kullanıcının kayıt tutmaya başladığı günden
+    // önceye uzanmaz ([trackingSince]).
+    //
+    // Cihazda görüldü (13 Eki 2026): ayın 12'sinde başlayan biri iki günde
+    // 5.910 ₺ girdi; sayfa "günlük ortalama 454 ₺ — yaşanan 13 gün
+    // üzerinden" dedi. Uygulamayı kullanmadığı 11 gün "harcamadığı gün"
+    // sayılmıştı. Aynı nedenle "en çok harcadığın gün" bugünkü 4.590 ₺'yi,
+    // kayıt girmediği önceki salıyla ortalayıp 2.295 ₺ gösteriyordu.
+    //
+    // Kıyas penceresi ([elapsedDays]) TAKVİME hizalı kalır; yalnız bölenler
+    // değişir.
+    final sinceDay = trackingSince == null ? null : _dayOnly(trackingSince);
+    final activeStart = (sinceDay != null && sinceDay.isAfter(startDay))
+        ? (sinceDay.isAfter(elapsedEnd) ? elapsedEnd : sinceDay)
+        : startDay;
+    final activeSpan = elapsedEnd.difference(activeStart).inDays + 1;
+    final activeDays =
+        activeSpan < 1 ? 1 : (activeSpan > days ? days : activeSpan);
 
     final net = totalIncome - totalExpense;
 
@@ -169,8 +190,9 @@ class TransactionAnalyticsService {
     // "En çok harcadığınız gün: Salı (500 TL)" diyordu. Fark davranış değil
     // TAKVİM — o ayda 5 Salı, 4 Perşembe var. Toplamı o günün pencere içinde
     // kaç kez geçtiğine bölmek yanlılığı kaldırır.
-    final weekdayOccurrences =
-        hasElapsed ? _weekdayOccurrences(startDay, elapsedEnd) : const <int, int>{};
+    final weekdayOccurrences = hasElapsed
+        ? _weekdayOccurrences(activeStart, elapsedEnd)
+        : const <int, int>{};
     final Map<int, double> weekdayAverage = {
       for (final e in elapsedExpenseByWeekday.entries)
         if ((weekdayOccurrences[e.key] ?? 0) > 0)
@@ -208,9 +230,10 @@ class TransactionAnalyticsService {
     // tespit ediyor, 5 gün sonra ödenecek kirayı görmezden gelen bir "günlük
     // limit" kullanıcıyı bilerek yanıltır.
     final spendableRemaining = net - upcomingObligations;
-    final double? dailySafeToSpend = (remainingDays > 0 && spendableRemaining > 0)
-        ? (spendableRemaining / remainingDays)
-        : null;
+    final double? dailySafeToSpend =
+        (remainingDays > 0 && spendableRemaining > 0)
+            ? (spendableRemaining / remainingDays)
+            : null;
 
     // Kategori Bazlı Harcama Sıçraması Uyarısı (Category Spike)
     // Kıyas penceresi Rapor ile ORTAK ([comparisonWindowFor]): iki sayfa
@@ -249,8 +272,9 @@ class TransactionAnalyticsService {
                 previousWindow.end,
               ),
             ),
-      dailyAverageExpense: elapsedExpense / elapsedDays,
+      dailyAverageExpense: elapsedExpense / activeDays,
       elapsedDays: elapsedDays,
+      averageWindowDays: activeDays,
       topExpenseWeekday: topWeekday?.key,
       topExpenseWeekdayAverage: topWeekday?.value ?? 0,
       topExpenseWeekdayOccurrences:
@@ -372,6 +396,11 @@ class TransactionInsights {
   /// geçtiği; en az 1.
   final int elapsedDays;
 
+  /// [dailyAverageExpense]'in böleni: yaşanmış günlerin, kullanıcının kayıt
+  /// tutmaya başladığı günden SONRAKİ kısmı. Eski kullanıcıda [elapsedDays]
+  /// ile aynıdır.
+  final int averageWindowDays;
+
   /// Gün başına ortalaması en yüksek haftanın günü (1=Pazartesi .. 7=Pazar)
   /// ya da gider yoksa null.
   final int? topExpenseWeekday;
@@ -420,6 +449,7 @@ class TransactionInsights {
     required this.previousTotals,
     required this.dailyAverageExpense,
     required this.elapsedDays,
+    required this.averageWindowDays,
     required this.topExpenseWeekday,
     required this.topExpenseWeekdayAverage,
     required this.topExpenseWeekdayOccurrences,

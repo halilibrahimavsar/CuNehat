@@ -155,21 +155,23 @@ void main() {
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(
-      BlocProvider<TransactionFilterCubit>(create: (_) => TransactionFilterCubit(), child: BlocProvider<AmountVisibilityCubit>.value(
-        value: visibility,
-        child: MaterialApp(
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: const [Locale('tr'), Locale('en')],
-          locale: const Locale('tr'),
-          theme: ThemeData(fontFamily: kRealFontFamily),
-          home: const TransactionInsightsPage(userId: 'u', walletId: 'w'),
-        ),
-      )),
+      BlocProvider<TransactionFilterCubit>(
+          create: (_) => TransactionFilterCubit(),
+          child: BlocProvider<AmountVisibilityCubit>.value(
+            value: visibility,
+            child: MaterialApp(
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [Locale('tr'), Locale('en')],
+              locale: const Locale('tr'),
+              theme: ThemeData(fontFamily: kRealFontFamily),
+              home: const TransactionInsightsPage(userId: 'u', walletId: 'w'),
+            ),
+          )),
     );
     await tester.pumpAndSettle();
   }
@@ -298,8 +300,8 @@ void main() {
     expect(find.text('Bu dönemde gelir ya da gider yok'), findsOneWidget);
     expect(find.textContaining('1 para taşıma hareketi var'), findsOneWidget);
 
-    final previous =
-        DateFormat.yMMMM('tr').format(DateTime(lastMonth.year, lastMonth.month));
+    final previous = DateFormat.yMMMM('tr')
+        .format(DateTime(lastMonth.year, lastMonth.month));
     await tester.tap(find.text('$previous dönemine git'));
     await tester.pumpAndSettle();
     expect(find.text(previous), findsOneWidget);
@@ -315,7 +317,19 @@ void main() {
     await pumpPage(tester);
 
     expect(find.text(formatMoney(900 / elapsed)), findsWidgets);
-    expect(find.text('Yaşanan $elapsed gün üzerinden'), findsOneWidget);
+    expect(find.text('$elapsed günün ortalaması'), findsOneWidget);
+  });
+
+  testWidgets(
+      'ay ortasında başlayan kullanıcıda ortalama, kayıt tuttuğu '
+      'günlere bölünür', (tester) async {
+    // İlk (ve tek) kayıt bugün: uygulamayı kullanmadığı günler "harcamadığı
+    // gün" sayılmaz.
+    seed([tx(id: 'e1', date: now, amount: 900)]);
+    await pumpPage(tester);
+
+    expect(find.text('1 günün ortalaması'), findsOneWidget);
+    expect(find.text(formatMoney(900)), findsWidgets);
   });
 
   testWidgets('dönem ORTAK: başka sayfada seçilen dönem burada görünür',
@@ -385,15 +399,16 @@ void main() {
     expect(opened, TransactionsSection.report);
   });
 
-  testWidgets('bütçe %80\'i geçince "Durum"da uyarı çıkar (Rapor ile aynı hesap)',
+  testWidgets(
+      'bütçe %80\'i geçince "Durum"da uyarı çıkar (Rapor ile aynı hesap)',
       (tester) async {
     final budgets = _MockBudgetRepository();
     getIt.registerSingleton<BudgetRepository>(budgets);
-    when(() => budgets.getBudgets(any())).thenAnswer((_) async =>
-        const Right<Failure, List<BudgetEntity>>([
-          BudgetEntity(categoryId: 'Market', limitAmount: 1000),
-          BudgetEntity(categoryId: 'Fatura', limitAmount: 5000),
-        ]));
+    when(() => budgets.getBudgets(any()))
+        .thenAnswer((_) async => const Right<Failure, List<BudgetEntity>>([
+              BudgetEntity(categoryId: 'Market', limitAmount: 1000),
+              BudgetEntity(categoryId: 'Fatura', limitAmount: 5000),
+            ]));
     seed([
       tx(id: 'e1', date: dayThisMonth(1), amount: 950),
       tx(id: 'e2', date: dayThisMonth(1), amount: 100, tag: 'Fatura'),

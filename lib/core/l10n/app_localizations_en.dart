@@ -3081,11 +3081,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get insightDailyLimitTitle => 'Daily Spending Limit (Target)';
+  String get insightDailyLimitTitle => 'What you can spend per day';
 
   @override
   String insightDailyLimitDesc(int gun) {
-    return 'Recommended daily limit to stay on budget for the remaining $gun day(s).';
+    return 'What\'s left of this period\'s income, split over the remaining $gun day(s).';
   }
 
   @override
@@ -4260,12 +4260,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String insightWeekdayHint(int kez) {
-    return 'Average per day · $kez times this period';
+    return 'Average of $kez day(s) in the period';
   }
 
   @override
   String insightDailyAverageHint(int gun) {
-    return 'Over the $gun days elapsed';
+    return 'Average of $gun day(s)';
   }
 
   @override

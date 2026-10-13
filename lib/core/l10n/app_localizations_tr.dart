@@ -3071,11 +3071,11 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get insightDailyLimitTitle => 'Günlük harcama limiti (hedef)';
+  String get insightDailyLimitTitle => 'Günde harcayabileceğin';
 
   @override
   String insightDailyLimitDesc(int gun) {
-    return 'Kalan $gun gün boyunca bütçeni korumak için önerilen günlük limit.';
+    return 'Bu dönemin gelirinden kalanı, kalan $gun güne bölünce.';
   }
 
   @override
@@ -4235,12 +4235,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String insightWeekdayHint(int kez) {
-    return 'Gün başına ortalama · dönemde $kez kez';
+    return 'Dönemdeki $kez günün ortalaması';
   }
 
   @override
   String insightDailyAverageHint(int gun) {
-    return 'Yaşanan $gun gün üzerinden';
+    return '$gun günün ortalaması';
   }
 
   @override

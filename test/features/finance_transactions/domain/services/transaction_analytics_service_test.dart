@@ -207,7 +207,11 @@ void main() {
           amount: 20000,
           date: DateTime(2026, 6, 2),
           type: TransactionTypeModel.income),
-      _tx(title: 'Market', tag: 'Market', amount: 500, date: DateTime(2026, 6, 3)),
+      _tx(
+          title: 'Market',
+          tag: 'Market',
+          amount: 500,
+          date: DateTime(2026, 6, 3)),
       _tx(
         title: 'Transfer',
         tag: 'Transfer',
@@ -253,6 +257,73 @@ void main() {
 
       expect(r.totalIncome, 0);
       expect(r.savingsRate, isNull);
+    });
+  });
+
+  group('ortalamalar kayıt tutmaya BAŞLANAN günden öncesine yayılmaz', () {
+    // Cihazda görülen durum: ayın 12'sinde başlayan kullanıcı, 13 Ekim Salı.
+    final start = DateTime(2026, 10, 1);
+    final end = DateTime(2026, 10, 31);
+    final today = DateTime(2026, 10, 13);
+    final firstRecord = DateTime(2026, 10, 12, 9, 30);
+    final txs = [
+      _tx(amount: 1320, date: DateTime(2026, 10, 12, 10)),
+      _tx(amount: 4590, date: DateTime(2026, 10, 13, 17)),
+    ];
+
+    TransactionInsights analyze({DateTime? since}) =>
+        const TransactionAnalyticsService().analyze(
+          txs,
+          rangeStart: start,
+          rangeEnd: end,
+          currentDateOverride: today,
+          trackingSince: since,
+        );
+
+    test('günlük ortalama, kayıt tutulan günlere bölünür', () {
+      final insights = analyze(since: firstRecord);
+
+      expect(insights.averageWindowDays, 2);
+      expect(insights.dailyAverageExpense, closeTo(5910 / 2, 0.001));
+    });
+
+    test('eski davranış (başlangıç bilinmiyor): dönem başından bölünür', () {
+      final insights = analyze();
+
+      expect(insights.averageWindowDays, 13);
+      expect(insights.dailyAverageExpense, closeTo(5910 / 13, 0.001));
+    });
+
+    test('en çok harcanan gün, kayıt girilmeyen önceki salıyla ORTALANMAZ', () {
+      final insights = analyze(since: firstRecord);
+
+      expect(insights.topExpenseWeekday, DateTime.tuesday);
+      expect(insights.topExpenseWeekdayOccurrences, 1);
+      expect(insights.topExpenseWeekdayAverage, closeTo(4590, 0.001));
+    });
+
+    test('başlangıç dönemden ÖNCEYSE hiçbir şey değişmez', () {
+      final insights = analyze(since: DateTime(2026, 3, 4));
+
+      expect(insights.averageWindowDays, 13);
+      expect(insights.topExpenseWeekdayOccurrences, 2);
+    });
+
+    test('kıyas penceresi takvime hizalı kalır', () {
+      expect(analyze(since: firstRecord).elapsedDays, 13);
+    });
+
+    test('ilk kayıt bugünse bölen 1 gündür', () {
+      final insights = const TransactionAnalyticsService().analyze(
+        [_tx(amount: 300, date: DateTime(2026, 10, 13, 8))],
+        rangeStart: start,
+        rangeEnd: end,
+        currentDateOverride: today,
+        trackingSince: DateTime(2026, 10, 13, 8),
+      );
+
+      expect(insights.averageWindowDays, 1);
+      expect(insights.dailyAverageExpense, 300);
     });
   });
 

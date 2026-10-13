@@ -195,7 +195,6 @@ class _InsightsViewState extends State<_InsightsView> {
       _budgetsSub =
           getIt<BudgetsChangedNotifier>().stream.listen((_) => _loadBudgets());
     }
-
   }
 
   /// Kategori ikon+ad indeksini yükler ve kategoriler değiştikçe TAZELER.
@@ -354,9 +353,11 @@ class _InsightsViewState extends State<_InsightsView> {
         // dönemin son gününde de anlamlı.
         // Kullanıcının biriminde bugünü içeren dönem (ör. Çarşamba–Salı
         // haftası, 15–14 ayı) de bir "bütçe dönemi"dir.
-        rangeIsBudgetPeriod: DateRangeHelper.isBudgetPeriod(_range) ||
-            _isCurrentUnitPeriod(),
+        rangeIsBudgetPeriod:
+            DateRangeHelper.isBudgetPeriod(_range) || _isCurrentUnitPeriod(),
         rootIndex: _categoryRoots,
+        // Ortalamalar kullanıcının İLK kaydından öncesine yayılmaz.
+        trackingSince: _earliestDate(all),
         upcomingObligations: RecurringOccurrences.plannedExpenseTotal(
           templates,
           from: obligationsFrom,
@@ -570,12 +571,15 @@ class _InsightsViewState extends State<_InsightsView> {
                               if (insights.isEmpty)
                                 _buildPeriodEmptyNote(context, all, insights)
                               else ...[
-                                ..._buildPeriodSection(context, insights, money),
+                                ..._buildPeriodSection(
+                                    context, insights, money),
                                 ..._buildStatusSection(
                                     context, insights, money, all, derived),
-                                ..._buildHabitSection(context, insights, money, all),
+                                ..._buildHabitSection(
+                                    context, insights, money, all),
                               ],
-                              ..._buildRecurringSection(context, suggestions, money),
+                              ..._buildRecurringSection(
+                                  context, suggestions, money),
                             ],
                           ),
                         ),
@@ -711,7 +715,7 @@ class _InsightsViewState extends State<_InsightsView> {
         icon: Icons.calendar_today_rounded,
         label: context.l10n.gunlukOrtalamaHarcama,
         value: money(insights.dailyAverageExpense),
-        hint: context.l10n.insightDailyAverageHint(insights.elapsedDays),
+        hint: context.l10n.insightDailyAverageHint(insights.averageWindowDays),
       ),
       if (insights.topExpenseWeekday != null)
         InsightStatCard(
@@ -881,6 +885,15 @@ class _InsightsViewState extends State<_InsightsView> {
   /// Haftanın günü adı — elle yazılmış tr/en listesi DEĞİL, `intl`in kendi
   /// takvim adları. Eski listeler yeni bir dil eklendiğinde sessizce
   /// İngilizce'ye düşerdi.
+  /// Cüzdandaki en eski kaydın tarihi; kayıt yoksa `null`.
+  static DateTime? _earliestDate(List<TransactionEntity> all) {
+    DateTime? earliest;
+    for (final t in all) {
+      if (earliest == null || t.date.isBefore(earliest)) earliest = t.date;
+    }
+    return earliest;
+  }
+
   String _weekdayName(BuildContext context, int weekday) {
     if (weekday < 1 || weekday > 7) return '';
     final locale = Localizations.localeOf(context).languageCode;

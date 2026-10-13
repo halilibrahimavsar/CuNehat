@@ -5516,13 +5516,13 @@ abstract class AppLocalizations {
   /// No description provided for @insightDailyLimitTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Günlük harcama limiti (hedef)'**
+  /// **'Günde harcayabileceğin'**
   String get insightDailyLimitTitle;
 
   /// No description provided for @insightDailyLimitDesc.
   ///
   /// In tr, this message translates to:
-  /// **'Kalan {gun} gün boyunca bütçeni korumak için önerilen günlük limit.'**
+  /// **'Bu dönemin gelirinden kalanı, kalan {gun} güne bölünce.'**
   String insightDailyLimitDesc(int gun);
 
   /// No description provided for @insightSpikeTitle.
@@ -7460,13 +7460,13 @@ abstract class AppLocalizations {
   /// No description provided for @insightWeekdayHint.
   ///
   /// In tr, this message translates to:
-  /// **'Gün başına ortalama · dönemde {kez} kez'**
+  /// **'Dönemdeki {kez} günün ortalaması'**
   String insightWeekdayHint(int kez);
 
   /// No description provided for @insightDailyAverageHint.
   ///
   /// In tr, this message translates to:
-  /// **'Yaşanan {gun} gün üzerinden'**
+  /// **'{gun} günün ortalaması'**
   String insightDailyAverageHint(int gun);
 
   /// No description provided for @insightTapForTransactions.
