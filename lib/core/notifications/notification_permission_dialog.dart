@@ -2,9 +2,27 @@ import 'package:flutter/material.dart';
 
 import 'package:cunehat/core/extensions/context_extensions.dart';
 
+/// "Bildirim gerekçesi gösterildi" kalıcı bayrağı. Değeri DEĞİŞMEZ: eski
+/// kurulumlarda bu anahtarla yazılı ve onlara yeniden sorulmamalı.
+const String kNotificationRationaleShownKey =
+    'notification_permission_explained';
+
+/// Bildirim izni ŞİMDİ sorulmalı mı?
+///
+/// - [alreadyExplained]: gerekçe daha önce gösterildi (kullanıcı ne dediyse
+///   dedi) → bir daha sorulmaz; dönüş yolu Ayarlar > Bildirimler.
+/// - [reminderWanted]: bu oturumda hatırlatma taşıyan bir kayıt var/oluştu
+///   (bkz. `ReminderSyncService.reminderWanted`). Yoksa sorunun konusu yok.
+///
+/// Eskiden izin ilk açılışta, bu ikinci koşul aranmadan soruluyordu.
+bool shouldAskNotificationPermission({
+  required bool alreadyExplained,
+  required bool reminderWanted,
+}) =>
+    !alreadyExplained && reminderWanted;
+
 /// Sistem bildirim izni istenmeden önce gösterilen gerekçe diyaloğu.
-/// Kardeşi [showPrivacyConsentDialog] (privacy_policy_page.dart) ile aynı
-/// stile sadıktır: kapatılamaz, kısa gerekçe + net eylem.
+/// Kapatılamaz, kısa gerekçe + net eylem.
 ///
 /// Döndürdüğü `true`, kullanıcının "İzin Ver" dediğini; çağıran taraf bu
 /// durumda `NotificationService.requestPermissions()`'ı tetiklemelidir.

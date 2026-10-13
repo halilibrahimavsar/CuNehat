@@ -12046,6 +12046,72 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bağı kalkan “{title}” ({amount}) artık bir gelir. Kategorisini seç.'**
   String unlinkPickCategoryIncome(String title, String amount);
+
+  /// No description provided for @firstRunTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'ÇuHat\'a hoş geldin'**
+  String get firstRunTitle;
+
+  /// No description provided for @firstRunBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelirini ve giderini yaz, paranın nereye gittiğini gör.'**
+  String get firstRunBody;
+
+  /// No description provided for @firstRunBalanceLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şu an ne kadar paran var?'**
+  String get firstRunBalanceLabel;
+
+  /// No description provided for @firstRunBalanceHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bilmiyorsan boş bırak; sonra düzeltirsin.'**
+  String get firstRunBalanceHint;
+
+  /// No description provided for @firstRunStart.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başla'**
+  String get firstRunStart;
+
+  /// No description provided for @firstRunRestore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedeğim var'**
+  String get firstRunRestore;
+
+  /// No description provided for @firstRunPrivacyNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıtların yalnız bu telefonda durur; sunucumuz yok.'**
+  String get firstRunPrivacyNote;
+
+  /// No description provided for @firstRunDefaultWalletName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdanım'**
+  String get firstRunDefaultWalletName;
+
+  /// No description provided for @firstRunFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan kurulamadı. Yeniden dene.'**
+  String get firstRunFailed;
+
+  /// No description provided for @restoreBackupTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedekten geri yükle'**
+  String get restoreBackupTitle;
+
+  /// No description provided for @restoreBackupBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Drive\'daki ya da telefonundaki yedeği seç. Kayıtların olduğu gibi geri gelir.'**
+  String get restoreBackupBody;
 }
 
 class _AppLocalizationsDelegate

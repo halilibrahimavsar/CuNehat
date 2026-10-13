@@ -22,6 +22,12 @@ import 'package:cunehat/features/wallet/domain/card_family.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/no_wallet_view.dart';
+import 'package:cunehat/features/wallet/presentation/widgets/welcome_view.dart';
+import 'package:cunehat/features/wallet/domain/first_wallet_setup.dart';
+import 'package:cunehat/features/wallet/domain/usecases/wallet_usecase.dart';
+import 'package:cunehat/features/finance_transactions/domain/usecases/install_starter_pack_usecase.dart';
+import 'package:cunehat/core/services/reminder_sync_service.dart';
+import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_transaction_entity.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_event.dart';
@@ -95,8 +101,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   /// gösteriliyordu. Yeni bir vade gelince imza değişir ve tekrar çıkar.
   String? _dismissedPendingSignature;
 
-  /// İlk açılış akışı (gizlilik onamı + bildirim izni gerekçesi) bitene kadar
-  /// bekleyen-işlem diyaloğu açılmaz; yoksa üç modal üst üste biniyordu.
+  /// Açılış diyalogları (bildirim izni, yedek teklifi) bitene kadar
+  /// bekleyen-işlem diyaloğu açılmaz; yoksa modallar üst üste biniyordu.
   final Completer<void> _firstLaunchGate = Completer<void>();
 
   /// Build içinde yaratılırsa her rebuild'de key değişir ve scaffold'un tüm
@@ -133,9 +139,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             );
     _navController.viewStack.addListener(_pumpOnboarding);
 
-    // İlk açılışta sırayla: gizlilik onamı, ardından bildirim izni gerekçesi.
-    // Tek postFrameCallback'te sıralı çalıştırılır ki sistem izin promptu
-    // gizlilik diyaloğuyla çakışmasın.
+    // Hatırlatma taşıyan ilk kayıt oluştuğunda bildirim izni sorulur (bkz.
+    // [_maybeRequestNotificationPermission]).
+    getIt<ReminderSyncService>().reminderWanted.addListener(_onReminderWanted);
+
+    // Açılış diyalogları tek postFrameCallback'te SIRALI çalışır ki sistem
+    // izin promptu yedek teklifiyle çakışmasın.
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => runFirstLaunchThenOpenGate(
         onboarding: _runFirstLaunchOnboarding,
@@ -148,20 +157,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     if (!_firstLaunchGate.isCompleted) _firstLaunchGate.complete();
   }
 
-  static const String _privacyConsentKey = 'privacy_consent_shown';
-  static const String _notificationRationaleKey =
-      'notification_permission_explained';
-
   Future<void> _runFirstLaunchOnboarding() async {
-    await _maybeShowPrivacyConsent();
-    if (!mounted) return;
     await _maybeRequestNotificationPermission();
     if (!mounted) return;
     await _maybeOfferBackup();
   }
 
-  /// Yedekleme teklifi. Diğer ikisinden farklı olarak ilk açılışa BAĞLI
-  /// DEĞİL: sıfır veriyle sorulması anlamsız olduğu için eşiğe ulaşana kadar
+  /// Yedekleme teklifi. İlk açılışa BAĞLI DEĞİL: sıfır veriyle sorulması anlamsız olduğu için eşiğe ulaşana kadar
   /// her açılışta yeniden değerlendirilir (bkz. [BackupOfferPrompt]).
   Future<void> _maybeOfferBackup() async {
     final prefs = getIt<SharedPreferences>();
@@ -193,29 +195,60 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     await prefs.setBool(BackupOfferPrompt.seenKey, true);
   }
 
-  Future<void> _maybeShowPrivacyConsent() async {
-    final prefs = getIt<SharedPreferences>();
-    if (prefs.getBool(_privacyConsentKey) ?? false) return;
-    if (!mounted) return;
-    await showPrivacyConsentDialog(context);
-    await prefs.setBool(_privacyConsentKey, true);
+  bool _askingNotificationPermission = false;
+
+  void _onReminderWanted() {
+    // Açılış diyaloglarının arkasına sıralan: `syncAll` açılışta koşar ve
+    // yedek teklifiyle aynı anda tetiklenebilir.
+    unawaited(_firstLaunchGate.future.then((_) {
+      if (mounted) return _maybeRequestNotificationPermission();
+    }));
   }
 
+  /// Bildirim iznini, sorunun bir KONUSU olduğunda sorar.
+  ///
+  /// Eskiden ilk açılışta, kullanıcının elinde hatırlatılacak tek bir kayıt
+  /// yokken soruluyordu. Artık hatırlatma taşıyan ilk kayıt (düzenli işlem,
+  /// vadeli borç, kart) oluşunca sorulur; yedeğini geri yükleyen kullanıcıda
+  /// hatırlatmalar hazır geldiği için ilk açılışta sorulmaya devam eder.
+  ///
+  /// Ana sayfanın üstünde bir form ya da sayfa varken SORULMAZ: istek
+  /// düşmez, üstteki rota kapanınca [didChangeDependencies] yeniden dener.
   Future<void> _maybeRequestNotificationPermission() async {
+    if (_askingNotificationPermission || !mounted) return;
     final prefs = getIt<SharedPreferences>();
-    if (prefs.getBool(_notificationRationaleKey) ?? false) return;
-    if (!mounted) return;
-    final granted = await showNotificationPermissionRationale(context);
-    // Bayrak gerekçe GÖSTERİLDİKTEN sonra yazılır. Kullanıcı "Şimdi Değil"
-    // dese de açılışta bir daha rahatsız edilmez; izni sonradan vermek
-    // isterse Ayarlar > Bildirimler kartından her zaman isteyebilir.
-    await prefs.setBool(_notificationRationaleKey, true);
-    if (granted) {
-      try {
-        await getIt<NotificationService>().requestPermissions();
-      } catch (e) {
-        debugPrint('Failed to request notification permissions: $e');
+    if (!shouldAskNotificationPermission(
+      alreadyExplained: prefs.getBool(kNotificationRationaleShownKey) ?? false,
+      reminderWanted: getIt<ReminderSyncService>().reminderWanted.value,
+    )) {
+      return;
+    }
+    if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
+
+    _askingNotificationPermission = true;
+    try {
+      final service = getIt<NotificationService>();
+      if (await service.areNotificationsEnabled()) {
+        // İzin zaten var (Android 12 ve altında kurulumla gelir): sorulacak
+        // bir şey yok, bir daha da denenmesin.
+        await prefs.setBool(kNotificationRationaleShownKey, true);
+        return;
       }
+      if (!mounted) return;
+      final granted = await showNotificationPermissionRationale(context);
+      // Bayrak gerekçe GÖSTERİLDİKTEN sonra yazılır. Kullanıcı "Şimdi Değil"
+      // dese de bir daha rahatsız edilmez; izni sonradan vermek isterse
+      // Ayarlar > Bildirimler kartından her zaman isteyebilir.
+      await prefs.setBool(kNotificationRationaleShownKey, true);
+      if (granted) {
+        try {
+          await service.requestPermissions();
+        } catch (e, st) {
+          reportError('Ana sayfa · bildirim izni', e, st);
+        }
+      }
+    } finally {
+      _askingNotificationPermission = false;
     }
   }
 
@@ -235,12 +268,58 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     if (mounted) setState(() {});
   }
 
-  void _loadWallets() {
+  String _userId() {
     final authState = context.read<AppAuthBloc>().state;
-    final userId = authState is AppAuthenticated
+    return authState is AppAuthenticated
         ? authState.user.uid
         : (authState is AppAuthLocked ? authState.user.uid : 'local_user');
-    context.read<WalletBloc>().add(WatchWalletsEvent(userId));
+  }
+
+  void _loadWallets() {
+    context.read<WalletBloc>().add(WatchWalletsEvent(_userId()));
+  }
+
+  /// Karşılama ekranındaki "Başla": ilk cüzdanı ve hazır kategorileri kurar.
+  /// Hata iletisi (başarıda `null`) döner; bkz. [WelcomeView.onStart].
+  ///
+  /// `WalletBloc`'a olay GÖNDERİLMEZ: cüzdan akışı yeni kaydı kendisi görür
+  /// ve kabuk karşılamadan doğrudan deftere geçer. Olağan yol
+  /// (`CreateWalletEvent`) ayrıca "Cüzdan oluşturuldu!" bildirimi basar; ilk
+  /// ekranda kullanıcının yaptığı şey "başlamak", cüzdan oluşturmak değil.
+  Future<String?> _startFresh(double openingBalance) async {
+    final l10n = context.l10n;
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final result = await FirstWalletSetup(
+      getIt<WalletCreateUseCase>(),
+      getIt<WalletSetActiveUseCase>(),
+      getIt<InstallStarterPackUseCase>(),
+    )(
+      userId: _userId(),
+      name: l10n.firstRunDefaultWalletName,
+      openingBalance: openingBalance,
+      currency: kDefaultCurrency,
+      languageCode: languageCode,
+    );
+    return result.fold(
+      (failure) {
+        reportError('Ana sayfa · ilk cüzdan', failure.message);
+        return l10n.firstRunFailed;
+      },
+      (_) {
+        _markPrivacyNoteSeen();
+        return null;
+      },
+    );
+  }
+
+  /// Gizlilik notu karşılama ekranında duruyor; kullanıcı oradan ilerlediğinde
+  /// "görüldü" sayılır.
+  void _markPrivacyNoteSeen() => unawaited(
+      getIt<SharedPreferences>().setBool(kPrivacyConsentShownKey, true));
+
+  void _openRestore() {
+    _markPrivacyNoteSeen();
+    context.push(AppRoutes.restoreBackup);
   }
 
   @override
@@ -248,6 +327,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     super.didChangeDependencies();
     _navController.reduceMotion =
         MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    // Rota bağımlılığı: üstteki form/sayfa kapanınca burası yeniden koşar ve
+    // bekleyen bildirim izni sorusu o an sorulur.
+    if (ModalRoute.of(context)?.isCurrent ?? false) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _onReminderWanted());
+    }
   }
 
   /// Defter · İçgörü · Rapor sekme şeridinden gelen istek.
@@ -273,6 +357,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   void dispose() {
     // Kapıyı bekleyen listener'lar askıda kalmasın.
     _openFirstLaunchGate();
+    getIt<ReminderSyncService>()
+        .reminderWanted
+        .removeListener(_onReminderWanted);
     _navController.horizontalController
         .removeListener(_onSliderStateMaybeChanged);
     _navController.viewStack.removeListener(_pumpOnboarding);
@@ -428,7 +515,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   Widget _buildContent(WalletState walletState) {
     return switch (walletState) {
-      WalletLoadingSt() => const Center(child: CircularProgressIndicator()),
+      // İlk durum da "yükleniyor": eskiden karşılama dalına düşüyor ve cüzdanı
+      // OLAN kullanıcı her açılışta bir kare boyunca boş ekranı görüyordu.
+      WalletInitialSt() ||
+      WalletLoadingSt() =>
+        const Center(child: CircularProgressIndicator()),
       WalletErrorSt() => ErrorView(
           message: walletState.err,
           onPressed: _loadWallets,
@@ -437,7 +528,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               Icon(Icons.error_outline, size: 48, color: Colors.red[400]),
         ),
       WalletLoadedSt() => _buildLoadedContent(walletState),
-      _ => NoWalletView(infoText: context.l10n.cuzdanOlusturunuz),
+      NoWalletSt() => WelcomeView(
+          currency: kDefaultCurrency,
+          onStart: _startFresh,
+          onRestore: _openRestore,
+          onPrivacyPolicy: () => context.push(AppRoutes.privacyPolicy),
+        ),
     };
   }
 

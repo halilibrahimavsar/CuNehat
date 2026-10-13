@@ -1,3 +1,4 @@
+import 'package:cunehat/core/constants/app_version.dart';
 import 'dart:async';
 
 import 'package:cunehat/config/di/injection.dart';
@@ -233,9 +234,11 @@ class _AppBarContentState extends State<AppBarContent> {
     } else {
       return Center(
         child: Text(
-          state is NoWalletSt
-              ? context.l10n.createWallet
-              : context.l10n.selectWallet,
+          // Cüzdan yokken ekranda karşılama var; çubuk yalnız uygulamanın
+          // adını taşır. Eskiden "Cüzdan Oluştur" yazıyordu: dokunulamayan
+          // bir başlık, karşılamadaki "Başla" ile yarışan ikinci bir komut
+          // gibi okunuyordu.
+          state is NoWalletSt ? kAppName : context.l10n.selectWallet,
           style: const TextStyle(
             color: AppColors.white,
             fontWeight: FontWeight.bold,

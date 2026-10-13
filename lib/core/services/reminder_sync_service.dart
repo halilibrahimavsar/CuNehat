@@ -1,6 +1,7 @@
 import 'package:cunehat/core/l10n/app_strings.dart';
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 
 import 'package:cunehat/core/notifications/notification_constants.dart';
@@ -64,7 +65,25 @@ class ReminderSyncService {
   }
 
   @disposeMethod
-  Future<void> dispose() async => _ledgerChanges?.cancel();
+  Future<void> dispose() async {
+    await _ledgerChanges?.cancel();
+    _reminderWanted.dispose();
+  }
+
+  final ValueNotifier<bool> _reminderWanted = ValueNotifier(false);
+
+  /// Bu oturumda en az bir GERÇEK hatırlatma (düzenli işlem, borç vadesi,
+  /// kart son ödemesi) kurulmak istendi mi.
+  ///
+  /// Bildirim izni eskiden uygulamanın İLK açılışında, kullanıcının elinde
+  /// hatırlatılacak tek bir kayıt yokken soruluyordu: neye "evet" dediğini
+  /// bilmeden karar veriyordu. Artık ana sayfa bu işareti dinler ve izni,
+  /// hatırlatma taşıyan ilk kayıt oluştuğunda — yani sorunun bir anlamı
+  /// olduğunda — sorar. Motivasyon bildirimleri (varsayılan KAPALI) sayılmaz.
+  ///
+  /// Sistem izni kapalıyken de true olur: `scheduleNotification` planı yine
+  /// yazar, izin verildiği an bildirimler çalışır.
+  ValueListenable<bool> get reminderWanted => _reminderWanted;
 
   /// Tüm hatırlatma türlerini güncel veriye/ayarlara göre yeniden kurar.
   Future<void> syncAll() async {
@@ -124,6 +143,7 @@ class ReminderSyncService {
 
     if (!template.isActive || !_settings.isRecurringRemindersEnabled) return;
 
+    _reminderWanted.value = true;
     final l10n = _localizer.l10n;
     final now = DateTime.now();
     await _notifications.scheduleNotification(
@@ -174,6 +194,7 @@ class ReminderSyncService {
     if (dueDate == null || debt.isPaid) return;
     if (!_settings.isDebtRemindersEnabled) return;
 
+    _reminderWanted.value = true;
     final l10n = _localizer.l10n;
     final now = DateTime.now();
     await _notifications.scheduleNotification(
@@ -268,6 +289,7 @@ class ReminderSyncService {
     // son ödeme geçtikten sonra her gün "gecikti" bildirimi kurulmaz.
     if (status.isCarrying) return;
 
+    _reminderWanted.value = true;
     final l10n = _localizer.l10n;
     final amount = formatMoney(remaining, currency: wallet.currency);
     final due = status.dueDate;

@@ -7044,4 +7044,40 @@ class AppLocalizationsTr extends AppLocalizations {
   String unlinkPickCategoryIncome(String title, String amount) {
     return 'Bağı kalkan “$title” ($amount) artık bir gelir. Kategorisini seç.';
   }
+
+  @override
+  String get firstRunTitle => 'ÇuHat\'a hoş geldin';
+
+  @override
+  String get firstRunBody =>
+      'Gelirini ve giderini yaz, paranın nereye gittiğini gör.';
+
+  @override
+  String get firstRunBalanceLabel => 'Şu an ne kadar paran var?';
+
+  @override
+  String get firstRunBalanceHint => 'Bilmiyorsan boş bırak; sonra düzeltirsin.';
+
+  @override
+  String get firstRunStart => 'Başla';
+
+  @override
+  String get firstRunRestore => 'Yedeğim var';
+
+  @override
+  String get firstRunPrivacyNote =>
+      'Kayıtların yalnız bu telefonda durur; sunucumuz yok.';
+
+  @override
+  String get firstRunDefaultWalletName => 'Cüzdanım';
+
+  @override
+  String get firstRunFailed => 'Cüzdan kurulamadı. Yeniden dene.';
+
+  @override
+  String get restoreBackupTitle => 'Yedekten geri yükle';
+
+  @override
+  String get restoreBackupBody =>
+      'Google Drive\'daki ya da telefonundaki yedeği seç. Kayıtların olduğu gibi geri gelir.';
 }

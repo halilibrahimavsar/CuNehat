@@ -123,9 +123,19 @@ class _Section extends StatelessWidget {
   }
 }
 
-/// İlk açılışta bir kez gösterilen gizlilik bilgilendirme/onam diyaloğu.
-/// Kapatılamaz; kullanıcı "Anladım" diyerek devam eder. "Gizlilik Politikası"
-/// tam metni açar. Çağıran, gösterildikten sonra kalıcı bayrağı yazar.
+/// "Gizlilik notu görüldü" kalıcı bayrağı. Değeri DEĞİŞMEZ: eski kurulumlarda
+/// bu anahtarla yazılı.
+///
+/// Eskiden ilk açılışta kapatılamaz bir diyalogla ([showPrivacyConsentDialog])
+/// yazılıyordu. Artık not karşılama ekranında durur (`WelcomeView`) ve bayrak
+/// kullanıcı oradan ilerlediğinde yazılır; diyalog yalnız Ayarlar > Yardım'dan
+/// yeniden açılabilir.
+const String kPrivacyConsentShownKey = 'privacy_consent_shown';
+
+/// Gizlilik bilgilendirme diyaloğu. Açılışta GÖSTERİLMEZ (bkz.
+/// [kPrivacyConsentShownKey]); Ayarlar > Yardım'daki "tanıtımı tekrar göster"
+/// satırından açılır. Kapatılamaz; kullanıcı "Anladım" diyerek devam eder.
+/// "Gizlilik Politikası" tam metni açar.
 Future<void> showPrivacyConsentDialog(BuildContext context) {
   return showDialog<void>(
     context: context,

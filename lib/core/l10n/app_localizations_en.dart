@@ -7093,4 +7093,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String unlinkPickCategoryIncome(String title, String amount) {
     return '“$title” ($amount) is now a plain income. Pick its category.';
   }
+
+  @override
+  String get firstRunTitle => 'Welcome to ÇuHat';
+
+  @override
+  String get firstRunBody =>
+      'Write down what you earn and spend, and see where your money goes.';
+
+  @override
+  String get firstRunBalanceLabel => 'How much money do you have right now?';
+
+  @override
+  String get firstRunBalanceHint =>
+      'Not sure? Leave it empty; you can fix it later.';
+
+  @override
+  String get firstRunStart => 'Start';
+
+  @override
+  String get firstRunRestore => 'I have a backup';
+
+  @override
+  String get firstRunPrivacyNote =>
+      'Your records stay on this phone only; we have no server.';
+
+  @override
+  String get firstRunDefaultWalletName => 'My Wallet';
+
+  @override
+  String get firstRunFailed => 'Could not set up the wallet. Try again.';
+
+  @override
+  String get restoreBackupTitle => 'Restore from backup';
+
+  @override
+  String get restoreBackupBody =>
+      'Pick the backup in Google Drive or on your phone. Your records come back as they were.';
 }

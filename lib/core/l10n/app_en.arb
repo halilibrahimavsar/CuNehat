@@ -4299,5 +4299,16 @@
         "type": "String"
       }
     }
-  }
+  },
+  "firstRunTitle": "Welcome to ÇuHat",
+  "firstRunBody": "Write down what you earn and spend, and see where your money goes.",
+  "firstRunBalanceLabel": "How much money do you have right now?",
+  "firstRunBalanceHint": "Not sure? Leave it empty; you can fix it later.",
+  "firstRunStart": "Start",
+  "firstRunRestore": "I have a backup",
+  "firstRunPrivacyNote": "Your records stay on this phone only; we have no server.",
+  "firstRunDefaultWalletName": "My Wallet",
+  "firstRunFailed": "Could not set up the wallet. Try again.",
+  "restoreBackupTitle": "Restore from backup",
+  "restoreBackupBody": "Pick the backup in Google Drive or on your phone. Your records come back as they were."
 }

@@ -139,6 +139,92 @@ void main() {
     );
   });
 
+  // Bildirim izni artık ilk açılışta değil, hatırlatma taşıyan İLK kayıt
+  // oluştuğunda sorulur; ana sayfa bu işareti dinler.
+  group('hatırlatma istendi işareti (bildirim izninin tetikleyicisi)', () {
+    test('başlangıçta kapalıdır', () {
+      expect(service.reminderWanted.value, isFalse);
+    });
+
+    test('etkin bir düzenli işlem hatırlatması kurulunca açılır', () async {
+      await service.syncRecurringTemplate(template);
+
+      expect(service.reminderWanted.value, isTrue);
+    });
+
+    test('duraklatılmış şablon işareti AÇMAZ', () async {
+      await service.syncRecurringTemplate(template.copyWith(isActive: false));
+
+      expect(service.reminderWanted.value, isFalse);
+    });
+
+    test('düzenli işlem hatırlatmaları kapalıyken açılmaz', () async {
+      when(() => settings.isRecurringRemindersEnabled).thenReturn(false);
+
+      await service.syncRecurringTemplate(template);
+
+      expect(service.reminderWanted.value, isFalse);
+    });
+
+    test('vadeli borç kurulunca açılır', () async {
+      await service.syncDebt(debt);
+
+      expect(service.reminderWanted.value, isTrue);
+    });
+
+    test('ödenmiş borç işareti AÇMAZ', () async {
+      await service.syncDebt(debt.copyWith(isPaid: true));
+
+      expect(service.reminderWanted.value, isFalse);
+    });
+
+    test('borç hatırlatmaları kapalıyken açılmaz', () async {
+      when(() => settings.isDebtRemindersEnabled).thenReturn(false);
+
+      await service.syncDebt(debt);
+
+      expect(service.reminderWanted.value, isFalse);
+    });
+
+    test(
+        'kayıt yokken açılış senkronu işareti AÇMAZ — motivasyon bildirimleri '
+        'izin sormanın gerekçesi değildir', () async {
+      when(() => recurringRepo.getAllTemplates())
+          .thenAnswer((_) async => const Right(<RecurringTransactionEntity>[]));
+      when(() => debtRepo.getAllDebts())
+          .thenAnswer((_) async => const Right(<DebtEntity>[]));
+      when(() => settings.getRandomFrequency())
+          .thenReturn(NotificationFrequency.high);
+
+      await service.syncAll();
+
+      verify(() => notifications.scheduleRandomDailyReminders(any())).called(1);
+      expect(service.reminderWanted.value, isFalse);
+    });
+
+    test('yedeği geri yüklenmiş kurulumda açılış senkronu işareti açar',
+        () async {
+      when(() => recurringRepo.getAllTemplates())
+          .thenAnswer((_) async => Right([template]));
+      when(() => debtRepo.getAllDebts())
+          .thenAnswer((_) async => const Right(<DebtEntity>[]));
+
+      await service.syncAll();
+
+      expect(service.reminderWanted.value, isTrue);
+    });
+
+    test('dinleyiciye yalnız ilk açılışta haber verilir', () async {
+      var notified = 0;
+      service.reminderWanted.addListener(() => notified++);
+
+      await service.syncRecurringTemplate(template);
+      await service.syncDebt(debt);
+
+      expect(notified, 1);
+    });
+  });
+
   group('syncRecurringTemplate', () {
     test(
         'vade GÜNÜNDE (bir gün önce değil) 09:00 için, bekleyen-diyalog yüküyle '

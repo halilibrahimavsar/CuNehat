@@ -10,6 +10,7 @@ import 'package:cunehat/features/settings/presentation/page/error_log_page.dart'
 import 'package:cunehat/features/settings/presentation/page/privacy_policy_page.dart';
 import 'package:cunehat/features/bank_import/presentation/pages/bank_import_page.dart';
 import 'package:cunehat/features/settings/presentation/page/backup_preview_page.dart';
+import 'package:cunehat/features/settings/presentation/page/restore_backup_page.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -189,6 +190,15 @@ GoRouter createAppRouter(AppAuthBloc authBloc) {
           return MaterialPage(
             key: state.pageKey,
             child: const BackupPreviewPage(),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.restoreBackup,
+        pageBuilder: (context, state) {
+          return MaterialPage(
+            key: state.pageKey,
+            child: const RestoreBackupPage(),
           );
         },
       ),

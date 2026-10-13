@@ -4533,5 +4533,16 @@
         "type": "String"
       }
     }
-  }
+  },
+  "firstRunTitle": "ÇuHat'a hoş geldin",
+  "firstRunBody": "Gelirini ve giderini yaz, paranın nereye gittiğini gör.",
+  "firstRunBalanceLabel": "Şu an ne kadar paran var?",
+  "firstRunBalanceHint": "Bilmiyorsan boş bırak; sonra düzeltirsin.",
+  "firstRunStart": "Başla",
+  "firstRunRestore": "Yedeğim var",
+  "firstRunPrivacyNote": "Kayıtların yalnız bu telefonda durur; sunucumuz yok.",
+  "firstRunDefaultWalletName": "Cüzdanım",
+  "firstRunFailed": "Cüzdan kurulamadı. Yeniden dene.",
+  "restoreBackupTitle": "Yedekten geri yükle",
+  "restoreBackupBody": "Google Drive'daki ya da telefonundaki yedeği seç. Kayıtların olduğu gibi geri gelir."
 }
