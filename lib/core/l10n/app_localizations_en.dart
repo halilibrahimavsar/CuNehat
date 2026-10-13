@@ -7130,4 +7130,61 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get restoreBackupBody =>
       'Pick the backup in Google Drive or on your phone. Your records come back as they were.';
+
+  @override
+  String get simpleBarMore => 'Insights and report';
+
+  @override
+  String get simpleBarSheetTitle => 'What do you want to look at?';
+
+  @override
+  String get simpleBarLedger => 'Ledger';
+
+  @override
+  String get simpleBarLedgerSubtitle => 'The list of your records';
+
+  @override
+  String get simpleBarInsightsSubtitle => 'What stands out this period';
+
+  @override
+  String get simpleBarReportSubtitle => 'Categories and charts';
+
+  @override
+  String get simpleBarTransferSubtitle => 'Move money between your wallets';
+
+  @override
+  String get sectionsHeader => 'Sections';
+
+  @override
+  String get sectionsIntro =>
+      'Keep the sections you don\'t use turned off; the home screen stays simple.';
+
+  @override
+  String get sectionSavingsTitle => 'Savings';
+
+  @override
+  String get sectionSavingsDesc => 'Gold, stocks, cash pots and goals';
+
+  @override
+  String get sectionDebtTitle => 'Debts and receivables';
+
+  @override
+  String get sectionDebtDesc => 'Loans, debts, receivables and cards';
+
+  @override
+  String get sectionLockedHasRecords =>
+      'Can\'t be turned off while it has records';
+
+  @override
+  String get drawerEnableSavingsTitle => 'Start tracking savings';
+
+  @override
+  String get drawerEnableSavingsSubtitle => 'Gold, stocks, cash pots, goals';
+
+  @override
+  String get drawerEnableDebtTitle => 'Track debts and receivables';
+
+  @override
+  String get drawerEnableDebtSubtitle =>
+      'Write down your loans, debts and receivables';
 }

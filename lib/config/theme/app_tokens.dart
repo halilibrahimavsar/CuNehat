@@ -39,6 +39,15 @@ abstract final class AppPalette {
   /// fazla açık; bu ton sayfa zemininde 4,8:1.
   static const Color dangerOnLight = Color(0xFFD81743);
   static const Color dangerOnDark = Color(0xFFFB7185);
+
+  /// Gelir / gider METNİ — kendi renginin %14'lük tonuyla boyanmış zeminde
+  /// (ör. alt çubuktaki "Gelir" / "Gider" düğmeleri). Bölüm renkleri
+  /// (`AppGradients.savings` / `debt`) bu zeminde 2:1 civarında kalıyor;
+  /// buradaki tonlar iki temada da 4,5:1'in üstünde (`simple_action_bar_test`).
+  static const Color incomeOnTintLight = Color(0xFF047857);
+  static const Color incomeOnTintDark = Color(0xFF34D399);
+  static const Color expenseOnTintLight = Color(0xFFBE123C);
+  static const Color expenseOnTintDark = Color(0xFFFB7185);
 }
 
 /// Köşe yarıçapları. Üç değer + hap.

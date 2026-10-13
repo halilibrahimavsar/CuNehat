@@ -7080,4 +7080,59 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get restoreBackupBody =>
       'Google Drive\'daki ya da telefonundaki yedeği seç. Kayıtların olduğu gibi geri gelir.';
+
+  @override
+  String get simpleBarMore => 'İçgörü ve rapor';
+
+  @override
+  String get simpleBarSheetTitle => 'Nereye bakmak istersin?';
+
+  @override
+  String get simpleBarLedger => 'Defter';
+
+  @override
+  String get simpleBarLedgerSubtitle => 'Kayıtlarının listesi';
+
+  @override
+  String get simpleBarInsightsSubtitle => 'Bu dönemde öne çıkanlar';
+
+  @override
+  String get simpleBarReportSubtitle => 'Kategoriler ve grafikler';
+
+  @override
+  String get simpleBarTransferSubtitle => 'Cüzdanların arasında para taşı';
+
+  @override
+  String get sectionsHeader => 'Bölümler';
+
+  @override
+  String get sectionsIntro =>
+      'Kullanmadığın bölümü kapalı tut; ana ekran sade kalır.';
+
+  @override
+  String get sectionSavingsTitle => 'Birikim';
+
+  @override
+  String get sectionSavingsDesc => 'Altın, hisse, nakit kasası ve hedefler';
+
+  @override
+  String get sectionDebtTitle => 'Borç ve alacak';
+
+  @override
+  String get sectionDebtDesc => 'Krediler, borçlar, alacaklar ve kartlar';
+
+  @override
+  String get sectionLockedHasRecords => 'Kaydı olduğu için kapatılamaz';
+
+  @override
+  String get drawerEnableSavingsTitle => 'Birikim tutmaya başla';
+
+  @override
+  String get drawerEnableSavingsSubtitle => 'Altın, hisse, nakit kasası, hedef';
+
+  @override
+  String get drawerEnableDebtTitle => 'Borç ve alacak takibi';
+
+  @override
+  String get drawerEnableDebtSubtitle => 'Kredi, borç ve alacaklarını yaz';
 }

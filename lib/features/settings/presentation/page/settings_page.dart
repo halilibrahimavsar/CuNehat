@@ -5,6 +5,7 @@ import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:cunehat/features/settings/presentation/widgets/about_card.dart';
+import 'package:cunehat/features/settings/presentation/widgets/home_sections_card.dart';
 import 'package:cunehat/features/settings/presentation/widgets/security_settings_card.dart';
 import 'package:cunehat/features/settings/presentation/widgets/settings_header.dart';
 import 'package:cunehat/features/settings/presentation/widgets/theme_selector_dropdown.dart';
@@ -70,6 +71,12 @@ class SettingsPage extends StatelessWidget {
                     padding: EdgeInsets.symmetric(vertical: 4),
                     child: LanguageSelectorDropdown(),
                   ),
+                  const SizedBox(height: 24),
+                  // Ana ekranın bölümleri: Birikim ve Borç kullandıkça açılır,
+                  // buradan elle de açılıp kapatılır.
+                  SettingsHeader(title: context.l10n.sectionsHeader),
+                  const SizedBox(height: 8),
+                  const HomeSectionsCard(),
                   const SizedBox(height: 24),
                   // Dönem birimi (gün / hafta / 2 hafta / ay + başlangıç):
                   // haftalık ya da maaş gününe göre ödeme alan kullanıcılar

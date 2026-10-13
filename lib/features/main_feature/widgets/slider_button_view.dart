@@ -15,6 +15,8 @@ import 'package:cunehat/features/main_feature/factories/sub_view_factory.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/features/main_feature/utils/slider_peek_store.dart';
+import 'package:cunehat/features/main_feature/widgets/simple_action_bar.dart';
+import 'package:cunehat/core/shared/widgets/row_action_sheet.dart';
 import 'package:cunehat/features/wallet/domain/card_family.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/transfer_sheet.dart';
@@ -22,6 +24,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unified_flutter_features/features/slider_2d_navigation/dynamic_slider.dart';
 import 'package:unified_flutter_features/features/slider_2d_navigation/models/slider_models.dart';
+
+/// Sade çubuğun "İçgörü ve rapor" sayfasındaki seçenekler.
+enum SimpleBarTarget { ledger, insights, report, transfer }
 
 /// Slider button view with vertical stack navigation
 ///
@@ -39,6 +44,11 @@ class SliderButtonView extends StatefulWidget {
     required this.walletState,
     required this.subViewFactory,
     required this.peekStore,
+    this.enabledStates = const {
+      SliderState.savedMoney,
+      SliderState.transactions,
+      SliderState.debt,
+    },
   });
 
   final AnimationController controller;
@@ -49,6 +59,10 @@ class SliderButtonView extends StatefulWidget {
 
   /// Dikey navigasyon tanıtımının hangi durumlarda oynayacağını bilen depo.
   final SliderPeekStore peekStore;
+
+  /// Ana ekranda açık olan bölümler (bkz. `SectionVisibility`). Tek bölüm
+  /// (yalnız İşlemler) varken kaydırıcı yerine [SimpleActionBar] kurulur.
+  final Set<SliderState> enabledStates;
 
   @override
   State<SliderButtonView> createState() => _SliderButtonViewState();
@@ -82,6 +96,8 @@ class _SliderButtonViewState extends State<SliderButtonView> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.enabledStates.length < 2) return _buildSimpleBar(context);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
       child: DynamicSlider(
@@ -95,8 +111,91 @@ class _SliderButtonViewState extends State<SliderButtonView> {
         peekStates: _pendingPeeks,
         onPeekPlayed: _onPeekPlayed,
         canPeek: _canPeek,
+        enabledStates: widget.enabledStates,
       ),
     );
+  }
+
+  // ==================== SADE ÇUBUK (yalnız İşlemler) ====================
+
+  Widget _buildSimpleBar(BuildContext context) {
+    final activeWallet = walletState.activeWallet;
+    return ListenableBuilder(
+      // Alt sayfa açılıp kapanınca "İçgörü ve rapor" düğmesinin dolu/boş
+      // hâli değişir.
+      listenable: navigationController.viewStack,
+      builder: (context, _) => SimpleActionBar(
+        moreActive: !navigationController.isAtMainView,
+        onIncome: () => _handleAction('add_income', context, activeWallet),
+        onExpense: () => _handleAction('add_expense', context, activeWallet),
+        onMore: () => _showSimpleBarSheet(context),
+      ),
+    );
+  }
+
+  /// Sade çubuğun seçim sayfası: Defter · İçgörü · Rapor, birden çok cüzdan
+  /// varsa Transfer. Kaydırıcının dikey çarkının ve Transfer mini düğmesinin
+  /// yazıyla okunan karşılığı.
+  Future<void> _showSimpleBarSheet(BuildContext context) async {
+    final l10n = context.l10n;
+    final activeWallet = walletState.activeWallet;
+    if (activeWallet == null) return;
+    final current = navigationController.viewStack.currentIndex;
+    final subMenus = MenuConfigs.configs[SliderState.transactions]!.subMenus;
+
+    final choice = await RowActionSheet.show<SimpleBarTarget>(
+      context,
+      title: l10n.simpleBarSheetTitle,
+      icon: Icons.bar_chart_rounded,
+      accent: Theme.of(context).colorScheme.primary,
+      keyPrefix: 'simple-bar',
+      actions: [
+        if (current != 0)
+          RowAction(
+            value: SimpleBarTarget.ledger,
+            icon: Icons.receipt_long_rounded,
+            title: l10n.simpleBarLedger,
+            subtitle: l10n.simpleBarLedgerSubtitle,
+          ),
+        for (final menu in subMenus)
+          if (menu.viewIndex != current)
+            RowAction(
+              value: menu.viewIndex == 1
+                  ? SimpleBarTarget.insights
+                  : SimpleBarTarget.report,
+              icon: menu.icon,
+              title: localizedSubMenuLabel(menu.label, l10n),
+              subtitle: menu.viewIndex == 1
+                  ? l10n.simpleBarInsightsSubtitle
+                  : l10n.simpleBarReportSubtitle,
+            ),
+        if (walletState.wallets.length >= 2)
+          RowAction(
+            value: SimpleBarTarget.transfer,
+            icon: Icons.swap_horiz_rounded,
+            title: l10n.transferKisa,
+            subtitle: l10n.simpleBarTransferSubtitle,
+          ),
+      ],
+    );
+    if (choice == null || !context.mounted) return;
+
+    switch (choice) {
+      case SimpleBarTarget.ledger:
+        await navigationController.closeToMain();
+      case SimpleBarTarget.insights:
+        await navigationController.navigateToView(
+          1,
+          sliderState: SliderState.transactions,
+        );
+      case SimpleBarTarget.report:
+        await navigationController.navigateToView(
+          2,
+          sliderState: SliderState.transactions,
+        );
+      case SimpleBarTarget.transfer:
+        _handleAction('transfer', context, activeWallet);
+    }
   }
 
   /// Close all subviews when slider is interacted with

@@ -13,6 +13,7 @@ import 'package:cunehat/features/main_feature/controllers/home_navigation_contro
 import 'package:cunehat/features/main_feature/controllers/home_navigation_requests.dart';
 import 'package:cunehat/features/main_feature/factories/sub_view_factory.dart';
 import 'package:cunehat/features/main_feature/pages/modern_appbar.dart';
+import 'package:cunehat/features/main_feature/utils/section_visibility.dart';
 import 'package:cunehat/features/main_feature/utils/slider_peek_store.dart';
 import 'package:cunehat/features/main_feature/widgets/cube_back_handler.dart';
 import 'package:cunehat/features/main_feature/widgets/main_content_swipe.dart';
@@ -87,6 +88,11 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late final HomeNavigationController _navController;
+
+  /// Ana ekranda hangi bölümlerin açık olduğu (Birikim ve Borç kullandıkça
+  /// açılır). Uygulama ömürlü tek örnek; `AppInitialization` kaydeder ve
+  /// kayıtlarla eşitler (kaydı olan bölüm kendiliğinden açılır).
+  final SectionVisibility _sections = getIt<SectionVisibility>();
   String? _currentWalletId;
 
   /// Aktif cüzdanın SAHİBİ (kartsa bağlı hesabı). Hesap ↔ kart geçişi aynı
@@ -113,13 +119,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _navController = HomeNavigationController(this);
+    _navController = HomeNavigationController(this)
+      ..setEnabledStates(_sections.enabledStates);
+    _sections.addListener(_onSectionsChanged);
     _lastSliderState = _navController.currentSliderState;
     _navController.horizontalController.addListener(_onSliderStateMaybeChanged);
     if (getIt.isRegistered<HomeNavigationRequests>()) {
       getIt<HomeNavigationRequests>()
         ..addListener(_onShowTransactions)
-        ..sectionHandler = _onSectionRequested;
+        ..sectionHandler = _onSectionRequested
+        ..mainHandler = _onMainRequested;
     }
     _loadWallets();
     // Bekleyen işlemleri yükle. Uygulamaya dönüş ve bildirim dokunuşu
@@ -347,6 +356,23 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         sliderState: SliderState.transactions));
   }
 
+  /// Etkin bölümler değişti (bir bölüm açıldı ya da kapatıldı): gezinme
+  /// ekseni yeni aralığa çekilir ve alt çubuk (sade çubuk ↔ kaydırıcı)
+  /// yeniden kurulur.
+  void _onSectionsChanged() {
+    _navController.setEnabledStates(_sections.enabledStates);
+    if (mounted) setState(() {});
+    // Kaydırıcı ilk kez göründüyse tanıtımı oynayabilir hâle geldi.
+    _pumpOnboarding();
+  }
+
+  /// Çekmeceden gelen "şu bölümü göster" isteği (bkz.
+  /// [HomeNavigationRequests.openMain]).
+  void _onMainRequested(SliderState state) {
+    if (!mounted) return;
+    unawaited(_navController.showMain(state));
+  }
+
   /// Dışarıdan "İşlemler'i göster" isteği (bkz. [HomeNavigationRequests]).
   void _onShowTransactions() {
     if (!mounted) return;
@@ -357,6 +383,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   void dispose() {
     // Kapıyı bekleyen listener'lar askıda kalmasın.
     _openFirstLaunchGate();
+    _sections.removeListener(_onSectionsChanged);
     getIt<ReminderSyncService>()
         .reminderWanted
         .removeListener(_onReminderWanted);
@@ -368,6 +395,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         ..removeListener(_onShowTransactions);
       if (requests.sectionHandler == _onSectionRequested) {
         requests.sectionHandler = null;
+      }
+      if (requests.mainHandler == _onMainRequested) {
+        requests.mainHandler = null;
       }
     }
     getIt<OnboardingCoordinator>().shellStatusProvider = null;
@@ -600,21 +630,28 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           // tetiklenir ve knob carousel'i ekranla senkron kalır.
           AnimatedBuilder(
             animation: _navController,
-            builder: (context, _) => Showcase.withWidget(
-              key: OnboardingKeys.addActionSlider,
-              container: const OnboardingNavigationHintCard(),
-              targetShapeBorder: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: SliderButtonView(
+            builder: (context, _) {
+              final bar = SliderButtonView(
                 peekStore: SliderPeekStore(getIt<SharedPreferences>()),
                 controller: _navController.horizontalController,
                 navigationController: _navController,
                 userId: userId,
                 walletState: walletState,
                 subViewFactory: _subViewFactory!,
-              ),
-            ),
+                enabledStates: _sections.enabledStates,
+              );
+              // Tanıtım hedefi yalnız KAYDIRICI: sade çubukta anlatılacak
+              // jest yok, her düğme ne yaptığını yazıyla söylüyor.
+              if (_sections.hasOnlyTransactions) return bar;
+              return Showcase.withWidget(
+                key: OnboardingKeys.addActionSlider,
+                container: const OnboardingNavigationHintCard(),
+                targetShapeBorder: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: bar,
+              );
+            },
           ),
       ],
     );

@@ -12112,6 +12112,114 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Google Drive\'daki ya da telefonundaki yedeği seç. Kayıtların olduğu gibi geri gelir.'**
   String get restoreBackupBody;
+
+  /// No description provided for @simpleBarMore.
+  ///
+  /// In tr, this message translates to:
+  /// **'İçgörü ve rapor'**
+  String get simpleBarMore;
+
+  /// No description provided for @simpleBarSheetTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nereye bakmak istersin?'**
+  String get simpleBarSheetTitle;
+
+  /// No description provided for @simpleBarLedger.
+  ///
+  /// In tr, this message translates to:
+  /// **'Defter'**
+  String get simpleBarLedger;
+
+  /// No description provided for @simpleBarLedgerSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıtlarının listesi'**
+  String get simpleBarLedgerSubtitle;
+
+  /// No description provided for @simpleBarInsightsSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu dönemde öne çıkanlar'**
+  String get simpleBarInsightsSubtitle;
+
+  /// No description provided for @simpleBarReportSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategoriler ve grafikler'**
+  String get simpleBarReportSubtitle;
+
+  /// No description provided for @simpleBarTransferSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdanların arasında para taşı'**
+  String get simpleBarTransferSubtitle;
+
+  /// No description provided for @sectionsHeader.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bölümler'**
+  String get sectionsHeader;
+
+  /// No description provided for @sectionsIntro.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kullanmadığın bölümü kapalı tut; ana ekran sade kalır.'**
+  String get sectionsIntro;
+
+  /// No description provided for @sectionSavingsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Birikim'**
+  String get sectionSavingsTitle;
+
+  /// No description provided for @sectionSavingsDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Altın, hisse, nakit kasası ve hedefler'**
+  String get sectionSavingsDesc;
+
+  /// No description provided for @sectionDebtTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç ve alacak'**
+  String get sectionDebtTitle;
+
+  /// No description provided for @sectionDebtDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Krediler, borçlar, alacaklar ve kartlar'**
+  String get sectionDebtDesc;
+
+  /// No description provided for @sectionLockedHasRecords.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaydı olduğu için kapatılamaz'**
+  String get sectionLockedHasRecords;
+
+  /// No description provided for @drawerEnableSavingsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Birikim tutmaya başla'**
+  String get drawerEnableSavingsTitle;
+
+  /// No description provided for @drawerEnableSavingsSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Altın, hisse, nakit kasası, hedef'**
+  String get drawerEnableSavingsSubtitle;
+
+  /// No description provided for @drawerEnableDebtTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç ve alacak takibi'**
+  String get drawerEnableDebtTitle;
+
+  /// No description provided for @drawerEnableDebtSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kredi, borç ve alacaklarını yaz'**
+  String get drawerEnableDebtSubtitle;
 }
 
 class _AppLocalizationsDelegate

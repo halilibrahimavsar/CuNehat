@@ -30,6 +30,12 @@ class SliderKnob extends StatelessWidget {
   /// alt sayfada da.
   final bool showAddButton;
 
+  /// Bu durumdan sola / sağa gidilecek bir durum var mı (yön oklarını sürer).
+  /// Uçlar artık sabit değil: kaydırıcı yalnız ETKİN durumlarda gezer
+  /// (bkz. `DynamicSlider.enabledStates`).
+  final bool canGoPrevious;
+  final bool canGoNext;
+
   /// ORTADAKİ öğeye (ana başlık ya da açık alt sayfanın etiketi) dokunuş:
   /// mini düğmeleri açar/kapatır.
   final VoidCallback onTap;
@@ -52,6 +58,8 @@ class SliderKnob extends StatelessWidget {
     required this.selectedIndex,
     required this.metrics,
     this.showAddButton = true,
+    this.canGoPrevious = true,
+    this.canGoNext = true,
     this.texts = const SliderTexts(),
     required this.onTap,
     this.onMainTitleTap,
@@ -278,11 +286,9 @@ class SliderKnob extends StatelessWidget {
   Widget _buildArrows() {
     // Calculate if we should show left/right arrows based on slider position
     // Show left arrow if not at the leftmost position
-    final bool showLeftArrow =
-        transitionProgress > 0.8 && currentState != SliderState.values.first;
+    final bool showLeftArrow = transitionProgress > 0.8 && canGoPrevious;
     // Show right arrow if not at the rightmost position
-    final bool showRightArrow =
-        transitionProgress > 0.8 && currentState != SliderState.values.last;
+    final bool showRightArrow = transitionProgress > 0.8 && canGoNext;
 
     return Stack(
       children: [

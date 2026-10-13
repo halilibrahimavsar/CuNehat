@@ -16,6 +16,9 @@ import 'package:cunehat/features/wallet/domain/card_family.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
 import 'package:cunehat/core/constants/app_version.dart';
+import 'package:cunehat/features/main_feature/controllers/home_navigation_requests.dart';
+import 'package:cunehat/features/main_feature/utils/section_visibility.dart';
+import 'package:unified_flutter_features/features/slider_2d_navigation/models/slider_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -87,6 +90,12 @@ class _ModernDrawerState extends State<ModernDrawer>
     super.initState();
     _initAnimations();
     _controller.forward();
+    // Çekmece kabukta kalıcıdır: bölüm açılıp kapanınca yeniden çizilmeli.
+    _sections?.addListener(_onSectionsChanged);
+  }
+
+  void _onSectionsChanged() {
+    if (mounted) setState(() {});
   }
 
   void _initAnimations() {
@@ -109,6 +118,7 @@ class _ModernDrawerState extends State<ModernDrawer>
 
   @override
   void dispose() {
+    _sections?.removeListener(_onSectionsChanged);
     _controller.dispose();
     super.dispose();
   }
@@ -257,6 +267,39 @@ class _ModernDrawerState extends State<ModernDrawer>
                         isDark: isDark,
                         theme: theme,
                       ),
+                      // Kapalı bölümler: ana ekranda yer tutmazlar, buradan
+                      // açılırlar. Açılan bölümün satırı kaybolur — artık ana
+                      // ekrandadır.
+                      if (!_sectionEnabled(SliderState.savedMoney))
+                        _buildAnimatedMenuItem(
+                          index: 4,
+                          icon: Icons.savings_outlined,
+                          title: context.l10n.drawerEnableSavingsTitle,
+                          subtitle: context.l10n.drawerEnableSavingsSubtitle,
+                          gradientColors: const [
+                            Color(0xFF10B981),
+                            Color(0xFF059669),
+                          ],
+                          onTap: () => _openSection(SliderState.savedMoney),
+                          delay: 250,
+                          isDark: isDark,
+                          theme: theme,
+                        ),
+                      if (!_sectionEnabled(SliderState.debt))
+                        _buildAnimatedMenuItem(
+                          index: 5,
+                          icon: Icons.account_balance_wallet_outlined,
+                          title: context.l10n.drawerEnableDebtTitle,
+                          subtitle: context.l10n.drawerEnableDebtSubtitle,
+                          gradientColors: const [
+                            Color(0xFFF43F5E),
+                            Color(0xFFBE123C),
+                          ],
+                          onTap: () => _openSection(SliderState.debt),
+                          delay: 300,
+                          isDark: isDark,
+                          theme: theme,
+                        ),
 
                       const SizedBox(height: 16),
 
@@ -462,6 +505,23 @@ class _ModernDrawerState extends State<ModernDrawer>
     );
   }
 
+  SectionVisibility? get _sections => getIt.isRegistered<SectionVisibility>()
+      ? getIt<SectionVisibility>()
+      : null;
+
+  /// Bölüm ana ekranda açık mı. Depo kayıtlı değilse (test) hepsi açık.
+  bool _sectionEnabled(SliderState section) =>
+      _sections?.isEnabled(section) ?? true;
+
+  /// Kapalı bir bölümü açar ve ana ekranı ona çevirir.
+  Future<void> _openSection(SliderState section) async {
+    Navigator.pop(context);
+    await _sections?.enable(section);
+    if (getIt.isRegistered<HomeNavigationRequests>()) {
+      getIt<HomeNavigationRequests>().openMain(section);
+    }
+  }
+
   Widget _buildWalletMetricsSection(ThemeData theme) {
     final isDark = theme.brightness == Brightness.dark;
     return BlocBuilder<WalletBloc, WalletState>(
@@ -633,34 +693,44 @@ class _ModernDrawerState extends State<ModernDrawer>
                 const SizedBox(height: 10),
 
                 // Sub Metrics Chips (Yatırım & Borç)
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildMetricChip(
-                        label: context.l10n.drawerInvestment,
-                        amount: wallet.investment,
-                        currencyCode: wallet.currency,
-                        icon: Icons.trending_up_rounded,
-                        accentColor: const Color(0xFF2EC4B6),
-                        isDark: isDark,
-                        theme: theme,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _buildMetricChip(
-                        label: context.l10n.drawerDebt,
-                        // Krediler + bağlı kartların borcu (bkz. debtOverview).
-                        amount: debtOverview(wallet, context.allWallets).total,
-                        currencyCode: wallet.currency,
-                        icon: Icons.credit_card_off_rounded,
-                        accentColor: const Color(0xFFE63946),
-                        isDark: isDark,
-                        theme: theme,
-                      ),
-                    ),
-                  ],
-                ),
+                // Kapalı bölümün rakamı gösterilmez (kaydı olan bölüm
+                // kapatılamadığı için gizlenen rakam hep sıfırdır).
+                if (_sectionEnabled(SliderState.savedMoney) ||
+                    _sectionEnabled(SliderState.debt))
+                  Row(
+                    children: [
+                      if (_sectionEnabled(SliderState.savedMoney))
+                        Expanded(
+                          child: _buildMetricChip(
+                            label: context.l10n.drawerInvestment,
+                            amount: wallet.investment,
+                            currencyCode: wallet.currency,
+                            icon: Icons.trending_up_rounded,
+                            accentColor: const Color(0xFF2EC4B6),
+                            isDark: isDark,
+                            theme: theme,
+                          ),
+                        ),
+                      if (_sectionEnabled(SliderState.savedMoney) &&
+                          _sectionEnabled(SliderState.debt))
+                        const SizedBox(width: 8),
+                      if (_sectionEnabled(SliderState.debt))
+                        Expanded(
+                          child: _buildMetricChip(
+                            label: context.l10n.drawerDebt,
+                            // Krediler + bağlı kartların borcu (bkz.
+                            // debtOverview).
+                            amount:
+                                debtOverview(wallet, context.allWallets).total,
+                            currencyCode: wallet.currency,
+                            icon: Icons.credit_card_off_rounded,
+                            accentColor: const Color(0xFFE63946),
+                            isDark: isDark,
+                            theme: theme,
+                          ),
+                        ),
+                    ],
+                  ),
               ],
             ),
           ),

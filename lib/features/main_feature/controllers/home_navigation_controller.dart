@@ -1,4 +1,5 @@
 import 'package:cunehat/core/shared/animations/unified_cube_transition.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:unified_flutter_features/features/slider_2d_navigation/helpers/drag_settle.dart';
 import 'package:unified_flutter_features/features/slider_2d_navigation/helpers/slider_state_helper.dart';
@@ -78,6 +79,52 @@ class HomeNavigationController extends ChangeNotifier {
 
   bool get isAtMainView => _viewStack.isAtMainView;
 
+  // ==================== ETKİN BÖLÜMLER ====================
+
+  Set<SliderState> _enabledStates = SliderState.values.toSet();
+
+  /// Ana ekranda gezilebilen bölümler (bkz. `SectionVisibility`).
+  Set<SliderState> get enabledStates => Set.unmodifiable(_enabledStates);
+
+  /// Yatay gezinmenin bir anlamı var mı: tek bölümde kaydıracak yer yoktur.
+  bool get hasHorizontalRange => _enabledStates.length > 1;
+
+  double _targetOf(SliderState state) =>
+      SliderStateHelper.getTargetValue(state, SliderState.values.length);
+
+  List<SliderState> get _orderedEnabled => [
+        for (final state in SliderState.values)
+          if (_enabledStates.contains(state)) state,
+      ];
+
+  double get _minValue => _targetOf(_orderedEnabled.first);
+  double get _maxValue => _targetOf(_orderedEnabled.last);
+
+  /// Gezilebilen bölümleri değiştirir.
+  ///
+  /// **Eksen yeniden ölçeklenmez, DARALTILIR.** Üç bölüm küpte sabit
+  /// yuvalarda durur (Birikim 0 · İşlemler 0,5 · Borç 1) ve İşlemler ortada
+  /// olduğu için uçlardan birini ya da ikisini kapatmak onun değerini
+  /// değiştirmez: yalnız eksenin gezilebilen aralığı kısalır. Bölüm sonradan
+  /// açıldığında aralık genişler; İşlemler sayfası yerinden oynamaz, yeniden
+  /// kurulmaz. (Yuvaları etkin bölüm sayısına göre yeniden dizmek tam da
+  /// `HorizontalCubeAnimationView`'ın başında anlatılan hatayı geri getirirdi:
+  /// sayfa yeniden mount olur, bloc'lar sıfırlanır, tur ikinci kez oynar.)
+  ///
+  /// Kapatılan bölümün üstünde durulurken çağrılırsa İşlemler'e dönülür.
+  void setEnabledStates(Set<SliderState> states) {
+    if (_isDisposed || setEquals(states, _enabledStates)) return;
+    assert(states.contains(SliderState.transactions),
+        'İşlemler her zaman etkindir');
+    _enabledStates = {...states, SliderState.transactions};
+
+    final value = _horizontalController.value;
+    if (value < _minValue || value > _maxValue) {
+      _horizontalController.value = _targetOf(SliderState.transactions);
+    }
+    notifyListeners();
+  }
+
   Map<SliderState, int> get selectedSubIndices =>
       Map.unmodifiable(_selectedSubIndices);
 
@@ -152,7 +199,7 @@ class HomeNavigationController extends ChangeNotifier {
     if (_isDisposed || width <= 0) return;
     _horizontalController.value =
         (_horizontalController.value - (deltaX / width) * pageSpan)
-            .clamp(0.0, 1.0);
+            .clamp(_minValue, _maxValue);
   }
 
   /// Sürükleme bitince oturt.
@@ -163,12 +210,14 @@ class HomeNavigationController extends ChangeNotifier {
   void settleMain({double velocityX = 0}) {
     if (_isDisposed) return;
     final maxIndex = SliderState.values.length - 1;
+    final enabled = _orderedEnabled;
     final target = resolveDragTarget(
       position: _horizontalController.value * maxIndex,
       // İçerik sola giderken (negatif dx) indeks artar: işaret ters.
       direction: flingDirection(-velocityX),
       maxIndex: maxIndex,
-    );
+      // Fiske, kapalı bir bölüme oturtamaz.
+    ).clamp(enabled.first.index, enabled.last.index);
     _horizontalController.animateTo(
       SliderStateHelper.getTargetValue(
         SliderState.values[target],
@@ -182,7 +231,7 @@ class HomeNavigationController extends ChangeNotifier {
   /// Alt sayfaları kapatıp [state] ana sayfasına kayar (dışarıdan gezinme
   /// isteği; bkz. `HomeNavigationRequests`).
   Future<void> showMain(SliderState state) async {
-    if (_isDisposed) return;
+    if (_isDisposed || !_enabledStates.contains(state)) return;
     await closeToMain();
     if (_isDisposed) return;
     await _horizontalController.animateTo(

@@ -8,7 +8,11 @@ import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/routes/gorouting.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
+import 'package:cunehat/core/error/error_handling.dart';
 import 'package:cunehat/core/error/error_log.dart';
+import 'package:cunehat/features/main_feature/utils/section_records.dart';
+import 'package:cunehat/features/main_feature/utils/section_visibility.dart';
+import 'package:cunehat/features/settings/presentation/page/privacy_policy_page.dart';
 import 'package:cunehat/core/models/legacy_safe_adapters.dart';
 import 'package:cunehat/core/services/auto_backup_service.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
@@ -61,6 +65,18 @@ class AppInitialization {
       // kadar yakalanan hatalar (init sırasında doğanlar dahil) bellekte
       // bekliyordu; attach onları önceki oturumların kayıtlarıyla birleştirir.
       ErrorLog.instance.attach(getIt<SharedPreferences>());
+
+      // Ana ekranın bölümleri (Birikim / Borç kullandıkça açılır). İlk
+      // kareden ÖNCE hazır olmalı: alt çubuk (sade çubuk ↔ kaydırıcı) buna
+      // göre kurulur. Retry'da ikinci kez kayıt (ve ikinci abonelik) atlanır.
+      if (!getIt.isRegistered<SectionVisibility>()) {
+        getIt
+          ..registerSingleton<SectionRecords>(SectionRecords())
+          ..registerSingleton<SectionVisibility>(
+            SectionVisibility(getIt<SharedPreferences>()),
+          );
+        await _initializeSections();
+      }
 
       // Ekranlardaki interaktif turlar (Showcase) için global kayıt. v5
       // API'si artık widget ağacında bir üst (ShowcaseWidget) gerektirmiyor;
@@ -116,6 +132,36 @@ class AppInitialization {
       debugPrint('Initialization error: $e');
       rethrow;
     }
+  }
+
+  /// Bölümlerin başlangıç durumu ve kayıtlarla eşitlenmesi.
+  ///
+  /// "Bu sürümden önce kullanılmış kurulum" ölçütü gizlilik bayrağı: eski
+  /// sürümde ilk açılışta, kapatılamaz bir diyalogla yazılıyordu, yani
+  /// uygulamayı bir kez bile açmış herkeste var. Yeni kurulumda bayrak
+  /// karşılama ekranından ilerleyince yazılır — buradaki ilk okumadan SONRA.
+  ///
+  /// Kaydı olan bölüm ilk kareden önce açılır (yedeği geri yüklenmiş
+  /// kurulum); sonrasında kutular izlenir ve kayıt oluştuğu an bölüm açılır.
+  /// Abonelik uygulama ömürlüdür.
+  static Future<void> _initializeSections() async {
+    final sections = getIt<SectionVisibility>();
+    final records = getIt<SectionRecords>();
+    await sections.ensureInitialized(
+      existingInstall:
+          getIt<SharedPreferences>().getBool(kPrivacyConsentShownKey) ?? false,
+    );
+
+    Future<void> sync() => sections.syncWithRecords(
+          savingsHasRecords: records.savingsHasRecords,
+          debtHasRecords: records.debtHasRecords,
+        );
+    await sync();
+    records.changes.listen((_) {
+      sync().catchError((Object e, StackTrace st) {
+        reportError('Bölümler · kayıt eşitleme', e, st);
+      });
+    });
   }
 
   static Future<void> _initializeHive() async {

@@ -14,9 +14,10 @@ import 'package:flutter/material.dart';
 /// listeler — önceliklidir, çünkü isabet testi en derinden başlar ve eşit
 /// eşikte önce çözen kazanır.
 ///
-/// ## Yalnız ANA görünümde kurulur
+/// ## Yalnız ANA görünümde ve birden çok bölüm varken kurulur
 ///
-/// Alt sayfa (Rapor, İçgörüler, Detay, Borç geçmişi) açıkken jest **hiç
+/// Tek bölüm açıkken (yeni kurulum: yalnız İşlemler) jest kurulmaz.
+/// Alt sayfa (Rapor, İçgörüler, Detay, Borç geçmişi) açıkken de jest **hiç
 /// kurulmaz**. İki ölçülmüş neden:
 ///
 /// 1. Alt sayfada yatay eksene dokunmak yıkıcı: `dragMainBy` ekseni
@@ -63,9 +64,15 @@ class MainContentSwipe extends StatelessWidget {
         return ListenableBuilder(
           // Alt sayfa açılıp kapanınca kapı yeniden değerlendirilmeli.
           // `navigateTo` _currentIndex'i yazdıktan HEMEN sonra haber verir.
-          listenable: controller.viewStack,
+          // Denetleyicinin kendisi de dinlenir: etkin bölümler değişince
+          // (bkz. `setEnabledStates`) jest kurulur ya da sökülür.
+          listenable: Listenable.merge([controller.viewStack, controller]),
           builder: (context, content) {
-            final enabled = controller.isAtMainView;
+            // Tek bölümde gidilecek yer yok: jest HİÇ kurulmaz, böylece
+            // sayfanın içindeki yatay jestlerle (kaydır-sil, gün şeridi)
+            // arenada yarışmaz.
+            final enabled =
+                controller.isAtMainView && controller.hasHorizontalRange;
             return GestureDetector(
               behavior: HitTestBehavior.translucent,
               onHorizontalDragUpdate: enabled

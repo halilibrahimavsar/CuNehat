@@ -106,6 +106,26 @@ class DynamicSlider extends StatefulWidget {
   /// Yan etkisi olmamalı; kare başına birden çok kez çağrılabilir.
   final bool Function()? canPeek;
 
+  /// Gösterilecek ana durumlar; varsayılan hepsi.
+  ///
+  /// Kapalı bir durumun bölümü çizilmez, knob oraya sürüklenemez ve
+  /// fiskeyle oraya oturmaz. **Denetleyicinin değer ekseni DEĞİŞMEZ:** her
+  /// durum [SliderStateHelper.getTargetValue]'daki yerinde kalır (üç durumda
+  /// 0 · 0,5 · 1); kaydırıcı yalnız etkin durumların kapladığı aralıkta
+  /// gezer ve o aralığı parkurun tamamına yayar. Böylece bir durum sonradan
+  /// açıldığında ötekilerin değeri — ve o değere bağlı her şey (sayfa
+  /// geçişi, üst çubuk rengi) — yerinden oynamaz.
+  ///
+  /// En az iki durum içermeli ve bitişik olmalıdır (aradan durum atlanamaz).
+  /// Tek durumda kaydıracak bir şey yoktur; o hâl bu widget'ın işi değil.
+  final Set<SliderState> enabledStates;
+
+  static const Set<SliderState> _allStates = {
+    SliderState.savedMoney,
+    SliderState.transactions,
+    SliderState.debt,
+  };
+
   const DynamicSlider({
     super.key,
     required this.controller,
@@ -118,6 +138,7 @@ class DynamicSlider extends StatefulWidget {
     this.peekStates = const {},
     this.onPeekPlayed,
     this.canPeek,
+    this.enabledStates = _allStates,
   });
 
   @override
@@ -239,6 +260,23 @@ class _DynamicSliderState extends State<DynamicSlider> {
       SliderState.values.length,
     );
   }
+
+  /// Etkin durumlar, eksen sırasında.
+  List<SliderState> get _states {
+    final states = [
+      for (final state in SliderState.values)
+        if (widget.enabledStates.contains(state)) state,
+    ];
+    assert(states.length >= 2, 'DynamicSlider en az iki etkin durum ister');
+    assert(
+      states.last.index - states.first.index == states.length - 1,
+      'Etkin durumlar bitişik olmalı: $states',
+    );
+    return states;
+  }
+
+  double _valueOf(SliderState state) =>
+      SliderStateHelper.getTargetValue(state, SliderState.values.length);
 
   void _onControllerChange() {
     final currentState = _getCurrentState();
@@ -490,7 +528,7 @@ class _DynamicSliderState extends State<DynamicSlider> {
   /// Knob'a ve çarka girecek TÜM etiketler. Knob genişliği en uzununa göre
   /// çözülür; yoksa durum değiştikçe knob boyut değiştirirdi.
   Iterable<String> get _allLabels sync* {
-    for (final state in SliderState.values) {
+    for (final state in _states) {
       yield SliderStateHelper.getLabelForState(state, widget.texts);
       for (final item in widget.subMenuItems[state] ?? const <SubMenuItem>[]) {
         yield item.label;
@@ -531,9 +569,18 @@ class _DynamicSliderState extends State<DynamicSlider> {
               // eklenecek bir şeyi yoksa (mini düğme tanımsız) '+' gizlenir.
               final hasMiniButtons =
                   (widget.miniButtons[state] ?? const []).isNotEmpty;
-              final sectionWidth = _widgetWidth / SliderState.values.length;
+              final states = _states;
+              // Etkin aralığın denetleyici eksenindeki uçları.
+              final minValue = _valueOf(states.first);
+              final maxValue = _valueOf(states.last);
+              final span = maxValue - minValue;
+              final sectionWidth = _widgetWidth / states.length;
+              // Etkin aralık parkurun TAMAMINA yayılır: iki durumda knob
+              // uçtan uca gider, parkurun yarısında asılı kalmaz.
+              final travel =
+                  ((value - minValue) / span).clamp(0.0, 1.0).toDouble();
               final knobPosition = SliderConfig.trackPadding +
-                  (value * (_widgetWidth - metrics.knobWidth)) -
+                  (travel * (_widgetWidth - metrics.knobWidth)) -
                   8;
               final transitionProgress = _calculateTransitionProgress(value);
 
@@ -546,12 +593,12 @@ class _DynamicSliderState extends State<DynamicSlider> {
                     _buildTrack(activeColor),
 
                     // State sections
-                    for (int i = 0; i < SliderState.values.length; i++)
+                    for (int i = 0; i < states.length; i++)
                       _buildStateSection(
-                        SliderState.values[i],
+                        states[i],
                         i * sectionWidth,
                         sectionWidth,
-                        state == SliderState.values[i],
+                        state == states[i],
                       ),
 
                     // Knob
@@ -570,6 +617,8 @@ class _DynamicSliderState extends State<DynamicSlider> {
                         transitionProgress: transitionProgress,
                         selectedIndex: _selectedCarouselIndex,
                         showAddButton: hasMiniButtons,
+                        canGoPrevious: state != states.first,
+                        canGoNext: state != states.last,
                         texts: widget.texts,
                         onTap: _toggleMiniButtons,
                         onMainTitleTap: () => widget.onStateTap?.call(state),
@@ -578,9 +627,11 @@ class _DynamicSliderState extends State<DynamicSlider> {
                         onHorizontalDrag: (details) {
                           final trackWidth = _widgetWidth - metrics.knobWidth;
                           if (trackWidth <= 0) return;
+                          // Parkurun tamamı etkin aralığa karşılık gelir.
                           final newValue = (widget.controller.value +
-                                  details.delta.dx / trackWidth)
-                              .clamp(0.0, 1.0);
+                                  details.delta.dx / trackWidth * span)
+                              .clamp(minValue, maxValue)
+                              .toDouble();
                           widget.controller.value = newValue;
                           widget.onValueChanged?.call(newValue);
                         },
@@ -589,15 +640,19 @@ class _DynamicSliderState extends State<DynamicSlider> {
                           // Konum + hız: hızlı bir fiske kısa yol almış olsa
                           // bile bir sayfa ilerletir. Eskiden yalnız konuma
                           // bakılıyor ve %20'lik hızlı fiske yutuluyordu.
-                          final maxIndex = SliderState.values.length - 1;
+                          // Hedef ETKİN durumlar arasından seçilir: fiske,
+                          // kapalı bir duruma oturtamaz.
+                          final maxIndex = states.length - 1;
                           final target = resolveDragTarget(
-                            position: widget.controller.value * maxIndex,
+                            position: (widget.controller.value - minValue) /
+                                span *
+                                maxIndex,
                             direction: flingDirection(
                               details.velocity.pixelsPerSecond.dx,
                             ),
                             maxIndex: maxIndex,
                           );
-                          _navigateToState(SliderState.values[target]);
+                          _navigateToState(states[target]);
                         },
                         onVerticalDrag: subItems.isNotEmpty
                             ? (details) {

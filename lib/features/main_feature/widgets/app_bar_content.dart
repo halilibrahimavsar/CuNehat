@@ -1,3 +1,4 @@
+import 'package:cunehat/features/main_feature/utils/section_visibility.dart';
 import 'package:cunehat/core/constants/app_version.dart';
 import 'dart:async';
 
@@ -103,12 +104,23 @@ class _AppBarContentState extends State<AppBarContent> {
     // Oluştur"dan başka bir şey yokken "işte aktif cüzdanın" demenin anlamı
     // yok. `enabled` false→true olunca OnboardingTour kendini yeniden
     // silahlandırır; ek bir tetikleyiciye gerek yok.
+    final sections = getIt.isRegistered<SectionVisibility>()
+        ? getIt<SectionVisibility>()
+        : null;
     return BlocBuilder<WalletBloc, WalletState>(
       buildWhen: (prev, curr) => _hasWallet(prev) != _hasWallet(curr),
-      builder: (context, walletState) => OnboardingTour(
-        flow: OnboardingFlow.shell,
-        keys: _tourKeys,
-        enabled: _hasWallet(walletState),
+      builder: (context, walletState) => ListenableBuilder(
+        listenable: sections ?? const AlwaysStoppedAnimation<double>(0),
+        builder: (context, child) => OnboardingTour(
+          flow: OnboardingFlow.shell,
+          keys: _tourKeys,
+          // Turun son adımı KAYDIRICIYI anlatır. Yalnız İşlemler açıkken
+          // kaydırıcı yoktur (sade çubuk); tur, ikinci bölüm açılıp kaydırıcı
+          // ilk kez göründüğünde oynar.
+          enabled: _hasWallet(walletState) &&
+              !(sections?.hasOnlyTransactions ?? false),
+          child: child!,
+        ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0),
           child: Row(

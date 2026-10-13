@@ -29,6 +29,88 @@ void main() {
     return controller;
   }
 
+  // Birikim ve Borç kullandıkça açılır; kapalı bölüme parmakla da gidilemez.
+  group('etkin bölümler', () {
+    testWidgets('tek bölümde (yalnız İşlemler) yatay jest HİÇ kurulmaz',
+        (tester) async {
+      final controller = await pump(tester);
+      controller.setEnabledStates({SliderState.transactions});
+      await tester.pump();
+
+      final detector = tester.widget<GestureDetector>(
+        find.descendant(
+          of: find.byType(MainContentSwipe),
+          matching: find.byType(GestureDetector),
+        ),
+      );
+      // Callback içinde yok saymak yetmez: tanınıp yok sayılan jest arenayı
+      // yine kazanır ve sayfanın içindeki yatay jestleri iptal ettirir.
+      expect(detector.onHorizontalDragUpdate, isNull);
+      expect(detector.onHorizontalDragEnd, isNull);
+      expect(detector.onHorizontalDragCancel, isNull);
+
+      await tester.drag(
+          find.byKey(const Key('icerik')), const Offset(-width, 0));
+      await tester.pumpAndSettle();
+      expect(controller.horizontalController.value, 0.5);
+    });
+
+    testWidgets('kapalı bölüme doğru sürükleme ekseni kıpırdatmaz',
+        (tester) async {
+      final controller = await pump(tester);
+      controller.setEnabledStates({SliderState.transactions, SliderState.debt});
+      await tester.pump();
+
+      // Sağa sürükleme = önceki sayfa = Birikim (kapalı).
+      await tester.drag(
+          find.byKey(const Key('icerik')), const Offset(width, 0));
+      await tester.pumpAndSettle();
+
+      expect(controller.horizontalController.value, 0.5);
+      expect(controller.currentSliderState, SliderState.transactions);
+    });
+
+    testWidgets('açık bölüme sürükleme çalışmaya devam eder', (tester) async {
+      final controller = await pump(tester);
+      controller.setEnabledStates({SliderState.transactions, SliderState.debt});
+      await tester.pump();
+
+      await tester.drag(
+          find.byKey(const Key('icerik')), const Offset(-width, 0));
+      await tester.pumpAndSettle();
+
+      expect(controller.currentSliderState, SliderState.debt);
+    });
+
+    testWidgets('hızlı fiske kapalı bölüme OTURTAMAZ', (tester) async {
+      final controller = await pump(tester);
+      controller
+          .setEnabledStates({SliderState.savedMoney, SliderState.transactions});
+      await tester.pump();
+
+      // Sola fiske = sonraki sayfa = Borç (kapalı).
+      await tester.fling(
+          find.byKey(const Key('icerik')), const Offset(-80, 0), 3000);
+      await tester.pumpAndSettle();
+
+      expect(controller.horizontalController.value, closeTo(0.5, 0.001));
+    });
+
+    testWidgets('bölüm açılınca jest yeniden kurulur', (tester) async {
+      final controller = await pump(tester);
+      controller.setEnabledStates({SliderState.transactions});
+      await tester.pump();
+      controller.setEnabledStates({SliderState.transactions, SliderState.debt});
+      await tester.pump();
+
+      await tester.drag(
+          find.byKey(const Key('icerik')), const Offset(-width, 0));
+      await tester.pumpAndSettle();
+
+      expect(controller.currentSliderState, SliderState.debt);
+    });
+  });
+
   testWidgets('içeriği sola sürüklemek sonraki sayfaya geçirir',
       (tester) async {
     final controller = await pump(tester);
@@ -238,7 +320,8 @@ void main() {
             ),
           ),
           barTouchData: BarTouchData(
-            touchCallback: (event, _) => events.add(event.runtimeType.toString()),
+            touchCallback: (event, _) =>
+                events.add(event.runtimeType.toString()),
           ),
         )),
       ),

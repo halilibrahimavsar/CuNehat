@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' show DateTimeRange, ValueChanged;
 import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
+import 'package:unified_flutter_features/features/slider_2d_navigation/models/slider_models.dart';
 
 /// Ana sayfanın DIŞINDAN (itilmiş bir rotadan) ana sayfaya gezinme isteği.
 ///
@@ -26,6 +27,14 @@ class HomeNavigationRequests extends ChangeNotifier {
   /// Sekme şeridinden bir bölüme geç.
   void openSection(TransactionsSection section) =>
       sectionHandler?.call(section);
+
+  /// Ana bölümler (Birikim / İşlemler / Borç) arasında geçiş isteğini ana
+  /// sayfaya ileten işleyici; [sectionHandler] ile aynı yaşam döngüsü.
+  ValueChanged<SliderState>? mainHandler;
+
+  /// [state] ana bölümünü göster. Çekmecedeki "Birikim tutmaya başla" gibi
+  /// satırlar bölümü açtıktan sonra buradan oraya götürür.
+  void openMain(SliderState state) => mainHandler?.call(state);
 
   DateTimeRange? _period;
 
