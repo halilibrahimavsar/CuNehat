@@ -363,9 +363,9 @@ class _ModernDrawerState extends State<ModernDrawer>
       child: Text(
         title,
         style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 1.2,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.2,
           color: isDark
               ? Colors.white.withValues(alpha: 0.45)
               : theme.colorScheme.primary.withValues(alpha: 0.7),
@@ -479,7 +479,7 @@ class _ModernDrawerState extends State<ModernDrawer>
           child: Text(
             displayName,
             style: TextStyle(
-              fontSize: 22,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: isDark ? Colors.white : theme.colorScheme.onSurface,
               letterSpacing: 0.5,
@@ -492,7 +492,7 @@ class _ModernDrawerState extends State<ModernDrawer>
           child: Text(
             email,
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 14,
               color: isDark
                   ? Colors.white.withValues(alpha: 0.75)
                   : theme.colorScheme.onSurfaceVariant,
@@ -554,7 +554,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                         theme.colorScheme.surface,
                       ],
               ),
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(28),
               border: Border.all(
                 color: isDark
                     ? Colors.white.withValues(alpha: 0.18)
@@ -579,7 +579,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: walletColor.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
                         AppIcons.getIconData(wallet.iconName),
@@ -598,7 +598,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                               color: isDark
                                   ? Colors.white
                                   : theme.colorScheme.onSurface,
-                              fontSize: 15,
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
                             maxLines: 1,
@@ -608,9 +608,9 @@ class _ModernDrawerState extends State<ModernDrawer>
                           Text(
                             context.l10n.drawerActiveWalletLabel,
                             style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.8,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.2,
                               color: isDark
                                   ? Colors.white54
                                   : theme.colorScheme.onSurfaceVariant,
@@ -626,7 +626,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                       ),
                       decoration: BoxDecoration(
                         color: walletColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: walletColor.withValues(alpha: 0.3),
                           width: 1,
@@ -635,8 +635,8 @@ class _ModernDrawerState extends State<ModernDrawer>
                       child: Text(
                         wallet.currency.toUpperCase(),
                         style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
                           color: isDark ? Colors.white : walletColor,
                         ),
                       ),
@@ -655,7 +655,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                     color: isDark
                         ? Colors.black.withValues(alpha: 0.25)
                         : Colors.white.withValues(alpha: 0.7),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     children: [
@@ -680,7 +680,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                       Text(
                         formatMoney(wallet.balance, currency: wallet.currency),
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: isDark
                               ? Colors.white
@@ -754,7 +754,7 @@ class _ModernDrawerState extends State<ModernDrawer>
         color: isDark
             ? accentColor.withValues(alpha: 0.12)
             : accentColor.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: accentColor.withValues(alpha: isDark ? 0.25 : 0.18),
           width: 1,
@@ -771,7 +771,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                 child: Text(
                   label,
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: isDark
                         ? Colors.white70
@@ -839,7 +839,7 @@ class _ModernDrawerState extends State<ModernDrawer>
               setState(() => _selectedIndex = index);
               onTap();
             },
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
             child: AnimatedContainer(
               duration: constants.AppDurations.short,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -849,7 +849,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                         ? Colors.white.withValues(alpha: 0.15)
                         : theme.colorScheme.primary.withValues(alpha: 0.12))
                     : Colors.transparent,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: _selectedIndex == index
                       ? (isDark
@@ -882,7 +882,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                         Text(
                           subtitle,
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 12,
                             color: isDark
                                 ? Colors.white54
                                 : theme.colorScheme.onSurfaceVariant
@@ -907,8 +907,8 @@ class _ModernDrawerState extends State<ModernDrawer>
                       child: Text(
                         '$badgeCount',
                         style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
                           color: theme.colorScheme.onError,
                         ),
                       ),
@@ -999,7 +999,7 @@ class _ModernDrawerState extends State<ModernDrawer>
           Text(
             'ÇuHat v$kAppVersionName',
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
               color: isDark
                   ? Colors.white38

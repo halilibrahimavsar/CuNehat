@@ -1,3 +1,4 @@
+import 'package:cunehat/core/shared/widgets/empty_state.dart';
 import 'package:cunehat/features/main_feature/utils/section_visibility.dart';
 import 'package:cunehat/core/shared/motion/app_motion.dart';
 import 'package:cunehat/core/shared/motion/period_transition.dart';
@@ -378,7 +379,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
                   clipBehavior: Clip.antiAlias,
                   shape: const RoundedRectangleBorder(
                     borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(32)),
+                        BorderRadius.vertical(top: Radius.circular(28)),
                   ),
                   child: SizedBox(
                     height: height,
@@ -771,7 +772,7 @@ class _EmptyDayRow extends StatelessWidget {
               context.l10n.txDayEmptyRow(date),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
+              style: TextStyle(fontSize: 14, color: scheme.onSurfaceVariant),
             ),
           ),
           TextButton.icon(
@@ -807,7 +808,7 @@ class _SelectionBar extends StatelessWidget {
       child: Material(
         key: const ValueKey('ledger-selection-bar'),
         color: cs.primaryContainer,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(4, 4, 8, 4),
           child: Row(
@@ -821,7 +822,7 @@ class _SelectionBar extends StatelessWidget {
                 l10n.nIslemSecili(count),
                 maxLines: 1,
                 style: TextStyle(
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
                   color: cs.onPrimaryContainer,
                 ),
               ),
@@ -893,7 +894,6 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
     final accent = mode.primaryColor;
     final hasQuery = query != null && query!.trim().isNotEmpty;
     final hasElsewhere = isFiltered && outsidePeriodMatches > 0;
@@ -914,105 +914,55 @@ class _EmptyState extends StatelessWidget {
             ? l10n.txSearchWidenBody(outsidePeriodMatches)
             : l10n.txEmptyFilteredBody;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 96,
-            height: 96,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  accent.withValues(alpha: 0.18),
-                  accent.withValues(alpha: 0.04),
-                ],
-              ),
-              border:
-                  Border.all(color: accent.withValues(alpha: 0.25), width: 1),
-            ),
-            child: Icon(
-              !isFiltered
-                  ? Icons.receipt_long_rounded
-                  : hasElsewhere
-                      ? Icons.history_rounded
-                      : Icons.filter_alt_off_rounded,
-              size: 42,
-              color: accent,
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.3,
-              color: scheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            body,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              height: 1.4,
-              color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
-            ),
-          ),
-          if (!isFiltered && showAddButtons) ...[
-            const SizedBox(height: 20),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 10,
-              runSpacing: 8,
-              children: [
-                FilledButton.tonalIcon(
-                  key: const ValueKey('tx-empty-add-expense'),
-                  onPressed: () => onAdd(TransactionTypeModel.expense),
-                  icon: const Icon(Icons.south_west_rounded, size: 18),
-                  label: Text(l10n.giderEkle),
-                ),
-                FilledButton.tonalIcon(
-                  key: const ValueKey('tx-empty-add-income'),
-                  onPressed: () => onAdd(TransactionTypeModel.income),
-                  icon: const Icon(Icons.north_east_rounded, size: 18),
-                  label: Text(l10n.gelirEkle),
-                ),
-              ],
-            ),
-          ],
-          if (emptyPeriod) ...[
-            const SizedBox(height: 12),
-            TextButton(
-              key: const ValueKey('tx-empty-show-all'),
-              onPressed: onWidenPeriod,
-              child: Text(l10n.txEmptyShowAll),
-            ),
-          ],
-          if (isFiltered) ...[
-            const SizedBox(height: 20),
-            if (hasElsewhere)
+    return EmptyState(
+      icon: !isFiltered
+          ? Icons.receipt_long_rounded
+          : hasElsewhere
+              ? Icons.history_rounded
+              : Icons.filter_alt_off_rounded,
+      accent: accent,
+      title: title,
+      body: body,
+      actions: [
+        if (!isFiltered && showAddButtons)
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 10,
+            runSpacing: 8,
+            children: [
               FilledButton.tonalIcon(
-                onPressed: onWidenPeriod,
-                icon: const Icon(Icons.search_rounded, size: 18),
-                label: Text(l10n.txSearchWidenAction),
+                key: const ValueKey('tx-empty-add-expense'),
+                onPressed: () => onAdd(TransactionTypeModel.expense),
+                icon: const Icon(Icons.south_west_rounded, size: 18),
+                label: Text(l10n.giderEkle),
               ),
-            if (hasElsewhere) const SizedBox(height: 8),
-            TextButton.icon(
-              onPressed: onClearFilters,
-              icon: const Icon(Icons.clear_all_rounded, size: 18),
-              label: Text(l10n.txEmptyClearFilters),
-            ),
-          ],
-        ],
-      ),
+              FilledButton.tonalIcon(
+                key: const ValueKey('tx-empty-add-income'),
+                onPressed: () => onAdd(TransactionTypeModel.income),
+                icon: const Icon(Icons.north_east_rounded, size: 18),
+                label: Text(l10n.gelirEkle),
+              ),
+            ],
+          ),
+        if (emptyPeriod)
+          TextButton(
+            key: const ValueKey('tx-empty-show-all'),
+            onPressed: onWidenPeriod,
+            child: Text(l10n.txEmptyShowAll),
+          ),
+        if (isFiltered && hasElsewhere)
+          FilledButton.tonalIcon(
+            onPressed: onWidenPeriod,
+            icon: const Icon(Icons.search_rounded, size: 18),
+            label: Text(l10n.txSearchWidenAction),
+          ),
+        if (isFiltered)
+          TextButton.icon(
+            onPressed: onClearFilters,
+            icon: const Icon(Icons.clear_all_rounded, size: 18),
+            label: Text(l10n.txEmptyClearFilters),
+          ),
+      ],
     );
   }
 }

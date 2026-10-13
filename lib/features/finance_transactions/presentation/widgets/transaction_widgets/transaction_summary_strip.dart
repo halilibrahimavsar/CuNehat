@@ -1,3 +1,4 @@
+import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
@@ -100,10 +101,12 @@ class TransactionSummaryStrip extends StatelessWidget {
       FinanceMode.compare =>
         hasActiveFilters ? l10n.txSummaryNetFiltered : l10n.txSummaryNet,
     };
+    final brightness = Theme.of(context).brightness;
     final headlineColor = switch (mode) {
-      FinanceMode.income => AppGradients.savings,
-      FinanceMode.expense => AppGradients.debt,
-      FinanceMode.compare => net >= 0 ? scheme.onSurface : AppGradients.debt,
+      FinanceMode.income => MoneyColors.incomeText(brightness),
+      FinanceMode.expense => MoneyColors.expenseText(brightness),
+      FinanceMode.compare =>
+        net >= 0 ? scheme.onSurface : MoneyColors.expenseText(brightness),
     };
 
     return AppCard(
@@ -130,8 +133,10 @@ class TransactionSummaryStrip extends StatelessWidget {
                 currency: currency,
                 style: TextStyle(
                   color: headlineColor,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w900,
+                  // Ölçekte 24 yok. 28 şeridi ~8dp uzatıp ilk defter satırını aşağı
+                  // itiyordu (dikey bütçe testi); bir alt basamak.
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
                   height: 1.1,
                   letterSpacing: -0.8,
                 ),
@@ -175,7 +180,7 @@ class TransactionSummaryStrip extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 10.5,
+              fontSize: 12,
               height: 1.2,
               color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),
@@ -203,9 +208,9 @@ class TransactionSummaryStrip extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: labelColor,
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.0,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
             ),
           ),
         ),
@@ -225,7 +230,7 @@ class TransactionSummaryStrip extends StatelessWidget {
   ) {
     final scheme = Theme.of(context).colorScheme;
     final muted = scheme.onSurfaceVariant.withValues(alpha: 0.85);
-    const footerStyle = TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700);
+    const footerStyle = TextStyle(fontSize: 12, fontWeight: FontWeight.w700);
 
     return Row(
       children: [
@@ -255,7 +260,7 @@ class TransactionSummaryStrip extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
             color: muted,
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -290,7 +295,10 @@ class TransactionSummaryStrip extends StatelessWidget {
     String currency,
     TextStyle style,
   ) {
-    final color = isIncome ? AppGradients.savings : AppGradients.debt;
+    final brightness = Theme.of(context).brightness;
+    final color = isIncome
+        ? MoneyColors.incomeText(brightness)
+        : MoneyColors.expenseText(brightness);
     final content = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -319,13 +327,13 @@ class TransactionSummaryStrip extends StatelessWidget {
       child: Material(
         color: selected ? color.withValues(alpha: 0.14) : Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
           side: BorderSide(
             color: color.withValues(alpha: selected ? 0.45 : 0.18),
           ),
         ),
         child: InkWell(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
           onTap: () => onModeChanged(selected ? FinanceMode.compare : target),
           child: Padding(
             // Dikey dolgu bilerek dar: şerit ekranın ilk yarısında ve her dp
@@ -374,8 +382,8 @@ class _TodayButton extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
                   color: accent,
                 ),
               ),

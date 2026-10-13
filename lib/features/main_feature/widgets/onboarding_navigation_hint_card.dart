@@ -19,7 +19,7 @@ class OnboardingNavigationHintCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: const [
           BoxShadow(
               color: Colors.black38, blurRadius: 16, offset: Offset(0, 6)),
@@ -32,8 +32,8 @@ class OnboardingNavigationHintCard extends StatelessWidget {
           Text(
             l10n.onboardingNavHintHeader,
             style: TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
               color: scheme.onSurface,
             ),
           ),
@@ -83,7 +83,7 @@ class OnboardingNavigationHintCard extends StatelessWidget {
                 title,
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
-                  fontSize: 13,
+                  fontSize: 14,
                   color: scheme.onSurface,
                 ),
               ),

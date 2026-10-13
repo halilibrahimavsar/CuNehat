@@ -181,15 +181,16 @@ void main() {
       item: TransactionWithBalance(transaction: moved, balanceAfter: 0),
     )));
     await tester.pumpAndSettle();
-    final brightness = Theme.of(tester.element(find.byType(TransactionCard)))
-        .brightness;
+    final brightness =
+        Theme.of(tester.element(find.byType(TransactionCard))).brightness;
     expect(amountColor('-150,00 ₺'), MoneyColors.moved(brightness));
 
     await tester.pumpWidget(buildTestableWidget(TransactionCard(
       item: TransactionWithBalance(transaction: spent, balanceAfter: 0),
     )));
     await tester.pumpAndSettle();
-    expect(amountColor('-150,00 ₺'), MoneyColors.expense);
+    // Tutar METİN tonuyla yazılır: vurgu kırmızısı açık zeminde 3,7:1.
+    expect(amountColor('-150,00 ₺'), MoneyColors.expenseText(brightness));
   });
 
   testWidgets(
@@ -212,8 +213,8 @@ void main() {
           openingBalance: 0,
           creditCard: card,
         );
-    final cardWallet = wallet('card',
-        card: const CreditCardInfo(closingDay: 25, dueDay: 5));
+    final cardWallet =
+        wallet('card', card: const CreditCardInfo(closingDay: 25, dueDay: 5));
     final walletBloc = _MockWalletBloc();
     when(() => walletBloc.state).thenReturn(
         WalletLoadedSt([wallet('wallet_123'), cardWallet], cardWallet));

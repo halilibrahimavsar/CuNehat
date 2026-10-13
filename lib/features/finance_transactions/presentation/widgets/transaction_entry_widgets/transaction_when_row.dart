@@ -145,7 +145,7 @@ class _DayChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    const radius = BorderRadius.all(Radius.circular(14));
+    const radius = BorderRadius.all(Radius.circular(12));
     return Semantics(
       button: true,
       selected: selected,
@@ -171,7 +171,7 @@ class _DayChip extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 color: selected ? accent : cs.onSurface,
               ),
@@ -201,10 +201,10 @@ class _WhenPill extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Material(
       color: cs.onSurface.withValues(alpha: 0.04),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           child: Row(
@@ -217,7 +217,7 @@ class _WhenPill extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: cs.onSurface,
                   ),

@@ -169,9 +169,9 @@ class _AddButton extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Material(
       color: cs.onSurface.withValues(alpha: 0.04),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         onTap: onPick,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -225,7 +225,7 @@ class _Preview extends StatelessWidget {
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             color: cs.onSurface.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
             children: [
@@ -247,7 +247,7 @@ class _Preview extends StatelessWidget {
                           Expanded(
                             child: Text(context.l10n.fisOcrTaraniyor,
                                 style: TextStyle(
-                                    fontSize: 13, color: cs.onSurfaceVariant)),
+                                    fontSize: 14, color: cs.onSurfaceVariant)),
                           ),
                         ],
                       );
@@ -255,7 +255,7 @@ class _Preview extends StatelessWidget {
                     return Text(
                       context.l10n.fisEkli,
                       style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: cs.onSurface),
                     );
@@ -315,7 +315,7 @@ class _Thumb extends StatelessWidget {
     return GestureDetector(
       onTap: () => _open(context),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         child: SizedBox(
           width: 52,
           height: 52,

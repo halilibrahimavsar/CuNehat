@@ -1,4 +1,5 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/config/theme/app_tokens.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
 import 'package:flutter/material.dart';
@@ -38,10 +39,32 @@ abstract final class MoneyColors {
   static Color moved(Brightness brightness) =>
       brightness == Brightness.dark ? _movedDark : _movedLight;
 
+  /// Gelir METNİ. [income] bir vurgu rengidir (çubuk, ikon, dolgu); açık
+  /// zeminde yazı olarak 2,5:1 veriyor — yeşil tutarlar düşük kontrastla
+  /// okunuyordu. Bu ton açık kartta 5,5:1, koyu kartta 9:1
+  /// (`money_colors_test.dart`).
+  static Color incomeText(Brightness brightness) =>
+      brightness == Brightness.dark
+          ? AppPalette.incomeOnTintDark
+          : AppPalette.incomeOnTintLight;
+
+  /// Gider METNİ. [expense] açık zeminde 3,7:1; bu ton 5,1:1 (koyuda 6,5:1).
+  static Color expenseText(Brightness brightness) =>
+      brightness == Brightness.dark
+          ? AppPalette.dangerOnDark
+          : AppPalette.dangerOnLight;
+
+  /// İşaretli bir tutarın metin rengi (net, gün toplamı).
+  static Color signedText(double value, Brightness brightness) =>
+      value >= 0 ? incomeText(brightness) : expenseText(brightness);
+
   /// Bir işlemin satır/tutar rengi: para taşıma nötr, gelir yeşil, gider
   /// kırmızı. Evren kuralı ortak fonksiyondan gelir ([isSpendingMovement]).
+  ///
+  /// Tutar bu renkle YAZILDIĞI için metin tonları döner ([incomeText] /
+  /// [expenseText]).
   static Color of(TransactionEntity t, Brightness brightness) {
     if (!isSpendingMovement(t)) return moved(brightness);
-    return t.isIncome ? income : expense;
+    return t.isIncome ? incomeText(brightness) : expenseText(brightness);
   }
 }

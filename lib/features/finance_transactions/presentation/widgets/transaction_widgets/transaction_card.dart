@@ -286,7 +286,7 @@ class TransactionCard extends StatelessWidget {
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: scheme.onSurfaceVariant
                                       .withValues(alpha: 0.7),
-                                  fontSize: 11,
+                                  fontSize: 12,
                                 ),
                               ),
                             ),
@@ -314,8 +314,8 @@ class TransactionCard extends StatelessWidget {
                   currency: context.activeWalletCurrency,
                   style: TextStyle(
                     color: accent,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
                     letterSpacing: -0.5,
                   ),
                 ),
@@ -363,7 +363,7 @@ class TransactionCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
           color: accent.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
           // Kategorisiz satır (ör. transfer bağı kaldırılmış ekstre satırı)
@@ -374,7 +374,7 @@ class TransactionCard extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            fontSize: 10.5,
+            fontSize: 12,
             fontWeight: FontWeight.w600,
             color: accent.withValues(alpha: 0.95),
           ),

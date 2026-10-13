@@ -1,3 +1,4 @@
+import 'package:cunehat/core/shared/widgets/empty_state.dart';
 import 'dart:async';
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_picker_sheet.dart';
@@ -189,40 +190,13 @@ class _EmptyBudgets extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return SliverFillRemaining(
       hasScrollBody: false,
       child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: scheme.primary.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child:
-                  Icon(Icons.savings_outlined, size: 48, color: scheme.primary),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              context.l10n.henuzButceYok,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              context.l10n.kategorilerinizeAylikHarcamaLimiti,
-              textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-          ],
+        child: EmptyState(
+          icon: Icons.savings_outlined,
+          title: context.l10n.henuzButceYok,
+          body: context.l10n.kategorilerinizeAylikHarcamaLimiti,
         ),
       ),
     );

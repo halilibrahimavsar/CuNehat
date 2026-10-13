@@ -2,7 +2,6 @@ import 'package:intl/intl.dart';
 import 'package:cunehat/core/shared/motion/app_motion.dart';
 import 'dart:math' as math;
 
-import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -420,7 +419,7 @@ class _DayHeaderDelegate extends SliverPersistentHeaderDelegate {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                       letterSpacing: -0.2,
                       color: scheme.onSurface,
                     ),
@@ -484,11 +483,10 @@ class _NetBadge extends StatelessWidget {
   // işareti; para taşıma gününde nokta yerine ⇄.
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
     final color = moved
-        ? MoneyColors.moved(Theme.of(context).brightness)
-        : net >= 0
-            ? MoneyColors.income
-            : MoneyColors.expense;
+        ? MoneyColors.moved(brightness)
+        : MoneyColors.signedText(net, brightness);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -506,8 +504,8 @@ class _NetBadge extends StatelessWidget {
           isExpense: net < 0,
           currency: context.activeWalletCurrency,
           style: TextStyle(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w800,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
             color: color,
             height: 1.2,
           ),
@@ -533,7 +531,7 @@ class _DayEndBalance extends StatelessWidget {
           Text(
             context.l10n.gunSonu,
             style: TextStyle(
-              fontSize: 10.5,
+              fontSize: 12,
               color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
             ),
           ),
@@ -541,9 +539,11 @@ class _DayEndBalance extends StatelessWidget {
             amount: balance,
             currency: context.activeWalletCurrency,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: balance >= 0 ? scheme.onSurfaceVariant : AppGradients.debt,
+              color: balance >= 0
+                  ? scheme.onSurfaceVariant
+                  : MoneyColors.expenseText(Theme.of(context).brightness),
             ),
           ),
         ],

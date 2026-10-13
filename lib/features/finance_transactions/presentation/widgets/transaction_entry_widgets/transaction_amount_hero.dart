@@ -1,4 +1,5 @@
 // transaction_form_fields.dart'tan bölündü (v1 temizliği): davranış aynı.
+import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/labeled_segment.dart';
@@ -108,9 +109,15 @@ class AmountHero extends StatelessWidget {
                       }
                     },
                     style: TextStyle(
-                      fontSize: 44,
-                      fontWeight: FontWeight.w800,
-                      color: accent,
+                      fontSize: 40,
+                      fontWeight: FontWeight.w700,
+                      // Yazılan tutar METİN tonuyla: gelir yeşili açık zeminde
+                      // yazı olarak 2,5:1 veriyordu.
+                      color: isExpense
+                          ? MoneyColors.expenseText(
+                              Theme.of(context).brightness)
+                          : MoneyColors.incomeText(
+                              Theme.of(context).brightness),
                       height: 1.0,
                     ),
                     cursorColor: accent,
@@ -119,8 +126,8 @@ class AmountHero extends StatelessWidget {
                       border: InputBorder.none,
                       hintText: '0',
                       hintStyle: TextStyle(
-                        fontSize: 44,
-                        fontWeight: FontWeight.w800,
+                        fontSize: 40,
+                        fontWeight: FontWeight.w700,
                         color: accent.withValues(alpha: 0.25),
                       ),
                     ),
@@ -132,7 +139,7 @@ class AmountHero extends StatelessWidget {
                   child: Text(
                     context.activeWalletCurrencySymbol,
                     style: TextStyle(
-                      fontSize: 26,
+                      fontSize: 28,
                       fontWeight: FontWeight.w700,
                       color: accent.withValues(alpha: 0.6),
                     ),

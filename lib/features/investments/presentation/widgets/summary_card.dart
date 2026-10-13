@@ -58,8 +58,8 @@ class SummaryCard extends StatelessWidget {
                   child: Text(
                     context.l10n.tOPLAMPortfoyDegeri,
                     style: theme.textTheme.labelMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.2,
                       color: scheme.onSurfaceVariant.withValues(alpha: 0.9),
                     ),
                   ),
@@ -88,8 +88,8 @@ class SummaryCard extends StatelessWidget {
             child: Text(
               money(totalCurrentValue),
               style: theme.textTheme.displayMedium?.copyWith(
-                fontWeight: FontWeight.w900,
-                fontSize: 48,
+                fontWeight: FontWeight.w700,
+                fontSize: 40,
                 letterSpacing: -1.5,
                 color: scheme.onSurface,
                 height: 1.1,
@@ -113,12 +113,12 @@ class SummaryCard extends StatelessWidget {
             labelStyle: theme.textTheme.labelSmall?.copyWith(
               color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
               fontWeight: FontWeight.bold,
-              letterSpacing: 1.0,
+              letterSpacing: 0.2,
             ),
             value: Text(
               money(totalInvestment),
               style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 color: scheme.onSurface,
               ),
             ),
@@ -129,7 +129,7 @@ class SummaryCard extends StatelessWidget {
             labelStyle: theme.textTheme.labelSmall?.copyWith(
               color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
               fontWeight: FontWeight.bold,
-              letterSpacing: 1.0,
+              letterSpacing: 0.2,
             ),
             value: Row(
               mainAxisSize: MainAxisSize.min,
@@ -154,7 +154,7 @@ class SummaryCard extends StatelessWidget {
                         decimals: 1, signed: true),
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: profitColor,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -162,7 +162,7 @@ class SummaryCard extends StatelessWidget {
                 Text(
                   money(totalProfit),
                   style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                     color: profitColor,
                   ),
                 ),

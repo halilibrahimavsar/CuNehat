@@ -100,7 +100,7 @@ class _CategoryPickerState extends State<CategoryPicker> {
             Text(
               context.l10n.labelKategori,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: cs.onSurfaceVariant,
                 letterSpacing: 0.2,
@@ -111,7 +111,7 @@ class _CategoryPickerState extends State<CategoryPicker> {
             Text(
               ' *',
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: widget.accent,
               ),
@@ -325,7 +325,7 @@ class _SubCategoryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    const radius = BorderRadius.all(Radius.circular(14));
+    const radius = BorderRadius.all(Radius.circular(12));
 
     // Zemin Material'da, çerçeve Container'da: rengi Container'a verseydik
     // InkWell dalgasını örterdi (aynı hata `category_starter_pack_sheet`'te
@@ -410,7 +410,7 @@ class _CategoryTile extends StatelessWidget {
           color: selected
               ? accent.withValues(alpha: 0.12)
               : cs.onSurface.withValues(alpha: 0.04),
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: selected ? accent : Colors.transparent,
             width: 1.6,
@@ -466,7 +466,7 @@ class _CategoryTile extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 color: selected ? accent : cs.onSurface,
               ),
@@ -493,7 +493,7 @@ class _AddCategoryTile extends StatelessWidget {
         width: 80,
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: cs.onSurface.withValues(alpha: 0.14),
             width: 1.4,
@@ -516,7 +516,7 @@ class _AddCategoryTile extends StatelessWidget {
             Text(
               context.l10n.yeni,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: FontWeight.w500,
                 color: cs.onSurfaceVariant,
               ),

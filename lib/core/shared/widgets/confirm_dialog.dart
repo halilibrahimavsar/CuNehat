@@ -109,7 +109,7 @@ class _ConfirmDialogViewState extends State<_ConfirmDialogView> {
                 child: Text(
                   widget.title,
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: scheme.onSurface,
                   ),

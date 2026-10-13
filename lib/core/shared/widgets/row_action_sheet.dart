@@ -145,7 +145,7 @@ class RowActionSheet<T> extends StatelessWidget {
                             title,
                             style: TextStyle(
                               fontSize: 16,
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w700,
                               color: cs.onSurface,
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -193,7 +193,7 @@ class RowActionSheet<T> extends StatelessWidget {
         action.title,
         style: TextStyle(
           fontWeight: FontWeight.w700,
-          fontSize: 14.5,
+          fontSize: 14,
           color: action.enabled ? (tint ?? cs.onSurface) : null,
         ),
       ),

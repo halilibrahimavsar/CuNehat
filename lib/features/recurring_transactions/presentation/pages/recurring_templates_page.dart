@@ -1,5 +1,6 @@
 // lib/features/recurring_transactions/presentation/pages/recurring_templates_page.dart
 
+import 'package:cunehat/core/shared/widgets/empty_state.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -606,41 +607,11 @@ class _EmptyTemplates extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: scheme.primary.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.event_repeat_rounded,
-                  size: 48, color: scheme.primary),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              context.l10n.henuzDuzenliIslemYok,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              context.l10n.islemEklerkenTekrarSikligi,
-              textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-          ],
-        ),
+      child: EmptyState(
+        icon: Icons.event_repeat_rounded,
+        title: context.l10n.henuzDuzenliIslemYok,
+        body: context.l10n.islemEklerkenTekrarSikligi,
       ),
     );
   }
