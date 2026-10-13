@@ -9,6 +9,7 @@ class MainActivity : FlutterFragmentActivity() {
     private var pdfRaster: PdfRasterPlugin? = null
     private var notificationPermission: NotificationPermissionPlugin? = null
     private var sharedStatement: SharedStatementPlugin? = null
+    private var feedbackMail: FeedbackMailPlugin? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -21,6 +22,10 @@ class MainActivity : FlutterFragmentActivity() {
             this,
         )
         sharedStatement = SharedStatementPlugin(
+            flutterEngine.dartExecutor.binaryMessenger,
+            this,
+        )
+        feedbackMail = FeedbackMailPlugin(
             flutterEngine.dartExecutor.binaryMessenger,
             this,
         )
@@ -47,6 +52,8 @@ class MainActivity : FlutterFragmentActivity() {
         notificationPermission = null
         sharedStatement?.dispose()
         sharedStatement = null
+        feedbackMail?.dispose()
+        feedbackMail = null
         super.onDestroy()
     }
 }
