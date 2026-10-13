@@ -49,16 +49,42 @@ void main() {
   });
 
   group('ilk kayıt cümlesi', () {
-    tearDown(FirstRecordMoment.takeAnnouncement);
+    final t0 = DateTime(2026, 10, 13, 17);
+    tearDown(FirstRecordMoment.cancelAnnouncement);
 
     test('kuyruğa alınan cümle bir kez verilir', () {
-      expect(FirstRecordMoment.takeAnnouncement(), isFalse);
+      expect(FirstRecordMoment.takeAnnouncement(now: t0), isFalse);
 
-      FirstRecordMoment.queueAnnouncement();
+      FirstRecordMoment.queueAnnouncement(now: t0);
 
-      expect(FirstRecordMoment.takeAnnouncement(), isTrue);
-      expect(FirstRecordMoment.takeAnnouncement(), isFalse,
+      expect(
+        FirstRecordMoment.takeAnnouncement(
+          now: t0.add(const Duration(seconds: 1)),
+        ),
+        isTrue,
+      );
+      expect(FirstRecordMoment.takeAnnouncement(now: t0), isFalse,
           reason: 'ikinci kayıtta sıradan "eklendi" bildirimi döner');
+    });
+
+    test(
+        'bayatlayan cümle söylenmez: dakikalar sonraki bir silmenin '
+        'bildiriminin yerine çıkmamalı', () {
+      FirstRecordMoment.queueAnnouncement(now: t0);
+
+      expect(
+        FirstRecordMoment.takeAnnouncement(
+          now: t0.add(const Duration(minutes: 3)),
+        ),
+        isFalse,
+      );
+    });
+
+    test('kayıt hata verirse cümle iptal edilir', () {
+      FirstRecordMoment.queueAnnouncement(now: t0);
+      FirstRecordMoment.cancelAnnouncement();
+
+      expect(FirstRecordMoment.takeAnnouncement(now: t0), isFalse);
     });
   });
 }

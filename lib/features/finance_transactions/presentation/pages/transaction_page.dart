@@ -519,6 +519,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
         return BlocConsumer<TransactionBloc, TransactionState>(
           listener: (context, state) {
             if (state is TransactionError) {
+              FirstRecordMoment.cancelAnnouncement();
               AppMessenger.error(state.message);
             } else if (state is TransactionActionSuccess) {
               if (state.warning != null) {

@@ -66,6 +66,7 @@
   "labelMin": "Min",
   "labelMax": "Max",
   "hintNotIstegeBagliOrn": "Note (Optional) · e.g. Grocery shopping",
+  "hintNotIstegeBagliOrnGelir": "Note (optional) · e.g. October salary",
   "tekrarlamaIstegeBagli": "Recurring (Optional)",
   "tekrarEtme": "One-time",
   "vazgec": "Cancel",

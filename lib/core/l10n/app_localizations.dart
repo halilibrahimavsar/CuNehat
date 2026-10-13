@@ -401,8 +401,14 @@ abstract class AppLocalizations {
   /// No description provided for @hintNotIstegeBagliOrn.
   ///
   /// In tr, this message translates to:
-  /// **'Not (İsteğe bağlı) · örn. Market alışverişi'**
+  /// **'Not (isteğe bağlı) · örn. market alışverişi'**
   String get hintNotIstegeBagliOrn;
+
+  /// No description provided for @hintNotIstegeBagliOrnGelir.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not (isteğe bağlı) · örn. ekim maaşı'**
+  String get hintNotIstegeBagliOrnGelir;
 
   /// No description provided for @tekrarlamaIstegeBagli.
   ///
@@ -1772,7 +1778,7 @@ abstract class AppLocalizations {
   /// No description provided for @maliyetiDegistirirsenizFarkCuzdana.
   ///
   /// In tr, this message translates to:
-  /// **'Maliyeti değiştirirseniz fark, cüzdana düzeltme hareketi olarak işlenir.'**
+  /// **'Maliyeti değiştirirsen fark, cüzdana düzeltme hareketi olarak işlenir.'**
   String get maliyetiDegistirirsenizFarkCuzdana;
 
   /// No description provided for @hesapla.
@@ -3692,7 +3698,7 @@ abstract class AppLocalizations {
   /// No description provided for @transferBakiyeAsimiMesaj.
   ///
   /// In tr, this message translates to:
-  /// **'Tutar, cüzdan bakiyesinden ({bakiye}) fazla. Devam ederseniz bakiye eksiye düşer. Devam edilsin mi?'**
+  /// **'Tutar, cüzdan bakiyesinden ({bakiye}) fazla. Devam edersen bakiye eksiye düşer. Devam edilsin mi?'**
   String transferBakiyeAsimiMesaj(String bakiye);
 
   /// No description provided for @yardimVeTurlar.
@@ -5516,7 +5522,7 @@ abstract class AppLocalizations {
   /// No description provided for @insightDailyLimitDesc.
   ///
   /// In tr, this message translates to:
-  /// **'Kalan {gun} gün boyunca bütçenizi korumak için tavsiye edilen günlük limit.'**
+  /// **'Kalan {gun} gün boyunca bütçeni korumak için önerilen günlük limit.'**
   String insightDailyLimitDesc(int gun);
 
   /// No description provided for @insightSpikeTitle.
@@ -6014,7 +6020,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupEmptyConfirmDesc.
   ///
   /// In tr, this message translates to:
-  /// **'Cihazda hiç kayıt yok. Devam ederseniz Drive\'daki en yeni yedeğin yerine boş bir yedek yazılır.'**
+  /// **'Cihazda hiç kayıt yok. Devam edersen Drive\'daki en yeni yedeğin yerine boş bir yedek yazılır.'**
   String get backupEmptyConfirmDesc;
 
   /// No description provided for @backupEmptyConfirmAction.
@@ -6086,7 +6092,7 @@ abstract class AppLocalizations {
   /// No description provided for @autoBackupLimitNote.
   ///
   /// In tr, this message translates to:
-  /// **'Uygulamayı hiç açmazsanız otomatik yedek çalışmaz.'**
+  /// **'Uygulamayı hiç açmazsan otomatik yedek çalışmaz.'**
   String get autoBackupLimitNote;
 
   /// No description provided for @autoBackupFailureWarning.
@@ -6242,7 +6248,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupPreviewDiffTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Geri yüklerseniz ne değişir'**
+  /// **'Geri yüklersen ne değişir'**
   String get backupPreviewDiffTitle;
 
   /// No description provided for @backupPreviewDiffOnDevice.
@@ -6260,7 +6266,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupPreviewReceiptWarning.
   ///
   /// In tr, this message translates to:
-  /// **'{count} işlemin fiş görseli var. Görseller yedeğe dahil edilmez; başka bir cihaza geri yüklerseniz bu görseller görünmez.'**
+  /// **'{count} işlemin fiş görseli var. Görseller yedeğe dahil edilmez; başka bir cihaza geri yüklersen bu görseller görünmez.'**
   String backupPreviewReceiptWarning(int count);
 
   /// No description provided for @backupPreviewEmptyWarning.
@@ -7358,7 +7364,7 @@ abstract class AppLocalizations {
   /// No description provided for @reportTopPayeesCoverage.
   ///
   /// In tr, this message translates to:
-  /// **'Bu liste dönem giderinin %{yuzde}\'ini kapsar'**
+  /// **'Bu liste dönem giderinin %{yuzde} kadarını kapsıyor'**
   String reportTopPayeesCoverage(Object yuzde);
 
   /// No description provided for @reportPayeeCount.

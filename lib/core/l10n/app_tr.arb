@@ -65,7 +65,8 @@
   "temizle": "Temizle",
   "labelMin": "Min",
   "labelMax": "Max",
-  "hintNotIstegeBagliOrn": "Not (İsteğe bağlı) · örn. Market alışverişi",
+  "hintNotIstegeBagliOrn": "Not (isteğe bağlı) · örn. market alışverişi",
+  "hintNotIstegeBagliOrnGelir": "Not (isteğe bağlı) · örn. ekim maaşı",
   "tekrarlamaIstegeBagli": "Tekrar (isteğe bağlı)",
   "tekrarEtme": "Tek seferlik",
   "vazgec": "Vazgeç",
@@ -424,7 +425,7 @@
     }
   },
   "mevcutDeger": "Mevcut değer",
-  "maliyetiDegistirirsenizFarkCuzdana": "Maliyeti değiştirirseniz fark, cüzdana düzeltme hareketi olarak işlenir.",
+  "maliyetiDegistirirsenizFarkCuzdana": "Maliyeti değiştirirsen fark, cüzdana düzeltme hareketi olarak işlenir.",
   "hesapla": "Hesapla",
   "birikmisFormatmoneyInvCurrentvalue": "Birikmiş: {currentValue} / ",
   "@birikmisFormatmoneyInvCurrentvalue": {
@@ -910,7 +911,7 @@
   "transferGeriAlinamadi": "Transfer geri alınamadı",
   "transferTarih": "Transfer tarihi",
   "transferIcinIkiCuzdanGerekli": "Transfer için en az iki cüzdan gerekli",
-  "transferBakiyeAsimiMesaj": "Tutar, cüzdan bakiyesinden ({bakiye}) fazla. Devam ederseniz bakiye eksiye düşer. Devam edilsin mi?",
+  "transferBakiyeAsimiMesaj": "Tutar, cüzdan bakiyesinden ({bakiye}) fazla. Devam edersen bakiye eksiye düşer. Devam edilsin mi?",
   "@transferBakiyeAsimiMesaj": {
     "placeholders": {
       "bakiye": {
@@ -1615,7 +1616,7 @@
     }
   },
   "insightDailyLimitTitle": "Günlük harcama limiti (hedef)",
-  "insightDailyLimitDesc": "Kalan {gun} gün boyunca bütçenizi korumak için tavsiye edilen günlük limit.",
+  "insightDailyLimitDesc": "Kalan {gun} gün boyunca bütçeni korumak için önerilen günlük limit.",
   "@insightDailyLimitDesc": {
     "placeholders": {
       "gun": {
@@ -1774,7 +1775,7 @@
   "driveErrWriteFailure": "Geri yükleme sırasında yazma hatası oldu. Telefondaki eski kayıtların geri alındı.",
   "driveUnchanged": "Veriler son yedekten beri değişmedi; yeni yedek alınmadı.",
   "backupEmptyConfirmTitle": "Boş yedek alınsın mı?",
-  "backupEmptyConfirmDesc": "Cihazda hiç kayıt yok. Devam ederseniz Drive'daki en yeni yedeğin yerine boş bir yedek yazılır.",
+  "backupEmptyConfirmDesc": "Cihazda hiç kayıt yok. Devam edersen Drive'daki en yeni yedeğin yerine boş bir yedek yazılır.",
   "backupEmptyConfirmAction": "Boş yedek al",
   "viewBackups": "Yedekleri görüntüle",
   "deleteAllBackups": "Tüm yedekleri sil",
@@ -1793,7 +1794,7 @@
   "autoBackupOff": "Kapalı",
   "autoBackupDaily": "Günlük",
   "autoBackupWeekly": "Haftalık",
-  "autoBackupLimitNote": "Uygulamayı hiç açmazsanız otomatik yedek çalışmaz.",
+  "autoBackupLimitNote": "Uygulamayı hiç açmazsan otomatik yedek çalışmaz.",
   "autoBackupFailureWarning": "Son {count} otomatik yedekleme denemesi başarısız oldu. Elle yedekleyerek nedenini görebilirsin.",
   "@autoBackupFailureWarning": {
     "placeholders": {
@@ -1826,10 +1827,10 @@
   "backupPreviewExpense": "Toplam gider",
   "backupPreviewTakenAt": "Yedek tarihi",
   "backupPreviewSchemaVersion": "Şema sürümü",
-  "backupPreviewDiffTitle": "Geri yüklerseniz ne değişir",
+  "backupPreviewDiffTitle": "Geri yüklersen ne değişir",
   "backupPreviewDiffOnDevice": "Cihazda",
   "backupPreviewDiffInBackup": "Yedekte",
-  "backupPreviewReceiptWarning": "{count} işlemin fiş görseli var. Görseller yedeğe dahil edilmez; başka bir cihaza geri yüklerseniz bu görseller görünmez.",
+  "backupPreviewReceiptWarning": "{count} işlemin fiş görseli var. Görseller yedeğe dahil edilmez; başka bir cihaza geri yüklersen bu görseller görünmez.",
   "@backupPreviewReceiptWarning": {
     "placeholders": {
       "count": {
@@ -2293,7 +2294,7 @@
   "reportTotalLabel": "Toplam",
   "reportTopPayeesTitle": "En çok harcanan yerler",
   "reportTopPayeesHint": "Benzer başlıklar birleştirildi (ör. aynı mağazanın şubeleri)",
-  "reportTopPayeesCoverage": "Bu liste dönem giderinin %{yuzde}'ini kapsar",
+  "reportTopPayeesCoverage": "Bu liste dönem giderinin %{yuzde} kadarını kapsıyor",
   "@reportTopPayeesCoverage": {
     "placeholders": {
       "yuzde": {}

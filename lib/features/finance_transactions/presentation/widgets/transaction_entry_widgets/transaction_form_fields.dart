@@ -459,7 +459,11 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
           isExpense: _isExpense,
         ),
         const SizedBox(height: 18),
-        _TitleField(controller: _c, accent: _accent),
+        _TitleField(
+          controller: _c,
+          accent: _accent,
+          isExpense: _isExpense,
+        ),
         const SizedBox(height: 22),
         WhenRow(controller: _c, accent: _accent),
         const SizedBox(height: 22),
@@ -528,7 +532,15 @@ class _TitleField extends StatelessWidget {
   final TransactionFormController controller;
   final Color accent;
 
-  const _TitleField({required this.controller, required this.accent});
+  const _TitleField({
+    required this.controller,
+    required this.accent,
+    required this.isExpense,
+  });
+
+  /// İpucundaki örnek türe uyar: gelir formunda "market alışverişi" örneği
+  /// duruyordu.
+  final bool isExpense;
 
   @override
   Widget build(BuildContext context) {
@@ -543,7 +555,9 @@ class _TitleField extends StatelessWidget {
       style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w500),
       decoration: InputDecoration(
         counterText: '',
-        hintText: context.l10n.hintNotIstegeBagliOrn,
+        hintText: isExpense
+            ? context.l10n.hintNotIstegeBagliOrn
+            : context.l10n.hintNotIstegeBagliOrnGelir,
         prefixIcon: Icon(Icons.edit_note_rounded,
             color: cs.onSurfaceVariant.withValues(alpha: 0.8)),
         filled: true,

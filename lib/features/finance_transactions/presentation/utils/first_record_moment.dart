@@ -36,14 +36,27 @@ class FirstRecordMoment {
   /// ve tek bildirim alanı vardır: ilk kayıt cümlesi ayrıca gösterilseydi
   /// hemen ardından gelen o bildirim onu ezerdi (cihazda görüldü). İkisi
   /// yarışmaz; ilk kayıtta sıradan bildirimin YERİNİ alır.
-  static bool _announcementPending = false;
+  ///
+  /// Bekleyen cümle [announcementLifetime] sonra düşer: kayıt hata verirse
+  /// ya da defter o an ekranda değilse (Rapor'dan girilen kayıt) kimse onu
+  /// tüketmez ve dakikalar sonraki ilgisiz bir bildirimin — örneğin bir
+  /// silmenin — yerine çıkardı.
+  static DateTime? _announcementQueuedAt;
 
-  static void queueAnnouncement() => _announcementPending = true;
+  static const Duration announcementLifetime = Duration(seconds: 8);
 
-  /// Bekleyen ilk kayıt cümlesi varsa `true` döner ve onu tüketir.
-  static bool takeAnnouncement() {
-    final pending = _announcementPending;
-    _announcementPending = false;
-    return pending;
+  static void queueAnnouncement({DateTime? now}) =>
+      _announcementQueuedAt = now ?? DateTime.now();
+
+  /// Kayıt başarısız oldu: cümle söylenmez.
+  static void cancelAnnouncement() => _announcementQueuedAt = null;
+
+  /// Bekleyen (ve bayatlamamış) ilk kayıt cümlesi varsa `true` döner ve onu
+  /// tüketir.
+  static bool takeAnnouncement({DateTime? now}) {
+    final queuedAt = _announcementQueuedAt;
+    _announcementQueuedAt = null;
+    if (queuedAt == null) return false;
+    return (now ?? DateTime.now()).difference(queuedAt) <= announcementLifetime;
   }
 }

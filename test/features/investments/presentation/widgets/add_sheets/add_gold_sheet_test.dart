@@ -285,7 +285,7 @@ void main() {
     // Goal category warning should be rendered
     expect(
         find.text(
-            'Maliyeti değiştirirseniz fark, cüzdana düzeltme hareketi olarak işlenir.'),
+            'Maliyeti değiştirirsen fark, cüzdana düzeltme hareketi olarak işlenir.'),
         findsOneWidget);
 
     // Tap color option circle to change color (e.g. Colors.blue)

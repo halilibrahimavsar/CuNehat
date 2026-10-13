@@ -172,6 +172,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hintNotIstegeBagliOrn => 'Note (Optional) · e.g. Grocery shopping';
 
   @override
+  String get hintNotIstegeBagliOrnGelir =>
+      'Note (optional) · e.g. October salary';
+
+  @override
   String get tekrarlamaIstegeBagli => 'Recurring (Optional)';
 
   @override

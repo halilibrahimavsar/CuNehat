@@ -170,7 +170,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get hintNotIstegeBagliOrn =>
-      'Not (İsteğe bağlı) · örn. Market alışverişi';
+      'Not (isteğe bağlı) · örn. market alışverişi';
+
+  @override
+  String get hintNotIstegeBagliOrnGelir =>
+      'Not (isteğe bağlı) · örn. ekim maaşı';
 
   @override
   String get tekrarlamaIstegeBagli => 'Tekrar (isteğe bağlı)';
@@ -945,7 +949,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get maliyetiDegistirirsenizFarkCuzdana =>
-      'Maliyeti değiştirirseniz fark, cüzdana düzeltme hareketi olarak işlenir.';
+      'Maliyeti değiştirirsen fark, cüzdana düzeltme hareketi olarak işlenir.';
 
   @override
   String get hesapla => 'Hesapla';
@@ -1994,7 +1998,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String transferBakiyeAsimiMesaj(String bakiye) {
-    return 'Tutar, cüzdan bakiyesinden ($bakiye) fazla. Devam ederseniz bakiye eksiye düşer. Devam edilsin mi?';
+    return 'Tutar, cüzdan bakiyesinden ($bakiye) fazla. Devam edersen bakiye eksiye düşer. Devam edilsin mi?';
   }
 
   @override
@@ -3071,7 +3075,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String insightDailyLimitDesc(int gun) {
-    return 'Kalan $gun gün boyunca bütçenizi korumak için tavsiye edilen günlük limit.';
+    return 'Kalan $gun gün boyunca bütçeni korumak için önerilen günlük limit.';
   }
 
   @override
@@ -3368,7 +3372,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get backupEmptyConfirmDesc =>
-      'Cihazda hiç kayıt yok. Devam ederseniz Drive\'daki en yeni yedeğin yerine boş bir yedek yazılır.';
+      'Cihazda hiç kayıt yok. Devam edersen Drive\'daki en yeni yedeğin yerine boş bir yedek yazılır.';
 
   @override
   String get backupEmptyConfirmAction => 'Boş yedek al';
@@ -3409,7 +3413,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get autoBackupLimitNote =>
-      'Uygulamayı hiç açmazsanız otomatik yedek çalışmaz.';
+      'Uygulamayı hiç açmazsan otomatik yedek çalışmaz.';
 
   @override
   String autoBackupFailureWarning(int count) {
@@ -3490,7 +3494,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get backupPreviewSchemaVersion => 'Şema sürümü';
 
   @override
-  String get backupPreviewDiffTitle => 'Geri yüklerseniz ne değişir';
+  String get backupPreviewDiffTitle => 'Geri yüklersen ne değişir';
 
   @override
   String get backupPreviewDiffOnDevice => 'Cihazda';
@@ -3500,7 +3504,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String backupPreviewReceiptWarning(int count) {
-    return '$count işlemin fiş görseli var. Görseller yedeğe dahil edilmez; başka bir cihaza geri yüklerseniz bu görseller görünmez.';
+    return '$count işlemin fiş görseli var. Görseller yedeğe dahil edilmez; başka bir cihaza geri yüklersen bu görseller görünmez.';
   }
 
   @override
@@ -4167,7 +4171,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String reportTopPayeesCoverage(Object yuzde) {
-    return 'Bu liste dönem giderinin %$yuzde\'ini kapsar';
+    return 'Bu liste dönem giderinin %$yuzde kadarını kapsıyor';
   }
 
   @override

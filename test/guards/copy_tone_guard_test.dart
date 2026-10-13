@@ -43,6 +43,13 @@ void main() {
     final formal = RegExp(
       // -ınız / -sınız ekleri (cüzdanınız, yapabilirsiniz, borcunuzun)
       '[$letter]*(ınız|iniz|unuz|ünüz|sınız|siniz|sunuz|sünüz)[$letter]*'
+      // -seniz / -sanız koşul çoğulu (ederseniz, açmazsanız). 13 Eki 2026'da
+      // yedi metin bu ve bir alttaki kalıpla bekçiden kaçmıştı.
+      '|[$letter]+(sanız|seniz)$after'
+      // ünlüyle biten gövdede iyelik: -nız/-niz (+hâl eki) — "bütçenizi".
+      // "henüz", "deniz", "önizle" aynı harf dizisini taşır; dışarıda kalır.
+      '|$before(?!henüz|deniz|önizle)[$letter]*[aeıioöuü](nız|niz|nuz|nüz)'
+      '(ı|i|u|ü|a|e|dan|den|da|de|ın|in|la|le)?$after'
       // -leyin / -ıyın emir çoğulu (ekleyin, yenileyin, taşıyın)
       '|[$letter]+(leyin|layın|ıyın|iyin|uyun|üyün)$after'
       // sık geçen emir çoğulları

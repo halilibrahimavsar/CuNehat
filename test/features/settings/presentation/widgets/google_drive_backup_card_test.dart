@@ -240,7 +240,7 @@ void main() {
 
     expect(autoBackup.frequency, AutoBackupFrequency.daily);
     // Sınır açıkça yazılmalı: "koruma altındasınız" izlenimi verilmemeli.
-    expect(find.textContaining('Uygulamayı hiç açmazsanız'), findsOneWidget);
+    expect(find.textContaining('Uygulamayı hiç açmazsan'), findsOneWidget);
   });
 
   testWidgets('üst üste otomatik yedek hatası kalıcı uyarı bandı gösterir',

@@ -45,9 +45,10 @@ class FeedbackMailPlugin(
     private fun compose(to: String, subject: String, body: String): Boolean {
         if (to.isBlank()) return false
         // Konu ve gövde hem adreste hem ek alanlarda: bazı istemciler yalnız
-        // birini okur.
+        // birini okur. Adresteki `@` KODLANMAZ (ikinci parametre): `%40`'ı
+        // çözmeyen bir istemci alıcıyı boş bırakırdı.
         val uri = Uri.parse(
-            "mailto:" + Uri.encode(to) +
+            "mailto:" + Uri.encode(to, "@") +
                 "?subject=" + Uri.encode(subject) +
                 "&body=" + Uri.encode(body),
         )
