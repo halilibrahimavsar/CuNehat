@@ -85,9 +85,11 @@ class _CategoryPickerState extends State<CategoryPicker> {
     });
   }
 
-  /// Şeridin ilk ekranına sığan kök sayısı (80dp karo + 10dp ara). Kısayol
+  /// Şeridin ilk ekranına sığan kök sayısı: 1,0 ölçekte dört (80dp karo +
+  /// 10dp ara); karo büyük yazıda genişlediği için sayı düşer. Kısayol
   /// satırı yalnız bunların DIŞINDA bir kategori sunabiliyorsa gösterilir.
-  static const int _stripCapacity = 4;
+  int _stripCapacity(BuildContext context) =>
+      (4 * 90 / (_CategoryTileMetrics.tileWidth(context) + 10)).floor();
 
   @override
   Widget build(BuildContext context) {
@@ -141,10 +143,11 @@ class _CategoryPickerState extends State<CategoryPicker> {
             return ValueListenableBuilder<List<CategoryEntity>>(
               valueListenable: widget.controller.categories,
               builder: (context, categories, __) {
+                final stripHeight = _CategoryTileMetrics.stripHeight(context);
                 if (loading && categories.isEmpty) {
-                  return const SizedBox(
-                    height: 96,
-                    child: Center(child: CircularProgressIndicator()),
+                  return SizedBox(
+                    height: stripHeight,
+                    child: const Center(child: CircularProgressIndicator()),
                   );
                 }
                 // Şerit yalnız ANA kategorileri gösterir: 40+ yaprağı tek
@@ -154,7 +157,7 @@ class _CategoryPickerState extends State<CategoryPicker> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _recents(tree),
-                    SizedBox(height: 96, child: _strip(tree)),
+                    SizedBox(height: stripHeight, child: _strip(tree)),
                     _expansion(tree),
                   ],
                 );
@@ -178,7 +181,8 @@ class _CategoryPickerState extends State<CategoryPicker> {
         // Şeridin ilk ekranında zaten duran köklerden ibaretse satır yalnız
         // yer kaplar (cihazda görüldü: tek öğesi şeridin ilk karosuydu).
         final onScreen = {
-          for (final node in tree.take(_stripCapacity)) node.category.id,
+          for (final node in tree.take(_stripCapacity(context)))
+            node.category.id,
         };
         if (recents.every((c) => onScreen.contains(c.id))) {
           return const SizedBox.shrink();
@@ -199,7 +203,7 @@ class _CategoryPickerState extends State<CategoryPicker> {
               const SizedBox(width: 8),
               Expanded(
                 child: SizedBox(
-                  height: 40,
+                  height: _CategoryTileMetrics.chipRowHeight(context),
                   child: ValueListenableBuilder<String?>(
                     valueListenable: widget.controller.categoryId,
                     builder: (context, selectedId, _) => ListView.separated(
@@ -308,6 +312,36 @@ class _CategoryPickerState extends State<CategoryPicker> {
   }
 }
 
+/// Karo ve çip ölçüleri — sistem yazı boyutuyla birlikte büyür.
+///
+/// Şerit 96dp'ye, karo 80dp'ye sabitti: yazı 2 katına çıkınca etiket karonun
+/// altından 11dp taşıyor (ölçüldü, 360×800), ad da dört harfte kesiliyordu
+/// ("Mark…"). Büyük yazıyı en çok kullanan kişi, kategoriyi adından seçen
+/// kişidir; ikon tek başına yetmez.
+abstract final class _CategoryTileMetrics {
+  /// Etiketin punto boyutu (karo ve çip aynı boyutu kullanır).
+  static const double _labelSize = 12;
+
+  /// Etiket satırının yazı boyutuna oranı: temadaki satır aralığı (1,4) +
+  /// yuvarlama payı.
+  static const double _lineFactor = 1.5;
+
+  /// Etiketin 1,0 ölçeğe göre BÜYÜDÜĞÜ punto. Küçük yazıda ölçüler küçülmez.
+  static double _growth(BuildContext context) {
+    final scaled = MediaQuery.textScalerOf(context).scale(_labelSize);
+    return scaled > _labelSize ? scaled - _labelSize : 0;
+  }
+
+  static double stripHeight(BuildContext context) =>
+      96 + _growth(context) * _lineFactor;
+
+  /// Karo, etiketle aynı oranda genişler: 2 katı yazıda da ~8 harf sığar.
+  static double tileWidth(BuildContext context) => 80 + _growth(context) * 4;
+
+  static double chipRowHeight(BuildContext context) =>
+      40 + _growth(context) * _lineFactor;
+}
+
 /// Açılan alandaki alt kategori çipi.
 class _SubCategoryChip extends StatelessWidget {
   final CategoryEntity category;
@@ -404,7 +438,7 @@ class _CategoryTile extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
-        width: 80,
+        width: _CategoryTileMetrics.tileWidth(context),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
         decoration: BoxDecoration(
           color: selected
@@ -490,7 +524,7 @@ class _AddCategoryTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 80,
+        width: _CategoryTileMetrics.tileWidth(context),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),

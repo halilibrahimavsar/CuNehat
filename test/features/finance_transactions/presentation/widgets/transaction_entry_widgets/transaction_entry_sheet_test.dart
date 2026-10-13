@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
@@ -27,6 +28,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 
+import '../../../../../support/real_font.dart';
 import '../../../../../support/wallet_category_stub.dart';
 
 class MockTransactionBloc extends MockBloc<TransactionEvent, TransactionState>
@@ -125,10 +127,11 @@ void main() {
     getIt.reset();
   });
 
-  Widget buildTestableWidget(Widget child) {
+  Widget buildTestableWidget(Widget child, {ThemeData? theme}) {
     return BlocProvider<AmountVisibilityCubit>(
       create: (_) => AmountVisibilityCubit(),
       child: MaterialApp(
+        theme: theme,
         localizationsDelegates: const [
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,
@@ -414,5 +417,83 @@ void main() {
       find.textContaining('Kira, maaş, abonelik gibi düzenli işlemler'),
       findsOneWidget,
     );
+  });
+  // Büyük yazı: "herkes kullanabilsin" ölçütünün bir parçası. Sistem yazı
+  // boyutu 1,3 ve 2,0'a çekilmiş telefonda form taşmamalı ve Kaydet, klavye
+  // açıkken de ekranda kalmalı.
+  group('büyük yazı (360×800)', () {
+    // Varsayılan test fontu gerçek Roboto'dan belirgin biçimde geniştir ve
+    // var olmayan taşmalar raporlar; ölçüm uygulamanın temasıyla yapılır.
+    setUpAll(loadRealRoboto);
+
+    /// Taşan widget'ın kaynak satırını da taşıyan özet.
+    String describe(List<FlutterErrorDetails> errors) => [
+          for (final e in errors)
+            '${e.exception.toString().split('\n').first} @ '
+                '${e.informationCollector?.call().map((n) => n.toString()).firstWhere((l) => l.contains('.dart:'), orElse: () => '?') ?? '?'}',
+        ].join('\n');
+
+    Future<List<FlutterErrorDetails>> openForm(
+      WidgetTester tester, {
+      required double textScale,
+      double keyboard = 0,
+    }) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1.0;
+      tester.view.viewInsets = FakeViewPadding(bottom: keyboard);
+      tester.platformDispatcher.textScaleFactorTestValue = textScale;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+      final errors = <FlutterErrorDetails>[];
+      final previous = FlutterError.onError;
+      FlutterError.onError = errors.add;
+      try {
+        final appTheme = ThemeNames.all[ThemeNames.sysLight]!;
+        await tester.pumpWidget(
+          buildTestableWidget(
+            Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () => TransactionSheetHandler.showSheet(
+                  context: context,
+                  userId: 'user_123',
+                  walletId: 'wallet_123',
+                  type: TransactionTypeModel.expense,
+                ),
+                child: const Text('Open Form'),
+              ),
+            ),
+            theme: appTheme.copyWith(
+              textTheme: appTheme.textTheme.apply(fontFamily: kRealFontFamily),
+            ),
+          ),
+        );
+        await tester.tap(find.text('Open Form'));
+        await tester.pumpAndSettle();
+      } finally {
+        FlutterError.onError = previous;
+      }
+      return errors;
+    }
+
+    for (final scale in const [1.0, 1.3, 2.0]) {
+      testWidgets('yazı ölçeği $scale: form taşmaz', (tester) async {
+        final errors = await openForm(tester, textScale: scale);
+
+        expect(errors, isEmpty, reason: describe(errors));
+      });
+
+      testWidgets('yazı ölçeği $scale, klavye açık: Kaydet klavyenin üstünde',
+          (tester) async {
+        const keyboard = 320.0;
+        final errors =
+            await openForm(tester, textScale: scale, keyboard: keyboard);
+
+        expect(errors, isEmpty, reason: describe(errors));
+        final save = tester.getRect(find.text('Kaydet').last);
+        expect(save.bottom, lessThanOrEqualTo(800 - keyboard));
+        expect(save.top, greaterThanOrEqualTo(0));
+      });
+    }
   });
 }
