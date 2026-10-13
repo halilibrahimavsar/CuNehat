@@ -1,4 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_fields.dart';
+import 'package:cunehat/features/main_feature/utils/section_records.dart';
 import 'package:cunehat/features/finance_transactions/presentation/utils/fresh_entry_marker.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/config/di/injection.dart';
@@ -58,6 +60,8 @@ class _MockOnboardingCoordinator extends Mock
 class MockPendingRecurringBloc
     extends MockBloc<PendingRecurringEvent, PendingRecurringState>
     implements PendingRecurringBloc {}
+
+class _MockSectionRecords extends Mock implements SectionRecords {}
 
 void main() {
   late MockPendingRecurringBloc mockPendingRecurringBloc;
@@ -249,6 +253,52 @@ void main() {
     verify(() => mockTransactionBloc.add(any(that: isA<AddTransactionEvent>())))
         .called(1);
     expect(find.text('Kaydet'), findsNothing); // Sheet is closed
+  });
+
+  group('"Kaydet ve yeni" kullandıkça gelir', () {
+    Future<void> open(WidgetTester tester, {required int records}) async {
+      final counter = _MockSectionRecords();
+      when(() => counter.transactionCount).thenReturn(records);
+      getIt.registerSingleton<SectionRecords>(counter);
+
+      await tester.pumpWidget(
+        buildTestableWidget(
+          Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () => TransactionSheetHandler.showSheet(
+                context: context,
+                userId: 'user_123',
+                walletId: 'wallet_123',
+                type: TransactionTypeModel.expense,
+              ),
+              child: const Text('Open Form'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Open Form'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('ilk kayıtlarda formun dibinde TEK düğme var', (tester) async {
+      await open(tester, records: 0);
+
+      expect(find.text('Kaydet'), findsOneWidget);
+      expect(find.text('Kaydet ve yeni'), findsNothing);
+    });
+
+    testWidgets('eşiğin hemen altında da yok', (tester) async {
+      await open(tester, records: kSaveAndNewAfterRecords - 1);
+
+      expect(find.text('Kaydet ve yeni'), findsNothing);
+    });
+
+    testWidgets('beş kayıttan sonra sunulur', (tester) async {
+      await open(tester, records: kSaveAndNewAfterRecords);
+
+      expect(find.text('Kaydet'), findsOneWidget);
+      expect(find.text('Kaydet ve yeni'), findsOneWidget);
+    });
   });
 
   testWidgets(

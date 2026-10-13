@@ -575,6 +575,10 @@ class _TransactionsViewState extends State<_TransactionsView> {
                       child: TransactionTopBar(
                         filter: filterState,
                         periodLabel: statementPeriodLabel(cubit, context.l10n),
+                        // Boş cüzdanda aranacak bir şey yok. Yüklenirken
+                        // gizlenmez: kaydı olan kullanıcıda düğmeler her
+                        // açılışta sonradan belirirdi.
+                        showTools: !walletIsEmpty || isLoading,
                         categoryLabels: _categoryLabels,
                         onModeChanged: cubit.setFinanceMode,
                         onPeriodStep: cubit.stepPeriod,

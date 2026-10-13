@@ -70,9 +70,11 @@ void main() {
     ValueChanged<String>? onSearchChanged,
     ValueChanged<DataFilter>? onDataFilterChanged,
     Map<String, String> labels = const {},
+    bool showTools = true,
   }) {
     return TransactionTopBar(
       filter: filter,
+      showTools: showTools,
       categoryLabels: labels,
       onModeChanged: (_) {},
       onPeriodStep: onPeriodStep ?? (_) {},
@@ -86,6 +88,47 @@ void main() {
       onDataFilterChanged: onDataFilterChanged ?? (_) {},
     );
   }
+
+  group('arama ve süzgeç yalnız aranacak bir şey varken', () {
+    final search = find.byKey(const ValueKey('tx-search-open'));
+    final filterButton = find.byKey(const ValueKey('tx-filter-open'));
+    final period = find.byKey(const ValueKey('tx-period-bar'));
+
+    testWidgets('kaydı olan cüzdanda ikisi de durur (varsayılan)',
+        (tester) async {
+      await tester.pumpWidget(wrap(bar(_filter())));
+      await tester.pumpAndSettle();
+
+      expect(search, findsOneWidget);
+      expect(filterButton, findsOneWidget);
+    });
+
+    testWidgets('boş cüzdanda ikisi de yok; dönem çubuğu satırı doldurur',
+        (tester) async {
+      await tester.pumpWidget(wrap(bar(_filter())));
+      await tester.pumpAndSettle();
+      final withTools = tester.getSize(period).width;
+
+      await tester.pumpWidget(wrap(bar(_filter(), showTools: false)));
+      await tester.pumpAndSettle();
+
+      expect(search, findsNothing);
+      expect(filterButton, findsNothing);
+      expect(period, findsOneWidget);
+      expect(tester.getSize(period).width, greaterThan(withTools));
+    });
+
+    testWidgets('ilk kayıtla birlikte yerlerine gelirler', (tester) async {
+      await tester.pumpWidget(wrap(bar(_filter(), showTools: false)));
+      await tester.pumpAndSettle();
+
+      await tester.pumpWidget(wrap(bar(_filter())));
+      await tester.pumpAndSettle();
+
+      expect(search, findsOneWidget);
+      expect(filterButton, findsOneWidget);
+    });
+  });
 
   group('yerleşim', () {
     // Çubuk iki kontrolü (dönem + filtre) tek satırda taşıyor;
@@ -109,8 +152,7 @@ void main() {
       });
     }
 
-    testWidgets('320dp: dönem çubuğu + filtre satıra sığar',
-        (tester) async {
+    testWidgets('320dp: dönem çubuğu + filtre satıra sığar', (tester) async {
       tester.view.physicalSize = const Size(320, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
@@ -308,7 +350,8 @@ void main() {
       expect(find.byType(TransactionPeriodBar), findsOneWidget);
     });
 
-    testWidgets('kapalıyken sorgu etkinse ikon işaretlidir, filtre noktası DEĞİL',
+    testWidgets(
+        'kapalıyken sorgu etkinse ikon işaretlidir, filtre noktası DEĞİL',
         (tester) async {
       await tester.pumpWidget(wrap(bar(_filter(search: 'market'))));
       await tester.pump();
@@ -320,8 +363,7 @@ void main() {
               .border as Border)
           .top
           .color;
-      final searchBorder =
-          border(find.byKey(const ValueKey('tx-search-open')));
+      final searchBorder = border(find.byKey(const ValueKey('tx-search-open')));
       final filterBorder = border(find
           .ancestor(
               of: find.byIcon(Icons.tune_rounded),
@@ -338,14 +380,16 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
       final changes = <DataFilter>[];
-      await tester.pumpWidget(wrap(bar(
-        _filter(
-          moved: MovedMoneyFilter.hide,
-          onlyWithReceipt: true,
-          onlyImported: true,
-        ),
-        onDataFilterChanged: changes.add,
-      ), width: 800));
+      await tester.pumpWidget(wrap(
+          bar(
+            _filter(
+              moved: MovedMoneyFilter.hide,
+              onlyWithReceipt: true,
+              onlyImported: true,
+            ),
+            onDataFilterChanged: changes.add,
+          ),
+          width: 800));
       await tester.pump();
 
       // Çip satırı yatay kayar; üçü birden ancak geniş ekranda kurulur.
@@ -354,9 +398,11 @@ void main() {
       expect(find.text('Ekstreden'), findsOneWidget);
 
       await tester.tap(find.descendant(
-        of: find.ancestor(
-            of: find.text('Para taşıma gizli'),
-            matching: find.byType(Container)).first,
+        of: find
+            .ancestor(
+                of: find.text('Para taşıma gizli'),
+                matching: find.byType(Container))
+            .first,
         matching: find.byIcon(Icons.close_rounded),
       ));
       expect(changes.single.movedMoney, MovedMoneyFilter.show);

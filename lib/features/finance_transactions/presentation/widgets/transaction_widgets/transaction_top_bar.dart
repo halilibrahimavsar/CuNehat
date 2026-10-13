@@ -52,6 +52,13 @@ class TransactionTopBar extends StatefulWidget {
   /// Dönem etiketinin yerine geçer (kart bağlamında ekstre dönemi).
   final String? periodLabel;
 
+  /// Arama ve süzgeç düğmeleri gösterilsin mi.
+  ///
+  /// Cüzdanda hiç kayıt yokken `false`: aranacak, süzülecek bir şey yoktur ve
+  /// uygulamayı yeni açan kişinin önünde anlamı olmayan iki düğme durur
+  /// (cihazda görüldü). İlk kayıtla birlikte gelirler.
+  final bool showTools;
+
   const TransactionTopBar({
     super.key,
     required this.filter,
@@ -67,6 +74,7 @@ class TransactionTopBar extends StatefulWidget {
     required this.onSearchChanged,
     required this.onDataFilterChanged,
     this.periodLabel,
+    this.showTools = true,
   });
 
   @override
@@ -167,34 +175,52 @@ class _TransactionTopBarState extends State<TransactionTopBar> {
                             ),
                     ),
                   ),
-                  // Arama açıkken ikon çekilir; alanın kendi × düğmesi kapatır.
+                  // Arama ve süzgeç yalnız aranacak bir şey varken durur (bkz.
+                  // [TransactionTopBar.showTools]); ilk kayıtla birlikte
+                  // yerlerine kayarak gelirler.
                   AnimatedSize(
                     duration: motion.d(AppMotion.medium),
                     curve: AppMotion.standard,
-                    child: _searchOpen
+                    alignment: Alignment.centerLeft,
+                    child: !widget.showTools
                         ? const SizedBox(height: _controlRow)
-                        : Padding(
-                            padding: const EdgeInsets.only(left: 8),
-                            child: _BarIconButton(
-                              key: const ValueKey('tx-search-open'),
-                              icon: Icons.search_rounded,
-                              label: l10n.txSearchOpen,
-                              active: hasQuery,
-                              onTap: _openSearch,
-                            ),
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Arama açıkken ikon çekilir; alanın kendi ×
+                              // düğmesi kapatır.
+                              AnimatedSize(
+                                duration: motion.d(AppMotion.medium),
+                                curve: AppMotion.standard,
+                                child: _searchOpen
+                                    ? const SizedBox(height: _controlRow)
+                                    : Padding(
+                                        padding: const EdgeInsets.only(left: 8),
+                                        child: _BarIconButton(
+                                          key: const ValueKey('tx-search-open'),
+                                          icon: Icons.search_rounded,
+                                          label: l10n.txSearchOpen,
+                                          active: hasQuery,
+                                          onTap: _openSearch,
+                                        ),
+                                      ),
+                              ),
+                              const SizedBox(width: 8),
+                              _BarIconButton(
+                                key: const ValueKey('tx-filter-open'),
+                                icon: Icons.tune_rounded,
+                                label: l10n.txOpenFilters,
+                                tooltip: l10n.filtreler,
+                                // Arama kendi ikonunda gösterilir; filtre
+                                // noktası yalnız panelin kendi filtrelerine
+                                // bakar.
+                                active: dataFilter
+                                    .copyWith(clearSearchQuery: true)
+                                    .hasActiveFilters,
+                                onTap: widget.onFilterTap,
+                              ),
+                            ],
                           ),
-                  ),
-                  const SizedBox(width: 8),
-                  _BarIconButton(
-                    icon: Icons.tune_rounded,
-                    label: l10n.txOpenFilters,
-                    tooltip: l10n.filtreler,
-                    // Arama kendi ikonunda gösterilir; filtre noktası yalnız
-                    // panelin kendi filtrelerine bakar.
-                    active: dataFilter
-                        .copyWith(clearSearchQuery: true)
-                        .hasActiveFilters,
-                    onTap: widget.onFilterTap,
                   ),
                 ],
               ),

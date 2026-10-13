@@ -2,6 +2,7 @@ import 'package:cunehat/core/shared/widgets/field_hint.dart';
 import 'package:flutter/material.dart';
 import 'package:cunehat/core/shared/motion/app_haptics.dart';
 import 'package:cunehat/features/finance_transactions/presentation/utils/fresh_entry_marker.dart';
+import 'package:cunehat/features/main_feature/utils/section_records.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
@@ -22,6 +23,9 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_receipt_row.dart';
 import 'package:cunehat/core/services/receipt_storage_service.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_frequency_enum.dart';
+
+/// Defterde bu kadar kayıt olunca formda "Kaydet ve yeni" de sunulur.
+const int kSaveAndNewAfterRecords = 5;
 
 /// Gelir/gider ekleme & düzenleme için sıfırdan tasarlanmış modern sayfa.
 ///
@@ -148,6 +152,15 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
     _c.dispose();
     super.dispose();
   }
+
+  /// "Kaydet ve yeni" kullandıkça gelir: ilk kayıtlarda formun dibinde TEK
+  /// düğme durur. Art arda kayıt girmek bir alışkanlık işidir; uygulamayı
+  /// yeni açan kişi için ikinci düğme "hangisine basacağım?" sorusudur.
+  ///
+  /// Sayfa açılırken bir kez okunur (form açıkken düğme belirmez/kaybolmaz).
+  /// Sayaç yoksa (test kabuğu) düğme gösterilir.
+  late final bool _saveAndNewEarned = !getIt.isRegistered<SectionRecords>() ||
+      getIt<SectionRecords>().transactionCount >= kSaveAndNewAfterRecords;
 
   /// [keepOpen]: "Kaydet ve yeni" — kayıt yazılır, sayfa kapanmaz.
   Future<void> _submit({bool keepOpen = false}) async {
@@ -376,7 +389,9 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
                     _SavedNotice(controller: _c),
                     Row(
                       children: [
-                        if (!_isEdit && widget.onSaveAndNew != null) ...[
+                        if (!_isEdit &&
+                            widget.onSaveAndNew != null &&
+                            _saveAndNewEarned) ...[
                           Expanded(
                             flex: 4,
                             child: _SaveAndNewButton(
