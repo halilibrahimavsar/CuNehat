@@ -2265,6 +2265,14 @@
       "expense": {}
     }
   },
+  "reportFlowChartSingleSemantics": "{kind} grafiği: {count} dönem, toplam {total}. Değerler için sütunlara dokun.",
+  "@reportFlowChartSingleSemantics": {
+    "placeholders": {
+      "kind": {},
+      "count": {},
+      "total": {}
+    }
+  },
   "reportBalanceChartSemantics": "Bakiye grafiği: dönem başı {start}, dönem sonu {end}. Ara değerler için çizgiye dokun.",
   "@reportBalanceChartSemantics": {
     "placeholders": {
@@ -2786,15 +2794,24 @@
   "kkEkstreBilgisi": "Ekstre bilgisi",
   "kkAyarlar": "Ayarlar",
   "kkEkstreGirilmedi": "Bu dönemin ekstresini girersen dönem borcu ve asgari bankanınkiyle birebir olur.",
-  "kkDefterGuvenilmez": "Kart bu kesimden sonra eklendi; dönem borcunu ekstreden gir.",
-  "kkFarkUyarisi": "Ekstre ile kayıtlar arasında {amount} fark var: eksik ya da fazla işlem olabilir.",
-  "@kkFarkUyarisi": {
+  "kkFarkUyarisiEksik": "Ekstre kayıtlarından {amount} fazla: kartta yazılmamış bir harcama olabilir.",
+  "@kkFarkUyarisiEksik": {
     "placeholders": {
       "amount": {
         "type": "String"
       }
     }
   },
+  "kkFarkUyarisiFazla": "Kayıtların ekstreden {amount} fazla: çift ya da bu ekstreye girmeyen bir kayıt olabilir.",
+  "@kkFarkUyarisiFazla": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "kkLimitKullanimi": "Limit kullanımı",
+  "kkDefterGuvenilmez": "Kart bu kesimden sonra eklendi; dönem borcunu ekstreden gir.",
   "kkOdemeIcinCuzdanYok": "Ödemek için başka bir cüzdanın olmalı.",
   "kkKesimTarihi": "Hesap kesim tarihi",
   "kkSonOdemeTarihi": "Son ödeme tarihi",
@@ -3473,6 +3490,22 @@
   },
   "reportViewLine": "Çizgi görünümü",
   "reportTrendVsPrevious": "önceki dönemin aynı noktasına göre",
+  "reportChangeUp": "{percent} arttı",
+  "@reportChangeUp": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "reportChangeDown": "{percent} azaldı",
+  "@reportChangeDown": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
   "reportTrendBalanceStart": "Dönem başı {amount}",
   "@reportTrendBalanceStart": {
     "placeholders": {

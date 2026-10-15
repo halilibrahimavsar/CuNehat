@@ -7307,6 +7307,13 @@ abstract class AppLocalizations {
   /// **'Gelir–gider grafiği: {count} dönem, toplam gelir {income}, toplam gider {expense}. Değerler için sütunlara dokun.'**
   String reportFlowChartSemantics(Object count, Object income, Object expense);
 
+  /// No description provided for @reportFlowChartSingleSemantics.
+  ///
+  /// In tr, this message translates to:
+  /// **'{kind} grafiği: {count} dönem, toplam {total}. Değerler için sütunlara dokun.'**
+  String reportFlowChartSingleSemantics(
+      Object kind, Object count, Object total);
+
   /// No description provided for @reportBalanceChartSemantics.
   ///
   /// In tr, this message translates to:
@@ -9005,17 +9012,29 @@ abstract class AppLocalizations {
   /// **'Bu dönemin ekstresini girersen dönem borcu ve asgari bankanınkiyle birebir olur.'**
   String get kkEkstreGirilmedi;
 
+  /// No description provided for @kkFarkUyarisiEksik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekstre kayıtlarından {amount} fazla: kartta yazılmamış bir harcama olabilir.'**
+  String kkFarkUyarisiEksik(String amount);
+
+  /// No description provided for @kkFarkUyarisiFazla.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıtların ekstreden {amount} fazla: çift ya da bu ekstreye girmeyen bir kayıt olabilir.'**
+  String kkFarkUyarisiFazla(String amount);
+
+  /// No description provided for @kkLimitKullanimi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Limit kullanımı'**
+  String get kkLimitKullanimi;
+
   /// No description provided for @kkDefterGuvenilmez.
   ///
   /// In tr, this message translates to:
   /// **'Kart bu kesimden sonra eklendi; dönem borcunu ekstreden gir.'**
   String get kkDefterGuvenilmez;
-
-  /// No description provided for @kkFarkUyarisi.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ekstre ile kayıtlar arasında {amount} fark var: eksik ya da fazla işlem olabilir.'**
-  String kkFarkUyarisi(String amount);
 
   /// No description provided for @kkOdemeIcinCuzdanYok.
   ///
@@ -10306,6 +10325,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'önceki dönemin aynı noktasına göre'**
   String get reportTrendVsPrevious;
+
+  /// No description provided for @reportChangeUp.
+  ///
+  /// In tr, this message translates to:
+  /// **'{percent} arttı'**
+  String reportChangeUp(String percent);
+
+  /// No description provided for @reportChangeDown.
+  ///
+  /// In tr, this message translates to:
+  /// **'{percent} azaldı'**
+  String reportChangeDown(String percent);
 
   /// No description provided for @reportTrendBalanceStart.
   ///

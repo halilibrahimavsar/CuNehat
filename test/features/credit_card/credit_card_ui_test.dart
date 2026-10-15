@@ -875,6 +875,71 @@ void main() {
           findsOneWidget);
     });
 
+    testWidgets(
+        'ekstre ile defter farkı YÖNÜYLE söylenir; limit çubuğu etiketlidir '
+        '(smoke C-40/C-41)', (tester) async {
+      tall(tester);
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      final handle = tester.ensureSemantics();
+      final repo = _MockTxRepo();
+      getIt.registerSingleton<TransactionsRepository>(repo);
+      when(() => repo.getTransactions(
+            userId: any(named: 'userId'),
+            walletId: 'card',
+          )).thenAnswer((_) async => Right([
+            TransactionEntity(
+              id: 't1',
+              userId: 'u',
+              walletId: 'card',
+              title: 'MARKET',
+              tag: 'cat-a',
+              amount: 800,
+              date: DateTime(2026, 9, 10),
+              type: TransactionTypeModel.expense,
+            ),
+          ]));
+      CreditCardInfo info(double declared) => CreditCardInfo(
+            closingDay: 15,
+            dueDay: 25,
+            paymentWalletId: 'bank',
+            limit: 50000,
+            lastStatement: CardStatement(
+              closingDate: DateTime(2026, 9, 15),
+              dueDate: DateTime(2026, 9, 25),
+              statementBalance: declared,
+              recordedAt: DateTime(2026, 9, 16),
+            ),
+          );
+      Future<void> pumpDeclared(double declared) async {
+        final card = _wallet('card',
+            name: 'Bonus',
+            balance: -800,
+            opening: 0,
+            createdAt: DateTime(2026, 8, 1),
+            card: info(declared));
+        await tester.pumpWidget(app(CreditCardTile(
+          key: ValueKey(declared),
+          card: card,
+          wallets: [_wallet('bank'), card],
+          today: DateTime(2026, 9, 20),
+        )));
+        await tester.pumpAndSettle();
+      }
+
+      // Beyan defterden büyük → kartta yazılmamış harcama aranır.
+      await pumpDeclared(850);
+      expect(find.text(l10n.kkFarkUyarisiEksik('50,00 ₺')), findsOneWidget);
+      expect(find.bySemanticsLabel(l10n.kkLimitKullanimi), findsOneWidget);
+      final bar =
+          tester.getSemantics(find.bySemanticsLabel(l10n.kkLimitKullanimi));
+      expect(bar.value, contains('800,00 ₺ / 50.000,00 ₺'));
+
+      // Beyan defterden küçük → çift ya da bu ekstreye girmeyen kayıt.
+      await pumpDeclared(750);
+      expect(find.text(l10n.kkFarkUyarisiFazla('50,00 ₺')), findsOneWidget);
+      handle.dispose();
+    });
+
     testWidgets('360dp genişlikte taşma yok', (tester) async {
       tester.view.physicalSize = const Size(360, 900);
       tester.view.devicePixelRatio = 1.0;

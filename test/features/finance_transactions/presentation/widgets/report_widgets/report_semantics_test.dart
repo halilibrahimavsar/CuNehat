@@ -9,6 +9,7 @@ import 'package:cunehat/features/finance_transactions/domain/services/transactio
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_cumulative_balance_chart.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_daily_net_flow_chart.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_change_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -81,6 +82,41 @@ void main() {
     handle.dispose();
   });
 
+  testWidgets(
+      'tek seri çizilirken yalnız o seri söylenir — gizli gelir "0" denmez',
+      (tester) async {
+    // Smoke test: Gider ölçüsünde çubuk grafik "toplam gelir 0,00 ₺" diye
+    // okunuyordu (dönem geliri 30.000 iken).
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(host(ReportDailyNetFlowChart(
+      series: series(),
+      showIncome: false,
+    )));
+    await tester.pumpAndSettle();
+
+    final all = labels(tester).toList();
+    expect(
+      all.any((l) => l.contains('Gider grafiği') && l.contains('1.500,00 ₺')),
+      isTrue,
+    );
+    expect(all.any((l) => l.contains('gelir')), isFalse);
+    handle.dispose();
+  });
+
+  testWidgets('kıyas rozeti yönü de söyler', (tester) async {
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(host(const Column(children: [
+      ReportChangeBadge(percent: 80, increaseIsGood: false),
+      ReportChangeBadge(percent: -25, increaseIsGood: false),
+    ])));
+    await tester.pumpAndSettle();
+
+    final all = labels(tester).toList();
+    expect(all, contains('%80 arttı'));
+    expect(all, contains('%25 azaldı'));
+    handle.dispose();
+  });
+
   testWidgets('bakiye grafiği dönem başı ve sonu bakiyesini söyler',
       (tester) async {
     final handle = tester.ensureSemantics();
@@ -134,8 +170,8 @@ void main() {
       onMetricChanged: (_) {},
       asLine: true,
       onAsLineChanged: (_) {},
-      totals: const ReportTotals(
-          totalIncome: 6200, totalExpense: 1500, net: 4700),
+      totals:
+          const ReportTotals(totalIncome: 6200, totalExpense: 1500, net: 4700),
       previousTotals: const ReportTotals(),
       flow: s,
       balance: s,

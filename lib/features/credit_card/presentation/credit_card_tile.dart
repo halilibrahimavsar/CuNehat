@@ -167,6 +167,7 @@ class CreditCardTile extends StatelessWidget {
             _LimitBar(
               used: card.creditCard!.limit! - status.availableLimit!,
               limit: card.creditCard!.limit!,
+              money: _money,
             ),
           const SizedBox(height: 8),
           _row(
@@ -322,7 +323,12 @@ class CreditCardTile extends StatelessWidget {
     final gap = s.reconciliationGap;
     final String? note;
     if (gap != null) {
-      note = l10n.kkFarkUyarisi(_money(gap.abs()));
+      // Yön söylenir: beyan defterden büyükse kartta yazılmamış harcama,
+      // küçükse çift ya da bu ekstreye girmeyen kayıt aranır. Eskiden iki
+      // durum aynı "eksik ya da fazla" cümlesini alıyordu (smoke C-40/41).
+      note = gap > 0
+          ? l10n.kkFarkUyarisiEksik(_money(gap))
+          : l10n.kkFarkUyarisiFazla(_money(-gap));
     } else if (s.declared == null && !s.derivedReliable) {
       note = l10n.kkDefterGuvenilmez;
     } else if (s.declared == null) {
@@ -354,7 +360,14 @@ class _LimitBar extends StatelessWidget {
   final double used;
   final double limit;
 
-  const _LimitBar({required this.used, required this.limit});
+  /// Kartın para biriminde biçimleyici (erişilebilirlik değeri için).
+  final String Function(double) money;
+
+  const _LimitBar({
+    required this.used,
+    required this.limit,
+    required this.money,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -374,11 +387,20 @@ class _LimitBar extends StatelessWidget {
         curve: Curves.easeOutCubic,
         builder: (context, v, _) => ClipRRect(
           borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: v,
-            minHeight: 6,
-            color: color,
-            backgroundColor: cs.onSurface.withValues(alpha: 0.08),
+          // Etiketsiz çubuk ekran okuyucuda yalnız "7" diye okunuyordu.
+          // İlerleme çubuğunun kendi semanticsValue'su yalnız SAYI kabul
+          // ediyor; etiket ve tutarlar dıştaki düğüme yazılır.
+          child: Semantics(
+            label: context.l10n.kkLimitKullanimi,
+            value: '${formatPercent(ratio * 100)} · '
+                '${money(used)} / ${money(limit)}',
+            excludeSemantics: true,
+            child: LinearProgressIndicator(
+              value: v,
+              minHeight: 6,
+              color: color,
+              backgroundColor: cs.onSurface.withValues(alpha: 0.08),
+            ),
           ),
         ),
       ),

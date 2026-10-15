@@ -4136,6 +4136,12 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String reportFlowChartSingleSemantics(
+      Object kind, Object count, Object total) {
+    return '$kind grafiği: $count dönem, toplam $total. Değerler için sütunlara dokun.';
+  }
+
+  @override
   String reportBalanceChartSemantics(Object start, Object end) {
     return 'Bakiye grafiği: dönem başı $start, dönem sonu $end. Ara değerler için çizgiye dokun.';
   }
@@ -5109,13 +5115,21 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu dönemin ekstresini girersen dönem borcu ve asgari bankanınkiyle birebir olur.';
 
   @override
-  String get kkDefterGuvenilmez =>
-      'Kart bu kesimden sonra eklendi; dönem borcunu ekstreden gir.';
+  String kkFarkUyarisiEksik(String amount) {
+    return 'Ekstre kayıtlarından $amount fazla: kartta yazılmamış bir harcama olabilir.';
+  }
 
   @override
-  String kkFarkUyarisi(String amount) {
-    return 'Ekstre ile kayıtlar arasında $amount fark var: eksik ya da fazla işlem olabilir.';
+  String kkFarkUyarisiFazla(String amount) {
+    return 'Kayıtların ekstreden $amount fazla: çift ya da bu ekstreye girmeyen bir kayıt olabilir.';
   }
+
+  @override
+  String get kkLimitKullanimi => 'Limit kullanımı';
+
+  @override
+  String get kkDefterGuvenilmez =>
+      'Kart bu kesimden sonra eklendi; dönem borcunu ekstreden gir.';
 
   @override
   String get kkOdemeIcinCuzdanYok => 'Ödemek için başka bir cüzdanın olmalı.';
@@ -5912,6 +5926,16 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get reportTrendVsPrevious => 'önceki dönemin aynı noktasına göre';
+
+  @override
+  String reportChangeUp(String percent) {
+    return '$percent arttı';
+  }
+
+  @override
+  String reportChangeDown(String percent) {
+    return '$percent azaldı';
+  }
 
   @override
   String reportTrendBalanceStart(Object amount) {

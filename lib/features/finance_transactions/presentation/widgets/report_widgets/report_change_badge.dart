@@ -1,4 +1,5 @@
 import 'package:cunehat/config/theme/money_colors.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:flutter/material.dart';
 
@@ -51,25 +52,33 @@ class ReportChangeBadge extends StatelessWidget {
         ? '${formatPercent(maxPercent)}+'
         : formatPercent(magnitude);
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          isIncrease
-              ? Icons.arrow_upward_rounded
-              : Icons.arrow_downward_rounded,
-          size: 11,
-          color: color,
-        ),
-        Text(
-          text,
-          style: theme.textTheme.bodySmall?.copyWith(
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
+    // Yön yalnız OKLA çiziliyor; ekran okuyucu "%80" duyup artış mı düşüş
+    // mü olduğunu öğrenemiyordu.
+    return Semantics(
+      label: isIncrease
+          ? context.l10n.reportChangeUp(text)
+          : context.l10n.reportChangeDown(text),
+      excludeSemantics: true,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isIncrease
+                ? Icons.arrow_upward_rounded
+                : Icons.arrow_downward_rounded,
+            size: 11,
             color: color,
           ),
-        ),
-      ],
+          Text(
+            text,
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

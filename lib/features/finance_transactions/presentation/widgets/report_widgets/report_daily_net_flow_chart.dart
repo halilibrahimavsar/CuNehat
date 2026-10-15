@@ -162,12 +162,23 @@ class ReportDailyNetFlowChart extends StatelessWidget {
         ],
         const SizedBox(height: 12),
         Semantics(
-          // Grafiğin kendisi ekran okuyucuya hiçbir şey söylemiyordu.
-          label: context.l10n.reportFlowChartSemantics(
-            buckets.length.toString(),
-            money(buckets.fold<double>(0, (s, b) => s + b.income)),
-            money(buckets.fold<double>(0, (s, b) => s + b.expense)),
-          ),
+          // Grafiğin kendisi ekran okuyucuya hiçbir şey söylemiyordu. Tek
+          // seri çiziliyorsa yalnız o söylenir: Gider ölçüsünde gizlenen
+          // gelir sıfırlandığı için etiket "toplam gelir 0,00" diyordu.
+          label: showIncome && showExpense
+              ? context.l10n.reportFlowChartSemantics(
+                  buckets.length.toString(),
+                  money(buckets.fold<double>(0, (s, b) => s + b.income)),
+                  money(buckets.fold<double>(0, (s, b) => s + b.expense)),
+                )
+              : context.l10n.reportFlowChartSingleSemantics(
+                  showIncome
+                      ? context.l10n.reportModeIncome
+                      : context.l10n.reportModeExpense,
+                  buckets.length.toString(),
+                  money(buckets.fold<double>(
+                      0, (s, b) => s + (showIncome ? b.income : b.expense))),
+                ),
           child: SizedBox(
             height: height,
             child: LayoutBuilder(

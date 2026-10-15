@@ -4149,6 +4149,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String reportFlowChartSingleSemantics(
+      Object kind, Object count, Object total) {
+    return '$kind chart: $count periods, total $total. Tap the bars for values.';
+  }
+
+  @override
   String reportBalanceChartSemantics(Object start, Object end) {
     return 'Balance chart: $start at the start of the period, $end at the end. Tap the line for values in between.';
   }
@@ -5144,13 +5150,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter this period\'s statement so the balance and minimum match your bank\'s.';
 
   @override
-  String get kkDefterGuvenilmez =>
-      'The card was added after this closing; enter the statement balance from your statement.';
+  String kkFarkUyarisiEksik(String amount) {
+    return 'The statement is $amount more than your records: a card purchase may be missing.';
+  }
 
   @override
-  String kkFarkUyarisi(String amount) {
-    return 'There\'s a $amount difference between the statement and your records: some transactions may be missing or duplicated.';
+  String kkFarkUyarisiFazla(String amount) {
+    return 'Your records are $amount more than the statement: a record may be duplicated or not on this statement.';
   }
+
+  @override
+  String get kkLimitKullanimi => 'Limit used';
+
+  @override
+  String get kkDefterGuvenilmez =>
+      'The card was added after this closing; enter the statement balance from your statement.';
 
   @override
   String get kkOdemeIcinCuzdanYok => 'You need another wallet to pay from.';
@@ -5967,6 +5981,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportTrendVsPrevious => 'vs. same point last period';
+
+  @override
+  String reportChangeUp(String percent) {
+    return 'up $percent';
+  }
+
+  @override
+  String reportChangeDown(String percent) {
+    return 'down $percent';
+  }
 
   @override
   String reportTrendBalanceStart(Object amount) {
