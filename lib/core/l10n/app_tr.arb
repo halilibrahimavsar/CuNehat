@@ -11,6 +11,8 @@
   "geriAl": "Geri al",
   "silmeGeriAlindi": "Silme geri alındı",
   "silmeGeriAlinamadi": "Geri alma başarısız oldu; kayıt geri getirilemedi",
+  "duzenlemeGeriAlindi": "Değişiklik geri alındı",
+  "duzenlemeGeriAlinamadi": "Geri alma başarısız oldu; kaydın eski hâli yazılamadı",
   "hintIkonAra": "İkon ara...",
   "hataStateFailureMessage": "Hata: {message}",
   "@hataStateFailureMessage": {

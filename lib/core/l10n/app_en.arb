@@ -11,6 +11,8 @@
   "geriAl": "Undo",
   "silmeGeriAlindi": "Deletion undone",
   "silmeGeriAlinamadi": "Undo failed; the record could not be restored",
+  "duzenlemeGeriAlindi": "Edit undone",
+  "duzenlemeGeriAlinamadi": "Undo failed; the previous version could not be restored",
   "hintIkonAra": "Search icon...",
   "hataStateFailureMessage": "Error: {message}",
   "@hataStateFailureMessage": {

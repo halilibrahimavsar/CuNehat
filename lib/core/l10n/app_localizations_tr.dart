@@ -43,6 +43,13 @@ class AppLocalizationsTr extends AppLocalizations {
       'Geri alma başarısız oldu; kayıt geri getirilemedi';
 
   @override
+  String get duzenlemeGeriAlindi => 'Değişiklik geri alındı';
+
+  @override
+  String get duzenlemeGeriAlinamadi =>
+      'Geri alma başarısız oldu; kaydın eski hâli yazılamadı';
+
+  @override
   String get hintIkonAra => 'İkon ara...';
 
   @override

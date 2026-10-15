@@ -226,6 +226,72 @@ void main() {
     });
   });
 
+  // Smoke test T-51: düzenlemenin geri alınması.
+  group('restore — düzenleme', () {
+    test('eski hâli AYNI kimlikle üzerine yazar; yeni kayıt EKLENMEZ',
+        () async {
+      when(() => transactionsRepository.updateTransaction(any()))
+          .thenAnswer((_) async => const Right(null));
+
+      final ok = await service.restore(TransactionEditUndo(
+        previous: transaction,
+        userId: 'user_1',
+        walletId: 'wallet_1',
+      ));
+
+      expect(ok, isTrue);
+      final written =
+          verify(() => transactionsRepository.updateTransaction(captureAny()))
+              .captured
+              .single as TransactionEntity;
+      expect(written, transaction);
+      verifyNever(() => addTransaction(any()));
+      verify(() => metrics.syncBalance('wallet_1')).called(1);
+    });
+
+    test('kayıt başka cüzdana taşınmışsa İKİ bakiye de senkronlanır', () async {
+      when(() => transactionsRepository.updateTransaction(any()))
+          .thenAnswer((_) async => const Right(null));
+      final changes = <TransactionsChange>[];
+      final sub = notifier.stream.listen(changes.add);
+
+      final ok = await service.restore(TransactionEditUndo(
+        previous: transaction, // wallet_1
+        userId: 'user_1',
+        walletId: 'wallet_2', // düzenlemede buraya taşınmıştı
+      ));
+      await Future<void>.delayed(Duration.zero);
+      await sub.cancel();
+
+      expect(ok, isTrue);
+      verify(() => metrics.syncBalance('wallet_2')).called(1);
+      verify(() => metrics.syncBalance('wallet_1')).called(1);
+      expect(changes.map((c) => c.walletId).toSet(), {'wallet_1', 'wallet_2'});
+    });
+
+    test('geri yazım başarısızsa false döner', () async {
+      when(() => transactionsRepository.updateTransaction(any()))
+          .thenAnswer((_) async => const Left(CacheFailure('yazılamadı')));
+
+      final ok = await service.restore(TransactionEditUndo(
+        previous: transaction,
+        userId: 'user_1',
+        walletId: 'wallet_1',
+      ));
+
+      expect(ok, isFalse);
+    });
+
+    test('pencere kapanınca commit hiçbir dosyaya dokunmaz', () async {
+      await service.commit(TransactionEditUndo(
+        previous: transaction.copyWith(receiptFileName: 'fis.jpg'),
+        userId: 'user_1',
+        walletId: 'wallet_1',
+      ));
+      verifyNever(() => receipts.delete(any()));
+    });
+  });
+
   group('restore — ters kayıtlar', () {
     test('borçta ters kayıtların TAMAMI silinir, sonra borç geri yazılır',
         () async {
@@ -351,10 +417,10 @@ void main() {
       ));
 
       expect(ok, isTrue);
-      final written = verify(() =>
-              transactionsRepository.updateTransaction(captureAny()))
-          .captured
-          .single as TransactionEntity;
+      final written =
+          verify(() => transactionsRepository.updateTransaction(captureAny()))
+              .captured
+              .single as TransactionEntity;
       expect(written, adopted);
       verify(() => addInvestment(any())).called(1);
     });

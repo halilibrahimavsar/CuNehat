@@ -67,6 +67,27 @@ final class TransactionDeletionUndo extends DeletionUndo {
   List<Object?> get props => [transaction, userId, walletId, alsoRestore];
 }
 
+/// Bir işlem DÜZENLEMESİNİ geri almak için: düzenleme öncesi kayıt aynı
+/// kimlikle geri yazılır. Silmedeki "şimdi yap, geri alınırsa eski hale
+/// döndür" modeliyle aynı; bakiye defterden türediği için geri yazım eski
+/// durumu birebir verir.
+///
+/// [walletId] düzenleme SONRASI cüzdandır; kayıt başka cüzdana taşındıysa
+/// eski cüzdan [previous]'un cüzdanıdır ve iki bakiye de yeniden türetilir.
+final class TransactionEditUndo extends DeletionUndo {
+  /// Depodan (UI kopyasından değil) okunmuş düzenleme öncesi hâl.
+  final TransactionEntity previous;
+
+  const TransactionEditUndo({
+    required this.previous,
+    required super.userId,
+    required super.walletId,
+  });
+
+  @override
+  List<Object?> get props => [previous, userId, walletId];
+}
+
 final class DebtDeletionUndo extends DeletionUndo {
   final DebtEntity debt;
 
@@ -193,8 +214,18 @@ class DeletionUndoService {
       // 3) Metrikleri defterden yeniden türet.
       ok = await _walletMetrics.syncBalance(undo.walletId) && ok;
       await _syncOwnMetric(undo);
+      final movedFrom =
+          undo is TransactionEditUndo && undo.previous.walletId != undo.walletId
+              ? undo.previous.walletId
+              : null;
+      if (movedFrom != null) {
+        ok = await _walletMetrics.syncBalance(movedFrom) && ok;
+      }
 
       _notifier.notify(userId: undo.userId, walletId: undo.walletId);
+      if (movedFrom != null) {
+        _notifier.notify(userId: undo.userId, walletId: movedFrom);
+      }
       return ok;
     } catch (e, st) {
       debugPrint('DeletionUndoService.restore hatası: $e\n$st');
@@ -232,6 +263,11 @@ class DeletionUndoService {
           }
           return _addTransaction(transaction);
         }(),
+      // Düzenleme: kayıt hâlâ depoda, eski hâli üzerine yazılır. Usecase
+      // değil repo: güncelleme usecase'i de yalnız repoya yazıyor, kuplaj
+      // yan etkisi yok.
+      TransactionEditUndo(:final previous) =>
+        await _transactionsRepository.updateTransaction(previous),
       DebtDeletionUndo(:final debt) => await _addDebt(debt),
       ReceivableDeletionUndo(:final receivable) =>
         await _addReceivable(receivable),
@@ -257,6 +293,7 @@ class DeletionUndoService {
     try {
       switch (undo) {
         case TransactionDeletionUndo():
+        case TransactionEditUndo():
           break;
         case DebtDeletionUndo():
           await _walletMetrics.syncDebt(undo.walletId);

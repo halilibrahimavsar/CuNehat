@@ -5,7 +5,8 @@ import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'package:cunehat/core/services/deletion_undo_service.dart';
 
-/// Silme sonrası "Geri al" mesajını gösterir.
+/// Silme (ya da işlem düzenlemesi, [TransactionEditUndo]) sonrası "Geri al"
+/// mesajını gösterir.
 ///
 /// [context] yalnız metinleri okumak için kullanılır (senkron); mesajın
 /// yaşam döngüsü çağıran widget'a bağlı DEĞİLDİR (bkz. [AppMessenger]).
@@ -18,12 +19,14 @@ void showDeletionMessage(
   String? undoneMessage,
 }) {
   final l = context.l10n;
+  final isEdit = undo is TransactionEditUndo;
   showDeletionMessageWithTexts(
     message: message,
     undo: undo,
     undoLabel: l.geriAl,
-    undoneMessage: undoneMessage ?? l.silmeGeriAlindi,
-    undoFailedMessage: l.silmeGeriAlinamadi,
+    undoneMessage:
+        undoneMessage ?? (isEdit ? l.duzenlemeGeriAlindi : l.silmeGeriAlindi),
+    undoFailedMessage: isEdit ? l.duzenlemeGeriAlinamadi : l.silmeGeriAlinamadi,
   );
 }
 

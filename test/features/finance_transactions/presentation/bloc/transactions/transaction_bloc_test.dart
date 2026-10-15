@@ -76,6 +76,11 @@ void main() {
     mockGetByIdUseCase = MockGetTransactionByIdUseCase();
     mockMetricsService = MockWalletMetricsService();
     changedNotifier = TransactionsChangedNotifier();
+    // Düzenleme, geri alma için kaydın ÖNCEKİ hâlini depodan okur. Okunamazsa
+    // düzenleme yine yapılır, yalnız geri alma sunulmaz — testlerin çoğu bu
+    // yolu izler; geri almayı sınayanlar kendi kaydını verir.
+    when(() => mockGetByIdUseCase(any()))
+        .thenAnswer((_) async => const Left(CacheFailure('yok')));
 
     transactionBloc = TransactionBloc(
       getTransactionsGroupedUseCase: mockGetGroupedUseCase,
@@ -199,8 +204,7 @@ void main() {
         TransactionActionSuccess(
           'Grocery başarıyla eklendi',
           transactions: [testTransaction],
-          warning:
-              'Bakiye eşitlenemedi; cüzdan ekranına dönüp tekrar dene.',
+          warning: 'Bakiye eşitlenemedi; cüzdan ekranına dönüp tekrar dene.',
         ),
       ],
     );
@@ -219,8 +223,7 @@ void main() {
         TransactionActionSuccess(
           'Grocery başarıyla eklendi',
           transactions: [testTransaction],
-          warning:
-              'Bakiye eşitlenemedi; cüzdan ekranına dönüp tekrar dene.',
+          warning: 'Bakiye eşitlenemedi; cüzdan ekranına dönüp tekrar dene.',
         ),
       ],
     );
@@ -356,8 +359,7 @@ void main() {
         const TransactionActionSuccess(
           'Grocery başarıyla güncellendi',
           transactions: [],
-          warning:
-              'Bakiye eşitlenemedi; cüzdan ekranına dönüp tekrar dene.',
+          warning: 'Bakiye eşitlenemedi; cüzdan ekranına dönüp tekrar dene.',
         ),
       ],
     );
@@ -378,6 +380,60 @@ void main() {
       expect: () => [
         const TransactionError(
             'İşlem güncellenirken hata oluştu: Update failed',
+            transactions: []),
+      ],
+    );
+  });
+
+  // Smoke test T-51: düzenlemenin de "Geri al"ı olmalı.
+  group('UpdateTransactionEvent · geri alma', () {
+    final edited = testTransaction.copyWith(amount: 1650);
+
+    blocTest<TransactionBloc, TransactionState>(
+      'başarı durumu düzenleme ÖNCESİ (depodaki) hâli taşır',
+      build: () {
+        when(() => mockGetByIdUseCase('tx_123'))
+            .thenAnswer((_) async => Right(testTransaction));
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockUpdateUseCase(edited))
+            .thenAnswer((_) async => const Right(null));
+        return transactionBloc;
+      },
+      act: (bloc) => bloc.add(UpdateTransactionEvent(
+        previousTransaction: testTransaction,
+        newTransaction: edited,
+      )),
+      expect: () => [
+        TransactionActionSuccess(
+          'Grocery başarıyla güncellendi',
+          transactions: const [],
+          undo: TransactionEditUndo(
+            previous: testTransaction,
+            userId: 'user_123',
+            walletId: 'wallet_123',
+          ),
+        ),
+      ],
+    );
+
+    blocTest<TransactionBloc, TransactionState>(
+      'fiş değiştiyse geri alma SUNULMAZ (eski görsel diskten silindi)',
+      build: () {
+        when(() => mockGetByIdUseCase('tx_123')).thenAnswer((_) async =>
+            Right(testTransaction.copyWith(receiptFileName: 'eski.jpg')));
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        return transactionBloc;
+      },
+      act: (bloc) => bloc.add(UpdateTransactionEvent(
+        previousTransaction: testTransaction,
+        newTransaction: edited.copyWith(receiptFileName: 'yeni.jpg'),
+      )),
+      expect: () => [
+        const TransactionActionSuccess('Grocery başarıyla güncellendi',
             transactions: []),
       ],
     );
@@ -466,8 +522,7 @@ void main() {
         const TransactionActionSuccess(
           'Grocery diğer cüzdana taşındı',
           transactions: [],
-          warning:
-              'Bakiye eşitlenemedi; cüzdan ekranına dönüp tekrar dene.',
+          warning: 'Bakiye eşitlenemedi; cüzdan ekranına dönüp tekrar dene.',
         ),
       ],
     );
@@ -811,8 +866,7 @@ void main() {
         TransactionActionSuccess(
           'Grocery silindi',
           transactions: const [],
-          warning:
-              'Bakiye eşitlenemedi; cüzdan ekranına dönüp tekrar dene.',
+          warning: 'Bakiye eşitlenemedi; cüzdan ekranına dönüp tekrar dene.',
           undo: TransactionDeletionUndo(
             transaction: testTransaction,
             userId: 'user_123',

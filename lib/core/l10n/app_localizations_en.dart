@@ -43,6 +43,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Undo failed; the record could not be restored';
 
   @override
+  String get duzenlemeGeriAlindi => 'Edit undone';
+
+  @override
+  String get duzenlemeGeriAlinamadi =>
+      'Undo failed; the previous version could not be restored';
+
+  @override
   String get hintIkonAra => 'Search icon...';
 
   @override

@@ -201,6 +201,14 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       return;
     }
 
+    // Geri alma için düzenleme ÖNCESİ hâl DEPODAN okunur: formun elindeki
+    // kopya bayat olabilir. Okunamazsa düzenleme yine yapılır, yalnız geri
+    // alma sunulmaz.
+    final id = updated.id;
+    final stored = id == null
+        ? null
+        : (await getTransactionByIdUseCase(id)).fold((_) => null, (t) => t);
+
     final result = await updateTransactionUseCase(updated);
 
     await result.fold(
@@ -224,6 +232,17 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
               if (t.id != updated.id) t else if (!moved) updated,
           ],
           warning: synced ? null : _syncWarning,
+          // Fiş değiştiyse geri alma YOK: güncelleme eski görseli diskten
+          // hemen siliyor (TransactionRepositoryImpl.updateTransaction);
+          // geri gelen kayıt kopuk bir eke işaret ederdi.
+          undo: stored != null &&
+                  stored.receiptFileName == updated.receiptFileName
+              ? TransactionEditUndo(
+                  previous: stored,
+                  userId: updated.userId,
+                  walletId: updated.walletId,
+                )
+              : null,
         ));
         transactionsChangedNotifier.notify(
           userId: updated.userId,

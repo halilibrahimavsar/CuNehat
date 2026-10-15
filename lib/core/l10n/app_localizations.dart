@@ -164,6 +164,18 @@ abstract class AppLocalizations {
   /// **'Geri alma başarısız oldu; kayıt geri getirilemedi'**
   String get silmeGeriAlinamadi;
 
+  /// No description provided for @duzenlemeGeriAlindi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Değişiklik geri alındı'**
+  String get duzenlemeGeriAlindi;
+
+  /// No description provided for @duzenlemeGeriAlinamadi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geri alma başarısız oldu; kaydın eski hâli yazılamadı'**
+  String get duzenlemeGeriAlinamadi;
+
   /// No description provided for @hintIkonAra.
   ///
   /// In tr, this message translates to:
