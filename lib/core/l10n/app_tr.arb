@@ -3328,6 +3328,14 @@
       }
     }
   },
+  "reportBudgetMonths": "Aylık limitler {months} aya göre hesaplandı.",
+  "@reportBudgetMonths": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
   "systemTagSavingsDeposit": "Birikime aktarım",
   "systemTagSavingsWithdraw": "Birikimden aktarım",
   "potUnavailableMessage": "Kasanın bakiyesi bu işlem için yetmiyor; hiçbir şey kaydedilmedi.",

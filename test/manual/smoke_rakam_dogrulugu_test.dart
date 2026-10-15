@@ -246,7 +246,7 @@ void main() {
     final m = DateTimeRange(start: DateTime(2026, 9, 15), end: DateTime(2026, 10, 14));
     expect(DateRangeHelper.monthlyLimitFactor(m), 1, reason: 'R-42');
     final yr = DateTimeRange(start: DateTime(2026, 1, 1), end: DateTime(2026, 12, 31));
-    expect(2000 * DateRangeHelper.monthlyLimitFactor(yr), closeTo(23983.57, 0.01), reason: 'R-43');
+    expect(2000 * DateRangeHelper.monthlyLimitFactor(yr), 24000, reason: 'R-43 (tam yıl = 12 ay)');
   });
 
   test('I-01..I-10 İçgörü, Ekim', () {

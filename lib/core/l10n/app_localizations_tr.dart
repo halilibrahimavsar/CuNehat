@@ -5728,6 +5728,11 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String reportBudgetMonths(int months) {
+    return 'Aylık limitler $months aya göre hesaplandı.';
+  }
+
+  @override
   String get systemTagSavingsDeposit => 'Birikime aktarım';
 
   @override

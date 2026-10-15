@@ -3205,6 +3205,14 @@
       }
     }
   },
+  "reportBudgetMonths": "{months, plural, =1{Monthly limits counted for 1 month.} other{Monthly limits counted for {months} months.}}",
+  "@reportBudgetMonths": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
   "systemTagSavingsDeposit": "To savings",
   "systemTagSavingsWithdraw": "From savings",
   "potUnavailableMessage": "The savings pot doesn't have enough balance; nothing was saved.",

@@ -71,6 +71,27 @@ void main() {
         findsOneWidget);
   });
 
+  testWidgets('tam aylardan oluşan dönemde not ay sayısını söyler (R-43)',
+      (tester) async {
+    await tester.pumpWidget(host(ReportBudgetSummaryCard(
+      statuses: const [
+        BudgetStatus(
+            categoryId: 'm',
+            label: 'Market',
+            spent: 3850,
+            limit: 24000,
+            prorated: true),
+      ],
+      periodDays: 365,
+      periodMonths: 12,
+      onTap: (_) {},
+    )));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Aylık limitler 12 aya göre hesaplandı.'), findsOneWidget);
+    expect(find.textContaining('günlük döneme'), findsNothing);
+  });
+
   testWidgets('bütçe yokken hiç çizilmez', (tester) async {
     await tester.pumpWidget(host(ReportBudgetSummaryCard(
       statuses: const [],

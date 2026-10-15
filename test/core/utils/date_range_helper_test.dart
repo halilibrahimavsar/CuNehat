@@ -180,4 +180,47 @@ void main() {
       );
     });
   });
+
+  group('wholeMonthCount / monthlyLimitFactor', () {
+    DateTimeRange r(DateTime a, DateTime b) => DateTimeRange(start: a, end: b);
+
+    test('takvim yılı 12 tam aydır; 2.000 TL limit 24.000 olur (R-43)', () {
+      final year = r(DateTime(2026, 1, 1), DateTime(2026, 12, 31, 23, 59, 59));
+      expect(DateRangeHelper.wholeMonthCount(year), 12);
+      expect(2000 * DateRangeHelper.monthlyLimitFactor(year), 24000);
+    });
+
+    test('ayın ortasından başlayan çok aylık aralık da sayılır', () {
+      expect(
+          DateRangeHelper.wholeMonthCount(
+              r(DateTime(2026, 7, 16), DateTime(2026, 10, 15))),
+          3);
+      expect(
+          DateRangeHelper.wholeMonthCount(
+              r(DateTime(2026, 9, 15), DateTime(2026, 10, 14))),
+          1);
+      expect(
+          DateRangeHelper.isMonthLength(
+              r(DateTime(2026, 9, 15), DateTime(2026, 10, 14))),
+          isTrue);
+    });
+
+    test('tam ay olmayan aralık gün orantısına düşer', () {
+      final week = r(DateTime(2026, 10, 12), DateTime(2026, 10, 18));
+      expect(DateRangeHelper.wholeMonthCount(week), isNull);
+      expect(
+          DateRangeHelper.monthlyLimitFactor(week), closeTo(7 / 30.4375, 1e-9));
+      expect(
+          DateRangeHelper.wholeMonthCount(
+              r(DateTime(2026, 1, 1), DateTime(2026, 2, 27))),
+          isNull);
+    });
+
+    test('28\'inden sonra başlayan aralık tam ay sayılmaz', () {
+      expect(
+          DateRangeHelper.wholeMonthCount(
+              r(DateTime(2026, 1, 31), DateTime(2026, 2, 27))),
+          isNull);
+    });
+  });
 }

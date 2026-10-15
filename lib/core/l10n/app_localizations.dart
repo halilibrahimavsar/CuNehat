@@ -10001,6 +10001,12 @@ abstract class AppLocalizations {
   /// **'Aylık limitler bu {days} günlük döneme orantılandı.'**
   String reportBudgetProrated(int days);
 
+  /// No description provided for @reportBudgetMonths.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aylık limitler {months} aya göre hesaplandı.'**
+  String reportBudgetMonths(int months);
+
   /// No description provided for @systemTagSavingsDeposit.
   ///
   /// In tr, this message translates to:

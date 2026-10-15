@@ -29,11 +29,16 @@ class ReportBudgetSummaryCard extends StatelessWidget {
   /// Dönemin gün sayısı (orantılama notunda yazılır).
   final int periodDays;
 
+  /// Dönem tam aylardan oluşuyorsa ay sayısı
+  /// ([DateRangeHelper.wholeMonthCount]); not "N aya göre" der.
+  final int? periodMonths;
+
   const ReportBudgetSummaryCard({
     super.key,
     required this.statuses,
     required this.onTap,
     this.periodDays = 0,
+    this.periodMonths,
   });
 
   /// En fazla kaç satır listelenir. Tamamı zaten Bütçeler sayfasında.
@@ -91,7 +96,9 @@ class ReportBudgetSummaryCard extends StatelessWidget {
           if (prorated) ...[
             const SizedBox(height: 4),
             Text(
-              context.l10n.reportBudgetProrated(periodDays),
+              periodMonths != null
+                  ? context.l10n.reportBudgetMonths(periodMonths!)
+                  : context.l10n.reportBudgetProrated(periodDays),
               key: const ValueKey('budget-prorated-note'),
               style: theme.textTheme.bodySmall?.copyWith(
                 fontSize: 11,
@@ -158,11 +165,11 @@ List<BudgetStatus> computeBudgetStatuses({
   required String Function(String tag) labelFor,
 }) {
   if (budgets.isEmpty) return const [];
-  // Limit AYLIK. Aralık tam bir ay değilse limit döneme ORANTILANIR (gün
-  // sayısı / 30,44): haftalık ya da iki haftalık bakan kullanıcı bütçesini
-  // görmeye devam eder. Eskiden oran hiç üretilmiyordu ("Bu Yıl"da 12 aylık
-  // harcamayı 1 aylık limite bölmek "%340 aşıldı" diyordu — o hata hâlâ
-  // yok: yıl için limit 12 katına çıkar).
+  // Limit AYLIK. Aralık tam aylardan oluşuyorsa limit ay sayısıyla çarpılır
+  // ("Bu Yıl" → 12 katı); değilse döneme ORANTILANIR (gün sayısı / 30,44):
+  // haftalık ya da iki haftalık bakan kullanıcı bütçesini görmeye devam
+  // eder. Eskiden oran hiç üretilmiyordu ("Bu Yıl"da 12 aylık harcamayı 1
+  // aylık limite bölmek "%340 aşıldı" diyordu).
   final factor = DateRangeHelper.monthlyLimitFactor(range);
 
   final spentByTag = <String, double>{};
@@ -264,8 +271,9 @@ class _BudgetRow extends StatelessWidget {
                     percentText,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color:
-                          status.isExceeded ? MoneyColors.expense : MoneyColors.income,
+                      color: status.isExceeded
+                          ? MoneyColors.expense
+                          : MoneyColors.income,
                     ),
                   ),
                 ],

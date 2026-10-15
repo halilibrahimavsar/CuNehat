@@ -5777,6 +5777,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String reportBudgetMonths(int months) {
+    String _temp0 = intl.Intl.pluralLogic(
+      months,
+      locale: localeName,
+      other: 'Monthly limits counted for $months months.',
+      one: 'Monthly limits counted for 1 month.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get systemTagSavingsDeposit => 'To savings';
 
   @override

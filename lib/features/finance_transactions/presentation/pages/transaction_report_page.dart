@@ -1,3 +1,4 @@
+import 'package:cunehat/core/utils/date_range_helper.dart';
 import 'package:cunehat/core/shared/motion/period_transition.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_scope_chips.dart';
 import 'package:cunehat/features/credit_card/presentation/card_context_rail.dart';
@@ -1063,6 +1064,9 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                                         statuses: derived.budgetStatuses,
                                         periodDays: _seriesService.dayCount(
                                             _range.start, _range.end),
+                                        periodMonths:
+                                            DateRangeHelper.wholeMonthCount(
+                                                _range),
                                         onTap: _openBudgetCategory,
                                       ),
                                     ],

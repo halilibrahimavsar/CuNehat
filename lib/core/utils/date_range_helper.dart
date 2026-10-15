@@ -108,17 +108,30 @@ class DateRangeHelper {
   /// [range] TAM BİR AY uzunluğunda mı — ayın kaçında başlarsa başlasın
   /// (15 Eyl → 14 Eki dahil)? Maaş gününe göre ay kullanan kişinin dönemi de
   /// bir aydır; bütçe limiti orantılanmadan kullanılır.
-  static bool isMonthLength(DateTimeRange range) {
+  static bool isMonthLength(DateTimeRange range) => wholeMonthCount(range) == 1;
+
+  /// [range] kaç TAM aydan oluşuyor — ayın kaçında başlarsa başlasın
+  /// (1 Oca – 31 Ara → 12, 16 Tem – 15 Eki → 3, 15 Eyl – 14 Eki → 1). Tam
+  /// ay değilse ya da başlangıç 28'inden sonraysa (ay sonu kenetlemesi
+  /// belirsiz) `null`.
+  static int? wholeMonthCount(DateTimeRange range) {
     final start = range.start;
-    if (start.day > 28) return false;
-    return _isSameDay(
-        range.end, DateTime(start.year, start.month + 1, start.day - 1));
+    if (start.day > 28) return null;
+    for (var n = 1;; n++) {
+      final end = DateTime(start.year, start.month + n, start.day - 1);
+      if (_isSameDay(range.end, end)) return n;
+      if (end.isAfter(range.end)) return null;
+    }
   }
 
-  /// Aylık bir bütçe limitini [range]'e uyarlayan katsayı: tam bir ayda 1,
-  /// diğer aralıklarda gün sayısı / ortalama ay uzunluğu (30,4375).
+  /// Aylık bir bütçe limitini [range]'e uyarlayan katsayı: tam aylardan
+  /// oluşan aralıkta ay sayısı ("Bu yıl" → 12), diğer aralıklarda gün sayısı
+  /// / ortalama ay uzunluğu (30,4375). Eskiden yalnız tek ay tam sayılıyordu;
+  /// yıl 365 / 30,4375 = 11,99 ay çıkıyor, 2.000'lik bütçe 23.983,57 oluyordu
+  /// (smoke test R-43).
   static double monthlyLimitFactor(DateTimeRange range) {
-    if (isMonthLength(range)) return 1;
+    final months = wholeMonthCount(range);
+    if (months != null) return months.toDouble();
     final days = DateTime.utc(range.end.year, range.end.month, range.end.day)
             .difference(DateTime.utc(
                 range.start.year, range.start.month, range.start.day))
