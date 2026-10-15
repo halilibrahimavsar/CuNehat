@@ -996,10 +996,16 @@ void main() {
   }
 
   group('CardContextRail', () {
+    // Gün SABİT. "Kart son kesimden sonra eklendi" kurgusu bugünün tarihiyle
+    // kuruluyordu; kesim günü 15 olduğundan her ayın 15'inde son kesim
+    // bugün oluyor, bugün eklenen kart kesimden SONRA sayılmıyor ve iki test
+    // kırılıyordu (sınırın kendisi `card_cycle_test.dart`'ta).
+    final today = DateTime(2026, 9, 20);
+
     testWidgets('kartı olmayan cüzdanda hiç yer kaplamaz', (tester) async {
       when(() => bloc.state)
           .thenReturn(WalletLoadedSt([_wallet('bank')], _wallet('bank')));
-      await tester.pumpWidget(app(const CardContextRail()));
+      await tester.pumpWidget(app(CardContextRail(today: today)));
       expect(find.byType(GestureDetector), findsNothing);
     });
 
@@ -1012,7 +1018,7 @@ void main() {
       final other = _wallet('other', name: 'Nakit');
       when(() => bloc.state)
           .thenReturn(WalletLoadedSt([bank, card, other], bank));
-      await tester.pumpWidget(app(const CardContextRail()));
+      await tester.pumpWidget(app(CardContextRail(today: today)));
       await tester.pumpAndSettle();
 
       expect(find.text('Banka'), findsOneWidget);
@@ -1041,7 +1047,7 @@ void main() {
       final bank = _wallet('bank');
       final card = bonusCard();
       when(() => bloc.state).thenReturn(WalletLoadedSt([bank, card], card));
-      await tester.pumpWidget(app(const CardContextRail()));
+      await tester.pumpWidget(app(CardContextRail(today: today)));
       await tester.pumpAndSettle();
 
       // Defter boş: kesilmiş ekstrede ödenecek bir şey yok. Şerit "Kalan
@@ -1066,7 +1072,6 @@ void main() {
       final repo = _MockTxRepo();
       getIt.registerSingleton<TransactionsRepository>(repo);
       // Son kesimden 3 gün önceki harcama: kesilmiş ekstrededir.
-      final today = DateTime.now();
       final cycle = CardCycle(bonusCard().creditCard!);
       final spentOn =
           cycle.lastClosing(today).subtract(const Duration(days: 3));
@@ -1088,7 +1093,7 @@ void main() {
       final bank = _wallet('bank');
       final card = bonusCard();
       when(() => bloc.state).thenReturn(WalletLoadedSt([bank, card], card));
-      await tester.pumpWidget(app(const CardContextRail()));
+      await tester.pumpWidget(app(CardContextRail(today: today)));
       await tester.pumpAndSettle();
 
       expect(find.text(l10n.kkKalanDonemBorcu), findsOneWidget);
@@ -1106,7 +1111,7 @@ void main() {
           name: 'Bonus',
           balance: -2500,
           opening: -2500,
-          createdAt: DateTime.now(),
+          createdAt: today,
           card: const CreditCardInfo(
             closingDay: 15,
             dueDay: 25,
@@ -1114,7 +1119,7 @@ void main() {
             paymentWalletId: 'bank',
           ));
       when(() => bloc.state).thenReturn(WalletLoadedSt([bank, fresh], fresh));
-      await tester.pumpWidget(app(const CardContextRail()));
+      await tester.pumpWidget(app(CardContextRail(today: today)));
       await tester.pumpAndSettle();
 
       // Eskiden açılış borcunun tamamı geçen ekstreye yazılıyordu:
@@ -1134,10 +1139,10 @@ void main() {
       emptyLedger();
       final bank = _wallet('bank', name: 'Çok uzun adlı maaş hesabı cüzdanı');
       // En kalabalık şerit: tahmin tutarı + son ödeme çipi + "Ekstreyi gir".
-      final card = bonusCard().copyWith(createdAt: DateTime.now());
+      final card = bonusCard().copyWith(createdAt: today);
       when(() => bloc.state).thenReturn(
           WalletLoadedSt([bank, card, bonusCard(id: 'world')], card));
-      await tester.pumpWidget(app(const CardContextRail()));
+      await tester.pumpWidget(app(CardContextRail(today: today)));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('ctx-card-statement')), findsOneWidget);
       expect(tester.takeException(), isNull);

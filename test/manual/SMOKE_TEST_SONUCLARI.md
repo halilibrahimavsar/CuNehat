@@ -316,7 +316,10 @@ aranır. **Şema/Hive değişikliği yok.**
 değişikliği derlemeyle aynı zincirde geri alındı). Yeni fikstürler:
 `badcolor`, `c40`, `c41`. Geçici kullanıcı silindi.
 
-**Testler:** tam takım (son durum) 3.804 geçti, 2 kırık — ikisi de `CardContextRail`
-(`credit_card_ui_test.dart`), **dalın başında (`feat/acemi-turu`) da kırık**:
-test `DateTime.now()` kullanıyor ve kartın kesim günü 15; bugün 15 Ekim. Bu
-turun bulgusu değil, tarihe bağlı test kırılganlığı (ayrıca ele alınmalı).
+**Testler:** tam takım (son durum) 3.807 geçti, kırık yok. Önceki koşudaki 2
+`CardContextRail` kırığı (`credit_card_ui_test.dart`, dalın başında da kırıktı)
+tarihe bağlı test kurgusuydu: "kart son kesimden sonra eklendi" `DateTime.now()`
+ile kuruluyordu, kesim günü 15 → her ayın 15'inde son kesim bugün oluyor ve bugün
+eklenen kart kesimden sonra sayılmıyordu. Uygulama davranışı doğru (kesim o günü
+de kapsar). Şeride test için `today` verildi, grup 20 Eyl 2026'ya sabitlendi;
+sınır `card_cycle_test.dart`'ta ayrı testle kilitlendi.

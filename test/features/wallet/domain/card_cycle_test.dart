@@ -343,6 +343,21 @@ void main() {
     });
 
     test(
+        'kart kesim GÜNÜ açıldıysa türetilen dönem borcu güvenilir: kesim o '
+        'günü de kapsar, açılış borcu kesilen ekstrededir', () {
+      final s = computeCardStatus(
+        card: _card(),
+        openingBalance: -2000,
+        walletCreatedAt: DateTime(2026, 9, 15, 18, 30),
+        ledger: const [],
+        today: DateTime(2026, 9, 15),
+      );
+      expect(s.lastClosing, DateTime(2026, 9, 15));
+      expect(s.derivedReliable, isTrue);
+      expect(s.statementDebt, 2000);
+    });
+
+    test(
         'REGRESYON: kart son kesimden SONRA eklendi, ekstre yok → dönem borcu '
         'BİLİNMİYOR; açılış borcu ödenecek/gecikmiş sayılmaz', () {
       // Kesim 25 / son ödeme 5; kart 9 Ekim'de 3.000 TL borçla eklendi.

@@ -45,10 +45,14 @@ class CardContextRail extends StatelessWidget {
   /// düşündürüyordu. Yalnız durum şeridi / son ödeme bantları kalır.
   final bool showPills;
 
+  /// "Bugün" — test edilebilirlik için (bkz. [CardsStatusBuilder.today]).
+  final DateTime? today;
+
   const CardContextRail({
     super.key,
     this.pillsOnly = false,
     this.showPills = true,
+    this.today,
   }) : assert(showPills || !pillsOnly, 'hapsız "yalnız hap" kipi boş olurdu');
 
   @override
@@ -134,11 +138,13 @@ class CardContextRail extends StatelessWidget {
                 key: const ValueKey('ctx-due-bands'),
                 cards: cards,
                 wallets: state.wallets,
+                today: today,
               )
             : _CardStrip(
                 key: ValueKey('ctx-strip-${activeCard.id}'),
                 card: activeCard,
                 wallets: state.wallets,
+                today: today,
               ),
       ),
     );
@@ -273,8 +279,14 @@ class _ContextPill extends StatelessWidget {
 class _CardStrip extends StatelessWidget {
   final WalletEntity card;
   final List<WalletEntity> wallets;
+  final DateTime? today;
 
-  const _CardStrip({super.key, required this.card, required this.wallets});
+  const _CardStrip({
+    super.key,
+    required this.card,
+    required this.wallets,
+    this.today,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -293,6 +305,7 @@ class _CardStrip extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
             child: CardStatusBuilder(
               card: card,
+              today: today,
               builder: (context, status) {
                 // Dönem borcu bilinmiyor (kart son kesimden SONRA eklendi,
                 // ekstre girilmedi): ödeme çağrısı ya da gecikme YOK (bkz.
@@ -402,8 +415,14 @@ class _CardStrip extends StatelessWidget {
 class _DueBands extends StatelessWidget {
   final List<WalletEntity> cards;
   final List<WalletEntity> wallets;
+  final DateTime? today;
 
-  const _DueBands({super.key, required this.cards, required this.wallets});
+  const _DueBands({
+    super.key,
+    required this.cards,
+    required this.wallets,
+    this.today,
+  });
 
   static const int dueSoonDays = 3;
 
@@ -411,6 +430,7 @@ class _DueBands extends StatelessWidget {
   Widget build(BuildContext context) {
     return CardsStatusBuilder(
       cards: cards,
+      today: today,
       builder: (context, statuses, _) {
         final due = [
           for (final c in cards)
