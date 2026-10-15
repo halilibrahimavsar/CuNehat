@@ -100,4 +100,7 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    // MainActivity'deki enableEdgeToEdge(); eklentiler zaten bu sürümü
+    // çekiyor, burada açıkça bildiriliyor ki geçişli bağımlılığa yaslanmasın.
+    implementation("androidx.activity:activity:1.12.4")
 }
