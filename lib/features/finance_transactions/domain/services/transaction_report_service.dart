@@ -1,3 +1,4 @@
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 
@@ -120,10 +121,15 @@ class TransactionReportService {
       }
     }
 
+    // Kuruşa yuvarlanır: 0,10 + 0,20 ham toplamı 0,30000000000000004.
+    // Ekranda "0,30" görünüyordu ama toplamı eşiğe/karşılaştırmaya sokan
+    // kod ham değeri görürdü (smoke test T-55).
+    income = roundToCents(income);
+    expense = roundToCents(expense);
     return ReportTotals(
       totalIncome: income,
       totalExpense: expense,
-      net: income - expense,
+      net: roundToCents(income - expense),
     );
   }
 

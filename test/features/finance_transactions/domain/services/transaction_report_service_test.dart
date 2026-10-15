@@ -179,6 +179,17 @@ void main() {
       expect(t.totalExpense.toStringAsFixed(2), '10.00');
     });
 
+    test('toplamlar KURUŞA yuvarlanır — ham sapma dışarı sızmaz (smoke T-55)',
+        () {
+      final t = service.calculateTotals([
+        tx(DateTime(2026, 11, 14), 0.1, TransactionTypeModel.expense),
+        tx(DateTime(2026, 11, 14), 0.2, TransactionTypeModel.expense),
+      ]);
+      // Eskiden 0.30000000000000004: eşiğe ya da eşitliğe sokan kod yanılırdı.
+      expect(t.totalExpense, 0.3);
+      expect(t.net, -0.3);
+    });
+
     test('kategori dağılımı ondalık toplamı tolerans içinde', () {
       final result = service.buildCategoryBreakdown(
         [

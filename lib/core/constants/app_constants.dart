@@ -77,8 +77,24 @@ class WalletColors {
     return '0x${color.toARGB32().toRadixString(16).padLeft(8, '0').toUpperCase()}';
   }
 
+  /// Kayıtlı rengi çözer; kendi biçimimiz `0xAARRGGBB` ([colorToHex]).
+  ///
+  /// Asla fırlatmaz: değer yedekten gelir ve geri yükleme bu alanı
+  /// doğrulamıyor. Elle düzenlenmiş bir yedekteki `FFF44336` her karede
+  /// build sırasında FormatException atıyor, cüzdan başlığı kırmızı taşma
+  /// bandına dönüyordu (smoke test). `#RRGGBB`, `RRGGBB`, `AARRGGBB` de
+  /// kabul edilir; çözülemeyen değer ilk hazır renge düşer — renk para
+  /// değildir, sessiz varsayılan zararsızdır.
   static Color hexToColor(String hex) {
-    return Color(int.parse(hex));
+    var h = hex.trim();
+    if (h.startsWith('#')) {
+      h = h.substring(1);
+    } else if (h.toLowerCase().startsWith('0x')) {
+      h = h.substring(2);
+    }
+    if (h.length == 6) h = 'FF$h';
+    final value = h.length == 8 ? int.tryParse(h, radix: 16) : null;
+    return value == null ? presetColors.first : Color(value);
   }
 }
 
