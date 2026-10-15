@@ -365,6 +365,7 @@ void main() {
           () => Future<void>.delayed(const Duration(milliseconds: 10)));
       await tester.pump();
     }
+    await pumpUntilFound(tester, find.byIcon(Icons.broken_image_rounded));
 
     expect(find.byIcon(Icons.broken_image_rounded), findsOneWidget);
   });

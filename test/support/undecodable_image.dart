@@ -31,3 +31,18 @@ Future<void> writeUndecodableImage(WidgetTester tester, File file) async {
     if (ok) throw StateError('Bozuk sanılan bayt görsel olarak çözüldü');
   });
 }
+
+/// [finder] bulunana dek (en çok ~1 sn) gerçek zamana izin verip kare çizer.
+///
+/// [writeUndecodableImage] hatayı yalnız düz `FileImage` anahtarıyla önbelleğe
+/// düşürür; `cacheWidth` verilen bir `Image.file` ise `ResizeImage` anahtarı
+/// kullanır ve o önbelleği ıskalar — çözme widget'ın kendi yüklemesinde,
+/// gerçek zamanda olur. Yükleme sahte bölgede başladığı için tek bir
+/// `runAsync` beklemesi kilitlenir; gerçek zaman ve `pump` dönüşümlü verilir.
+Future<void> pumpUntilFound(WidgetTester tester, Finder finder) async {
+  for (var i = 0; i < 100 && finder.evaluate().isEmpty; i++) {
+    await tester
+        .runAsync(() => Future<void>.delayed(const Duration(milliseconds: 10)));
+    await tester.pump();
+  }
+}

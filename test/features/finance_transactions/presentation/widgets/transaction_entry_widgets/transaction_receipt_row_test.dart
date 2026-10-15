@@ -85,8 +85,7 @@ void main() {
     await pickFromCamera(tester);
 
     expect(
-      find.text(
-          'Görsel alınamadı. Kamera ve fotoğraf izinlerini kontrol et.'),
+      find.text('Görsel alınamadı. Kamera ve fotoğraf izinlerini kontrol et.'),
       findsOneWidget,
     );
     expect(controller.pickedReceipt.value, isNull);
@@ -118,7 +117,7 @@ void main() {
     controller.pickedReceipt.value = XFile(file.path);
 
     await pumpRow(tester);
-    await tester.pump();
+    await pumpUntilFound(tester, find.byIcon(Icons.broken_image_rounded));
 
     expect(find.byIcon(Icons.broken_image_rounded), findsOneWidget);
   });

@@ -334,6 +334,7 @@ class _Thumb extends StatelessWidget {
       return Image.file(
         File(p.path),
         fit: BoxFit.cover,
+        cacheWidth: _thumbCacheWidth(context),
         errorBuilder: _brokenImage,
       );
     }
@@ -342,10 +343,21 @@ class _Thumb extends StatelessWidget {
       builder: (context, snap) {
         final file = snap.data;
         if (file == null) return const ColoredBox(color: Colors.black12);
-        return Image.file(file, fit: BoxFit.cover, errorBuilder: _brokenImage);
+        return Image.file(
+          file,
+          fit: BoxFit.cover,
+          cacheWidth: _thumbCacheWidth(context),
+          errorBuilder: _brokenImage,
+        );
       },
     );
   }
+
+  /// Fiş 1600 px'e kadar kaydediliyor; 52 dp'lik kareye tam çözmek her
+  /// küçük resim için ~7 MB bellek demek. Genişliğin 2 katı: `cover` yatay
+  /// fişi de büyütüp bulanıklaştırmadan doldursun.
+  static int _thumbCacheWidth(BuildContext context) =>
+      (52 * 2 * MediaQuery.devicePixelRatioOf(context)).round();
 
   static Widget _brokenImage(BuildContext _, Object __, StackTrace? ___) =>
       const ColoredBox(

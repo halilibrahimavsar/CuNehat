@@ -673,6 +673,12 @@ class _ReceiptCard extends StatelessWidget {
                         ? Image.file(
                             file,
                             fit: BoxFit.cover,
+                            // 1600 px'lik fişi 56 dp'ye tam çözmesin; 2 kat
+                            // pay yatay fişin `cover` ile bulanıklaşmaması için.
+                            cacheWidth: (56 *
+                                    2 *
+                                    MediaQuery.devicePixelRatioOf(context))
+                                .round(),
                             // Dosya var ama çözülemiyor (yarım kalmış kopya,
                             // bozuk görsel). İşleyici yokken kare boş kalıyor
                             // ve hata "yakalanmamış" diye raporlanıyordu.
