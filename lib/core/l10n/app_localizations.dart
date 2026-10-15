@@ -10344,6 +10344,12 @@ abstract class AppLocalizations {
   /// **'Dönem başı {amount}'**
   String reportTrendBalanceStart(Object amount);
 
+  /// No description provided for @reportTrendBalanceOther.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer hareketler {amount}'**
+  String reportTrendBalanceOther(Object amount);
+
   /// No description provided for @reportFocusShareExpense.
   ///
   /// In tr, this message translates to:

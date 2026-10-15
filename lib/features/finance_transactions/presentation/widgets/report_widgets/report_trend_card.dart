@@ -1,3 +1,4 @@
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -184,7 +185,7 @@ class ReportTrendCard extends StatelessWidget {
             noPrevious: headline.noPrevious,
           ),
           const SizedBox(height: 4),
-          _Context(lines: _contextLines(context, money, m)),
+          _Context(lines: _contextLines(context, money, m, headline.amount)),
           const SizedBox(height: 14),
           Semantics(
             label: context.l10n.reportTrendSemantics(
@@ -207,6 +208,7 @@ class ReportTrendCard extends StatelessWidget {
                     previousBuckets: previousFlow?.buckets,
                     color: color,
                     showBucketDelta: !isBalance,
+                    zeroBased: !isBalance,
                   )
                 : ReportDailyNetFlowChart(
                     series: ReportSeries(
@@ -327,10 +329,16 @@ class ReportTrendCard extends StatelessWidget {
     );
   }
 
+  /// Dönem sonu bakiyesi − dönem başı − net: nete girmeyip bakiyeyi
+  /// değiştiren hareketler (para taşıma; "kartlar dahil"de karttan yapılan
+  /// harcama ters yönde).
+  double _otherMovements(double endBalance) =>
+      roundToCents(endBalance - balance.openingBalance - totals.net);
+
   /// Manşetin altındaki bağlam satırı: özet kutularının yerine geçen
   /// "diğer sayılar".
-  List<String> _contextLines(
-      BuildContext context, MoneyWriter money, TrendMetric m) {
+  List<String> _contextLines(BuildContext context, MoneyWriter money,
+      TrendMetric m, double headlineAmount) {
     final l10n = context.l10n;
     final f = focus;
     if (f != null) {
@@ -353,6 +361,12 @@ class ReportTrendCard extends StatelessWidget {
       TrendMetric.balance => [
           l10n.reportTrendBalanceStart(money(balance.openingBalance)),
           net,
+          // Satır başlıktaki bakiyeye TOPLANMALI: "Dönem başı 37.100 · Net
+          // +26.400" 63.500 ediyordu, bakiye 60.000 (aradaki −3.500 para
+          // taşıma; X-04). Kalan, nete girmeyip bakiyeyi değiştiren her şey.
+          if (_otherMovements(headlineAmount).abs() >= 0.005)
+            l10n.reportTrendBalanceOther(
+                money.withSign(_otherMovements(headlineAmount))),
         ],
     };
   }
@@ -573,6 +587,11 @@ class _TrendLineChart extends StatelessWidget {
   final Color color;
   final bool showBucketDelta;
 
+  /// Eksen sıfırdan mı başlar. Birikimli gider/gelir/net sıfırdan başlar ve
+  /// eksen de öyle olmalı; BAKİYE için değil: 60 B'lik bakiyede ±%10'luk
+  /// hareket sıfır tabanlı eksende düz bir çizgiye dönüyordu (smoke test).
+  final bool zeroBased;
+
   const _TrendLineChart({
     required this.axis,
     required this.unit,
@@ -582,6 +601,7 @@ class _TrendLineChart extends StatelessWidget {
     required this.previousBuckets,
     required this.color,
     required this.showBucketDelta,
+    this.zeroBased = true,
   });
 
   static const double _height = 180;
@@ -599,11 +619,19 @@ class _TrendLineChart extends StatelessWidget {
     var maxValue =
         values.isEmpty ? 0.0 : values.reduce((a, b) => a > b ? a : b);
     // Gider/gelir birikimi sıfırdan başlar; eksen de sıfırdan başlamalı,
-    // yoksa küçük bir artış dik bir yokuş gibi görünür.
-    if (minValue > 0) minValue = 0;
-    if (minValue == maxValue) maxValue = minValue + 10;
+    // yoksa küçük bir artış dik bir yokuş gibi görünür. Bakiye ise dönemin
+    // kendi aralığında çizilir (bkz. ReportCumulativeBalanceChart).
+    if (zeroBased && minValue > 0) minValue = 0;
+    if (minValue == maxValue) {
+      if (zeroBased) {
+        maxValue = minValue + 10;
+      } else {
+        minValue -= 10;
+        maxValue += 10;
+      }
+    }
     final pad = (maxValue - minValue) * 0.1;
-    final axisMin = minValue < 0 ? minValue - pad : 0.0;
+    final axisMin = !zeroBased || minValue < 0 ? minValue - pad : 0.0;
     final axisMax = maxValue + pad;
     final yInterval = (maxValue - minValue).abs() / 2;
     final crossesZero = minValue < 0 && maxValue > 0;

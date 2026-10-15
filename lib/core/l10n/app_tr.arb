@@ -3512,6 +3512,12 @@
       "amount": {}
     }
   },
+  "reportTrendBalanceOther": "Diğer hareketler {amount}",
+  "@reportTrendBalanceOther": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
   "reportFocusShareExpense": "Giderlerdeki payı {percent}",
   "@reportFocusShareExpense": {
     "placeholders": {

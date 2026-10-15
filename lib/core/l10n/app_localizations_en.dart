@@ -5998,6 +5998,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String reportTrendBalanceOther(Object amount) {
+    return 'Other movements $amount';
+  }
+
+  @override
   String reportFocusShareExpense(Object percent) {
     return '$percent of expenses';
   }

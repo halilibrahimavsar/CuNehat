@@ -3384,6 +3384,12 @@
     }
   },
   "reportTrendBalanceStart": "Start of period {amount}",
+  "reportTrendBalanceOther": "Other movements {amount}",
+  "@reportTrendBalanceOther": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
   "reportFocusShareExpense": "{percent} of expenses",
   "reportFocusShareIncome": "{percent} of income",
   "reportPreviousAmount": "Previous period {amount}",
