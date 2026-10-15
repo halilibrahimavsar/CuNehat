@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 /// Geliştirilmekte olan özelliklerin derleme zamanı bayrakları.
 ///
 /// **Kural:** bayrak yalnız ARAYÜZ GİRİŞLERİNİ gizler. Şema, adapter ve veri
@@ -10,12 +8,10 @@ abstract final class FeatureFlags {
   /// Kredi kartı cüzdanı (kesim/son ödeme, ekstre özeti, borç sayfası kart
   /// bölümü, taksitli harcama).
   ///
-  /// Geliştirme ve profil derlemelerinde AÇIK, Play'e giden release
-  /// derlemesinde KAPALI; açmak için
-  /// `--dart-define=CUHAT_CREDIT_CARDS=true`. Ücretsiz/Pro kararı verilmeden
-  /// ve kart ekstresi okuma gerçek örneklerle ölçülmeden açılmaz.
+  /// 1.1.0 (versionCode 9) ile release derlemesinde de AÇIK. Gerekirse
+  /// `--dart-define=CUHAT_CREDIT_CARDS=false` ile girişler yeniden gizlenir.
   static const bool creditCards = bool.fromEnvironment(
     'CUHAT_CREDIT_CARDS',
-    defaultValue: !kReleaseMode,
+    defaultValue: true,
   );
 }
