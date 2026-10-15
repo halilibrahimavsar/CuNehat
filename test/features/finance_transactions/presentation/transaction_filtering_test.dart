@@ -175,6 +175,51 @@ void main() {
     test('tutar aranmaz — "250" başlıkta geçmiyorsa eşleşmez', () {
       expect(idsOf(_filter(search: '250')), isEmpty);
     });
+
+    test('üst kategorinin adında da eşleşir (smoke T-36)', () {
+      // "fatura" yazan kullanıcı Fatura altındaki Elektrik ve Su
+      // kayıtlarını bekler; etiket haritası yalnız YAPRAK adı taşır.
+      final rows = [
+        _tx(
+            id: 'e',
+            title: 'Enerjisa',
+            tag: 'c-elektrik',
+            amount: 800,
+            date: DateTime(2026, 8, 3)),
+        _tx(
+            id: 's',
+            title: 'İSKİ',
+            tag: 'c-su',
+            amount: 200,
+            date: DateTime(2026, 8, 3)),
+        _tx(
+            id: 'm',
+            title: 'Migros',
+            tag: 'c-market',
+            amount: 650,
+            date: DateTime(2026, 8, 4)),
+      ];
+      List<String> ids(String query) => applyTransactionFilters(
+            transactions: rows,
+            currentBalance: 0,
+            filter: _filter(search: query),
+            categoryLabels: const {
+              'c-fatura': 'Fatura',
+              'c-elektrik': 'Elektrik',
+              'c-su': 'Su',
+              'c-market': 'Market',
+            },
+            categoryRoots: const {
+              'c-elektrik': 'c-fatura',
+              'c-su': 'c-fatura',
+              'c-market': 'c-market',
+            },
+          ).map((e) => e.transaction.id!).toList()
+            ..sort();
+      expect(ids('fatura'), ['e', 's']);
+      expect(ids('elektr'), ['e']);
+      expect(ids('market'), ['m']);
+    });
   });
 
   group('ek filtreler', () {

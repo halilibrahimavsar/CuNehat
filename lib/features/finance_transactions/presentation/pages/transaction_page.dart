@@ -429,6 +429,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
                         ledger: _ledger,
                         filter: state,
                         categoryLabels: _categoryLabels,
+                        categoryRoots: _categoryRoots,
                       ).length,
                       onFilterChanged: cubit.updateFilter,
                       onDateTap: () => pickSharedPeriod(builderContext),
@@ -526,6 +527,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
       ledger: ledger,
       filter: filter,
       categoryLabels: _categoryLabels,
+      categoryRoots: _categoryRoots,
       applyDateWindow: false,
     ).length;
   }
@@ -586,6 +588,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
               ledger: ledger,
               filter: filterState,
               categoryLabels: _categoryLabels,
+              categoryRoots: _categoryRoots,
             );
 
             final period = DateTimeRange(

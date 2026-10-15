@@ -39,7 +39,9 @@ List<TransactionWithBalance> buildLedger({
 ///
 /// [categoryLabels] `tag` → görünen ad; arama kategori ADINDA da eşleşsin diye
 /// gerekir (kullanıcı "market" yazınca başlığı "ŞOK 4712" olan satır da
-/// gelmeli).
+/// gelmeli). [categoryRoots] `tag` → kök kategori kimliği: arama ÜST
+/// kategorinin adında da eşleşir ("fatura" → Elektrik ve Su satırları;
+/// kategori süzgecinde kök seçmek de alt kategorileri getiriyor).
 ///
 /// [applyDateWindow] false verilirse dönem UYGULANMAZ; takvim görünümü tüm
 /// geçmişi görür ve dönemi kendi çizer.
@@ -47,6 +49,7 @@ List<TransactionWithBalance> filterLedger({
   required List<TransactionWithBalance> ledger,
   required CombinedFilter filter,
   Map<String, String> categoryLabels = const {},
+  Map<String, String> categoryRoots = const {},
   bool applyDateWindow = true,
 }) {
   final mode = filter.viewFilter.financeMode;
@@ -84,7 +87,8 @@ List<TransactionWithBalance> filterLedger({
     if (onlyWithReceipt && (t.receiptFileName?.isEmpty ?? true)) return false;
     if (onlyImported && !t.isFromBankStatement) return false;
 
-    if (query.isNotEmpty && !_matchesQuery(t, query, categoryLabels)) {
+    if (query.isNotEmpty &&
+        !_matchesQuery(t, query, categoryLabels, categoryRoots)) {
       return false;
     }
 
@@ -99,6 +103,7 @@ List<TransactionWithBalance> applyTransactionFilters({
   required double currentBalance,
   required CombinedFilter filter,
   Map<String, String> categoryLabels = const {},
+  Map<String, String> categoryRoots = const {},
   bool applyDateWindow = true,
 }) {
   return filterLedger(
@@ -108,21 +113,29 @@ List<TransactionWithBalance> applyTransactionFilters({
     ),
     filter: filter,
     categoryLabels: categoryLabels,
+    categoryRoots: categoryRoots,
     applyDateWindow: applyDateWindow,
   );
 }
 
-/// Arama alanları: başlık, kategorinin görünen adı ve (varsa) bankanın dekont
-/// numarası. Tutar bilerek DIŞARIDA — "500" yazan kullanıcı 1.500 ve 5.000'i
-/// de eşleştirip listeyi gürültüye boğuyor; tutar için tutar aralığı var.
+/// Arama alanları: başlık, kategorinin ve üst kategorisinin görünen adı ve
+/// (varsa) bankanın dekont numarası. Tutar bilerek DIŞARIDA — "500" yazan
+/// kullanıcı 1.500 ve 5.000'i de eşleştirip listeyi gürültüye boğuyor; tutar
+/// için tutar aralığı var.
 bool _matchesQuery(
   TransactionEntity t,
   String foldedQuery,
   Map<String, String> categoryLabels,
+  Map<String, String> categoryRoots,
 ) {
   if (matchesFolded(t.title, foldedQuery)) return true;
   final label = categoryLabels[t.tag] ?? t.tag;
   if (matchesFolded(label, foldedQuery)) return true;
+  final root = categoryRoots[t.tag];
+  if (root != null && root != t.tag) {
+    final rootLabel = categoryLabels[root] ?? root;
+    if (matchesFolded(rootLabel, foldedQuery)) return true;
+  }
   final reference = t.reference;
   if (reference != null && matchesFolded(reference, foldedQuery)) return true;
   return false;
