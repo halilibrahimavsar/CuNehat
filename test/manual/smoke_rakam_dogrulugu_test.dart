@@ -10,6 +10,9 @@ import 'package:cunehat/features/finance_transactions/domain/services/report_ser
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_analytics_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/transaction_period.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
+import 'package:cunehat/features/finance_transactions/presentation/transaction_filtering.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/wallet/domain/card_cycle.dart';
 import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
 import 'package:flutter/material.dart' show DateTimeRange;
@@ -183,6 +186,33 @@ void main() {
     ];
     final v = rep.calculateTotals(l).totalExpense;
     expect(formatMoneyNumber(v).replaceAll(',', '.'), '0.30', reason: 'T-55 (ham: $v)');
+    // Bölüm E: toplam artık kuruşa yuvarlı (eskiden 0.30000000000000004).
+    expect(v, 0.3, reason: 'T-55 ham değer');
+  });
+
+  test('T-36 arama üst kategori adında da eşleşir', () {
+    List<String> ids(String q) => applyTransactionFilters(
+          transactions: banka,
+          currentBalance: 60000,
+          filter: CombinedFilter(
+            viewFilter: ViewFilter(
+              financeMode: FinanceMode.compare,
+              startDate: octRange.start,
+              endDate: DateTime(2026, 10, 31, 23, 59, 59),
+            ),
+            dataFilter: DataFilter(searchQuery: q),
+          ),
+          categoryLabels: const {
+            'fatura': 'Fatura',
+            'elektrik': 'Elektrik',
+            'su': 'Su',
+            'market': 'Market',
+          },
+          categoryRoots: root,
+        ).map((e) => e.transaction.id!).toList()
+          ..sort();
+    expect(ids('fatura'), ['A10', 'A9'], reason: 'T-36');
+    expect(ids('elektr'), ['A9'], reason: 'T-35');
   });
 
   test('R-01..R-06 özet kartları + kıyas', () {
@@ -194,7 +224,10 @@ void main() {
         rep.splitSystemMovements(banka).spending, w.start, w.end));
     expect(prev.totalIncome, 30000, reason: 'R-01');
     expect(prev.totalExpense, 2000, reason: 'R-02');
-    expect((3600 - 2000) / 2000, 0.8);
+    final cur = rep.calculateTotals(rep.splitSystemMovements(oct).spending);
+    expect(cur.totalExpense, 3600);
+    expect((cur.totalExpense - prev.totalExpense) / prev.totalExpense, 0.8,
+        reason: 'R-02 ↑%80');
     expect(26400 / 30000, closeTo(0.88, 1e-9), reason: 'R-03');
     // Ağustos boş
     final aw = comparisonWindowFor(sepRange, now: today)!;
@@ -327,6 +360,16 @@ void main() {
         rangeStart: octRange.start, rangeEnd: octRange.end,
         currentDateOverride: today);
     expect(q.categorySpike, isNull, reason: 'I-26');
+  });
+
+  test('C-52 ekstre döneminde kayıt tarihi (İçgörü = İşlemler = 1.400)', () {
+    // Kart bağlamında dönem bir EKSTRE ise İçgörü/Rapor ödeme gününe
+    // taşımaz (sayfa kararı, bkz. transaction_insights_page `_analysisOf`).
+    final x = ana.analyze(kart(),
+        rangeStart: DateTime(2026, 9, 26),
+        rangeEnd: DateTime(2026, 10, 25, 23, 59, 59),
+        currentDateOverride: today);
+    expect(x.totalExpense, 1400, reason: 'C-52');
   });
 
   test('I-30 kart İçgörü ödeme gününe göre', () {

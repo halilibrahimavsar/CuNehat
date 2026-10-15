@@ -285,3 +285,38 @@ etiketsiz, fark uyarısı/kıyas rozeti yön söylemiyor, bakiye grafiği 0'dan
 başlıyor, bakiye alt satırı toplanmıyor (not 3), çubuk grafik semantik etiketi
 (not 4), tutar alanında bir kez "4.400" (doğrulanmadı), geri yükleme
 `colorHex` doğrulamıyor.
+
+---
+
+# Bölüm E — Çözümler (15 Eki 2026, dal `fix/smoke-bulgulari`)
+
+Kararlar (kullanıcı, 15 Eki): C-52 → ekstre döneminde kayıt tarihi; R-43 → tam
+aylarda ay sayısı; T-51 → düzenlemeye de Geri al; T-36 → üst kategori adı da
+aranır. **Şema/Hive değişikliği yok.**
+
+| Bulgu | Çözüm | Commit | Cihaz |
+|---|---|---|---|
+| C-52 aynı ekstre başlığında 1.400 / 1.500 | Ekstre döneminde İçgörü/Rapor `datedByPayment` uygulamaz; takvim ayında sürer | `c2538e7a` | ✅ ekstre 26 Eyl–25 Eki: İşlemler = İçgörü = Rapor **1.400**; "Bu ay" (Ekim) İçgörü/Rapor 1.500 |
+| R-43 yıllık bütçe 23.983,57 | `DateRangeHelper.wholeMonthCount`; tam aylarda limit × ay; not "N aya göre" | `b8cfdad8`, `0128072a` | ✅ "Bu yıl": Market 3.750 / **24.000** (%16), "Aylık limitler 12 aya göre hesaplandı." |
+| T-36 "fatura" sonuç vermiyor | Arama kök kategorinin etiketinde de eşleşir | `0fb94358` | ✅ "fatura" → Elektrik 800 + Su 200, gider 1.000 |
+| T-51 düzenlemede Geri al yok | `TransactionEditUndo`; fiş değiştiyse sunulmaz | `44079b9d` | ✅ A12 650→1.650 → "Geri al" → "Değişiklik geri alındı"; Banka 60.000, gider 3.600, 9 işlem, Market %51 |
+| Fark uyarısı yönsüz (C-40/41) | Eksik / fazla için iki ayrı cümle | `a247bd76` | ✅ 1.550: "Ekstre kayıtlarından 50,00 ₺ fazla…"; 1.450: "Kayıtların ekstreden 50,00 ₺ fazla…" |
+| Limit çubuğu etiketsiz | "Limit kullanımı, %7 · 3.400 / 50.000" | `a247bd76` | ✅ "%7 · 3.400,00 ₺ / 50.000,00 ₺, Limit kullanımı" |
+| Kıyas rozeti yönsüz | "%80 arttı / azaldı" | `a247bd76` | ✅ "%80 arttı" |
+| Çubuk grafik "toplam gelir 0,00" | Tek seride yalnız o seri söylenir | `a247bd76` | ✅ "Gider grafiği: 15 dönem, toplam 3.600,00 ₺" |
+| Bakiye ekseni 0'dan | Bakiye kendi aralığında çizilir | `3c051b18` | ✅ eksen ~59 B'den; çizgi 67.100 → 60.000 görünür iniyor |
+| X-04 alt satır toplanmıyor | "Diğer hareketler −3.500" | `3c051b18` | ✅ "Dönem başı 37.100 · Net +26.400 · Diğer hareketler −3.500" (= 60.000) |
+| Geri yükleme `colorHex` doğrulamıyor | `hexToColor` fırlatmaz; `#RRGGBB`/`AARRGGBB` çözülür, bozuk → ilk hazır renk | `ecc8d518` | ✅ `FF2196F3` mavi, `#4CAF50` yeşil, `kırmızı` → varsayılan; logcat'te FormatException/taşma yok |
+| T-55 ham 0,30000000000000004 | `calculateTotals` kuruşa yuvarlar | `ecc8d518` | (servis testi) |
+| Tutar alanında bir kez "4.400" | Widget testinde 4 klavye dizisiyle **üretilemedi** → adb girişi kaynaklı sayıldı; kod değişmedi, diziler testle kilitlendi | `ecc8d518` | — |
+| R-01 %0 rozeti / I-02, I-05, X-03 yüzeyi / C-28 ileri tarih | Kod doğru, yönerge eskiydi → `SMOKE_TEST_RAKAM_DOGRULUGU.md` güncellendi | `docs` commit (aşağıda) | — |
+
+**Cihaz:** emülatör (API 33), geçici kullanıcı, release-as-`.dev` x86_64
+(debug APK 153 MB emülatörde yer bulamadı → R8'li 29 MB eşi; gradle
+değişikliği derlemeyle aynı zincirde geri alındı). Yeni fikstürler:
+`badcolor`, `c40`, `c41`. Geçici kullanıcı silindi.
+
+**Testler:** tam takım (son durum) 3.804 geçti, 2 kırık — ikisi de `CardContextRail`
+(`credit_card_ui_test.dart`), **dalın başında (`feat/acemi-turu`) da kırık**:
+test `DateTime.now()` kullanıyor ve kartın kesim günü 15; bugün 15 Ekim. Bu
+turun bulgusu değil, tarihe bağlı test kırılganlığı (ayrıca ele alınmalı).

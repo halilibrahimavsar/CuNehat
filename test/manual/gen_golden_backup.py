@@ -31,12 +31,17 @@ def mk(V):
     if V=='cstmt2': ccA=card(off=None)
     if V=='cstmt3': ccA=card(off=None,stmt=stmt('2026-09-25','2026-10-05'))
     if V=='c33': ccA=card(stmt=stmt('2026-09-25','2026-10-05'))
+    if V=='c40': ccA=card(stmt=stmt('2026-09-25','2026-10-05',bal=1550.0))
+    if V=='c41': ccA=card(stmt=stmt('2026-09-25','2026-10-05',bal=1450.0))
     if V=='cstmt4': ccA=card(off=None,stmt=stmt('2026-09-25','2026-10-07'))
     wallets=[w('A','Banka',10000.0,'2026-08-01T09:00:00.000',order=0),
              w('B','Nakit',2000.0,'2026-08-01T09:00:00.000',order=1,color='0xFF4CAF50'),
              w('K','Kart',0.0,'2026-09-01T09:00:00.000',cc=ccA,order=2,color='0xFFF44336')]
     if V=='c43':
         wallets[2]=w('K','Kart',-3000.0,'2026-10-10T09:00:00.000',cc=ccA,order=2,color='0xFFF44336')
+    if V=='badcolor':
+        # Elle düzenlenmiş yedek: renk bizim 0xAARRGGBB biçiminde değil.
+        wallets[0]['colorHex']='FF2196F3'; wallets[1]['colorHex']='#4CAF50'; wallets[2]['colorHex']='kırmızı'
     t('A1','A','09-01','c-maas',30000,True,'Maaş'); t('A2','A','09-04','c-market',1000,False,'Market')
     t('A3','A','09-08','c-elektrik',700,False,'Elektrik'); t('A4','A','09-12','c-yemek',300,False,'Yemek')
     t('A5','A','09-20','c-market',900,False,'Market'); t('A6','A','10-01','c-maas',30000,True,'Maaş')
@@ -85,6 +90,6 @@ def mk(V):
         bud=[]
     return dict(version=16,timestamp='2026-10-15T03:00:00.000',wallets=wallets,transactions=txs,investments=[],
       debts=[],receivables=[],budgets=bud,recurringTransactions=rec,users={},categories=cats,goals=[])
-for V in ['base','x53','r06','r13','r14','i21','i22','edge','cedge','newuser','cstmt1','cstmt2','cstmt3','cstmt4','c43','c33','i26','t43']:
+for V in ['base','x53','r06','r13','r14','i21','i22','edge','cedge','newuser','cstmt1','cstmt2','cstmt3','cstmt4','c43','c33','i26','t43','badcolor','c40','c41']:
     json.dump(mk(V),open(f'golden_{V}.json','w'),ensure_ascii=False)
 print('ok')

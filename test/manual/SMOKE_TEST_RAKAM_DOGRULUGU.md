@@ -117,7 +117,7 @@ harcama sayılmaz).
 | T-33 | Kategori = Market | A7, A12 → toplam 1.850 | |
 | T-34 | Tutar aralığı 400–900 | A9 (800), A11 (450), A12 (650) | |
 | T-35 | Arama "elektr" | A9 (başlık) | |
-| T-36 | Arama "fatura" | **boş** — arama kategori ADINDA eşleşir, Elektrik'in adı "Elektrik"; kök adı aranmaz (⚠️ beklenti bu mu?) | |
+| T-36 | Arama "fatura" | **A9 + A10** (Elektrik 800 + Su 200) — arama üst kategorinin adında da eşleşir (karar 15 Eki, `0fb94358`) | |
 | T-37 | Arama "500" | Tutara göre ARAMAZ → boş | |
 | T-38 | Filtreler açıkken özet şeridi | Görünen satırlardan hesaplanır (T-33'te gider 1.850) | |
 
@@ -135,7 +135,7 @@ harcama sayılmaz).
 | ID | Adım | Beklenen | Sonuç |
 |---|---|---|---|
 | T-50 | A12'yi 650 → 1.650 yap | Gider 4.600, Market %62, bakiye 59.000 — **sayfa yenilemeden** | |
-| T-51 | Geri al (T-50'yi eski haline) | Tüm rakamlar T-10…T-15'e döner | |
+| T-51 | Düzenleme snackbar'ındaki **"Geri al"** (T-50'yi eski haline) | Tüm rakamlar T-10…T-15'e döner; "Değişiklik geri alındı". Fiş değiştirilen düzenlemede Geri al **sunulmaz** (`44079b9d`) | |
 | T-52 | A14'ü sil → snackbar "Geri al" | Gider 3.300 → geri alınca 3.600; bakiye 60.300 → 60.000 | |
 | T-53 | 20 Eki'ye (ileri tarih) Market 500 ekle | Ekim gider **4.100**; bakiye satırı 59.500 | |
 | T-54 | Saat sınırı: 31 Eki 23:59'a 10,00 gider | Ekim'de görünür, Kasım'da görünmez | |
@@ -155,7 +155,7 @@ Kaynak: `transaction_report_service.dart`, `report_series_service.dart`
 
 | ID | Kart | Beklenen | Sonuç |
 |---|---|---|---|
-| R-01 | Gelir | **30.000,00**, rozet **%0** (1–15 Eyl gelir 30.000) | |
+| R-01 | Gelir | **30.000,00**; değişim %0 → rozet **görünmez** (`ReportChangeBadge.minPercent` = 1 altı gizli) | |
 | R-02 | Gider | **3.600,00**, rozet **↑ %80** (1–15 Eyl gider 2.000 = A2+A3+A4; A5 20 Eyl pencere DIŞI) — kötü renk | |
 | R-03 | Net | **26.400,00**, alt satır "%88 birikim" | |
 | R-04 | Eylül (geçmiş dönem) | Gelir 30.000 · Gider 2.900 · Net 27.100 · "%90 birikim"; Ağustos boş → rozet yüzdesiz "yeni" | |
@@ -202,7 +202,7 @@ Kaynak: `transaction_report_service.dart`, `report_series_service.dart`
 | R-40 | Ekim | 1.850 / 2.000 = **%92,5**, orantılama notu YOK | |
 | R-41 | Hafta 05–11 Eki | Limit 2.000 × 7/30,4375 = **459,96**; harcama 650 → **%141 aşıldı**; "7 günlük döneme orantılandı" notu | |
 | R-42 | 15 Eyl – 14 Eki (ay uzunluğu) | Limit **2.000** (orantılanmaz); Market 1.850 + A5 900 = 2.750 → %137,5 | |
-| R-43 | Bu Yıl | Limit 2.000 × 365/30,4375 = **23.983,57** (kod yorumu "12 katı" diyor → 24.000 beklenir) ⚠️ karar | |
+| R-43 | Bu Yıl | Limit 2.000 × 12 = **24.000** (tam aylardan oluşan aralık → ay sayısı); not "Aylık limitler 12 aya göre hesaplandı." (karar 15 Eki, `b8cfdad8`) | |
 | R-44 | Elektrik'e 500 bütçe | 800/500 = %160 (alt kategori kendi bütçesiyle ölçülür) | |
 
 ---
@@ -218,14 +218,14 @@ kayıttan öncesine uzanmaz (`trackingSince`).
 | ID | Kart | Beklenen | Hesap | Sonuç |
 |---|---|---|---|---|
 | I-01 | Gelir / Gider / Net | 30.000 / **3.600** / 26.400 | sistem hariç | |
-| I-02 | Birikim oranı | **%88** | 26.400 / 30.000 | |
+| I-02 | Birikim oranı | **%88** — İçgörü'de kart YOK (Acemi turu); Rapor Net ölçüsünün alt satırında "%88 birikim" | 26.400 / 30.000 | |
 | I-03 | Günlük ortalama | **240,00** "15 gün üzerinden" | 3.600 / 15 | |
 | I-04 | En çok harcanan gün | **Cumartesi, 825,00** (2 Cumartesi) | Cmt 3+10 Eki = 1.650 / 2; Cuma 600; Salı 225; Çrş 150 | |
-| I-05 | En çok kategori | Market 1.850 | | |
+| I-05 | En çok kategori | Market 1.850 — İçgörü'de kart YOK; İşlemler "En çok" satırı ve Rapor kategori halkası | | |
 | I-06 | En büyük harcama | Market 1.200 (02 Eki) — transfer 2.000 **olmamalı** | | |
 | I-07 | Günde ne kadar harcayabilirim | **1.552,94** × 17 gün | 26.400 / (15→31 Eki = 17 gün) | |
 | I-08 | Sıçrama uyarısı | **Market %85** "önceki 15 gün" (1.850 vs 1.000) | Fatura %43, Yemek %50; Ulaşım öncesi 0 → aday değil | |
-| I-09 | Kıyas rozetleri | Rapor R-01/R-02 ile **aynı** (%0, ↑%80) | ortak `comparisonWindowFor` | |
+| I-09 | Kıyas rozetleri | İçgörü'de rozet YOK; Rapor R-02 ↑%80 (R-01 %0 gizli) | ortak `comparisonWindowFor` | |
 | I-10 | "2 para taşıma sayılmadı" | 2 | | |
 
 ### 3.2 Varyasyonlar
@@ -282,7 +282,7 @@ Kaynak: `card_cycle.dart` (`CardCycle`, `computeCardStatus`, faiz tahminleri),
 | C-25 | Ayar silinip yalnız beyan (25/09 → 05/10 = 10 gün) kalsın | Kural türetilir: 25 Eki → 04 Kas | |
 | C-26 | Beyan farkı 12 gün (25/09 → 07/10) | Sonraki aylar **10 gün** ile hesaplanır (geç göstermemek için) | |
 | C-27 | Taksit bölme kuruşu: 1.000,00 × 3 | 333,33 · 333,33 · **333,34** (toplam tam 1.000,00) | |
-| C-28 | 31 Ocak'ta 3 taksit | 31 Oca · 28 Şub · **31 Mar** | |
+| C-28 | 31 Ocak'ta 3 taksit | 31 Oca · 28 Şub · **31 Mar** — işlem formu İLERİ tarih almaz (`transaction_when_row.dart` `lastDate: now`); cihazda eşdeğeri: 31 Ağu → 30 Eyl → 31 Eki | |
 | C-29 | Taksit grubunu düzenle: toplam 3.000 → 3.300 | 1.100 × 3; ileri taksitler + C-09 güncellenir | |
 
 ### 4.3 Gecikme, devir, faiz (veri setinde K6 tutarını değiştirerek)
@@ -302,8 +302,8 @@ ekstre **1.500**, asgari **450**, son ödeme 05 Eki.
 
 | ID | Senaryo | Beklenen | Sonuç |
 |---|---|---|---|
-| C-40 | Beyan ekstre 1.550 (defter 1.500) | Fark **+50** "defterde eksik harcama" | |
-| C-41 | Beyan 1.450 | Fark **−50** "fazla/çift kayıt" | |
+| C-40 | Beyan ekstre 1.550 (defter 1.500) | "Ekstre kayıtlarından 50,00 ₺ fazla: kartta yazılmamış bir harcama olabilir." | |
+| C-41 | Beyan 1.450 | "Kayıtların ekstreden 50,00 ₺ fazla: çift ya da bu ekstreye girmeyen bir kayıt olabilir." | |
 | C-42 | Beyan 1.500 | Fark uyarısı **yok** | |
 | C-43 | Yeni kart, oluşturma **10 Eki**, açılış borcu 3.000, beyan yok | Dönem borcu **bilinmiyor** → kalan 0, **gecikti/bildirim YOK**, "ekstreyi gir" önerisi; toplam borç 3.000 | |
 
@@ -313,7 +313,7 @@ ekstre **1.500**, asgari **450**, son ödeme 05 Eki.
 |---|---|---|---|
 | C-50 | A8 ve K6 | Aynı tutar, aynı gün, birbirine bağlı; birini silmek ikisini birden kaldırır | |
 | C-51 | A8'i sil | Banka 61.500; kart borcu 4.900, kalan ekstre 1.500 → **gecikti** (10 gün) | |
-| C-52 | Kart cüzdanı İşlemler, Ekim özeti | Gider **1.400** (K7 + ileri tarihli K4; KAYIT tarihine göre) — Rapor/İçgörü Ekim'de **1.500** (ÖDEME tarihine göre). ⚠️ Bilinçli fark mı? Kullanıcıya açıklanıyor mu? | |
+| C-52 | Kart cüzdanı, dönem **"Ekstre · 26 Eyl – 25 Eki"** | İşlemler = İçgörü = Rapor gider **1.400** (K3 + K7; ekstre döneminde KAYIT tarihi). Takvim ayı **Ekim**'de İçgörü/Rapor **1.500** (ödeme gününe göre, I-30). Karar 15 Eki, `c2538e7a` | |
 | C-53 | Kart harcaması Banka bakiyesini | Değiştirmez; yalnız ödeme (A8) değiştirir | |
 
 ---
@@ -326,8 +326,8 @@ Aynı soruya iki ekranın aynı cevabı vermesi:
 |---|---|---|---|
 | X-01 | İşlemler şeridi gider ↔ Rapor gider ↔ İçgörü gider (Banka, Ekim) | **3.600 = 3.600 = 3.600** | |
 | X-02 | "En çok:" yüzdeleri ↔ Rapor kategori yüzdeleri | Aynı kırılım (%51/%28/%13) | |
-| X-03 | Rapor kıyas rozeti ↔ İçgörü kıyas rozeti | %0 / ↑%80 her ikisinde | |
-| X-04 | Rapor bakiye çizgisi sonu ↔ cüzdan bakiyesi | 60.000 = 60.000 | |
+| X-03 | Rapor kıyas rozeti ↔ İşlemler/İçgörü | İçgörü'de rozet YOK; Rapor ↑%80, erişilebilirlikte "%80 arttı" | |
+| X-04 | Rapor bakiye çizgisi sonu ↔ cüzdan bakiyesi | 60.000 = 60.000; alt satır "Dönem başı 37.100 · Net +26.400 · Diğer hareketler −3.500" (toplamı 60.000) | |
 | X-05 | Rapor bütçe kartı ↔ Bütçeler sayfası (Ekim) | %92,5 = %92,5 | |
 | X-06 | Kart rozeti borcu ↔ kart sayfası ↔ Borç özeti | 3.400 her yerde | |
 | X-07 | Kategori alt sayfası toplamı ↔ pasta dilimi | Market 1.850 = 1.850 | |
