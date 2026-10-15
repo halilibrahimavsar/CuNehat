@@ -283,19 +283,29 @@ class _InsightsViewState extends State<_InsightsView> {
   /// Analiz kopyası: kart cüzdanında harcamalar ÖDEME gününe taşınır
   /// ([datedByPayment]) — İçgörü de Rapor gibi kart harcamasını ödendiği
   /// aya sayar. Kimliğe göre önbelleklenir.
+  ///
+  /// Dönem bir EKSTRE dönemiyse taşınmaz: ekstre zaten faturanın kendisidir,
+  /// "26 Eyl – 25 Eki" o aralıkta yapılan harcamadır. Taşınınca aralığa
+  /// önceki ekstrenin harcaması düşüyordu — aynı başlık altında İşlemler
+  /// 1.400, İçgörü 1.500 (cihazda görüldü, smoke test C-52).
   List<TransactionEntity>? _analysisSourceRaw;
   WalletEntity? _analysisSelf;
+  bool? _analysisStatement;
   List<TransactionEntity> _analysisList = const [];
 
   List<TransactionEntity> _analysisOf(List<TransactionEntity> raw) {
     final self = context.walletById(widget.walletId);
-    if (identical(_analysisSourceRaw, raw) && identical(_analysisSelf, self)) {
+    final statement = context.read<TransactionFilterCubit>().isStatementPeriod;
+    if (identical(_analysisSourceRaw, raw) &&
+        identical(_analysisSelf, self) &&
+        _analysisStatement == statement) {
       return _analysisList;
     }
     _analysisSourceRaw = raw;
     _analysisSelf = self;
+    _analysisStatement = statement;
     final card = FeatureFlags.creditCards ? self?.creditCard : null;
-    _analysisList = card == null ? raw : datedByPayment(raw, card);
+    _analysisList = card == null || statement ? raw : datedByPayment(raw, card);
     return _analysisList;
   }
 

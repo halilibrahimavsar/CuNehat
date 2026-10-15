@@ -294,26 +294,36 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   /// kartın (ya da "kartlar dahil" hesabın) harcamasını parasının ödendiği
   /// aya sayar. Kayıtların kendisi değişmez; CSV ve ayrıntı listesi ham
   /// tarihi gösterir ([_rawOf]).
+  ///
+  /// Kartın KENDİ dönemi bir ekstre dönemiyse kendi harcaması taşınmaz:
+  /// ekstre o aralıkta yapılan harcamadır (bkz. İçgörü'deki `_analysisOf`,
+  /// smoke test C-52).
   List<TransactionEntity>? _mergeAccountSource;
   List<TransactionEntity>? _mergeCardSource;
   WalletEntity? _mergeSelf;
   bool? _mergeIncludeCards;
+  bool? _mergeStatement;
   List<TransactionEntity> _merged = const [];
 
   List<TransactionEntity> _analysisSource(List<TransactionEntity> account) {
     final self = context.walletById(widget.walletId);
+    final statement = context.read<TransactionFilterCubit>().isStatementPeriod;
     if (identical(_mergeAccountSource, account) &&
         identical(_mergeCardSource, _cardLedger) &&
         identical(_mergeSelf, self) &&
-        _mergeIncludeCards == _includeCards) {
+        _mergeIncludeCards == _includeCards &&
+        _mergeStatement == statement) {
       return _merged;
     }
     _mergeAccountSource = account;
     _mergeCardSource = _cardLedger;
     _mergeSelf = self;
     _mergeIncludeCards = _includeCards;
+    _mergeStatement = statement;
     final selfCard = FeatureFlags.creditCards ? self?.creditCard : null;
-    final base = selfCard == null ? account : datedByPayment(account, selfCard);
+    final base = selfCard == null || statement
+        ? account
+        : datedByPayment(account, selfCard);
     _merged = _includeCards
         ? mergeCardSpending(account: base, cards: _cardLedger)
         : base;

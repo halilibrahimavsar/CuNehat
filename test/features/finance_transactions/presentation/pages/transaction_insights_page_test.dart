@@ -1,6 +1,10 @@
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/budgets/domain/repositories/budget_repository.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_summary_cards.dart';
+import 'package:cunehat/features/wallet/domain/card_cycle.dart';
+import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
+import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/main_feature/controllers/home_navigation_requests.dart';
 import 'package:cunehat/features/finance_transactions/domain/transaction_period.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
@@ -51,6 +55,9 @@ class MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
 class MockCategoryRepository extends Mock implements CategoryRepository {}
 
 class _MockBudgetRepository extends Mock implements BudgetRepository {}
+
+class _MockWalletBloc extends MockBloc<WalletEvent, WalletState>
+    implements WalletBloc {}
 
 void main() {
   late MockTransactionBloc bloc;
@@ -575,6 +582,89 @@ void main() {
       // uyarısına dönerdi.
       expect(find.byType(DailySafeToSpendCard), findsOneWidget);
       expect(find.byType(InsightOverspentCard), findsNothing);
+    });
+  });
+
+  group('kart cüzdanı', () {
+    // Smoke test C-52: aynı "Ekstre · …" başlığı altında İşlemler bu
+    // ekstrenin harcamasını (kayıt tarihi), İçgörü ise ödeme gününe taşınmış
+    // ÖNCEKİ ekstrenin harcamasını gösteriyordu.
+    const info =
+        CreditCardInfo(closingDay: 25, dueDay: 5, paymentWalletId: 'bank');
+    final cycle = CardCycle(info);
+    final current = cycle.periodContaining(now);
+    final previous =
+        cycle.periodContaining(current.start.subtract(const Duration(days: 1)));
+
+    Future<TransactionFilterCubit> pumpCard(WidgetTester tester) async {
+      final card = WalletEntity(
+        id: 'w',
+        userId: 'u',
+        name: 'Kart',
+        balance: 0,
+        debt: 0,
+        credit: 0,
+        investment: 0,
+        colorHex: '0xFFF44336',
+        iconName: 'wallet',
+        createdAt: DateTime(2025, 1, 1),
+        openingBalance: 0,
+        creditCard: info,
+      );
+      final walletBloc = _MockWalletBloc();
+      when(() => walletBloc.state).thenReturn(WalletLoadedSt([card], card));
+      DateTime noon(DateTime d) => DateTime(d.year, d.month, d.day, 12);
+      seed([
+        tx(id: 'onceki', date: noon(previous.start), amount: 1000),
+        tx(id: 'bu', date: noon(current.start), amount: 400),
+      ]);
+      tester.view.physicalSize = const Size(360, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      final cubit = TransactionFilterCubit();
+      await tester.pumpWidget(BlocProvider<WalletBloc>.value(
+        value: walletBloc,
+        child: BlocProvider<TransactionFilterCubit>.value(
+          value: cubit,
+          child: BlocProvider<AmountVisibilityCubit>.value(
+            value: visibility,
+            child: MaterialApp(
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [Locale('tr'), Locale('en')],
+              locale: const Locale('tr'),
+              theme: ThemeData(fontFamily: kRealFontFamily),
+              home: const TransactionInsightsPage(userId: 'u', walletId: 'w'),
+            ),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      return cubit;
+    }
+
+    testWidgets('ekstre döneminde harcama KAYIT tarihiyle sayılır (C-52)',
+        (tester) async {
+      final cubit = await pumpCard(tester);
+      expect(cubit.isStatementPeriod, isTrue);
+      expect(find.textContaining('400,00'), findsWidgets);
+      expect(find.textContaining('1.000,00'), findsNothing);
+    });
+
+    testWidgets('takvim ayında harcama ÖDENDİĞİ aya sayılır', (tester) async {
+      final cubit = await pumpCard(tester);
+      final due = cycle.dueFor(previous.end);
+      cubit.setPeriod(DateTimeRange(
+        start: DateTime(due.year, due.month, 1),
+        end: DateTime(due.year, due.month + 1, 0, 23, 59, 59),
+      ));
+      await tester.pumpAndSettle();
+      expect(cubit.isStatementPeriod, isFalse);
+      expect(find.textContaining('1.000,00'), findsWidgets);
     });
   });
 }

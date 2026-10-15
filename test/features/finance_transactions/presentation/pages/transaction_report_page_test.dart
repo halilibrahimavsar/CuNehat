@@ -30,6 +30,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/repor
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_daily_net_flow_chart.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
+import 'package:cunehat/features/wallet/domain/card_cycle.dart';
 import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
@@ -145,23 +146,25 @@ void main() {
   }
 
   Widget buildTestableWidget(Widget child) {
-    return BlocProvider<TransactionFilterCubit>(create: (_) => TransactionFilterCubit(), child: BlocProvider<AmountVisibilityCubit>(
-      create: (_) => AmountVisibilityCubit(),
-      child: MaterialApp(
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: const [
-          Locale('tr'),
-          Locale('en'),
-        ],
-        locale: const Locale('tr'),
-        home: child,
-      ),
-    ));
+    return BlocProvider<TransactionFilterCubit>(
+        create: (_) => TransactionFilterCubit(),
+        child: BlocProvider<AmountVisibilityCubit>(
+          create: (_) => AmountVisibilityCubit(),
+          child: MaterialApp(
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('tr'),
+              Locale('en'),
+            ],
+            locale: const Locale('tr'),
+            home: child,
+          ),
+        ));
   }
 
   testWidgets(
@@ -303,7 +306,8 @@ void main() {
     final bars = tester
         .widget<ReportDailyNetFlowChart>(find.byType(ReportDailyNetFlowChart));
     expect(bars.showExpense, isTrue);
-    expect(bars.showIncome, isFalse, reason: 'Gider ölçüsünde gelir çubuğu yok');
+    expect(bars.showIncome, isFalse,
+        reason: 'Gider ölçüsünde gelir çubuğu yok');
 
     await selectMetric(tester, 'Bakiye');
     expect(find.byType(ReportDailyNetFlowChart), findsNothing);
@@ -720,8 +724,8 @@ void main() {
           TrendMetric.balance,
         );
         expect(find.text('Bu dönemde gelir ya da gider yok'), findsOneWidget);
-        expect(find.textContaining('1 para taşıma hareketi var'),
-            findsOneWidget);
+        expect(
+            find.textContaining('1 para taşıma hareketi var'), findsOneWidget);
       });
 
       testWidgets('"Para taşımayı dahil et" normal rapora döner',
@@ -1200,8 +1204,8 @@ void main() {
       ]);
 
       final card = tester.widget<ReportTrendCard>(find.byType(ReportTrendCard));
-      expect(card.flow.buckets.last.start,
-          DateTime(now.year, now.month, lastDay));
+      expect(
+          card.flow.buckets.last.start, DateTime(now.year, now.month, lastDay));
       expect(lastDrawn(tester), DateTime(now.year, now.month, now.day));
       // Kesikli çizgi: önceki dönemin serisi gerçekten veri taşıyor.
       expect(card.previousFlow?.hasNoActivity, isFalse);
@@ -1504,6 +1508,116 @@ void main() {
 
       expect(find.text('Kartla market'), findsOneWidget);
       expect(find.text('Market'), findsOneWidget);
+    });
+  });
+
+  group('kart cüzdanı', () {
+    // Smoke test C-52: kart bağlamında ortak dönem EKSTRE döngüsüdür. Rapor
+    // harcamayı önce ödeme gününe taşıyıp sonra ekstre aralığına süzünce
+    // "Ekstre · 26 Eyl – 25 Eki" altında ÖNCEKİ ekstrenin harcaması
+    // görünüyordu (İşlemler 1.400, Rapor 1.500).
+    const info =
+        CreditCardInfo(closingDay: 25, dueDay: 5, paymentWalletId: 'bank');
+    final cycle = CardCycle(info);
+    final now = DateTime.now();
+    final current = cycle.periodContaining(now);
+    final previous =
+        cycle.periodContaining(current.start.subtract(const Duration(days: 1)));
+
+    Future<TransactionFilterCubit> pumpCard(WidgetTester tester) async {
+      final card = WalletEntity(
+        id: 'card',
+        userId: 'user_123',
+        name: 'Kart',
+        balance: 0,
+        debt: 0,
+        credit: 0,
+        investment: 0,
+        colorHex: '0xFFF44336',
+        iconName: 'wallet',
+        createdAt: DateTime(2025, 1, 1),
+        openingBalance: 0,
+        creditCard: info,
+      );
+      final walletBloc = _MockWalletBloc();
+      when(() => walletBloc.state).thenReturn(WalletLoadedSt([card], card));
+      final repo = _MockTxRepo();
+      getIt.registerSingleton<TransactionsRepository>(repo);
+      when(() => repo.getTransactions(
+            userId: any(named: 'userId'),
+            walletId: any(named: 'walletId'),
+          )).thenAnswer((_) async => const Right([]));
+      TransactionEntity tx(String id, double amount, DateTime day) =>
+          TransactionEntity(
+            id: id,
+            userId: 'user_123',
+            walletId: 'card',
+            title: id,
+            tag: 'Food',
+            amount: amount,
+            date: DateTime(day.year, day.month, day.day, 12),
+            type: TransactionTypeModel.expense,
+          );
+      when(() => mockTransactionBloc.state).thenReturn(TransactionLoaded(
+        groupedTransactions: const {},
+        allTransactions: [
+          // Önceki ekstre: ödemesi BU ekstrenin aralığına düşer.
+          tx('onceki', 1000, previous.start),
+          // Bu ekstre.
+          tx('bu', 400, current.start),
+        ],
+      ));
+      tester.view.physicalSize = const Size(1080, 2600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      final cubit = TransactionFilterCubit();
+      await tester.pumpWidget(BlocProvider<WalletBloc>.value(
+        value: walletBloc,
+        child: BlocProvider<TransactionFilterCubit>.value(
+          value: cubit,
+          child: BlocProvider<AmountVisibilityCubit>(
+            create: (_) => AmountVisibilityCubit(),
+            child: MaterialApp(
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [Locale('tr'), Locale('en')],
+              locale: const Locale('tr'),
+              home: const TransactionReportPage(
+                userId: 'user_123',
+                walletId: 'card',
+              ),
+            ),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      return cubit;
+    }
+
+    testWidgets('ekstre döneminde harcama KAYIT tarihiyle sayılır (C-52)',
+        (tester) async {
+      final cubit = await pumpCard(tester);
+      expect(cubit.isStatementPeriod, isTrue);
+      expect(find.textContaining('400,00'), findsWidgets);
+      expect(find.textContaining('1.000,00'), findsNothing);
+    });
+
+    testWidgets('takvim ayında harcama ÖDENDİĞİ aya sayılır', (tester) async {
+      final cubit = await pumpCard(tester);
+      // Önceki ekstrenin son ödeme günü bu ekstrenin içinde; o günün
+      // takvim ayına bakılınca önceki ekstrenin harcaması orada görünür.
+      final due = cycle.dueFor(previous.end);
+      cubit.setPeriod(DateTimeRange(
+        start: DateTime(due.year, due.month, 1),
+        end: DateTime(due.year, due.month + 1, 0, 23, 59, 59),
+      ));
+      await tester.pumpAndSettle();
+      expect(cubit.isStatementPeriod, isFalse);
+      expect(find.textContaining('1.000,00'), findsWidgets);
     });
   });
 }
