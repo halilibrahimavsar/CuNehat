@@ -555,6 +555,55 @@ Security and stability
 
 ---
 
+## Sürüm notları — 1.1.0 (versionCode 9)
+
+16 Eki 2026 · **ONAY BEKLİYOR.** Kapsam `f44a836e..` (`+8`'den sonrası): kredi
+kartı release'te AÇIK (bayrak varsayılanı `true`), Rapor 2.0, taksit grubu,
+ana kasa, acemi/değer/basit turları, smoke düzeltmeleri. Şema 14→16
+(`migrateBackup` zinciri tam). Play önerileri: `enableEdgeToEdge()`, optimize
+kaynak küçültme, AGP 9.0.1 + Gradle 9.1.0; bitmap önerisi file_picker'ın
+bizde çalışmayan sıkıştırma yolu (kod değişikliği yok). Yerinde yükseltme
+provası `+8`→`+9` API 33 emülatörde geçti (demo veri, tutarlar aynı, logcat
+temiz, yeniden başlatmada 10/10 alarm geri kuruldu).
+
+### Türkçe (470 karakter, sınır 500)
+
+```
+Kredi kartı
+• Kart cüzdanı: kesim ve son ödeme günü, limit, ekstre özeti, faiz tahmini.
+• Taksitler kendi ayına yazılır; kart borcu Borç ve Net'e katılır.
+
+Daha anlaşılır rapor
+• Zaman çizgisi, önceki dönemle kıyas; kategoriye dokunup alt kırılıma in.
+• "Param nereye gidiyor?" ana ekranda tek satırda.
+
+Daha kolay kullanım
+• Hızlı kayıt formu, cüzdanlar arası kaydırma, toplu kategori değiştirme.
+• Düzenlemeyi de geri al; Ayarlar'dan görüş gönder.
+
+Ve birçok düzeltme.
+```
+
+### English (472 karakter, sınır 500)
+
+```
+Credit cards
+• Card wallet: statement and due dates, limit, statement summary, interest estimate.
+• Installments land in their own month; card debt counts in Debt and Net.
+
+Clearer report
+• Timeline and previous-period comparison; tap a category to drill down.
+• "Where does my money go?" in one line on the home screen.
+
+Easier to use
+• Quicker entry form, swipe between wallets, change categories in bulk.
+• Undo edits too; send feedback from Settings.
+
+Plus many fixes.
+```
+
+---
+
 ## Sürüm notları — 1.0.0 (versionCode 8)
 
 26 Eyl 2026. Kapsam `604e60bd..` (`+7`'den sonrası): ortak dönem + gün/hafta/2 hafta
