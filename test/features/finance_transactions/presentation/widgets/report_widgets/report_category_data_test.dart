@@ -220,16 +220,17 @@ void main() {
       expect(progress.isExceeded, isFalse);
     });
 
-    test('yıl aralığında limit 12 aya ORANTILANIR (%340 hatası dönmez)', () {
-      // 2026 = 365 gün → 1000 × 365 / 30,4375 ≈ 11.992 ₺. 12.000 ₺ harcama
-      // limitin yaklaşık tamamı; eski hata "1 aylık limitin %1200'ü" derdi.
+    test('yıl aralığında limit 12 KATINA çıkar (%340 hatası dönmez)', () {
+      // Takvim yılı 12 tam ay → 1000 × 12 = 12.000 ₺ (smoke R-43; eskiden
+      // gün orantısıyla 11.992 çıkıyordu). Eski hata "1 aylık limitin
+      // %1200'ü" derdi.
       final progress = builderFor(DateTimeRange(
         start: DateTime(2026, 1, 1),
         end: DateTime(2026, 12, 31),
       )).budgetProgressFor('m', 11000);
 
       expect(progress, isNotNull);
-      expect(progress!.limit, closeTo(1000 * 365 / 30.4375, 0.01));
+      expect(progress!.limit, 12000);
       expect(progress.isExceeded, isFalse);
     });
 
