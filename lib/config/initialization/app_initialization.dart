@@ -33,6 +33,8 @@ import 'package:cunehat/features/debt_and_receivable/data/models/receivable_mode
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_calc_mode_adapter.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_type_adapter.dart';
 import 'package:cunehat/features/budgets/data/models/budget_model.dart';
+import 'package:cunehat/features/budgets/data/models/temp_budget_model.dart';
+import 'package:cunehat/features/budgets/data/datasources/local/temp_budget_local_datasource.dart';
 import 'package:cunehat/features/budgets/domain/services/budget_alert_monitor.dart';
 import 'package:cunehat/features/investments/presentation/widgets/color_adapter.dart';
 import 'package:cunehat/features/settings/presentation/blocs/theme_blocs/theme_bloc.dart';
@@ -179,6 +181,7 @@ class AppInitialization {
       Hive.openBox<DebtModel>('debts'),
       Hive.openBox<ReceivableModel>('receivables'),
       Hive.openBox<BudgetModel>('budgets_box'),
+      Hive.openBox<TempBudgetModel>(TempBudgetLocalDataSource.boxName),
       Hive.openBox<RecurringTransactionModel>('recurring_transactions_box'),
       Hive.openBox<CategoryModel>(CategoryLocalDataSource.boxName),
     ]);
@@ -213,6 +216,7 @@ class AppInitialization {
         AdapterRegistration.of(DebtTypeAdapter()),
         AdapterRegistration.of(DebtCalcModeAdapter()),
         AdapterRegistration.of(BudgetModelAdapter()),
+        AdapterRegistration.of(TempBudgetModelAdapter()),
         AdapterRegistration.of(RecurringFrequencyAdapter()),
         AdapterRegistration.of(CategoryModelAdapter()),
         AdapterRegistration.of(ColorAdapter()),

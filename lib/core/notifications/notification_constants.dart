@@ -62,6 +62,11 @@ class ReminderIds {
   static int budget(String walletId, String categoryId) =>
       'budget_$walletId::$categoryId'.hashCode;
 
+  /// Tek seferlik bütçenin eşik uyarısı; kimlik bütçenin kendi `id`'si (aynı
+  /// kategoride aylık bütçe de olabilir, iki uyarı birbirini ezmemeli).
+  static int tempBudget(String tempBudgetId) =>
+      'temp_budget_$tempBudgetId'.hashCode;
+
   /// Motivasyon hatırlatıcıları bu aralıktan sıralı kimlik alır; toplu iptal
   /// için aralığın sabit olması gerekir.
   static const int randomReminderStart = 10000;

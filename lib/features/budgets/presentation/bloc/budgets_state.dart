@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
+import 'package:cunehat/features/budgets/domain/entities/temp_budget_entity.dart';
 import 'package:cunehat/core/error/failure.dart';
 
 abstract class BudgetsState extends Equatable {
@@ -16,10 +17,13 @@ class BudgetsLoading extends BudgetsState {}
 class BudgetsLoaded extends BudgetsState {
   final List<BudgetEntity> budgets;
 
-  const BudgetsLoaded(this.budgets);
+  /// Tek seferlik bütçeler, başlangıç tarihine göre sıralı.
+  final List<TempBudgetEntity> tempBudgets;
+
+  const BudgetsLoaded(this.budgets, {this.tempBudgets = const []});
 
   @override
-  List<Object?> get props => [budgets];
+  List<Object?> get props => [budgets, tempBudgets];
 }
 
 class BudgetsError extends BudgetsState {

@@ -4382,5 +4382,116 @@
   "txEmptyPeriodTitle": "No records in this period",
   "txEmptyPeriodBody": "You haven't written any income or expense in this range.",
   "txEmptyShowAll": "Show all records",
-  "privacyDataHeader": "Privacy and data"
+  "privacyDataHeader": "Privacy and data",
+  "tempBudgetSectionTitle": "One-time budgets",
+  "tempBudgetFinishedSection": "Finished ({count})",
+  "@tempBudgetFinishedSection": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tempBudgetKindMonthly": "Monthly budget",
+  "tempBudgetKindMonthlyDesc": "A category limit that renews every month",
+  "tempBudgetKindOneTime": "One-time budget",
+  "tempBudgetKindOneTimeDesc": "Holiday, moving, a celebration… for a date range, across one or more categories",
+  "tempBudgetNewTitle": "New one-time budget",
+  "tempBudgetEditTitle": "Edit one-time budget",
+  "tempBudgetNameLabel": "Name",
+  "tempBudgetNameHint": "e.g. Holiday",
+  "tempBudgetNameRequired": "Enter a name",
+  "tempBudgetRangeLabel": "Date range",
+  "tempBudgetRangeRequired": "Pick a date range",
+  "tempBudgetLimitLabel": "Limit (whole range)",
+  "tempBudgetCategoriesLabel": "Counted categories",
+  "tempBudgetCategoriesHint": "Subcategories are counted too.",
+  "tempBudgetAddCategory": "Add category",
+  "tempBudgetCategoriesRequired": "Pick at least one category",
+  "tempBudgetCategoryCovered": "{parent} is already selected; its subcategory is counted with it.",
+  "@tempBudgetCategoryCovered": {
+    "placeholders": {
+      "parent": {
+        "type": "String"
+      }
+    }
+  },
+  "tempBudgetStartsIn": "{days, plural, =0{Starts today} =1{Starts tomorrow} other{Starts in {days} days}}",
+  "@tempBudgetStartsIn": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "tempBudgetDaysLeft": "{days, plural, =1{Last day} other{{days} days left}}",
+  "@tempBudgetDaysLeft": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "tempBudgetDailyAllowance": "You can spend {amount} a day",
+  "@tempBudgetDailyAllowance": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "tempBudgetResultLeft": "{amount} left",
+  "@tempBudgetResultLeft": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "tempBudgetResultOver": "{amount} over",
+  "@tempBudgetResultOver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "tempBudgetResultExact": "Finished exactly on the limit",
+  "tempBudgetSpentOfLimit": "{spent} / {limit}",
+  "@tempBudgetSpentOfLimit": {
+    "placeholders": {
+      "spent": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "tempBudgetDeleteConfirmTitle": "Delete one-time budget?",
+  "tempBudgetDeleteConfirmMessage": "\"{name}\" will be deleted. Your transactions are not affected.",
+  "@tempBudgetDeleteConfirmMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tempBudgetDeleted": "\"{name}\" deleted",
+  "@tempBudgetDeleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tempBudgetEmptyBody": "Set a monthly limit for a category, or a one-time budget for a period like a holiday, and follow it here as you spend.",
+  "tempBudgetMoreCategories": "+{count}",
+  "@tempBudgetMoreCategories": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -6,7 +6,9 @@ import 'package:cunehat/core/services/notification_settings_service.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/budgets/domain/services/budget_alert_monitor.dart';
+import 'package:cunehat/features/budgets/domain/entities/temp_budget_entity.dart';
 import 'package:cunehat/features/budgets/domain/usecases/get_budgets_usecase.dart';
+import 'package:cunehat/features/budgets/domain/usecases/temp_budget_usecases.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:dartz/dartz.dart';
@@ -18,6 +20,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 class MockGetBudgetsUsecase extends Mock implements GetBudgetsUsecase {}
 
 class MockCategoryRepository extends Mock implements CategoryRepository {}
+
+class MockGetTempBudgetsUsecase extends Mock implements GetTempBudgetsUsecase {}
 
 class MockNotificationService extends Mock implements NotificationService {}
 
@@ -235,5 +239,135 @@ void main() {
           body: tr.notifBudgetExceededBody('Food'),
           payload: NotificationPayloads.budgetAlert,
         )).called(1);
+  });
+
+  group('tek seferlik bütçe', () {
+    late MockGetTempBudgetsUsecase mockTemps;
+
+    TempBudgetEntity temp({
+      required DateTime start,
+      required DateTime end,
+      double spent = 0,
+      String id = 'tb',
+    }) =>
+        TempBudgetEntity(
+          id: id,
+          walletId: 'w',
+          name: 'Tatil',
+          limitAmount: 1000,
+          startDate: start,
+          endDate: end,
+          categoryIds: const ['Food'],
+          spentAmount: spent,
+        );
+
+    BudgetAlertMonitor buildWithTemps() {
+      monitor.dispose();
+      mockTemps = MockGetTempBudgetsUsecase();
+      return BudgetAlertMonitor(
+        mockGetBudgets,
+        mockNotifications,
+        mockNotificationSettings,
+        mockLocalizer,
+        prefs,
+        mockCategories,
+        notifier,
+        mockTemps,
+      );
+    }
+
+    test(
+        'aynı kategoride aylık + geçici bütçe İKİ AYRI bildirim; geçicinin adı '
+        've kendi kimliği kullanılır', () async {
+      monitor = buildWithTemps();
+      final now = DateTime.now();
+      when(() => mockGetBudgets('u', 'w'))
+          .thenAnswer((_) async => Right([b('Food', 100, 85)]));
+      when(() => mockTemps('u', 'w')).thenAnswer((_) async => Right([
+            temp(
+              start: now.subtract(const Duration(days: 1)),
+              end: now.add(const Duration(days: 1)),
+              spent: 1200,
+            ),
+          ]));
+      stubNotify();
+
+      notifier.notify(userId: 'u', walletId: 'w');
+      await settle();
+
+      verify(() => mockNotifications.showNotification(
+            id: ReminderIds.budget('w', 'Food'),
+            title: tr.notifBudgetWarningTitle,
+            body: tr.notifBudgetWarningBody('Food'),
+            payload: NotificationPayloads.budgetAlert,
+          )).called(1);
+      verify(() => mockNotifications.showNotification(
+            id: ReminderIds.tempBudget('tb'),
+            title: tr.notifBudgetExceededTitle,
+            body: tr.notifBudgetExceededBody('Tatil'),
+            payload: NotificationPayloads.budgetAlert,
+          )).called(1);
+    });
+
+    test('BİTMİŞ ya da YAKLAŞAN geçici bütçe uyarı üretmez', () async {
+      monitor = buildWithTemps();
+      final now = DateTime.now();
+      when(() => mockGetBudgets('u', 'w'))
+          .thenAnswer((_) async => const Right([]));
+      when(() => mockTemps('u', 'w')).thenAnswer((_) async => Right([
+            temp(
+              id: 'past',
+              start: now.subtract(const Duration(days: 10)),
+              end: now.subtract(const Duration(days: 2)),
+              spent: 5000,
+            ),
+            temp(
+              id: 'future',
+              start: now.add(const Duration(days: 2)),
+              end: now.add(const Duration(days: 5)),
+              spent: 5000,
+            ),
+          ]));
+      stubNotify();
+
+      notifier.notify(userId: 'u', walletId: 'w');
+      await settle();
+
+      verifyNever(() => mockNotifications.showNotification(
+            id: any(named: 'id'),
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            payload: any(named: 'payload'),
+          ));
+    });
+
+    test('geçici bütçe uyarısı da yeni oturumda TEKRARLANMAZ (temel durum)',
+        () async {
+      monitor = buildWithTemps();
+      final now = DateTime.now();
+      final active = temp(
+        start: now.subtract(const Duration(days: 1)),
+        end: now.add(const Duration(days: 1)),
+        spent: 900,
+      );
+      when(() => mockGetBudgets('u', 'w'))
+          .thenAnswer((_) async => const Right([]));
+      when(() => mockTemps('u', 'w')).thenAnswer((_) async => Right([active]));
+      stubNotify();
+
+      notifier.notify(userId: 'u', walletId: 'w');
+      await settle();
+      monitor = buildWithTemps();
+      when(() => mockTemps('u', 'w')).thenAnswer((_) async => Right([active]));
+      notifier.notify(userId: 'u', walletId: 'w');
+      await settle();
+
+      verify(() => mockNotifications.showNotification(
+            id: ReminderIds.tempBudget('tb'),
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            payload: any(named: 'payload'),
+          )).called(1);
+    });
   });
 }

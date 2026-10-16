@@ -12,7 +12,9 @@ import 'package:cunehat/core/services/notification_settings_service.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/budgets/domain/services/budget_alert_service.dart';
+import 'package:cunehat/features/budgets/domain/entities/temp_budget_entity.dart';
 import 'package:cunehat/features/budgets/domain/usecases/get_budgets_usecase.dart';
+import 'package:cunehat/features/budgets/domain/usecases/temp_budget_usecases.dart';
 import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 
@@ -51,6 +53,14 @@ class BudgetAlertMonitor {
 
   final Map<String, List<BudgetEntity>> _previousByWallet = {};
 
+  /// Tek seferlik bütçeler; verilmezse (eski testler) yalnız aylıklar izlenir.
+  final GetTempBudgetsUsecase? _getTempBudgets;
+
+  /// Tek seferlik bütçe, eşik karşılaştırmasına bu önekli anahtarla girer:
+  /// [BudgetAlertService] kategoriye göre eşler, aynı kategoride aylık bütçe
+  /// de varsa ikisi birbirinin önceki durumu sanılırdı.
+  static const String tempKeyPrefix = 'temp:';
+
   BudgetAlertMonitor(
     this._getBudgets,
     this._notifications,
@@ -58,8 +68,9 @@ class BudgetAlertMonitor {
     this._localizer,
     this._prefs,
     this._categories,
-    TransactionsChangedNotifier notifier,
-  ) {
+    TransactionsChangedNotifier notifier, [
+    this._getTempBudgets,
+  ]) {
     _loadBaseline();
     _subscription = notifier.stream.listen(_onTransactionsChanged);
   }
@@ -71,8 +82,32 @@ class BudgetAlertMonitor {
     if (userId == null || walletId == null) return;
 
     final result = await _getBudgets(userId, walletId);
-    final budgets = result.fold((_) => null, (value) => value);
-    if (budgets == null) return;
+    final monthly = result.fold((_) => null, (value) => value);
+    if (monthly == null) return;
+
+    // Yalnız SÜREN geçici bütçe uyarı üretir: bitmiş birine geriye tarihli
+    // kayıt girmek "aşıldı" bildirimi attırmamalı, yaklaşan birinin harcaması
+    // zaten sıfır.
+    final temps = <String, TempBudgetEntity>{};
+    final getTemps = _getTempBudgets;
+    if (getTemps != null) {
+      final now = DateTime.now();
+      final tempResult = await getTemps(userId, walletId);
+      for (final t in tempResult.fold(
+          (_) => const <TempBudgetEntity>[], (value) => value)) {
+        if (t.statusOn(now) == TempBudgetStatus.active) temps[t.id] = t;
+      }
+    }
+    final budgets = [
+      ...monthly,
+      for (final t in temps.values)
+        BudgetEntity(
+          categoryId: '$tempKeyPrefix${t.id}',
+          walletId: walletId,
+          limitAmount: t.limitAmount,
+          spentAmount: t.spentAmount,
+        ),
+    ];
 
     final previous = _previousByWallet[walletId] ?? const <BudgetEntity>[];
     final crossings = _alertService.detectCrossings(
@@ -97,7 +132,13 @@ class BudgetAlertMonitor {
       } catch (e) {
         debugPrint('BudgetAlertMonitor: kategori adları okunamadı: $e');
       }
-      String nameOf(String id) => breadcrumbs[id] ?? id;
+      String nameOf(String id) {
+        if (id.startsWith(tempKeyPrefix)) {
+          return temps[id.substring(tempKeyPrefix.length)]?.name ?? id;
+        }
+        return breadcrumbs[id] ?? id;
+      }
+
       for (final alert in crossings) {
         final String title;
         final String body;
@@ -116,7 +157,10 @@ class BudgetAlertMonitor {
           // Bütçeler cüzdan bazlı: yalnız categoryId kullanılırsa aynı
           // kategoriyi iki cüzdanda bütçeleyen kullanıcıda ikinci uyarı
           // birincinin üstüne yazar.
-          id: ReminderIds.budget(walletId, alert.categoryId),
+          id: alert.categoryId.startsWith(tempKeyPrefix)
+              ? ReminderIds.tempBudget(
+                  alert.categoryId.substring(tempKeyPrefix.length))
+              : ReminderIds.budget(walletId, alert.categoryId),
           title: title,
           body: body,
           payload: NotificationPayloads.budgetAlert,

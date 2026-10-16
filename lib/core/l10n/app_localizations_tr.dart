@@ -7177,4 +7177,135 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get privacyDataHeader => 'Gizlilik ve veri';
+
+  @override
+  String get tempBudgetSectionTitle => 'Tek seferlik bütçeler';
+
+  @override
+  String tempBudgetFinishedSection(int count) {
+    return 'Biten ($count)';
+  }
+
+  @override
+  String get tempBudgetKindMonthly => 'Aylık bütçe';
+
+  @override
+  String get tempBudgetKindMonthlyDesc =>
+      'Bir kategoriye her ay yenilenen limit';
+
+  @override
+  String get tempBudgetKindOneTime => 'Tek seferlik bütçe';
+
+  @override
+  String get tempBudgetKindOneTimeDesc =>
+      'Tatil, taşınma, bayram… tarih aralığıyla, bir ya da birkaç kategoriye';
+
+  @override
+  String get tempBudgetNewTitle => 'Yeni tek seferlik bütçe';
+
+  @override
+  String get tempBudgetEditTitle => 'Tek seferlik bütçeyi düzenle';
+
+  @override
+  String get tempBudgetNameLabel => 'Ad';
+
+  @override
+  String get tempBudgetNameHint => 'ör. Tatil';
+
+  @override
+  String get tempBudgetNameRequired => 'Bir ad yaz';
+
+  @override
+  String get tempBudgetRangeLabel => 'Tarih aralığı';
+
+  @override
+  String get tempBudgetRangeRequired => 'Tarih aralığı seç';
+
+  @override
+  String get tempBudgetLimitLabel => 'Limit (aralığın tamamı)';
+
+  @override
+  String get tempBudgetCategoriesLabel => 'Sayılan kategoriler';
+
+  @override
+  String get tempBudgetCategoriesHint => 'Alt kategorileri de sayılır.';
+
+  @override
+  String get tempBudgetAddCategory => 'Kategori ekle';
+
+  @override
+  String get tempBudgetCategoriesRequired => 'En az bir kategori seç';
+
+  @override
+  String tempBudgetCategoryCovered(String parent) {
+    return '$parent zaten seçili; alt kategorisi ayrıca sayılmaz.';
+  }
+
+  @override
+  String tempBudgetStartsIn(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days gün sonra başlıyor',
+      one: 'Yarın başlıyor',
+      zero: 'Bugün başlıyor',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tempBudgetDaysLeft(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days gün kaldı',
+      one: 'Son gün',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tempBudgetDailyAllowance(String amount) {
+    return 'Günde $amount harcayabilirsin';
+  }
+
+  @override
+  String tempBudgetResultLeft(String amount) {
+    return '$amount kaldı';
+  }
+
+  @override
+  String tempBudgetResultOver(String amount) {
+    return '$amount aştı';
+  }
+
+  @override
+  String get tempBudgetResultExact => 'Tam limitte bitti';
+
+  @override
+  String tempBudgetSpentOfLimit(String spent, String limit) {
+    return '$spent / $limit';
+  }
+
+  @override
+  String get tempBudgetDeleteConfirmTitle => 'Tek seferlik bütçe silinsin mi?';
+
+  @override
+  String tempBudgetDeleteConfirmMessage(String name) {
+    return '\"$name\" silinecek. İşlemlerine dokunulmaz.';
+  }
+
+  @override
+  String tempBudgetDeleted(String name) {
+    return '\"$name\" silindi';
+  }
+
+  @override
+  String get tempBudgetEmptyBody =>
+      'Kategorilerine aylık limit koy ya da tatil gibi bir dönem için tek seferlik bütçe aç; harcadıkça burada izlersin.';
+
+  @override
+  String tempBudgetMoreCategories(int count) {
+    return '+$count';
+  }
 }

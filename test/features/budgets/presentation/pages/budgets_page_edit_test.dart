@@ -213,6 +213,9 @@ void main() {
 
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
+    // Önce tür seçilir (aylık / tek seferlik).
+    await tester.tap(find.byKey(const ValueKey('budget-kind-monthly')));
+    await tester.pumpAndSettle();
 
     expect(find.text(l10n.yeniButceEkle), findsOneWidget);
     expect(find.byKey(const ValueKey('budget-category-field')), findsOneWidget);
@@ -234,6 +237,8 @@ void main() {
     Future<AppLocalizations> openPicker(WidgetTester tester) async {
       final l10n = await pumpPage(tester);
       await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('budget-kind-monthly')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('budget-category-field')));
       await tester.pumpAndSettle();

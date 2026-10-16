@@ -38,6 +38,7 @@ const Map<int, BackupMigration> backupMigrations = {
   13: _v13ToV14,
   14: _v14ToV15,
   15: _v15ToV16,
+  16: _v16ToV17,
 };
 
 /// [raw]'ı [targetVersion]'a yükseltir.
@@ -232,5 +233,19 @@ Map<String, dynamic> _v15ToV16(Map<String, dynamic> raw) {
       for (final i in investments)
         {...Map<String, dynamic>.from(i as Map), 'isPrimary': false},
     ],
+  };
+}
+
+/// v16 → v17: tek seferlik (tarih aralıklı) bütçeler — yeni `tempBudgets`
+/// dizisi.
+///
+/// v16'da bu kavram yoktu; boş dizi tam olarak bunu söyler. Aylık bütçelere
+/// (`budgets`) dokunulmaz: geçici bütçe ayrı bir kayıt, aylık bütçenin
+/// "yalnız bu ay" sürümü değil. Dizi AÇIKÇA yazılıyor (bkz. `_v12ToV13`).
+Map<String, dynamic> _v16ToV17(Map<String, dynamic> raw) {
+  return {
+    ...raw,
+    'version': 17,
+    'tempBudgets': const <dynamic>[],
   };
 }

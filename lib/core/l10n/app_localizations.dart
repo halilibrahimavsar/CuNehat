@@ -12269,6 +12269,192 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Gizlilik ve veri'**
   String get privacyDataHeader;
+
+  /// No description provided for @tempBudgetSectionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tek seferlik bütçeler'**
+  String get tempBudgetSectionTitle;
+
+  /// No description provided for @tempBudgetFinishedSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Biten ({count})'**
+  String tempBudgetFinishedSection(int count);
+
+  /// No description provided for @tempBudgetKindMonthly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aylık bütçe'**
+  String get tempBudgetKindMonthly;
+
+  /// No description provided for @tempBudgetKindMonthlyDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir kategoriye her ay yenilenen limit'**
+  String get tempBudgetKindMonthlyDesc;
+
+  /// No description provided for @tempBudgetKindOneTime.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tek seferlik bütçe'**
+  String get tempBudgetKindOneTime;
+
+  /// No description provided for @tempBudgetKindOneTimeDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tatil, taşınma, bayram… tarih aralığıyla, bir ya da birkaç kategoriye'**
+  String get tempBudgetKindOneTimeDesc;
+
+  /// No description provided for @tempBudgetNewTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni tek seferlik bütçe'**
+  String get tempBudgetNewTitle;
+
+  /// No description provided for @tempBudgetEditTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tek seferlik bütçeyi düzenle'**
+  String get tempBudgetEditTitle;
+
+  /// No description provided for @tempBudgetNameLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ad'**
+  String get tempBudgetNameLabel;
+
+  /// No description provided for @tempBudgetNameHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'ör. Tatil'**
+  String get tempBudgetNameHint;
+
+  /// No description provided for @tempBudgetNameRequired.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir ad yaz'**
+  String get tempBudgetNameRequired;
+
+  /// No description provided for @tempBudgetRangeLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih aralığı'**
+  String get tempBudgetRangeLabel;
+
+  /// No description provided for @tempBudgetRangeRequired.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih aralığı seç'**
+  String get tempBudgetRangeRequired;
+
+  /// No description provided for @tempBudgetLimitLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Limit (aralığın tamamı)'**
+  String get tempBudgetLimitLabel;
+
+  /// No description provided for @tempBudgetCategoriesLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayılan kategoriler'**
+  String get tempBudgetCategoriesLabel;
+
+  /// No description provided for @tempBudgetCategoriesHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alt kategorileri de sayılır.'**
+  String get tempBudgetCategoriesHint;
+
+  /// No description provided for @tempBudgetAddCategory.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori ekle'**
+  String get tempBudgetAddCategory;
+
+  /// No description provided for @tempBudgetCategoriesRequired.
+  ///
+  /// In tr, this message translates to:
+  /// **'En az bir kategori seç'**
+  String get tempBudgetCategoriesRequired;
+
+  /// No description provided for @tempBudgetCategoryCovered.
+  ///
+  /// In tr, this message translates to:
+  /// **'{parent} zaten seçili; alt kategorisi ayrıca sayılmaz.'**
+  String tempBudgetCategoryCovered(String parent);
+
+  /// No description provided for @tempBudgetStartsIn.
+  ///
+  /// In tr, this message translates to:
+  /// **'{days, plural, =0{Bugün başlıyor} =1{Yarın başlıyor} other{{days} gün sonra başlıyor}}'**
+  String tempBudgetStartsIn(int days);
+
+  /// No description provided for @tempBudgetDaysLeft.
+  ///
+  /// In tr, this message translates to:
+  /// **'{days, plural, =1{Son gün} other{{days} gün kaldı}}'**
+  String tempBudgetDaysLeft(int days);
+
+  /// No description provided for @tempBudgetDailyAllowance.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günde {amount} harcayabilirsin'**
+  String tempBudgetDailyAllowance(String amount);
+
+  /// No description provided for @tempBudgetResultLeft.
+  ///
+  /// In tr, this message translates to:
+  /// **'{amount} kaldı'**
+  String tempBudgetResultLeft(String amount);
+
+  /// No description provided for @tempBudgetResultOver.
+  ///
+  /// In tr, this message translates to:
+  /// **'{amount} aştı'**
+  String tempBudgetResultOver(String amount);
+
+  /// No description provided for @tempBudgetResultExact.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam limitte bitti'**
+  String get tempBudgetResultExact;
+
+  /// No description provided for @tempBudgetSpentOfLimit.
+  ///
+  /// In tr, this message translates to:
+  /// **'{spent} / {limit}'**
+  String tempBudgetSpentOfLimit(String spent, String limit);
+
+  /// No description provided for @tempBudgetDeleteConfirmTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tek seferlik bütçe silinsin mi?'**
+  String get tempBudgetDeleteConfirmTitle;
+
+  /// No description provided for @tempBudgetDeleteConfirmMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'\"{name}\" silinecek. İşlemlerine dokunulmaz.'**
+  String tempBudgetDeleteConfirmMessage(String name);
+
+  /// No description provided for @tempBudgetDeleted.
+  ///
+  /// In tr, this message translates to:
+  /// **'\"{name}\" silindi'**
+  String tempBudgetDeleted(String name);
+
+  /// No description provided for @tempBudgetEmptyBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategorilerine aylık limit koy ya da tatil gibi bir dönem için tek seferlik bütçe aç; harcadıkça burada izlersin.'**
+  String get tempBudgetEmptyBody;
+
+  /// No description provided for @tempBudgetMoreCategories.
+  ///
+  /// In tr, this message translates to:
+  /// **'+{count}'**
+  String tempBudgetMoreCategories(int count);
 }
 
 class _AppLocalizationsDelegate

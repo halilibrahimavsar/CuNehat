@@ -468,15 +468,62 @@ void main() {
       expect(result['investments'], isEmpty);
     });
 
-    test('v9 yedeği YEDİ adımda güncele yükselir', () {
-      final result = migrateBackup(
-        v9Backup(),
-        targetVersion: DataSerializationService.schemaVersion,
-      );
+    test('v9 yedeği YEDİ adımda v16\'ya yükselir', () {
+      final result = migrateBackup(v9Backup(), targetVersion: 16);
       expect(result['version'], 16);
       final wallet = (result['wallets'] as List).first as Map;
       // v9'da kart kavramı yoktu: creditCard null, içine alan da yazılmaz.
       expect(wallet['creditCard'], isNull);
+      final tx = (result['transactions'] as List).first as Map;
+      expect(tx, containsPair('installmentGroupId', null));
+    });
+  });
+
+  group('v16 → v17 (tek seferlik bütçeler)', () {
+    Map<String, dynamic> v16Backup() => {
+          'version': 16,
+          'timestamp': '2026-10-16T10:00:00.000',
+          'wallets': [
+            {'id': 'w1', 'name': 'Maaş', 'creditCard': null},
+          ],
+          'budgets': [
+            {'categoryId': 'c1', 'limitAmount': 2000, 'walletId': 'w1'},
+          ],
+          'transactions': [
+            {'id': 't1', 'installmentGroupId': null},
+          ],
+          'users': <String, dynamic>{},
+        };
+
+    test('boş tempBudgets dizisi AÇIKÇA yazılır', () {
+      final result = migrateBackup(v16Backup(), targetVersion: 17);
+      expect(result['version'], 17);
+      expect(result.containsKey('tempBudgets'), isTrue);
+      expect(result['tempBudgets'], isEmpty);
+    });
+
+    test('aylık bütçelere dokunulmaz — geçici bütçeye DÖNÜŞMEZLER', () {
+      final source = v16Backup();
+      final result = migrateBackup(source, targetVersion: 17);
+      expect(result['budgets'], source['budgets']);
+      expect(result['wallets'], source['wallets']);
+      expect(result['transactions'], source['transactions']);
+    });
+
+    test('dönüşüm SAFTIR; girdi değişmez', () {
+      final source = v16Backup();
+      migrateBackup(source, targetVersion: 17);
+      expect(source['version'], 16);
+      expect(source.containsKey('tempBudgets'), isFalse);
+    });
+
+    test('v9 yedeği SEKİZ adımda güncele yükselir', () {
+      final result = migrateBackup(
+        v9Backup(),
+        targetVersion: DataSerializationService.schemaVersion,
+      );
+      expect(result['version'], 17);
+      expect(result['tempBudgets'], isEmpty);
       final tx = (result['transactions'] as List).first as Map;
       expect(tx, containsPair('installmentGroupId', null));
     });

@@ -6,6 +6,8 @@ import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/features/budgets/domain/usecases/get_budgets_usecase.dart';
 import 'package:cunehat/features/budgets/domain/usecases/save_budget_usecase.dart';
 import 'package:cunehat/features/budgets/domain/usecases/delete_budget_usecase.dart';
+import 'package:cunehat/features/budgets/domain/usecases/temp_budget_usecases.dart';
+import 'package:cunehat/features/budgets/domain/entities/temp_budget_entity.dart';
 import 'budgets_event.dart';
 import 'budgets_state.dart';
 
@@ -15,17 +17,27 @@ class BudgetsBloc extends Bloc<BudgetsEvent, BudgetsState> {
   final SaveBudgetUsecase _saveBudgetUsecase;
   final DeleteBudgetUsecase _deleteBudgetUsecase;
 
+  /// Tek seferlik bütçeler; verilmezse (yalıtılmış testler) liste boş kalır.
+  final GetTempBudgetsUsecase? _getTempBudgetsUsecase;
+  final SaveTempBudgetUsecase? _saveTempBudgetUsecase;
+  final DeleteTempBudgetUsecase? _deleteTempBudgetUsecase;
+
   StreamSubscription<TransactionsChange>? _transactionsChangedSubscription;
 
   BudgetsBloc(
     this._getBudgetsUsecase,
     this._saveBudgetUsecase,
     this._deleteBudgetUsecase,
-    TransactionsChangedNotifier transactionsChangedNotifier,
-  ) : super(BudgetsInitial()) {
+    TransactionsChangedNotifier transactionsChangedNotifier, [
+    this._getTempBudgetsUsecase,
+    this._saveTempBudgetUsecase,
+    this._deleteTempBudgetUsecase,
+  ]) : super(BudgetsInitial()) {
     on<LoadBudgetsEvent>(_onLoadBudgets);
     on<SaveBudgetEvent>(_onSaveBudget);
     on<DeleteBudgetEvent>(_onDeleteBudget);
+    on<SaveTempBudgetEvent>(_onSaveTempBudget);
+    on<DeleteTempBudgetEvent>(_onDeleteTempBudget);
 
     // İşlem defteri değişince harcanan tutarlar bayatlamasın diye yenile.
     // (Bütçe-aşım uyarısı BudgetAlertMonitor'da; o app-ömürlüdür.)
@@ -57,9 +69,19 @@ class BudgetsBloc extends Bloc<BudgetsEvent, BudgetsState> {
     _currentWalletId = event.walletId;
     emit(BudgetsLoading());
     final result = await _getBudgetsUsecase(event.userId, event.walletId);
+    final getTemps = _getTempBudgetsUsecase;
+    final temps =
+        getTemps == null ? null : await getTemps(event.userId, event.walletId);
     result.fold(
       (failure) => emit(BudgetsError(failure)),
-      (budgets) => emit(BudgetsLoaded(budgets)),
+      (budgets) {
+        // Geçici bütçe okunamazsa aylık liste yine gösterilir: biri
+        // bozuldu diye ikisini birden hata ekranına çevirmek orantısız.
+        final tempBudgets =
+            temps?.fold((_) => const <TempBudgetEntity>[], (value) => value) ??
+                const <TempBudgetEntity>[];
+        emit(BudgetsLoaded(budgets, tempBudgets: tempBudgets));
+      },
     );
   }
 
@@ -89,6 +111,35 @@ class BudgetsBloc extends Bloc<BudgetsEvent, BudgetsState> {
     final walletId = _currentWalletId;
     if (userId == null || walletId == null) return;
     add(LoadBudgetsEvent(userId: userId, walletId: walletId));
+  }
+
+  Future<void> _onSaveTempBudget(
+    SaveTempBudgetEvent event,
+    Emitter<BudgetsState> emit,
+  ) async {
+    final save = _saveTempBudgetUsecase;
+    if (save == null) return;
+    final budget = event.budget.walletId.isEmpty && _currentWalletId != null
+        ? event.budget.copyWith(walletId: _currentWalletId)
+        : event.budget;
+    final result = await save(budget);
+    result.fold(
+      (failure) => emit(BudgetsError(failure)),
+      (_) => _reloadIfOpen(),
+    );
+  }
+
+  Future<void> _onDeleteTempBudget(
+    DeleteTempBudgetEvent event,
+    Emitter<BudgetsState> emit,
+  ) async {
+    final delete = _deleteTempBudgetUsecase;
+    if (delete == null) return;
+    final result = await delete(event.id);
+    result.fold(
+      (failure) => emit(BudgetsError(failure)),
+      (_) => _reloadIfOpen(),
+    );
   }
 
   Future<void> _onDeleteBudget(

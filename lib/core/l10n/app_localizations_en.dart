@@ -7237,4 +7237,135 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyDataHeader => 'Privacy and data';
+
+  @override
+  String get tempBudgetSectionTitle => 'One-time budgets';
+
+  @override
+  String tempBudgetFinishedSection(int count) {
+    return 'Finished ($count)';
+  }
+
+  @override
+  String get tempBudgetKindMonthly => 'Monthly budget';
+
+  @override
+  String get tempBudgetKindMonthlyDesc =>
+      'A category limit that renews every month';
+
+  @override
+  String get tempBudgetKindOneTime => 'One-time budget';
+
+  @override
+  String get tempBudgetKindOneTimeDesc =>
+      'Holiday, moving, a celebration… for a date range, across one or more categories';
+
+  @override
+  String get tempBudgetNewTitle => 'New one-time budget';
+
+  @override
+  String get tempBudgetEditTitle => 'Edit one-time budget';
+
+  @override
+  String get tempBudgetNameLabel => 'Name';
+
+  @override
+  String get tempBudgetNameHint => 'e.g. Holiday';
+
+  @override
+  String get tempBudgetNameRequired => 'Enter a name';
+
+  @override
+  String get tempBudgetRangeLabel => 'Date range';
+
+  @override
+  String get tempBudgetRangeRequired => 'Pick a date range';
+
+  @override
+  String get tempBudgetLimitLabel => 'Limit (whole range)';
+
+  @override
+  String get tempBudgetCategoriesLabel => 'Counted categories';
+
+  @override
+  String get tempBudgetCategoriesHint => 'Subcategories are counted too.';
+
+  @override
+  String get tempBudgetAddCategory => 'Add category';
+
+  @override
+  String get tempBudgetCategoriesRequired => 'Pick at least one category';
+
+  @override
+  String tempBudgetCategoryCovered(String parent) {
+    return '$parent is already selected; its subcategory is counted with it.';
+  }
+
+  @override
+  String tempBudgetStartsIn(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Starts in $days days',
+      one: 'Starts tomorrow',
+      zero: 'Starts today',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tempBudgetDaysLeft(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days left',
+      one: 'Last day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tempBudgetDailyAllowance(String amount) {
+    return 'You can spend $amount a day';
+  }
+
+  @override
+  String tempBudgetResultLeft(String amount) {
+    return '$amount left';
+  }
+
+  @override
+  String tempBudgetResultOver(String amount) {
+    return '$amount over';
+  }
+
+  @override
+  String get tempBudgetResultExact => 'Finished exactly on the limit';
+
+  @override
+  String tempBudgetSpentOfLimit(String spent, String limit) {
+    return '$spent / $limit';
+  }
+
+  @override
+  String get tempBudgetDeleteConfirmTitle => 'Delete one-time budget?';
+
+  @override
+  String tempBudgetDeleteConfirmMessage(String name) {
+    return '\"$name\" will be deleted. Your transactions are not affected.';
+  }
+
+  @override
+  String tempBudgetDeleted(String name) {
+    return '\"$name\" deleted';
+  }
+
+  @override
+  String get tempBudgetEmptyBody =>
+      'Set a monthly limit for a category, or a one-time budget for a period like a holiday, and follow it here as you spend.';
+
+  @override
+  String tempBudgetMoreCategories(int count) {
+    return '+$count';
+  }
 }

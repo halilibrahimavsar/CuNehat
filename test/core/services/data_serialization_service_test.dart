@@ -8,7 +8,9 @@ import 'package:cunehat/core/services/backup_summary.dart';
 import 'package:cunehat/core/services/data_serialization_service.dart';
 import 'package:cunehat/core/services/reminder_sync_service.dart';
 import 'package:cunehat/core/services/receipt_storage_service.dart';
+import 'package:cunehat/features/budgets/data/datasources/local/temp_budget_local_datasource.dart';
 import 'package:cunehat/features/budgets/data/models/budget_model.dart';
+import 'package:cunehat/features/budgets/data/models/temp_budget_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_type_adapter.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/receivable_model.dart';
@@ -53,6 +55,8 @@ class FakeReceivableModel extends Fake implements ReceivableModel {}
 
 class FakeBudgetModel extends Fake implements BudgetModel {}
 
+class FakeTempBudgetModel extends Fake implements TempBudgetModel {}
+
 class FakeCategoryModel extends Fake implements CategoryModel {}
 
 class FakeGoalModel extends Fake implements GoalModel {}
@@ -73,6 +77,7 @@ void main() {
     registerFallbackValue(FakeDebtModel());
     registerFallbackValue(FakeReceivableModel());
     registerFallbackValue(FakeBudgetModel());
+    registerFallbackValue(FakeTempBudgetModel());
     registerFallbackValue(FakeRecurringTransactionModel());
     registerFallbackValue(FakeCategoryModel());
     registerFallbackValue(FakeGoalModel());
@@ -100,6 +105,7 @@ void main() {
     register(DebtTypeAdapter());
     register(DebtCalcModeAdapter());
     register(BudgetModelAdapter());
+    register(TempBudgetModelAdapter());
     register(RecurringTransactionModelAdapter());
     register(RecurringFrequencyAdapter());
     register(CategoryModelAdapter());
@@ -537,7 +543,7 @@ void main() {
 
     final jsonString = await service.exportDataToJson();
     final data = jsonDecode(jsonString) as Map<String, dynamic>;
-    expect(data['version'], 16);
+    expect(data['version'], DataSerializationService.schemaVersion);
     await service.clearAllLocalData();
     final result = await service.importDataFromJson(jsonString);
 
@@ -548,6 +554,79 @@ void main() {
     expect(back.lateInterestRate, 4.55);
     expect(Hive.box<InvestmentModel>('investments_box').get('pot')!.isPrimary,
         isTrue);
+  });
+
+  test('şema 17: tek seferlik bütçeler export/import round-trip ile korunur',
+      () async {
+    await Hive.box<TempBudgetModel>(TempBudgetLocalDataSource.boxName)
+        .put('tb1', _tempBudget());
+
+    final jsonString = await service.exportDataToJson();
+    final data = jsonDecode(jsonString) as Map<String, dynamic>;
+    expect(data['version'], 17);
+    expect(data['tempBudgets'], hasLength(1));
+
+    await service.clearAllLocalData();
+    expect(
+        Hive.box<TempBudgetModel>(TempBudgetLocalDataSource.boxName).length, 0);
+    final result = await service.importDataFromJson(jsonString);
+
+    expect(result.isSuccess, true);
+    final back = Hive.box<TempBudgetModel>(TempBudgetLocalDataSource.boxName)
+        .get('tb1')!;
+    expect(back.name, 'Tatil');
+    expect(back.walletId, 'w1');
+    expect(back.limitAmount, 15000);
+    expect(back.startDate, DateTime(2026, 11, 10));
+    expect(back.endDate, DateTime(2026, 11, 20));
+    expect(back.categoryIds, ['c1', 'c2']);
+    // Özet tek "bütçe" sayısı gösterir: aylık + tek seferlik.
+    expect(service.inspectBackup(jsonString).summary?.budgetCount, 1);
+  });
+
+  group('eski sürüm yedeği (v16) migrasyonla geri yüklenir', () {
+    /// Sahadaki gerçek biçim (17 Eki 2026 öncesi): `tempBudgets` dizisi YOK.
+    String v16Backup() => jsonEncode({
+          'version': 16,
+          'timestamp': '2026-10-16T10:00:00.000',
+          'wallets': [_wallet().toJson()],
+          'transactions': [_transaction().toJson()],
+          'investments': [],
+          'debts': [],
+          'receivables': [],
+          'budgets': [
+            BudgetModel(categoryId: 'c1', limitAmount: 2000, walletId: 'w1')
+                .toJson(),
+          ],
+          'recurringTransactions': [],
+          'users': {
+            'u1': {'activeWalletId': 'w1'}
+          },
+          'categories': [_category().toJson()],
+          'goals': [],
+        });
+
+    test('geri yükleme BAŞARILI; aylık bütçe yerinde, geçici bütçe yok',
+        () async {
+      // Cihazda önceden kalan geçici bütçe: tam değişim onu da temizlemeli.
+      await Hive.box<TempBudgetModel>(TempBudgetLocalDataSource.boxName)
+          .put('stale', _tempBudget(id: 'stale'));
+
+      final result = await service.importDataFromJson(v16Backup());
+
+      expect(result.isSuccess, true);
+      expect(Hive.box<BudgetModel>('budgets_box').get('w1::c1')!.limitAmount,
+          2000);
+      expect(
+          Hive.box<TempBudgetModel>(TempBudgetLocalDataSource.boxName).isEmpty,
+          isTrue);
+    });
+
+    test('önizleme de v16 dosyasını okunabilir sayar', () {
+      final inspection = service.inspectBackup(v16Backup());
+      expect(inspection.status, BackupInspectionStatus.ok);
+      expect(inspection.summary?.budgetCount, 1);
+    });
   });
 
   test('kart cüzdanı export/import round-trip ile kart bilgisini korur',
@@ -655,6 +734,7 @@ void main() {
     final debtBox = MockBox<DebtModel>();
     final receivableBox = MockBox<ReceivableModel>();
     final budgetBox = MockBox<BudgetModel>();
+    final tempBudgetBox = MockBox<TempBudgetModel>();
     final recurringBox = MockBox<RecurringTransactionModel>();
     final userBox = MockBox<Map>();
     final categoryBox = MockBox<CategoryModel>();
@@ -666,6 +746,7 @@ void main() {
     _stubBox<DebtModel>(debtBox, {});
     _stubBox<ReceivableModel>(receivableBox, {});
     _stubBox<BudgetModel>(budgetBox, {});
+    _stubBox<TempBudgetModel>(tempBudgetBox, {'old-temp': _tempBudget()});
     _stubBox<RecurringTransactionModel>(recurringBox, {});
     _stubBox<Map>(userBox, {});
     _stubBox<CategoryModel>(categoryBox, {'old-cat': _category(id: 'old-cat')});
@@ -686,6 +767,9 @@ void main() {
         .thenAnswer((_) async => receivableBox);
     when(() => mockHive.openBox<BudgetModel>('budgets_box'))
         .thenAnswer((_) async => budgetBox);
+    when(() => mockHive
+            .openBox<TempBudgetModel>(TempBudgetLocalDataSource.boxName))
+        .thenAnswer((_) async => tempBudgetBox);
     when(() => mockHive.openBox<RecurringTransactionModel>(
         'recurring_transactions_box')).thenAnswer((_) async => recurringBox);
     when(() => mockHive.openBox<Map>('users')).thenAnswer((_) async => userBox);
@@ -723,6 +807,8 @@ void main() {
     // Kategori kutusu da geri sarılır: yazım yarıda kalırsa kullanıcı hem
     // eski hem yeni kategorilerden yoksun kalırdı.
     verify(() => categoryBox.putAll(any())).called(greaterThanOrEqualTo(1));
+    // Tek seferlik bütçeler de: yarıda kalan geri yükleme onları silmemeli.
+    verify(() => tempBudgetBox.putAll(any())).called(greaterThanOrEqualTo(1));
   });
 
   // ===================================================== önizleme (inspect)
@@ -864,6 +950,7 @@ Future<void> _openAllBoxes() async {
   await Hive.openBox<DebtModel>('debts');
   await Hive.openBox<ReceivableModel>('receivables');
   await Hive.openBox<BudgetModel>('budgets_box');
+  await Hive.openBox<TempBudgetModel>(TempBudgetLocalDataSource.boxName);
   await Hive.openBox<RecurringTransactionModel>('recurring_transactions_box');
   await Hive.openBox<Map>('users');
   await Hive.openBox<CategoryModel>(CategoryLocalDataSource.boxName);
@@ -890,6 +977,9 @@ Future<void> _clearAllBoxes() async {
   }
   if (Hive.isBoxOpen('budgets_box')) {
     await Hive.box<BudgetModel>('budgets_box').clear();
+  }
+  if (Hive.isBoxOpen(TempBudgetLocalDataSource.boxName)) {
+    await Hive.box<TempBudgetModel>(TempBudgetLocalDataSource.boxName).clear();
   }
   if (Hive.isBoxOpen('recurring_transactions_box')) {
     await Hive.box<RecurringTransactionModel>('recurring_transactions_box')
@@ -997,3 +1087,13 @@ RecurringTransactionModel _recurring({String id = 'rec1'}) {
     anchorDay: 1,
   );
 }
+
+TempBudgetModel _tempBudget({String id = 'tb1'}) => TempBudgetModel(
+      id: id,
+      walletId: 'w1',
+      name: 'Tatil',
+      limitAmount: 15000,
+      startDate: DateTime(2026, 11, 10),
+      endDate: DateTime(2026, 11, 20),
+      categoryIds: const ['c1', 'c2'],
+    );

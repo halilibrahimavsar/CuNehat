@@ -7,6 +7,8 @@ import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/core/services/backup_summary.dart';
 import 'package:cunehat/core/services/reminder_sync_service.dart';
 import 'package:cunehat/features/budgets/data/models/budget_model.dart';
+import 'package:cunehat/features/budgets/data/datasources/local/temp_budget_local_datasource.dart';
+import 'package:cunehat/features/budgets/data/models/temp_budget_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/receivable_model.dart';
 import 'package:cunehat/core/services/receipt_storage_service.dart';
@@ -61,6 +63,7 @@ class _ParsedBackup {
   final List<DebtModel> debts;
   final List<ReceivableModel> receivables;
   final List<BudgetModel> budgets;
+  final List<TempBudgetModel> tempBudgets;
   final List<RecurringTransactionModel> recurringTransactions;
   final Map<String, Map> users;
   final List<CategoryModel> categories;
@@ -76,6 +79,7 @@ class _ParsedBackup {
     required this.debts,
     required this.receivables,
     required this.budgets,
+    required this.tempBudgets,
     required this.recurringTransactions,
     required this.users,
     required this.categories,
@@ -177,7 +181,12 @@ class DataSerializationService {
   /// gün sonra), `monthlyInterestRate` ve `lateInterestRate` (yalnız tahmin
   /// için); yatırımlara `isPrimary` (ana kasa). Kart alanları ayarlanmamışken
   /// `null`, `isPrimary` `false`; v15 yedekleri `_v15ToV16` ile açıkça alır.
-  static const int schemaVersion = 16;
+  ///
+  /// v17 (2026-10-17): tek seferlik (tarih aralıklı) bütçeler — yeni
+  /// `tempBudgets` dizisi. v16 yedekleri `_v16ToV17` ile boş dizi alır.
+  /// Sürüm, veri dönüşmese de artar: v16 uygulaması bilmediği diziyi
+  /// sessizce düşürürdü, reddetmesi gerekir.
+  static const int schemaVersion = 17;
 
   final HiveInterface _hive;
   final ReceiptStorageService _receiptStorage;
@@ -218,6 +227,9 @@ class DataSerializationService {
     await (await _hive.openBox<ReceivableModel>('receivables')).clear();
     await (await _hive.openBox<BudgetModel>('budgets_box')).clear();
     await (await _hive
+            .openBox<TempBudgetModel>(TempBudgetLocalDataSource.boxName))
+        .clear();
+    await (await _hive
             .openBox<RecurringTransactionModel>('recurring_transactions_box'))
         .clear();
     await (await _hive.openBox<Map>('users')).clear();
@@ -244,6 +256,8 @@ class DataSerializationService {
     final debtBox = await _hive.openBox<DebtModel>('debts');
     final receivableBox = await _hive.openBox<ReceivableModel>('receivables');
     final budgetBox = await _hive.openBox<BudgetModel>('budgets_box');
+    final tempBudgetBox =
+        await _hive.openBox<TempBudgetModel>(TempBudgetLocalDataSource.boxName);
     final recurringBox = await _hive
         .openBox<RecurringTransactionModel>('recurring_transactions_box');
     final userBox = await _hive.openBox<Map>('users');
@@ -269,6 +283,7 @@ class DataSerializationService {
       'debts': debtBox.values.map((d) => d.toJson()).toList(),
       'receivables': receivableBox.values.map((r) => r.toJson()).toList(),
       'budgets': budgetBox.values.map((b) => b.toJson()).toList(),
+      'tempBudgets': tempBudgetBox.values.map((b) => b.toJson()).toList(),
       'recurringTransactions':
           recurringBox.values.map((r) => r.toJson()).toList(),
       'users': users,
@@ -297,6 +312,8 @@ class DataSerializationService {
     final debtBox = await _hive.openBox<DebtModel>('debts');
     final receivableBox = await _hive.openBox<ReceivableModel>('receivables');
     final budgetBox = await _hive.openBox<BudgetModel>('budgets_box');
+    final tempBudgetBox =
+        await _hive.openBox<TempBudgetModel>(TempBudgetLocalDataSource.boxName);
     final recurringBox = await _hive
         .openBox<RecurringTransactionModel>('recurring_transactions_box');
     final userBox = await _hive.openBox<Map>('users');
@@ -314,6 +331,7 @@ class DataSerializationService {
     final debtSnapshot = Map.of(debtBox.toMap());
     final receivableSnapshot = Map.of(receivableBox.toMap());
     final budgetSnapshot = Map.of(budgetBox.toMap());
+    final tempBudgetSnapshot = Map.of(tempBudgetBox.toMap());
     final recurringSnapshot = Map.of(recurringBox.toMap());
     final userSnapshot = Map.of(userBox.toMap());
 
@@ -324,6 +342,7 @@ class DataSerializationService {
       await debtBox.clear();
       await receivableBox.clear();
       await budgetBox.clear();
+      await tempBudgetBox.clear();
       await recurringBox.clear();
       await userBox.clear();
 
@@ -354,6 +373,9 @@ class DataSerializationService {
       }
       for (final model in parsedBackup.budgets) {
         await budgetBox.put(model.storageKey, model);
+      }
+      for (final model in parsedBackup.tempBudgets) {
+        await tempBudgetBox.put(model.id, model);
       }
       for (final model in parsedBackup.recurringTransactions) {
         await recurringBox.put(model.id, model);
@@ -438,6 +460,7 @@ class DataSerializationService {
         await _rollback(debtBox, debtSnapshot);
         await _rollback(receivableBox, receivableSnapshot);
         await _rollback(budgetBox, budgetSnapshot);
+        await _rollback(tempBudgetBox, tempBudgetSnapshot);
         await _rollback(recurringBox, recurringSnapshot);
         await _rollback(userBox, userSnapshot);
         await _rollback(categoryBox, categorySnapshot);
@@ -468,7 +491,8 @@ class DataSerializationService {
           investmentCount: parsed.investments.length,
           debtCount: parsed.debts.length,
           receivableCount: parsed.receivables.length,
-          budgetCount: parsed.budgets.length,
+          // Özet tek "bütçe" sayısı gösterir: aylık + tek seferlik.
+          budgetCount: parsed.budgets.length + parsed.tempBudgets.length,
           recurringCount: parsed.recurringTransactions.length,
           categoryCount: parsed.categories.length,
           goalCount: parsed.goals.length,
@@ -496,6 +520,8 @@ class DataSerializationService {
     final debtBox = await _hive.openBox<DebtModel>('debts');
     final receivableBox = await _hive.openBox<ReceivableModel>('receivables');
     final budgetBox = await _hive.openBox<BudgetModel>('budgets_box');
+    final tempBudgetBox =
+        await _hive.openBox<TempBudgetModel>(TempBudgetLocalDataSource.boxName);
     final recurringBox = await _hive
         .openBox<RecurringTransactionModel>('recurring_transactions_box');
 
@@ -509,7 +535,7 @@ class DataSerializationService {
       investmentCount: investmentBox.length,
       debtCount: debtBox.length,
       receivableCount: receivableBox.length,
-      budgetCount: budgetBox.length,
+      budgetCount: budgetBox.length + tempBudgetBox.length,
       recurringCount: recurringBox.length,
       categoryCount: categoryBox.length,
       goalCount: goalBox.length,
@@ -628,6 +654,10 @@ class DataSerializationService {
           .toList(),
       budgets: _list(migrated, 'budgets')
           .map((b) => BudgetModel.fromJson(Map<String, dynamic>.from(b as Map)))
+          .toList(),
+      tempBudgets: _list(migrated, 'tempBudgets')
+          .map((b) =>
+              TempBudgetModel.fromJson(Map<String, dynamic>.from(b as Map)))
           .toList(),
       recurringTransactions: _list(migrated, 'recurringTransactions')
           .map((r) => RecurringTransactionModel.fromJson(

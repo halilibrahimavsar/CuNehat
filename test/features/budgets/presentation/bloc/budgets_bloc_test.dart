@@ -5,6 +5,8 @@ import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/budgets/domain/usecases/delete_budget_usecase.dart';
 import 'package:cunehat/features/budgets/domain/usecases/get_budgets_usecase.dart';
 import 'package:cunehat/features/budgets/domain/usecases/save_budget_usecase.dart';
+import 'package:cunehat/features/budgets/domain/entities/temp_budget_entity.dart';
+import 'package:cunehat/features/budgets/domain/usecases/temp_budget_usecases.dart';
 import 'package:cunehat/features/budgets/presentation/bloc/budgets_bloc.dart';
 import 'package:cunehat/features/budgets/presentation/bloc/budgets_event.dart';
 import 'package:cunehat/features/budgets/presentation/bloc/budgets_state.dart';
@@ -17,6 +19,13 @@ class MockGetBudgetsUsecase extends Mock implements GetBudgetsUsecase {}
 class MockSaveBudgetUsecase extends Mock implements SaveBudgetUsecase {}
 
 class MockDeleteBudgetUsecase extends Mock implements DeleteBudgetUsecase {}
+
+class MockGetTempBudgetsUsecase extends Mock implements GetTempBudgetsUsecase {}
+
+class MockSaveTempBudgetUsecase extends Mock implements SaveTempBudgetUsecase {}
+
+class MockDeleteTempBudgetUsecase extends Mock
+    implements DeleteTempBudgetUsecase {}
 
 void main() {
   late MockGetBudgetsUsecase mockGetUseCase;
@@ -283,5 +292,98 @@ void main() {
         ]),
       );
     });
+  });
+
+  group('tek seferlik bütçeler', () {
+    late MockGetTempBudgetsUsecase getTemps;
+    late MockSaveTempBudgetUsecase saveTemp;
+    late MockDeleteTempBudgetUsecase deleteTemp;
+
+    final temp = TempBudgetEntity(
+      id: 'tb',
+      name: 'Tatil',
+      limitAmount: 1000,
+      startDate: DateTime(2026, 11, 10),
+      endDate: DateTime(2026, 11, 20),
+      categoryIds: const ['Food'],
+    );
+
+    setUpAll(() => registerFallbackValue(temp));
+
+    BudgetsBloc build() {
+      getTemps = MockGetTempBudgetsUsecase();
+      saveTemp = MockSaveTempBudgetUsecase();
+      deleteTemp = MockDeleteTempBudgetUsecase();
+      return BudgetsBloc(mockGetUseCase, mockSaveUseCase, mockDeleteUseCase,
+          changedNotifier, getTemps, saveTemp, deleteTemp);
+    }
+
+    blocTest<BudgetsBloc, BudgetsState>(
+      'yükleme aylık ve geçici bütçeleri birlikte taşır',
+      build: () {
+        final bloc = build();
+        when(() => mockGetUseCase('u', 'w'))
+            .thenAnswer((_) async => Right([testBudget]));
+        when(() => getTemps('u', 'w')).thenAnswer((_) async => Right([temp]));
+        return bloc;
+      },
+      act: (bloc) =>
+          bloc.add(const LoadBudgetsEvent(userId: 'u', walletId: 'w')),
+      expect: () => [
+        BudgetsLoading(),
+        BudgetsLoaded([testBudget], tempBudgets: [temp]),
+      ],
+    );
+
+    blocTest<BudgetsBloc, BudgetsState>(
+      'geçici bütçe okunamazsa aylık liste YİNE gösterilir',
+      build: () {
+        final bloc = build();
+        when(() => mockGetUseCase('u', 'w'))
+            .thenAnswer((_) async => Right([testBudget]));
+        when(() => getTemps('u', 'w'))
+            .thenAnswer((_) async => const Left(CacheFailure('x')));
+        return bloc;
+      },
+      act: (bloc) =>
+          bloc.add(const LoadBudgetsEvent(userId: 'u', walletId: 'w')),
+      expect: () => [
+        BudgetsLoading(),
+        BudgetsLoaded([testBudget]),
+      ],
+    );
+
+    blocTest<BudgetsBloc, BudgetsState>(
+      'kayıtta boş walletId aktif cüzdanla damgalanır, sonra liste tazelenir',
+      build: () {
+        final bloc = build();
+        when(() => mockGetUseCase('u', 'w'))
+            .thenAnswer((_) async => const Right([]));
+        when(() => getTemps('u', 'w')).thenAnswer((_) async => const Right([]));
+        when(() => saveTemp(any())).thenAnswer((_) async => const Right(null));
+        return bloc;
+      },
+      act: (bloc) async {
+        bloc.add(const LoadBudgetsEvent(userId: 'u', walletId: 'w'));
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        bloc.add(SaveTempBudgetEvent(temp));
+      },
+      wait: const Duration(milliseconds: 30),
+      verify: (_) {
+        verify(() => saveTemp(temp.copyWith(walletId: 'w'))).called(1);
+        verify(() => getTemps('u', 'w')).called(2);
+      },
+    );
+
+    blocTest<BudgetsBloc, BudgetsState>(
+      'silme kimlikle yapılır',
+      build: () {
+        final bloc = build();
+        when(() => deleteTemp('tb')).thenAnswer((_) async => const Right(null));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(const DeleteTempBudgetEvent('tb')),
+      verify: (_) => verify(() => deleteTemp('tb')).called(1),
+    );
   });
 }

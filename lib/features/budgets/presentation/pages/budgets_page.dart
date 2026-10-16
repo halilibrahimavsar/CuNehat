@@ -15,6 +15,7 @@ import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/budgets/presentation/bloc/budgets_bloc.dart';
 import 'package:cunehat/features/budgets/presentation/bloc/budgets_event.dart';
 import 'package:cunehat/features/budgets/presentation/bloc/budgets_state.dart';
+import 'package:cunehat/features/budgets/presentation/widgets/temp_budget_widgets.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
@@ -158,7 +159,7 @@ class _BudgetsBodyState extends State<_BudgetsBody> {
                     .hataStateFailureMessage(state.failure.message))),
           );
         } else if (state is BudgetsLoaded) {
-          if (state.budgets.isEmpty) {
+          if (state.budgets.isEmpty && state.tempBudgets.isEmpty) {
             return const _EmptyBudgets();
           }
           return SliverPadding(
@@ -168,13 +169,24 @@ class _BudgetsBodyState extends State<_BudgetsBody> {
                 .plusFabClearance(),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                _BudgetSummaryCard(budgets: state.budgets),
-                const SizedBox(height: 16),
-                ...state.budgets.map((budget) => _BudgetListItem(
-                      budget: budget,
-                      categoryLabels: _labels,
-                      walletId: widget.walletId,
-                    )),
+                // Özet kartı "BU AY" der: yalnız aylık bütçeleri toplar.
+                // Tek seferlik bütçe ayın içine sığmayabilir; ona katılsaydı
+                // "bu ay toplam limit" yalan olurdu.
+                if (state.budgets.isNotEmpty) ...[
+                  _BudgetSummaryCard(budgets: state.budgets),
+                  const SizedBox(height: 16),
+                  ...state.budgets.map((budget) => _BudgetListItem(
+                        budget: budget,
+                        categoryLabels: _labels,
+                        walletId: widget.walletId,
+                      )),
+                ],
+                if (state.tempBudgets.isNotEmpty)
+                  TempBudgetSection(
+                    budgets: state.tempBudgets,
+                    categoryLabels: _labels,
+                    walletId: widget.walletId,
+                  ),
               ]),
             ),
           );
@@ -196,7 +208,7 @@ class _EmptyBudgets extends StatelessWidget {
         child: EmptyState(
           icon: Icons.savings_outlined,
           title: context.l10n.henuzButceYok,
-          body: context.l10n.kategorilerinizeAylikHarcamaLimiti,
+          body: context.l10n.tempBudgetEmptyBody,
         ),
       ),
     );
@@ -513,11 +525,48 @@ class _AddBudgetButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton(
-      onPressed: () => _showBudgetForm(context, walletId: walletId),
+      onPressed: () => _chooseBudgetKind(context),
       child: const Icon(Icons.add),
     );
   }
+
+  /// Önce tür: aylık mı, tek seferlik mi. İki form çok farklı (biri tek
+  /// kategori + aylık limit, öteki ad + aralık + birden çok kategori); tek
+  /// formda anahtarla geçiş, alanların yarısını anlamsız kılardı.
+  Future<void> _chooseBudgetKind(BuildContext context) async {
+    final l10n = context.l10n;
+    final kind = await RowActionSheet.show<_BudgetKind>(
+      context,
+      keyPrefix: 'budget-kind',
+      title: l10n.yeniButceEkle,
+      icon: Icons.savings_outlined,
+      accent: Theme.of(context).colorScheme.primary,
+      actions: [
+        RowAction(
+          value: _BudgetKind.monthly,
+          icon: Icons.autorenew_rounded,
+          title: l10n.tempBudgetKindMonthly,
+          subtitle: l10n.tempBudgetKindMonthlyDesc,
+        ),
+        RowAction(
+          value: _BudgetKind.oneTime,
+          icon: Icons.event_note_rounded,
+          title: l10n.tempBudgetKindOneTime,
+          subtitle: l10n.tempBudgetKindOneTimeDesc,
+        ),
+      ],
+    );
+    if (kind == null || !context.mounted) return;
+    switch (kind) {
+      case _BudgetKind.monthly:
+        _showBudgetForm(context, walletId: walletId);
+      case _BudgetKind.oneTime:
+        showTempBudgetForm(context, walletId: walletId);
+    }
+  }
 }
+
+enum _BudgetKind { monthly, oneTime }
 
 /// Bütçe formunu alt sayfa olarak açar: yeni bütçe, ya da [editing] verilirse
 /// o bütçenin limiti.

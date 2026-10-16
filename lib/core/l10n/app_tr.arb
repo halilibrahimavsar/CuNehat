@@ -4616,5 +4616,116 @@
   "txEmptyPeriodTitle": "Bu dönemde kayıt yok",
   "txEmptyPeriodBody": "Bu aralıkta gelir ya da gider yazmadın.",
   "txEmptyShowAll": "Tüm kayıtları göster",
-  "privacyDataHeader": "Gizlilik ve veri"
+  "privacyDataHeader": "Gizlilik ve veri",
+  "tempBudgetSectionTitle": "Tek seferlik bütçeler",
+  "tempBudgetFinishedSection": "Biten ({count})",
+  "@tempBudgetFinishedSection": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tempBudgetKindMonthly": "Aylık bütçe",
+  "tempBudgetKindMonthlyDesc": "Bir kategoriye her ay yenilenen limit",
+  "tempBudgetKindOneTime": "Tek seferlik bütçe",
+  "tempBudgetKindOneTimeDesc": "Tatil, taşınma, bayram… tarih aralığıyla, bir ya da birkaç kategoriye",
+  "tempBudgetNewTitle": "Yeni tek seferlik bütçe",
+  "tempBudgetEditTitle": "Tek seferlik bütçeyi düzenle",
+  "tempBudgetNameLabel": "Ad",
+  "tempBudgetNameHint": "ör. Tatil",
+  "tempBudgetNameRequired": "Bir ad yaz",
+  "tempBudgetRangeLabel": "Tarih aralığı",
+  "tempBudgetRangeRequired": "Tarih aralığı seç",
+  "tempBudgetLimitLabel": "Limit (aralığın tamamı)",
+  "tempBudgetCategoriesLabel": "Sayılan kategoriler",
+  "tempBudgetCategoriesHint": "Alt kategorileri de sayılır.",
+  "tempBudgetAddCategory": "Kategori ekle",
+  "tempBudgetCategoriesRequired": "En az bir kategori seç",
+  "tempBudgetCategoryCovered": "{parent} zaten seçili; alt kategorisi ayrıca sayılmaz.",
+  "@tempBudgetCategoryCovered": {
+    "placeholders": {
+      "parent": {
+        "type": "String"
+      }
+    }
+  },
+  "tempBudgetStartsIn": "{days, plural, =0{Bugün başlıyor} =1{Yarın başlıyor} other{{days} gün sonra başlıyor}}",
+  "@tempBudgetStartsIn": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "tempBudgetDaysLeft": "{days, plural, =1{Son gün} other{{days} gün kaldı}}",
+  "@tempBudgetDaysLeft": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "tempBudgetDailyAllowance": "Günde {amount} harcayabilirsin",
+  "@tempBudgetDailyAllowance": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "tempBudgetResultLeft": "{amount} kaldı",
+  "@tempBudgetResultLeft": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "tempBudgetResultOver": "{amount} aştı",
+  "@tempBudgetResultOver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "tempBudgetResultExact": "Tam limitte bitti",
+  "tempBudgetSpentOfLimit": "{spent} / {limit}",
+  "@tempBudgetSpentOfLimit": {
+    "placeholders": {
+      "spent": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "tempBudgetDeleteConfirmTitle": "Tek seferlik bütçe silinsin mi?",
+  "tempBudgetDeleteConfirmMessage": "\"{name}\" silinecek. İşlemlerine dokunulmaz.",
+  "@tempBudgetDeleteConfirmMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tempBudgetDeleted": "\"{name}\" silindi",
+  "@tempBudgetDeleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tempBudgetEmptyBody": "Kategorilerine aylık limit koy ya da tatil gibi bir dönem için tek seferlik bütçe aç; harcadıkça burada izlersin.",
+  "tempBudgetMoreCategories": "+{count}",
+  "@tempBudgetMoreCategories": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

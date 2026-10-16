@@ -22,15 +22,16 @@ verisi geçersiz sayılır; çözüm veri silme/yeniden kurulumdur, migrasyon de
   dahil — enum değerleri yalnız **sona** eklenir).
 - `typeId` silinmez, adapter kaydı kaldırılmaz.
 - Sıradaki serbest numaralar için ilgili hafıza notlarına bak; tahmin etme.
-  (12 Eki 2026 itibarıyla: `WalletModel` typeId 0 → sıradaki alan **16**;
+  (17 Eki 2026 itibarıyla: `WalletModel` typeId 0 → sıradaki alan **16**;
   `TransactionModel` typeId 1 → sıradaki alan **18** (14 = `importBatchId`,
   şema 13; 15–17 = taksit grubu, şema 15); `InvestmentModel` typeId 4 →
   sıradaki alan **18** (11 ve 13 emekli/yakılmış; 17 = `isPrimary`, şema 16);
   `CategoryModel` typeId 15 → sıradaki alan **6**; `CreditCardInfoModel`
   typeId 17 → sıradaki alan **10** (7 = `dueOffsetDays`, 8 =
   `monthlyInterestRate`, 9 = `lateInterestRate`, şema 16);
-  `CardStatementModel` typeId 18 → sıradaki alan **6**; sıradaki typeId
-  **19**.)
+  `CardStatementModel` typeId 18 → sıradaki alan **6**;
+  `TempBudgetModel` typeId 19 (tek seferlik bütçe, kutu `temp_budgets_box`,
+  şema 17) → sıradaki alan **7**; sıradaki typeId **20**.)
 - `InvestmentModel` üretilen adapter kullanır; geç eklenen non-null alanı
   (`isPrimary`) eski kayıtta `SafeInvestmentModelAdapter.read` varsayılana
   düşürür. Bu modele alan eklerken ÜÇ yer birlikte değişir: `@HiveField`
@@ -38,7 +39,8 @@ verisi geçersiz sayılır; çözüm veri silme/yeniden kurulumdur, migrasyon de
 
 ### Yedek şeması — `DataSerializationService.schemaVersion`
 
-- Mevcut sürüm **16** (15→16: karta `dueOffsetDays`/`monthlyInterestRate`/
+- Mevcut sürüm **17** (16→17: tek seferlik bütçeler — yeni `tempBudgets`
+  dizisi, eski yedeğe boş dizi yazılır; 15→16: karta `dueOffsetDays`/`monthlyInterestRate`/
   `lateInterestRate`, yatırıma `isPrimary` (ana kasa); 14→15: işlemlere
   taksit grubu `installmentGroupId`/`installmentNo`/`installmentCount`; 13→14: yatırım türüne `cash` — veri
   dönüşmez, eski sürüm yeni yedeği reddetsin diye; 12→13: işlemlere

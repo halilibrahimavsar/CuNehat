@@ -54,10 +54,16 @@ import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit
     as _i21;
 import 'package:cunehat/features/budgets/data/datasources/local/budget_local_datasource.dart'
     as _i828;
+import 'package:cunehat/features/budgets/data/datasources/local/temp_budget_local_datasource.dart'
+    as _i303;
 import 'package:cunehat/features/budgets/data/repositories/budget_repository_impl.dart'
     as _i626;
+import 'package:cunehat/features/budgets/data/repositories/temp_budget_repository_impl.dart'
+    as _i1034;
 import 'package:cunehat/features/budgets/domain/repositories/budget_repository.dart'
     as _i94;
+import 'package:cunehat/features/budgets/domain/repositories/temp_budget_repository.dart'
+    as _i746;
 import 'package:cunehat/features/budgets/domain/services/budget_alert_monitor.dart'
     as _i222;
 import 'package:cunehat/features/budgets/domain/usecases/delete_budget_usecase.dart'
@@ -66,6 +72,8 @@ import 'package:cunehat/features/budgets/domain/usecases/get_budgets_usecase.dar
     as _i21;
 import 'package:cunehat/features/budgets/domain/usecases/save_budget_usecase.dart'
     as _i613;
+import 'package:cunehat/features/budgets/domain/usecases/temp_budget_usecases.dart'
+    as _i618;
 import 'package:cunehat/features/budgets/presentation/bloc/budgets_bloc.dart'
     as _i645;
 import 'package:cunehat/features/debt_and_receivable/data/datasource/debt_local_datasource.dart'
@@ -257,6 +265,8 @@ extension GetItInjectableX on _i174.GetIt {
         () => appModule.flutterLocalNotificationsPlugin);
     gh.lazySingleton<_i719.HomeNavigationRequests>(
         () => _i719.HomeNavigationRequests());
+    gh.lazySingleton<_i303.TempBudgetLocalDataSource>(
+        () => _i303.TempBudgetLocalDataSource.create());
     gh.lazySingleton<_i698.LocalAuthRepository>(
         () => appModule.localAuthRepository(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i198.DebtRepository>(() => _i354.DebtRepositoryImpl(
@@ -281,6 +291,8 @@ extension GetItInjectableX on _i174.GetIt {
         ));
     gh.lazySingleton<_i648.RecurringTransactionLocalDataSource>(
         () => _i648.RecurringTransactionLocalDataSourceImpl());
+    gh.lazySingleton<_i746.TempBudgetRepository>(() =>
+        _i1034.TempBudgetRepositoryImpl(gh<_i303.TempBudgetLocalDataSource>()));
     gh.lazySingleton<_i468.ReceivableRepository>(() =>
         _i162.ReceivableRepositoryImpl(
             receivableDatasourceRepository:
@@ -359,6 +371,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i162.GetPendingRecurringTransactionsUsecase>(() =>
         _i162.GetPendingRecurringTransactionsUsecase(
             gh<_i788.RecurringTransactionRepository>()));
+    gh.factory<_i618.GetTempBudgetsUsecase>(() => _i618.GetTempBudgetsUsecase(
+          gh<_i746.TempBudgetRepository>(),
+          gh<_i543.TransactionsRepository>(),
+          gh<_i896.CategoryRepository>(),
+          gh<_i504.WalletRepository>(),
+        ));
     gh.factory<_i818.AddInvestmentUseCase>(
         () => _i818.AddInvestmentUseCase(gh<_i589.InvestmentRepository>()));
     gh.factory<_i318.DeleteInvestmentUseCase>(
@@ -369,6 +387,15 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i420.UpdateInvestmentUseCase(gh<_i589.InvestmentRepository>()));
     gh.factory<_i362.GetLiveQuoteUseCase>(
         () => _i362.GetLiveQuoteUseCase(gh<_i589.InvestmentRepository>()));
+    gh.factory<_i618.SaveTempBudgetUsecase>(() => _i618.SaveTempBudgetUsecase(
+          gh<_i746.TempBudgetRepository>(),
+          gh<_i977.BudgetsChangedNotifier>(),
+        ));
+    gh.factory<_i618.DeleteTempBudgetUsecase>(
+        () => _i618.DeleteTempBudgetUsecase(
+              gh<_i746.TempBudgetRepository>(),
+              gh<_i977.BudgetsChangedNotifier>(),
+            ));
     gh.factory<_i510.GetGoalsUseCase>(
         () => _i510.GetGoalsUseCase(gh<_i851.GoalRepository>()));
     gh.factory<_i510.SaveGoalUseCase>(
@@ -446,6 +473,18 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i777.TransactionsChangedNotifier>(),
           gh<_i520.CategoriesChangedNotifier>(),
         ));
+    gh.factory<_i691.DeleteBudgetsForCategoryUsecase>(
+        () => _i691.DeleteBudgetsForCategoryUsecase(
+              gh<_i94.BudgetRepository>(),
+              gh<_i746.TempBudgetRepository>(),
+              gh<_i977.BudgetsChangedNotifier>(),
+            ));
+    gh.factory<_i691.DeleteBudgetsForWalletUsecase>(
+        () => _i691.DeleteBudgetsForWalletUsecase(
+              gh<_i94.BudgetRepository>(),
+              gh<_i746.TempBudgetRepository>(),
+              gh<_i977.BudgetsChangedNotifier>(),
+            ));
     gh.factory<_i613.SaveBudgetUsecase>(() => _i613.SaveBudgetUsecase(
           gh<_i94.BudgetRepository>(),
           gh<_i977.BudgetsChangedNotifier>(),
@@ -454,16 +493,6 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i94.BudgetRepository>(),
           gh<_i977.BudgetsChangedNotifier>(),
         ));
-    gh.factory<_i691.DeleteBudgetsForCategoryUsecase>(
-        () => _i691.DeleteBudgetsForCategoryUsecase(
-              gh<_i94.BudgetRepository>(),
-              gh<_i977.BudgetsChangedNotifier>(),
-            ));
-    gh.factory<_i691.DeleteBudgetsForWalletUsecase>(
-        () => _i691.DeleteBudgetsForWalletUsecase(
-              gh<_i94.BudgetRepository>(),
-              gh<_i977.BudgetsChangedNotifier>(),
-            ));
     gh.lazySingleton<_i239.WalletMetricsService>(() =>
         _i239.WalletMetricsService(
           walletRepository: gh<_i504.WalletRepository>(),
@@ -497,6 +526,19 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i198.DebtRepository>(),
           gh<_i534.ReminderSyncService>(),
         ));
+    gh.lazySingleton<_i222.BudgetAlertMonitor>(
+      () => _i222.BudgetAlertMonitor(
+        gh<_i21.GetBudgetsUsecase>(),
+        gh<_i551.NotificationService>(),
+        gh<_i721.NotificationSettingsService>(),
+        gh<_i931.NotificationLocalizer>(),
+        gh<_i460.SharedPreferences>(),
+        gh<_i896.CategoryRepository>(),
+        gh<_i777.TransactionsChangedNotifier>(),
+        gh<_i618.GetTempBudgetsUsecase>(),
+      ),
+      dispose: (i) => i.dispose(),
+    );
     gh.factory<_i86.DeleteCategoryUseCase>(() => _i86.DeleteCategoryUseCase(
           gh<_i896.CategoryRepository>(),
           gh<_i543.TransactionsRepository>(),
@@ -553,24 +595,6 @@ extension GetItInjectableX on _i174.GetIt {
         ));
     gh.factory<_i570.LanguageBloc>(
         () => _i570.LanguageBloc(gh<_i534.ReminderSyncService>()));
-    gh.factory<_i645.BudgetsBloc>(() => _i645.BudgetsBloc(
-          gh<_i21.GetBudgetsUsecase>(),
-          gh<_i613.SaveBudgetUsecase>(),
-          gh<_i691.DeleteBudgetUsecase>(),
-          gh<_i777.TransactionsChangedNotifier>(),
-        ));
-    gh.lazySingleton<_i222.BudgetAlertMonitor>(
-      () => _i222.BudgetAlertMonitor(
-        gh<_i21.GetBudgetsUsecase>(),
-        gh<_i551.NotificationService>(),
-        gh<_i721.NotificationSettingsService>(),
-        gh<_i931.NotificationLocalizer>(),
-        gh<_i460.SharedPreferences>(),
-        gh<_i896.CategoryRepository>(),
-        gh<_i777.TransactionsChangedNotifier>(),
-      ),
-      dispose: (i) => i.dispose(),
-    );
     gh.lazySingleton<_i530.AutoBackupService>(
       () => _i530.AutoBackupService(
         gh<_i186.GoogleDriveBackupService>(),
@@ -628,6 +652,15 @@ extension GetItInjectableX on _i174.GetIt {
           walletMetricsService: gh<_i239.WalletMetricsService>(),
           transactionsChangedNotifier: gh<_i777.TransactionsChangedNotifier>(),
           categoriesChangedNotifier: gh<_i520.CategoriesChangedNotifier>(),
+        ));
+    gh.factory<_i645.BudgetsBloc>(() => _i645.BudgetsBloc(
+          gh<_i21.GetBudgetsUsecase>(),
+          gh<_i613.SaveBudgetUsecase>(),
+          gh<_i691.DeleteBudgetUsecase>(),
+          gh<_i777.TransactionsChangedNotifier>(),
+          gh<_i618.GetTempBudgetsUsecase>(),
+          gh<_i618.SaveTempBudgetUsecase>(),
+          gh<_i618.DeleteTempBudgetUsecase>(),
         ));
     gh.factory<_i21.BankImportCubit>(() => _i21.BankImportCubit(
           gh<_i1065.RawTableReader>(),
