@@ -1,4 +1,5 @@
 import 'package:cunehat/core/error/error_handling.dart';
+import 'package:cunehat/core/services/exchange_rate_service.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/budgets/domain/entities/temp_budget_entity.dart';
 import 'package:cunehat/features/budgets/domain/repositories/budget_repository.dart';
@@ -55,6 +56,7 @@ class ForecastService {
   final GoalRepository _goals;
   final InvestmentRepository _investments;
   final CategoryRepository _categories;
+  final ExchangeRateService _rates;
 
   ForecastService(
     this._wallets,
@@ -67,7 +69,28 @@ class ForecastService {
     this._goals,
     this._investments,
     this._categories,
+    this._rates,
   );
+
+  /// [currencies] → [currency] kurları ("Tüm cüzdanlar" için). Kuru
+  /// alınamayan birim haritada YOKTUR (çağıran o cüzdanı dışarıda bırakır).
+  /// Önce ağ denenir (önbellek tazeyse ağa çıkmaz), olmazsa bayat önbellek.
+  Future<Map<String, double>> ratesTo(
+      String currency, Iterable<String> currencies) async {
+    final out = <String, double>{};
+    for (final c in currencies.toSet()) {
+      if (c == currency) continue;
+      double? r;
+      try {
+        r = await _rates.rateBetween(c, currency);
+      } catch (e, st) {
+        reportError('Gelecek · kur', e, st);
+      }
+      r ??= _rates.cachedRateBetween(c, currency);
+      if (r != null && r > 0) out[c] = r;
+    }
+    return out;
+  }
 
   /// [userId]'nin tüm cüzdanlarının tahmini, kimliğe göre.
   Future<ForecastResult> forecast({

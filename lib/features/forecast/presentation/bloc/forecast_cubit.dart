@@ -12,6 +12,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 enum ForecastStatus { loading, ready, failed }
 
+/// Sayfanın kapsamı: aktif cüzdan ya da tüm cüzdanların birleşimi.
+enum ForecastScope { wallet, all }
+
 class ForecastState extends Equatable {
   final ForecastStatus status;
 
@@ -24,15 +27,40 @@ class ForecastState extends Equatable {
   /// Hesaplandığı gün (gece yarısını geçen oturum bayat kalmasın).
   final DateTime? computedFor;
 
+  final ForecastScope scope;
+
+  /// "Tüm cüzdanlar" için birim → görüntü birimi kurları.
+  final Map<String, double> rates;
+
   const ForecastState({
     this.status = ForecastStatus.loading,
     this.wallets = const {},
     this.categories = const [],
     this.computedFor,
+    this.scope = ForecastScope.wallet,
+    this.rates = const {},
   });
 
+  ForecastState copyWith({
+    ForecastStatus? status,
+    Map<String, WalletForecast>? wallets,
+    List<CategoryEntity>? categories,
+    DateTime? computedFor,
+    ForecastScope? scope,
+    Map<String, double>? rates,
+  }) =>
+      ForecastState(
+        status: status ?? this.status,
+        wallets: wallets ?? this.wallets,
+        categories: categories ?? this.categories,
+        computedFor: computedFor ?? this.computedFor,
+        scope: scope ?? this.scope,
+        rates: rates ?? this.rates,
+      );
+
   @override
-  List<Object?> get props => [status, wallets, categories, computedFor];
+  List<Object?> get props =>
+      [status, wallets, categories, computedFor, scope, rates];
 }
 
 /// Gelecek sayfasının durumu. Defter ya da bütçe değişince kendini yeniler:
@@ -80,21 +108,44 @@ class ForecastCubit extends Cubit<ForecastState> {
       );
       // Üst üste gelen yenilemelerde yalnız EN SON istek yazar.
       if (isClosed || gen != _generation) return;
-      emit(ForecastState(
+      emit(state.copyWith(
         status: ForecastStatus.ready,
         wallets: result.wallets,
         categories: result.categories,
         computedFor: DateTime(now.year, now.month, now.day),
       ));
+      if (state.scope == ForecastScope.all) await _loadRates();
     } catch (e, st) {
       reportError('Gelecek · tahmin', e, st);
       if (isClosed || gen != _generation) return;
-      emit(ForecastState(
-        status: ForecastStatus.failed,
-        wallets: state.wallets,
-        categories: state.categories,
-        computedFor: state.computedFor,
-      ));
+      emit(state.copyWith(status: ForecastStatus.failed));
+    }
+  }
+
+  /// Görüntü birimi: tüm cüzdanlar görünümünde toplamların birimi.
+  String? displayCurrency;
+
+  /// Kapsamı değiştirir; "tüm cüzdanlar"a geçişte kurlar yüklenir.
+  Future<void> setScope(ForecastScope scope, {required String currency}) async {
+    displayCurrency = currency;
+    emit(state.copyWith(scope: scope));
+    if (scope == ForecastScope.all) await _loadRates();
+  }
+
+  Future<void> _loadRates() async {
+    final currency = displayCurrency;
+    if (currency == null) return;
+    final needed = {
+      for (final w in state.wallets.values)
+        if (w.currency != currency) w.currency,
+    };
+    if (needed.isEmpty) return;
+    try {
+      final rates = await _service.ratesTo(currency, needed);
+      if (isClosed) return;
+      emit(state.copyWith(rates: rates));
+    } catch (e, st) {
+      reportError('Gelecek · kurlar', e, st);
     }
   }
 

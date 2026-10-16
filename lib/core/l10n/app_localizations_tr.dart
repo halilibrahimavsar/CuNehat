@@ -7581,4 +7581,20 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get forecastLoadFailed =>
       'Tahmin hesaplanamadı. Aşağı çekip yeniden dene.';
+
+  @override
+  String get forecastScopeWallet => 'Bu cüzdan';
+
+  @override
+  String get forecastScopeAll => 'Tüm cüzdanlar';
+
+  @override
+  String forecastAllCurrencyNote(String currency) {
+    return 'Toplamlar $currency cinsinden; diğer birimler güncel kurla çevrildi. Kart harcaması nakitten son ödeme gününde düşer.';
+  }
+
+  @override
+  String forecastExcludedWallets(String names) {
+    return 'Kur alınamadı, toplama katılmadı: $names';
+  }
 }

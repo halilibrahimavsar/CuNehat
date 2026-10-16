@@ -5002,5 +5002,23 @@
   "forecastHowGoals": "Hedef tahmini yalnız son 90 günde hedefe eklediğin paradan gelir; değer artışı hesaba katılmaz.",
   "forecastLinkTitle": "Önümüzdeki 30 gün",
   "forecastLinkBody": "Ay sonu tahmini, yaklaşan ödemeler, bütçe gidişatı",
-  "forecastLoadFailed": "Tahmin hesaplanamadı. Aşağı çekip yeniden dene."
+  "forecastLoadFailed": "Tahmin hesaplanamadı. Aşağı çekip yeniden dene.",
+  "forecastScopeWallet": "Bu cüzdan",
+  "forecastScopeAll": "Tüm cüzdanlar",
+  "forecastAllCurrencyNote": "Toplamlar {currency} cinsinden; diğer birimler güncel kurla çevrildi. Kart harcaması nakitten son ödeme gününde düşer.",
+  "@forecastAllCurrencyNote": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastExcludedWallets": "Kur alınamadı, toplama katılmadı: {names}",
+  "@forecastExcludedWallets": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -467,6 +467,10 @@ class ForecastUpcomingCard extends StatefulWidget {
   /// Tüm cüzdanlar görünümünde olay satırı cüzdan adını da yazar.
   final Map<String, String> walletNames;
 
+  /// Tüm cüzdanlar görünümünde her olay KENDİ biriminde yazılır (çevrilmiş
+  /// tutar ödenecek tutar değildir); cüzdan → birim.
+  final Map<String, String> currencyOf;
+
   const ForecastUpcomingCard({
     super.key,
     required this.events,
@@ -475,6 +479,7 @@ class ForecastUpcomingCard extends StatefulWidget {
     required this.today,
     required this.horizonDays,
     this.walletNames = const {},
+    this.currencyOf = const {},
   });
 
   @override
@@ -567,6 +572,10 @@ class _ForecastUpcomingCardState extends State<ForecastUpcomingCard> {
     final income = e.isIncome;
     final title = forecastEventTitle(l10n, e);
     final wallet = widget.walletNames[e.walletId];
+    final currency = widget.currencyOf[e.walletId];
+    final money = currency == null || currency == widget.money.currency
+        ? widget.money
+        : MoneyWriter(currency: currency, visible: widget.money.visible);
     final date = overdue
         ? AppFormatters.dayMonth.format(e.date)
         : forecastDayLabel(l10n, e.date, widget.today);
@@ -601,8 +610,8 @@ class _ForecastUpcomingCardState extends State<ForecastUpcomingCard> {
         children: [
           Text(
             e.certainty == ForecastCertainty.expected
-                ? '~${widget.money.withSign(e.amount)}'
-                : widget.money.withSign(e.amount),
+                ? '~${money.withSign(e.amount)}'
+                : money.withSign(e.amount),
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: AppType.strong,
               color: income
@@ -656,23 +665,33 @@ String forecastEventTitle(AppLocalizations l10n, ForecastEvent e) {
 
 class ForecastCardsCard extends StatelessWidget {
   final List<(String name, CardOutlook card)> cards;
-  final MoneyWriter money;
   final DateTime today;
-  final bool hasPace;
+
+  /// Kart cüzdanı → birim (her kart kendi biriminde yazılır).
+  final Map<String, String> currencyOf;
 
   const ForecastCardsCard({
     super.key,
     required this.cards,
-    required this.money,
+    required MoneyWriter money,
     required this.today,
-    this.hasPace = true,
-  });
+    this.currencyOf = const {},
+  }) : _money = money;
+
+  final MoneyWriter _money;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    MoneyWriter money(String walletId) {
+      final c = currencyOf[walletId];
+      return c == null || c == _money.currency
+          ? _money
+          : MoneyWriter(currency: c, visible: _money.visible);
+    }
+
     return AppCard(
       key: const ValueKey('forecast-cards-card'),
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
@@ -697,7 +716,7 @@ class ForecastCardsCard extends StatelessWidget {
             if (cards[i].$2.pendingAmount > 0)
               Text(
                 l10n.forecastCardPending(
-                  money(cards[i].$2.pendingAmount),
+                  money(cards[i].$2.walletId)(cards[i].$2.pendingAmount),
                   forecastDayLabel(l10n, cards[i].$2.pendingDue, today),
                 ),
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -707,7 +726,8 @@ class ForecastCardsCard extends StatelessWidget {
                 ),
               ),
             Text(
-              l10n.forecastCardEstimate(money(cards[i].$2.statementEstimate)),
+              l10n.forecastCardEstimate(
+                  money(cards[i].$2.walletId)(cards[i].$2.statementEstimate)),
               style: theme.textTheme.titleSmall
                   ?.copyWith(fontWeight: AppType.strong),
             ),
@@ -721,9 +741,10 @@ class ForecastCardsCard extends StatelessWidget {
             ),
             Text(
               l10n.forecastCardBreakdown(
-                money(cards[i].$2.spentSoFar),
-                money(cards[i].$2.installmentsUntilClosing),
-                money(cards[i].$2.paceUntilClosing),
+                money(cards[i].$2.walletId)(cards[i].$2.spentSoFar),
+                money(cards[i].$2.walletId)(
+                    cards[i].$2.installmentsUntilClosing),
+                money(cards[i].$2.walletId)(cards[i].$2.paceUntilClosing),
               ),
               style: theme.textTheme.bodySmall
                   ?.copyWith(color: scheme.onSurfaceVariant),
@@ -737,16 +758,30 @@ class ForecastCardsCard extends StatelessWidget {
 
 class ForecastGoalsCard extends StatelessWidget {
   final List<GoalOutlook> goals;
-  final MoneyWriter money;
+  final MoneyWriter _money;
 
-  const ForecastGoalsCard(
-      {super.key, required this.goals, required this.money});
+  /// Hedefin cüzdanı → birim.
+  final Map<String, String> currencyOf;
+
+  const ForecastGoalsCard({
+    super.key,
+    required this.goals,
+    required MoneyWriter money,
+    this.currencyOf = const {},
+  }) : _money = money;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    MoneyWriter moneyFor(GoalOutlook g) {
+      final c = currencyOf[g.goal.walletId];
+      return c == null || c == _money.currency
+          ? _money
+          : MoneyWriter(currency: c, visible: _money.visible);
+    }
+
     final monthYear = DateFormat.yMMMM(Intl.defaultLocale);
     return AppCard(
       key: const ValueKey('forecast-goals-card'),
@@ -766,7 +801,8 @@ class ForecastGoalsCard extends StatelessWidget {
                           ?.copyWith(fontWeight: AppType.medium)),
                 ),
                 Text(
-                  '${money(goals[i].saved)} / ${money(goals[i].goal.targetAmount)}',
+                  '${moneyFor(goals[i])(goals[i].saved)} / '
+                  '${moneyFor(goals[i])(goals[i].goal.targetAmount)}',
                   style: theme.textTheme.bodySmall
                       ?.copyWith(color: scheme.onSurfaceVariant),
                 ),
@@ -787,7 +823,8 @@ class ForecastGoalsCard extends StatelessWidget {
             ),
             if (!goals[i].reached && goals[i].monthlyContribution > 0)
               Text(
-                l10n.forecastGoalMonthly(money(goals[i].monthlyContribution)),
+                l10n.forecastGoalMonthly(
+                    moneyFor(goals[i])(goals[i].monthlyContribution)),
                 style: theme.textTheme.bodySmall
                     ?.copyWith(color: scheme.onSurfaceVariant),
               ),

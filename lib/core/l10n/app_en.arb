@@ -4768,5 +4768,23 @@
   "forecastHowGoals": "Goal estimates only use what you added in the last 90 days; value growth is not counted.",
   "forecastLinkTitle": "The next 30 days",
   "forecastLinkBody": "End-of-month outlook, upcoming payments, budget outlook",
-  "forecastLoadFailed": "Couldn't calculate the outlook. Pull down to try again."
+  "forecastLoadFailed": "Couldn't calculate the outlook. Pull down to try again.",
+  "forecastScopeWallet": "This wallet",
+  "forecastScopeAll": "All wallets",
+  "forecastAllCurrencyNote": "Totals are in {currency}; other currencies are converted at the current rate. Card spending leaves your cash on the due date.",
+  "@forecastAllCurrencyNote": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastExcludedWallets": "No exchange rate, left out of the total: {names}",
+  "@forecastExcludedWallets": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  }
 }

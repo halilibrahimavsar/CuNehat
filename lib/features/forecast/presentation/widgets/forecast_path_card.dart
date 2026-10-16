@@ -84,13 +84,20 @@ class ForecastPathCard extends StatelessWidget {
   final DateTime today;
   final int horizonDays;
 
+  /// Olası aralık bandı çizilsin mi; verilmezse cüzdanın hızı varsa.
+  /// Birleşik görünümde hız tek bir cüzdana ait değildir.
+  final bool? showBand;
+
   const ForecastPathCard({
     super.key,
     required this.forecast,
     required this.money,
     required this.today,
     required this.horizonDays,
+    this.showBand,
   });
+
+  bool get _band => showBand ?? forecast.pace != null;
 
   @override
   Widget build(BuildContext context) {
@@ -150,6 +157,7 @@ class ForecastPathCard extends StatelessWidget {
               money: money,
               today: today,
               color: accent,
+              hasBand: _band,
             ),
           ),
           const SizedBox(height: 8),
@@ -162,7 +170,7 @@ class ForecastPathCard extends StatelessWidget {
                   label: forecast.isCard
                       ? l10n.forecastCardPathTitle
                       : l10n.forecastLegendExpected),
-              if (forecast.pace != null)
+              if (_band)
                 _LegendDot(
                     color: accent.withValues(alpha: 0.25),
                     label: l10n.forecastLegendRange),
@@ -203,12 +211,14 @@ class _PathChart extends StatelessWidget {
   final MoneyWriter money;
   final DateTime today;
   final Color color;
+  final bool hasBand;
 
   const _PathChart({
     required this.forecast,
     required this.money,
     required this.today,
     required this.color,
+    required this.hasBand,
   });
 
   @override
@@ -217,7 +227,6 @@ class _PathChart extends StatelessWidget {
     final l10n = context.l10n;
     final path = forecast.path;
     if (path.isEmpty) return const SizedBox.shrink();
-    final hasBand = forecast.pace != null;
 
     var minV = path.first.expected;
     var maxV = path.first.expected;

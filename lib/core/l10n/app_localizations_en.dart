@@ -7642,4 +7642,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get forecastLoadFailed =>
       'Couldn\'t calculate the outlook. Pull down to try again.';
+
+  @override
+  String get forecastScopeWallet => 'This wallet';
+
+  @override
+  String get forecastScopeAll => 'All wallets';
+
+  @override
+  String forecastAllCurrencyNote(String currency) {
+    return 'Totals are in $currency; other currencies are converted at the current rate. Card spending leaves your cash on the due date.';
+  }
+
+  @override
+  String forecastExcludedWallets(String names) {
+    return 'No exchange rate, left out of the total: $names';
+  }
 }
