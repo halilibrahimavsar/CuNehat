@@ -1640,7 +1640,7 @@
   },
   "drawerSectionFinancial": "Para yönetimi",
   "drawerSectionSystem": "Uygulama",
-  "drawerBudgetSubtitle": "Kategorilere aylık harcama sınırı koy",
+  "drawerBudgetSubtitle": "Aylık ya da tatil gibi tek seferlik harcama sınırı koy",
   "drawerRecurringSubtitle": "Kira, maaş gibi yinelenen gelir ve giderler",
   "drawerBankImportSubtitle": "PDF ya da Excel hesap ekstresini içe aktar",
   "drawerBankImportTitle": "Banka ekstresi",
@@ -4738,7 +4738,7 @@
       }
     }
   },
-  "forecastHeadlineNegative": "{date} civarı eksiye düşebilir",
+  "forecastHeadlineNegative": "Bu gidişle {date} civarı eksiye düşebilir",
   "@forecastHeadlineNegative": {
     "placeholders": {
       "date": {
@@ -5110,5 +5110,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "forecastTodayInline": "bugün",
+  "forecastTomorrowInline": "yarın"
 }

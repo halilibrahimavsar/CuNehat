@@ -3111,7 +3111,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get drawerBudgetSubtitle =>
-      'Category-based budget tracking and spending limits';
+      'Monthly or one-time (like a holiday) spending limits';
 
   @override
   String get drawerRecurringSubtitle =>
@@ -7460,7 +7460,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String forecastBudgetFillsOn(String date) {
-    return 'At this pace, full on $date';
+    return 'At this pace, full by $date';
   }
 
   @override
@@ -7750,4 +7750,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String forecastCardPacePart(String amount) {
     return 'estimated $amount';
   }
+
+  @override
+  String get forecastTodayInline => 'today';
+
+  @override
+  String get forecastTomorrowInline => 'tomorrow';
 }

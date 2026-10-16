@@ -300,7 +300,7 @@ class BudgetOutlookRow extends StatelessWidget {
           o.fillDate == null
               ? l10n.forecastBudgetOver
               : l10n.forecastBudgetFillsOn(
-                  forecastDayLabel(l10n, o.fillDate!, today))
+                  forecastDayLabel(l10n, o.fillDate!, today, inline: true))
         ),
       BudgetOutlookStatus.onTrack => (
           MoneyColors.good,
@@ -717,7 +717,8 @@ class ForecastCardsCard extends StatelessWidget {
               Text(
                 l10n.forecastCardPending(
                   money(cards[i].$2.walletId)(cards[i].$2.pendingAmount),
-                  forecastDayLabel(l10n, cards[i].$2.pendingDue, today),
+                  forecastDayLabel(l10n, cards[i].$2.pendingDue, today,
+                      inline: true),
                 ),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: cards[i].$2.pendingOverdue

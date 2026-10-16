@@ -5564,7 +5564,7 @@ abstract class AppLocalizations {
   /// No description provided for @drawerBudgetSubtitle.
   ///
   /// In tr, this message translates to:
-  /// **'Kategorilere aylık harcama sınırı koy'**
+  /// **'Aylık ya da tatil gibi tek seferlik harcama sınırı koy'**
   String get drawerBudgetSubtitle;
 
   /// No description provided for @drawerRecurringSubtitle.
@@ -12477,7 +12477,7 @@ abstract class AppLocalizations {
   /// No description provided for @forecastHeadlineNegative.
   ///
   /// In tr, this message translates to:
-  /// **'{date} civarı eksiye düşebilir'**
+  /// **'Bu gidişle {date} civarı eksiye düşebilir'**
   String forecastHeadlineNegative(String date);
 
   /// No description provided for @forecastHeadlineUntilIncome.
@@ -13013,6 +13013,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'tahmini {amount}'**
   String forecastCardPacePart(String amount);
+
+  /// No description provided for @forecastTodayInline.
+  ///
+  /// In tr, this message translates to:
+  /// **'bugün'**
+  String get forecastTodayInline;
+
+  /// No description provided for @forecastTomorrowInline.
+  ///
+  /// In tr, this message translates to:
+  /// **'yarın'**
+  String get forecastTomorrowInline;
 }
 
 class _AppLocalizationsDelegate

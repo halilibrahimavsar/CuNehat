@@ -1619,7 +1619,7 @@
   },
   "drawerSectionFinancial": "Money",
   "drawerSectionSystem": "App",
-  "drawerBudgetSubtitle": "Category-based budget tracking and spending limits",
+  "drawerBudgetSubtitle": "Monthly or one-time (like a holiday) spending limits",
   "drawerRecurringSubtitle": "Automatic income and expense templates",
   "drawerBankImportSubtitle": "Import PDF/Excel account statements",
   "drawerBankImportTitle": "Bank Statement",
@@ -4581,7 +4581,7 @@
     }
   },
   "forecastBudgetsTitle": "Budget outlook",
-  "forecastBudgetFillsOn": "At this pace, full on {date}",
+  "forecastBudgetFillsOn": "At this pace, full by {date}",
   "@forecastBudgetFillsOn": {
     "placeholders": {
       "date": {
@@ -4876,5 +4876,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "forecastTodayInline": "today",
+  "forecastTomorrowInline": "tomorrow"
 }

@@ -12,12 +12,16 @@ import 'package:cunehat/features/forecast/domain/forecast_models.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-/// "Bugün" / "Yarın" / "14 Kas".
-String forecastDayLabel(AppLocalizations l10n, DateTime day, DateTime today) {
+/// "Bugün" / "Yarın" / "14 Kas". [inline]: cümle İÇİNDE ("bu hızla bugün
+/// dolar") küçük harfli biçim — cihazda "Bu hızla Bugün dolar" görüldü.
+String forecastDayLabel(AppLocalizations l10n, DateTime day, DateTime today,
+    {bool inline = false}) {
   final d = DateTime(day.year, day.month, day.day);
   final t = DateTime(today.year, today.month, today.day);
-  if (d == t) return l10n.forecastToday;
-  if (d == DateTime(t.year, t.month, t.day + 1)) return l10n.forecastTomorrow;
+  if (d == t) return inline ? l10n.forecastTodayInline : l10n.forecastToday;
+  if (d == DateTime(t.year, t.month, t.day + 1)) {
+    return inline ? l10n.forecastTomorrowInline : l10n.forecastTomorrow;
+  }
   return AppFormatters.dayMonth.format(d);
 }
 
@@ -50,7 +54,7 @@ String forecastDayLabel(AppLocalizations l10n, DateTime day, DateTime today) {
       (income == null || negative.day.isBefore(income.date))) {
     return (
       headline: l10n.forecastHeadlineNegative(
-          forecastDayLabel(l10n, negative.day, today)),
+          forecastDayLabel(l10n, negative.day, today, inline: true)),
       detail: null,
       warning: true,
     );
@@ -59,11 +63,12 @@ String forecastDayLabel(AppLocalizations l10n, DateTime day, DateTime today) {
   final detail = low == null
       ? null
       : l10n.forecastLowestPoint(
-          forecastDayLabel(l10n, low.day, today), money(low.expected));
+          forecastDayLabel(l10n, low.day, today, inline: true),
+          money(low.expected));
   if (income != null) {
     return (
-      headline: l10n.forecastHeadlineUntilIncome(
-          income.title, forecastDayLabel(l10n, income.date, today)),
+      headline: l10n.forecastHeadlineUntilIncome(income.title,
+          forecastDayLabel(l10n, income.date, today, inline: true)),
       detail: detail,
       warning: false,
     );

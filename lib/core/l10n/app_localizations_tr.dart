@@ -3100,7 +3100,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get drawerSectionSystem => 'Uygulama';
 
   @override
-  String get drawerBudgetSubtitle => 'Kategorilere aylık harcama sınırı koy';
+  String get drawerBudgetSubtitle =>
+      'Aylık ya da tatil gibi tek seferlik harcama sınırı koy';
 
   @override
   String get drawerRecurringSubtitle =>
@@ -7323,7 +7324,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String forecastHeadlineNegative(String date) {
-    return '$date civarı eksiye düşebilir';
+    return 'Bu gidişle $date civarı eksiye düşebilir';
   }
 
   @override
@@ -7690,4 +7691,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String forecastCardPacePart(String amount) {
     return 'tahmini $amount';
   }
+
+  @override
+  String get forecastTodayInline => 'bugün';
+
+  @override
+  String get forecastTomorrowInline => 'yarın';
 }
