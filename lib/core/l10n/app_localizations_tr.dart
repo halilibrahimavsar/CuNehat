@@ -7308,4 +7308,277 @@ class AppLocalizationsTr extends AppLocalizations {
   String tempBudgetMoreCategories(int count) {
     return '+$count';
   }
+
+  @override
+  String get menuForecast => 'Gelecek';
+
+  @override
+  String get simpleBarForecastSubtitle =>
+      'Ay sonu tahmini ve yaklaşan ödemeler';
+
+  @override
+  String forecastHorizonCaption(int days) {
+    return 'Önümüzdeki $days gün';
+  }
+
+  @override
+  String forecastHeadlineNegative(String date) {
+    return '$date civarı eksiye düşebilir';
+  }
+
+  @override
+  String forecastHeadlineUntilIncome(String income, String date) {
+    return '$income gelene kadar ($date) yetiyor';
+  }
+
+  @override
+  String forecastHeadlineHorizonOk(int days) {
+    return 'Önümüzdeki $days gün yetiyor';
+  }
+
+  @override
+  String forecastLowestPoint(String date, String amount) {
+    return 'En dar gün $date: $amount';
+  }
+
+  @override
+  String get forecastLegendExpected => 'Beklenen';
+
+  @override
+  String get forecastLegendRange => 'Olası aralık';
+
+  @override
+  String get forecastCardPathTitle => 'Kart borcu';
+
+  @override
+  String get forecastNoPaceTitle => 'Tahmin için biraz daha kayıt gerek';
+
+  @override
+  String forecastNoPaceBody(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days gün daha harcama kaydedince',
+      one: 'Bir gün daha harcama kaydedince',
+    );
+    return '$_temp0 günlük harcama hızını hesaplayıp yolculuğu çizerim. Şimdilik yalnız planlı ödemeleri gösteriyorum.';
+  }
+
+  @override
+  String get forecastPeriodTitle => 'Dönem sonu';
+
+  @override
+  String get forecastExpectedExpense => 'Beklenen gider';
+
+  @override
+  String get forecastExpectedIncome => 'Beklenen gelir';
+
+  @override
+  String get forecastExpectedNet => 'Beklenen net';
+
+  @override
+  String forecastRangeLabel(String low, String high) {
+    return '$low – $high arası';
+  }
+
+  @override
+  String get forecastPartRealized => 'Gerçekleşen';
+
+  @override
+  String get forecastPartKnown => 'Planlı';
+
+  @override
+  String get forecastPartPace => 'Tahmini';
+
+  @override
+  String forecastPreviousPeriod(String amount) {
+    return 'Önceki dönem: $amount';
+  }
+
+  @override
+  String get forecastBudgetsTitle => 'Bütçe gidişatı';
+
+  @override
+  String forecastBudgetFillsOn(String date) {
+    return 'Bu hızla $date dolar';
+  }
+
+  @override
+  String get forecastBudgetFits => 'Bu hızla sığıyor';
+
+  @override
+  String get forecastBudgetOver => 'Limit aşıldı';
+
+  @override
+  String get forecastBudgetFull => 'Limit doldu';
+
+  @override
+  String forecastBudgetRequiredDaily(String amount) {
+    return 'Sığması için günde en çok $amount';
+  }
+
+  @override
+  String forecastBudgetUpcoming(String amount) {
+    return 'Bu hızla ~$amount harcanır';
+  }
+
+  @override
+  String forecastBudgetExpectedEnd(String amount, String limit) {
+    return 'Beklenen ~$amount / $limit';
+  }
+
+  @override
+  String get forecastUpcomingTitle => 'Yaklaşanlar';
+
+  @override
+  String get forecastOverdueTitle => 'Gecikmiş';
+
+  @override
+  String get forecastThisWeek => 'Bu hafta';
+
+  @override
+  String get forecastNextWeek => 'Gelecek hafta';
+
+  @override
+  String get forecastLater => 'Daha sonra';
+
+  @override
+  String get forecastToday => 'Bugün';
+
+  @override
+  String get forecastTomorrow => 'Yarın';
+
+  @override
+  String get forecastChipEstimated => 'Tahmini';
+
+  @override
+  String get forecastChipExpected => 'Beklenen';
+
+  @override
+  String forecastEventCardStatement(String name) {
+    return '$name · sıradaki ekstre';
+  }
+
+  @override
+  String forecastEventCardPayment(String name) {
+    return '$name · ekstre ödemesi';
+  }
+
+  @override
+  String forecastEventInstallment(String title, int no, int count) {
+    return '$title · $no/$count';
+  }
+
+  @override
+  String forecastEventReceivable(String name) {
+    return '$name · alacak';
+  }
+
+  @override
+  String forecastUpcomingEmpty(int days) {
+    return 'Önümüzdeki $days günde planlı bir ödeme ya da gelir yok. Kira, maaş, abonelik gibi düzenli işlemleri ekledikçe burada görünürler.';
+  }
+
+  @override
+  String get forecastCardsTitle => 'Kartlar';
+
+  @override
+  String forecastCardEstimate(String amount) {
+    return 'Sıradaki ekstre ~$amount';
+  }
+
+  @override
+  String forecastCardClosingDue(String closing, String due) {
+    return 'Kesim $closing · son ödeme $due';
+  }
+
+  @override
+  String forecastCardBreakdown(String spent, String installments, String pace) {
+    return 'Şimdiye kadar $spent · taksit $installments · tahmini $pace';
+  }
+
+  @override
+  String forecastCardPending(String amount, String date) {
+    return 'Kesilmiş ekstreden kalan $amount · son ödeme $date';
+  }
+
+  @override
+  String get forecastGoalsTitle => 'Hedefler';
+
+  @override
+  String forecastGoalArrival(String date) {
+    return 'Bu hızla $date';
+  }
+
+  @override
+  String forecastGoalMonthly(String amount) {
+    return 'Ayda ortalama $amount katkı';
+  }
+
+  @override
+  String get forecastGoalNoContribution => 'Son 90 günde katkı yok';
+
+  @override
+  String get forecastGoalReached => 'Hedefe ulaşıldı';
+
+  @override
+  String get forecastGoalTooFar => 'Bu hızla 50 yıldan uzun';
+
+  @override
+  String get forecastHowTitle => 'Nasıl hesaplandı?';
+
+  @override
+  String forecastHowPace(int days, String amount) {
+    return 'Son $days günün serbest harcaması: günde ortalama $amount. Haftanın günlerine göre ayrı ayrı (hafta sonu farklı harcıyorsan o da hesaba girer).';
+  }
+
+  @override
+  String get forecastHowExcluded =>
+      'Düzenli ödemeler, taksitler ve cüzdanlar arası para taşıma hıza katılmadı; tarihleriyle ayrıca yer alıyorlar, iki kez sayılmazlar.';
+
+  @override
+  String forecastHowOneOffs(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Tek seferlik $count büyük harcama hıza katılmadı:',
+      one: 'Tek seferlik bir büyük harcama hıza katılmadı:',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get forecastHowIncome =>
+      'Gelir yalnız düzenli işlemlerden (maaş gibi) eklenir; düzensiz gelir tahmin edilmez.';
+
+  @override
+  String get forecastHowReceivable =>
+      'Beklenen alacaklar bakiye çizgisine katılmaz, yalnız olası aralığın üst ucuna.';
+
+  @override
+  String get forecastHowRange =>
+      'Olası aralık, son haftaların harcamasının ne kadar dalgalandığından gelir.';
+
+  @override
+  String get forecastHowCard =>
+      'Kart harcaması bakiyeden son ödeme gününde düşer; kesilmemiş ekstre tahminidir.';
+
+  @override
+  String get forecastHowLegacy =>
+      'Bu özellikten önce onaylanmış düzenli ödemeler ayırt edilemez; hızın içinde kalmış olabilirler.';
+
+  @override
+  String get forecastHowGoals =>
+      'Hedef tahmini yalnız son 90 günde hedefe eklediğin paradan gelir; değer artışı hesaba katılmaz.';
+
+  @override
+  String get forecastLinkTitle => 'Önümüzdeki 30 gün';
+
+  @override
+  String get forecastLinkBody =>
+      'Ay sonu tahmini, yaklaşan ödemeler, bütçe gidişatı';
+
+  @override
+  String get forecastLoadFailed =>
+      'Tahmin hesaplanamadı. Aşağı çekip yeniden dene.';
 }

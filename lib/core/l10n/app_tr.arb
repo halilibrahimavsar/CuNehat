@@ -4727,5 +4727,280 @@
         "type": "int"
       }
     }
-  }
+  },
+  "menuForecast": "Gelecek",
+  "simpleBarForecastSubtitle": "Ay sonu tahmini ve yaklaşan ödemeler",
+  "forecastHorizonCaption": "Önümüzdeki {days} gün",
+  "@forecastHorizonCaption": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "forecastHeadlineNegative": "{date} civarı eksiye düşebilir",
+  "@forecastHeadlineNegative": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastHeadlineUntilIncome": "{income} gelene kadar ({date}) yetiyor",
+  "@forecastHeadlineUntilIncome": {
+    "placeholders": {
+      "income": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastHeadlineHorizonOk": "Önümüzdeki {days} gün yetiyor",
+  "@forecastHeadlineHorizonOk": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "forecastLowestPoint": "En dar gün {date}: {amount}",
+  "@forecastLowestPoint": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastLegendExpected": "Beklenen",
+  "forecastLegendRange": "Olası aralık",
+  "forecastCardPathTitle": "Kart borcu",
+  "forecastNoPaceTitle": "Tahmin için biraz daha kayıt gerek",
+  "forecastNoPaceBody": "{days, plural, =1{Bir gün daha harcama kaydedince} other{{days} gün daha harcama kaydedince}} günlük harcama hızını hesaplayıp yolculuğu çizerim. Şimdilik yalnız planlı ödemeleri gösteriyorum.",
+  "@forecastNoPaceBody": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "forecastPeriodTitle": "Dönem sonu",
+  "forecastExpectedExpense": "Beklenen gider",
+  "forecastExpectedIncome": "Beklenen gelir",
+  "forecastExpectedNet": "Beklenen net",
+  "forecastRangeLabel": "{low} – {high} arası",
+  "@forecastRangeLabel": {
+    "placeholders": {
+      "low": {
+        "type": "String"
+      },
+      "high": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastPartRealized": "Gerçekleşen",
+  "forecastPartKnown": "Planlı",
+  "forecastPartPace": "Tahmini",
+  "forecastPreviousPeriod": "Önceki dönem: {amount}",
+  "@forecastPreviousPeriod": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastBudgetsTitle": "Bütçe gidişatı",
+  "forecastBudgetFillsOn": "Bu hızla {date} dolar",
+  "@forecastBudgetFillsOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastBudgetFits": "Bu hızla sığıyor",
+  "forecastBudgetOver": "Limit aşıldı",
+  "forecastBudgetFull": "Limit doldu",
+  "forecastBudgetRequiredDaily": "Sığması için günde en çok {amount}",
+  "@forecastBudgetRequiredDaily": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastBudgetUpcoming": "Bu hızla ~{amount} harcanır",
+  "@forecastBudgetUpcoming": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastBudgetExpectedEnd": "Beklenen ~{amount} / {limit}",
+  "@forecastBudgetExpectedEnd": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastUpcomingTitle": "Yaklaşanlar",
+  "forecastOverdueTitle": "Gecikmiş",
+  "forecastThisWeek": "Bu hafta",
+  "forecastNextWeek": "Gelecek hafta",
+  "forecastLater": "Daha sonra",
+  "forecastToday": "Bugün",
+  "forecastTomorrow": "Yarın",
+  "forecastChipEstimated": "Tahmini",
+  "forecastChipExpected": "Beklenen",
+  "forecastEventCardStatement": "{name} · sıradaki ekstre",
+  "@forecastEventCardStatement": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastEventCardPayment": "{name} · ekstre ödemesi",
+  "@forecastEventCardPayment": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastEventInstallment": "{title} · {no}/{count}",
+  "@forecastEventInstallment": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "no": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "forecastEventReceivable": "{name} · alacak",
+  "@forecastEventReceivable": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastUpcomingEmpty": "Önümüzdeki {days} günde planlı bir ödeme ya da gelir yok. Kira, maaş, abonelik gibi düzenli işlemleri ekledikçe burada görünürler.",
+  "@forecastUpcomingEmpty": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "forecastCardsTitle": "Kartlar",
+  "forecastCardEstimate": "Sıradaki ekstre ~{amount}",
+  "@forecastCardEstimate": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastCardClosingDue": "Kesim {closing} · son ödeme {due}",
+  "@forecastCardClosingDue": {
+    "placeholders": {
+      "closing": {
+        "type": "String"
+      },
+      "due": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastCardBreakdown": "Şimdiye kadar {spent} · taksit {installments} · tahmini {pace}",
+  "@forecastCardBreakdown": {
+    "placeholders": {
+      "spent": {
+        "type": "String"
+      },
+      "installments": {
+        "type": "String"
+      },
+      "pace": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastCardPending": "Kesilmiş ekstreden kalan {amount} · son ödeme {date}",
+  "@forecastCardPending": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastGoalsTitle": "Hedefler",
+  "forecastGoalArrival": "Bu hızla {date}",
+  "@forecastGoalArrival": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastGoalMonthly": "Ayda ortalama {amount} katkı",
+  "@forecastGoalMonthly": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastGoalNoContribution": "Son 90 günde katkı yok",
+  "forecastGoalReached": "Hedefe ulaşıldı",
+  "forecastGoalTooFar": "Bu hızla 50 yıldan uzun",
+  "forecastHowTitle": "Nasıl hesaplandı?",
+  "forecastHowPace": "Son {days} günün serbest harcaması: günde ortalama {amount}. Haftanın günlerine göre ayrı ayrı (hafta sonu farklı harcıyorsan o da hesaba girer).",
+  "@forecastHowPace": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastHowExcluded": "Düzenli ödemeler, taksitler ve cüzdanlar arası para taşıma hıza katılmadı; tarihleriyle ayrıca yer alıyorlar, iki kez sayılmazlar.",
+  "forecastHowOneOffs": "{count, plural, =1{Tek seferlik bir büyük harcama hıza katılmadı:} other{Tek seferlik {count} büyük harcama hıza katılmadı:}}",
+  "@forecastHowOneOffs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "forecastHowIncome": "Gelir yalnız düzenli işlemlerden (maaş gibi) eklenir; düzensiz gelir tahmin edilmez.",
+  "forecastHowReceivable": "Beklenen alacaklar bakiye çizgisine katılmaz, yalnız olası aralığın üst ucuna.",
+  "forecastHowRange": "Olası aralık, son haftaların harcamasının ne kadar dalgalandığından gelir.",
+  "forecastHowCard": "Kart harcaması bakiyeden son ödeme gününde düşer; kesilmemiş ekstre tahminidir.",
+  "forecastHowLegacy": "Bu özellikten önce onaylanmış düzenli ödemeler ayırt edilemez; hızın içinde kalmış olabilirler.",
+  "forecastHowGoals": "Hedef tahmini yalnız son 90 günde hedefe eklediğin paradan gelir; değer artışı hesaba katılmaz.",
+  "forecastLinkTitle": "Önümüzdeki 30 gün",
+  "forecastLinkBody": "Ay sonu tahmini, yaklaşan ödemeler, bütçe gidişatı",
+  "forecastLoadFailed": "Tahmin hesaplanamadı. Aşağı çekip yeniden dene."
 }

@@ -56,6 +56,6 @@ class HomeNavigationRequests extends ChangeNotifier {
   }
 }
 
-/// İşlemler sekmesinin üç yüzü: defter (ana görünüm) ve iki alt görünüm.
+/// İşlemler sekmesinin dört yüzü: defter (ana görünüm) ve üç alt görünüm.
 /// Sıra alt görünüm indeksidir (`SubMenuConfig.viewIndex`): 0 = ana görünüm.
-enum TransactionsSection { ledger, insights, report }
+enum TransactionsSection { ledger, insights, report, forecast }

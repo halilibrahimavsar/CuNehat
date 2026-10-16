@@ -130,6 +130,11 @@ class MenuConfigs {
           icon: Icons.analytics,
           viewIndex: 2,
         ),
+        SubMenuConfig(
+          label: 'Gelecek',
+          icon: Icons.update_rounded,
+          viewIndex: 3,
+        ),
       ],
     ),
     SliderState.debt: MenuConfiguration(
@@ -190,6 +195,8 @@ String localizedSubMenuLabel(String rawLabel, AppLocalizations l10n) {
       return l10n.menuDetails;
     case 'rapor':
       return l10n.menuReport;
+    case 'gelecek':
+      return l10n.menuForecast;
     case 'geçmiş':
     case 'gecmis':
       return l10n.menuHistory;

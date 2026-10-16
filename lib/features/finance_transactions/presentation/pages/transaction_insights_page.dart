@@ -52,6 +52,7 @@ import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dar
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
+import 'package:cunehat/features/forecast/presentation/widgets/forecast_link_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -588,6 +589,8 @@ class _InsightsViewState extends State<_InsightsView> {
                                 ..._buildHabitSection(
                                     context, insights, money, all),
                               ],
+                              if (rangeContainsToday(_range))
+                                const ForecastLinkTile(),
                               ..._buildRecurringSection(
                                   context, suggestions, money),
                             ],

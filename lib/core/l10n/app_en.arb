@@ -4493,5 +4493,280 @@
         "type": "int"
       }
     }
-  }
+  },
+  "menuForecast": "Ahead",
+  "simpleBarForecastSubtitle": "End-of-month outlook and upcoming payments",
+  "forecastHorizonCaption": "Next {days} days",
+  "@forecastHorizonCaption": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "forecastHeadlineNegative": "Could dip below zero around {date}",
+  "@forecastHeadlineNegative": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastHeadlineUntilIncome": "Lasts until {income} arrives ({date})",
+  "@forecastHeadlineUntilIncome": {
+    "placeholders": {
+      "income": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastHeadlineHorizonOk": "Enough for the next {days} days",
+  "@forecastHeadlineHorizonOk": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "forecastLowestPoint": "Tightest day {date}: {amount}",
+  "@forecastLowestPoint": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastLegendExpected": "Expected",
+  "forecastLegendRange": "Likely range",
+  "forecastCardPathTitle": "Card balance",
+  "forecastNoPaceTitle": "A few more days of records needed",
+  "forecastNoPaceBody": "{days, plural, =1{After one more day of records} other{After {days} more days of records}} I can work out your daily spending pace and draw the path. For now, only planned payments are shown.",
+  "@forecastNoPaceBody": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "forecastPeriodTitle": "End of period",
+  "forecastExpectedExpense": "Expected spending",
+  "forecastExpectedIncome": "Expected income",
+  "forecastExpectedNet": "Expected net",
+  "forecastRangeLabel": "between {low} and {high}",
+  "@forecastRangeLabel": {
+    "placeholders": {
+      "low": {
+        "type": "String"
+      },
+      "high": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastPartRealized": "So far",
+  "forecastPartKnown": "Planned",
+  "forecastPartPace": "Estimated",
+  "forecastPreviousPeriod": "Previous period: {amount}",
+  "@forecastPreviousPeriod": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastBudgetsTitle": "Budget outlook",
+  "forecastBudgetFillsOn": "At this pace, full on {date}",
+  "@forecastBudgetFillsOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastBudgetFits": "On track at this pace",
+  "forecastBudgetOver": "Over the limit",
+  "forecastBudgetFull": "Limit reached",
+  "forecastBudgetRequiredDaily": "To stay within: at most {amount} a day",
+  "@forecastBudgetRequiredDaily": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastBudgetUpcoming": "At this pace, about {amount} will be spent",
+  "@forecastBudgetUpcoming": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastBudgetExpectedEnd": "Expected ~{amount} / {limit}",
+  "@forecastBudgetExpectedEnd": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastUpcomingTitle": "Coming up",
+  "forecastOverdueTitle": "Overdue",
+  "forecastThisWeek": "This week",
+  "forecastNextWeek": "Next week",
+  "forecastLater": "Later",
+  "forecastToday": "Today",
+  "forecastTomorrow": "Tomorrow",
+  "forecastChipEstimated": "Estimated",
+  "forecastChipExpected": "Expected",
+  "forecastEventCardStatement": "{name} · next statement",
+  "@forecastEventCardStatement": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastEventCardPayment": "{name} · statement payment",
+  "@forecastEventCardPayment": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastEventInstallment": "{title} · {no}/{count}",
+  "@forecastEventInstallment": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "no": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "forecastEventReceivable": "{name} · receivable",
+  "@forecastEventReceivable": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastUpcomingEmpty": "No planned payments or income in the next {days} days. Recurring items like rent, salary or subscriptions show up here once you add them.",
+  "@forecastUpcomingEmpty": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "forecastCardsTitle": "Cards",
+  "forecastCardEstimate": "Next statement ~{amount}",
+  "@forecastCardEstimate": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastCardClosingDue": "Closes {closing} · due {due}",
+  "@forecastCardClosingDue": {
+    "placeholders": {
+      "closing": {
+        "type": "String"
+      },
+      "due": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastCardBreakdown": "So far {spent} · installments {installments} · estimated {pace}",
+  "@forecastCardBreakdown": {
+    "placeholders": {
+      "spent": {
+        "type": "String"
+      },
+      "installments": {
+        "type": "String"
+      },
+      "pace": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastCardPending": "Left on the closed statement {amount} · due {date}",
+  "@forecastCardPending": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastGoalsTitle": "Goals",
+  "forecastGoalArrival": "At this pace: {date}",
+  "@forecastGoalArrival": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastGoalMonthly": "About {amount} added per month",
+  "@forecastGoalMonthly": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastGoalNoContribution": "No contributions in the last 90 days",
+  "forecastGoalReached": "Goal reached",
+  "forecastGoalTooFar": "Over 50 years at this pace",
+  "forecastHowTitle": "How is this calculated?",
+  "forecastHowPace": "Your everyday spending over the last {days} days: {amount} a day on average, split by weekday (if weekends differ, that is accounted for).",
+  "@forecastHowPace": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastHowExcluded": "Recurring payments, installments and transfers between wallets are not part of the pace; they appear on their own dates and are never counted twice.",
+  "forecastHowOneOffs": "{count, plural, =1{One large one-off purchase was left out of the pace:} other{{count} large one-off purchases were left out of the pace:}}",
+  "@forecastHowOneOffs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "forecastHowIncome": "Income is only added from recurring items (like salary); irregular income is not guessed.",
+  "forecastHowReceivable": "Expected receivables are not added to the balance line, only to the top of the likely range.",
+  "forecastHowRange": "The likely range comes from how much your weekly spending has varied recently.",
+  "forecastHowCard": "Card spending leaves your balance on the due date; a statement that hasn't closed yet is an estimate.",
+  "forecastHowLegacy": "Recurring payments approved before this feature can't be told apart and may be included in the pace.",
+  "forecastHowGoals": "Goal estimates only use what you added in the last 90 days; value growth is not counted.",
+  "forecastLinkTitle": "The next 30 days",
+  "forecastLinkBody": "End-of-month outlook, upcoming payments, budget outlook",
+  "forecastLoadFailed": "Couldn't calculate the outlook. Pull down to try again."
 }

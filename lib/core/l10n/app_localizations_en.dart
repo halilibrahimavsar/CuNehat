@@ -7368,4 +7368,278 @@ class AppLocalizationsEn extends AppLocalizations {
   String tempBudgetMoreCategories(int count) {
     return '+$count';
   }
+
+  @override
+  String get menuForecast => 'Ahead';
+
+  @override
+  String get simpleBarForecastSubtitle =>
+      'End-of-month outlook and upcoming payments';
+
+  @override
+  String forecastHorizonCaption(int days) {
+    return 'Next $days days';
+  }
+
+  @override
+  String forecastHeadlineNegative(String date) {
+    return 'Could dip below zero around $date';
+  }
+
+  @override
+  String forecastHeadlineUntilIncome(String income, String date) {
+    return 'Lasts until $income arrives ($date)';
+  }
+
+  @override
+  String forecastHeadlineHorizonOk(int days) {
+    return 'Enough for the next $days days';
+  }
+
+  @override
+  String forecastLowestPoint(String date, String amount) {
+    return 'Tightest day $date: $amount';
+  }
+
+  @override
+  String get forecastLegendExpected => 'Expected';
+
+  @override
+  String get forecastLegendRange => 'Likely range';
+
+  @override
+  String get forecastCardPathTitle => 'Card balance';
+
+  @override
+  String get forecastNoPaceTitle => 'A few more days of records needed';
+
+  @override
+  String forecastNoPaceBody(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'After $days more days of records',
+      one: 'After one more day of records',
+    );
+    return '$_temp0 I can work out your daily spending pace and draw the path. For now, only planned payments are shown.';
+  }
+
+  @override
+  String get forecastPeriodTitle => 'End of period';
+
+  @override
+  String get forecastExpectedExpense => 'Expected spending';
+
+  @override
+  String get forecastExpectedIncome => 'Expected income';
+
+  @override
+  String get forecastExpectedNet => 'Expected net';
+
+  @override
+  String forecastRangeLabel(String low, String high) {
+    return 'between $low and $high';
+  }
+
+  @override
+  String get forecastPartRealized => 'So far';
+
+  @override
+  String get forecastPartKnown => 'Planned';
+
+  @override
+  String get forecastPartPace => 'Estimated';
+
+  @override
+  String forecastPreviousPeriod(String amount) {
+    return 'Previous period: $amount';
+  }
+
+  @override
+  String get forecastBudgetsTitle => 'Budget outlook';
+
+  @override
+  String forecastBudgetFillsOn(String date) {
+    return 'At this pace, full on $date';
+  }
+
+  @override
+  String get forecastBudgetFits => 'On track at this pace';
+
+  @override
+  String get forecastBudgetOver => 'Over the limit';
+
+  @override
+  String get forecastBudgetFull => 'Limit reached';
+
+  @override
+  String forecastBudgetRequiredDaily(String amount) {
+    return 'To stay within: at most $amount a day';
+  }
+
+  @override
+  String forecastBudgetUpcoming(String amount) {
+    return 'At this pace, about $amount will be spent';
+  }
+
+  @override
+  String forecastBudgetExpectedEnd(String amount, String limit) {
+    return 'Expected ~$amount / $limit';
+  }
+
+  @override
+  String get forecastUpcomingTitle => 'Coming up';
+
+  @override
+  String get forecastOverdueTitle => 'Overdue';
+
+  @override
+  String get forecastThisWeek => 'This week';
+
+  @override
+  String get forecastNextWeek => 'Next week';
+
+  @override
+  String get forecastLater => 'Later';
+
+  @override
+  String get forecastToday => 'Today';
+
+  @override
+  String get forecastTomorrow => 'Tomorrow';
+
+  @override
+  String get forecastChipEstimated => 'Estimated';
+
+  @override
+  String get forecastChipExpected => 'Expected';
+
+  @override
+  String forecastEventCardStatement(String name) {
+    return '$name · next statement';
+  }
+
+  @override
+  String forecastEventCardPayment(String name) {
+    return '$name · statement payment';
+  }
+
+  @override
+  String forecastEventInstallment(String title, int no, int count) {
+    return '$title · $no/$count';
+  }
+
+  @override
+  String forecastEventReceivable(String name) {
+    return '$name · receivable';
+  }
+
+  @override
+  String forecastUpcomingEmpty(int days) {
+    return 'No planned payments or income in the next $days days. Recurring items like rent, salary or subscriptions show up here once you add them.';
+  }
+
+  @override
+  String get forecastCardsTitle => 'Cards';
+
+  @override
+  String forecastCardEstimate(String amount) {
+    return 'Next statement ~$amount';
+  }
+
+  @override
+  String forecastCardClosingDue(String closing, String due) {
+    return 'Closes $closing · due $due';
+  }
+
+  @override
+  String forecastCardBreakdown(String spent, String installments, String pace) {
+    return 'So far $spent · installments $installments · estimated $pace';
+  }
+
+  @override
+  String forecastCardPending(String amount, String date) {
+    return 'Left on the closed statement $amount · due $date';
+  }
+
+  @override
+  String get forecastGoalsTitle => 'Goals';
+
+  @override
+  String forecastGoalArrival(String date) {
+    return 'At this pace: $date';
+  }
+
+  @override
+  String forecastGoalMonthly(String amount) {
+    return 'About $amount added per month';
+  }
+
+  @override
+  String get forecastGoalNoContribution =>
+      'No contributions in the last 90 days';
+
+  @override
+  String get forecastGoalReached => 'Goal reached';
+
+  @override
+  String get forecastGoalTooFar => 'Over 50 years at this pace';
+
+  @override
+  String get forecastHowTitle => 'How is this calculated?';
+
+  @override
+  String forecastHowPace(int days, String amount) {
+    return 'Your everyday spending over the last $days days: $amount a day on average, split by weekday (if weekends differ, that is accounted for).';
+  }
+
+  @override
+  String get forecastHowExcluded =>
+      'Recurring payments, installments and transfers between wallets are not part of the pace; they appear on their own dates and are never counted twice.';
+
+  @override
+  String forecastHowOneOffs(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count large one-off purchases were left out of the pace:',
+      one: 'One large one-off purchase was left out of the pace:',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get forecastHowIncome =>
+      'Income is only added from recurring items (like salary); irregular income is not guessed.';
+
+  @override
+  String get forecastHowReceivable =>
+      'Expected receivables are not added to the balance line, only to the top of the likely range.';
+
+  @override
+  String get forecastHowRange =>
+      'The likely range comes from how much your weekly spending has varied recently.';
+
+  @override
+  String get forecastHowCard =>
+      'Card spending leaves your balance on the due date; a statement that hasn\'t closed yet is an estimate.';
+
+  @override
+  String get forecastHowLegacy =>
+      'Recurring payments approved before this feature can\'t be told apart and may be included in the pace.';
+
+  @override
+  String get forecastHowGoals =>
+      'Goal estimates only use what you added in the last 90 days; value growth is not counted.';
+
+  @override
+  String get forecastLinkTitle => 'The next 30 days';
+
+  @override
+  String get forecastLinkBody =>
+      'End-of-month outlook, upcoming payments, budget outlook';
+
+  @override
+  String get forecastLoadFailed =>
+      'Couldn\'t calculate the outlook. Pull down to try again.';
 }

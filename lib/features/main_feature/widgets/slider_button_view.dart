@@ -26,7 +26,7 @@ import 'package:unified_flutter_features/features/slider_2d_navigation/dynamic_s
 import 'package:unified_flutter_features/features/slider_2d_navigation/models/slider_models.dart';
 
 /// Sade çubuğun "İçgörü ve rapor" sayfasındaki seçenekler.
-enum SimpleBarTarget { ledger, insights, report, transfer }
+enum SimpleBarTarget { ledger, insights, report, forecast, transfer }
 
 /// Slider button view with vertical stack navigation
 ///
@@ -160,14 +160,18 @@ class _SliderButtonViewState extends State<SliderButtonView> {
         for (final menu in subMenus)
           if (menu.viewIndex != current)
             RowAction(
-              value: menu.viewIndex == 1
-                  ? SimpleBarTarget.insights
-                  : SimpleBarTarget.report,
+              value: switch (menu.viewIndex) {
+                1 => SimpleBarTarget.insights,
+                2 => SimpleBarTarget.report,
+                _ => SimpleBarTarget.forecast,
+              },
               icon: menu.icon,
               title: localizedSubMenuLabel(menu.label, l10n),
-              subtitle: menu.viewIndex == 1
-                  ? l10n.simpleBarInsightsSubtitle
-                  : l10n.simpleBarReportSubtitle,
+              subtitle: switch (menu.viewIndex) {
+                1 => l10n.simpleBarInsightsSubtitle,
+                2 => l10n.simpleBarReportSubtitle,
+                _ => l10n.simpleBarForecastSubtitle,
+              },
             ),
         if (walletState.wallets.length >= 2)
           RowAction(
@@ -191,6 +195,11 @@ class _SliderButtonViewState extends State<SliderButtonView> {
       case SimpleBarTarget.report:
         await navigationController.navigateToView(
           2,
+          sliderState: SliderState.transactions,
+        );
+      case SimpleBarTarget.forecast:
+        await navigationController.navigateToView(
+          3,
           sliderState: SliderState.transactions,
         );
       case SimpleBarTarget.transfer:

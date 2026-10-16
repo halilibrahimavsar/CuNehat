@@ -45,6 +45,10 @@ import 'package:cunehat/features/wallet/domain/card_cycle.dart';
 import 'package:cunehat/features/wallet/domain/card_family.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
+import 'package:cunehat/features/forecast/data/forecast_service.dart';
+import 'package:cunehat/features/forecast/domain/forecast_models.dart';
+import 'package:cunehat/features/forecast/presentation/widgets/forecast_link_tile.dart';
+import 'package:cunehat/features/forecast/presentation/widgets/report_temp_budget_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -69,6 +73,7 @@ class TransactionReportPage extends StatelessWidget {
       child: _TransactionReportView(
         showAppBar: showAppBar,
         categoryRepository: getIt<CategoryRepository>(),
+        userId: userId,
         walletId: walletId,
       ),
     );
@@ -82,9 +87,13 @@ class _TransactionReportView extends StatefulWidget {
   /// Bütçeler cüzdan bazlı yüklendiği için görünümün cüzdanı bilmesi gerekir.
   final String walletId;
 
+  /// Tek seferlik bütçe kartının tahmini kullanıcının tüm cüzdanlarını okur.
+  final String userId;
+
   const _TransactionReportView({
     required this.showAppBar,
     required this.categoryRepository,
+    required this.userId,
     required this.walletId,
   });
 
@@ -743,6 +752,47 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   ///
   /// Grup bir KATEGORİ değil (kırılım eşleştirmesi yok), o yüzden detay
   /// sayfası kendi yeniden hesaplamasını yapamaz — liste doğrudan verilir.
+  Widget _tempBudgetSection(BuildContext context) {
+    final filter = context.read<TransactionFilterCubit>();
+    return ReportTempBudgetSection(
+      userId: widget.userId,
+      walletId: widget.walletId,
+      range: _range,
+      periodOf: () => filter.periodPreferences.periodContaining(DateTime.now()),
+      onTap: _openTempBudget,
+      service: getIt<ForecastService>(),
+      transactions: getIt<TransactionsChangedNotifier>(),
+      budgets: getIt<BudgetsChangedNotifier>(),
+    );
+  }
+
+  /// Geçici bütçenin saydığı işlemler: aralığındaki, kategorilerindeki
+  /// harcama (kart cüzdanında ödeme gününe göre — bütçe hesabıyla aynı).
+  void _openTempBudget(BudgetOutlook outlook, Set<String> tags) {
+    final source = _analysisSource(
+        _forWallet(context.read<TransactionBloc>().state.currentTransactions));
+    final start = outlook.periodStart;
+    final endExclusive = DateTime(outlook.periodEnd.year,
+        outlook.periodEnd.month, outlook.periodEnd.day + 1);
+    final items = [
+      for (final t in source)
+        if (!t.isIncome &&
+            isSpendingMovement(t) &&
+            tags.contains(t.tag) &&
+            !t.date.isBefore(start) &&
+            t.date.isBefore(endExclusive))
+          _rawOf(t),
+    ];
+    ReportTransactionListSheet.show(
+      context: context,
+      title: outlook.temp?.name ?? '',
+      transactions: items,
+      isExpense: true,
+      categoryIcons: _categoryIcons,
+      categoryLabels: _categoryLabels,
+    );
+  }
+
   void _openPayeeGroup(String label, List<TransactionEntity> items) {
     ReportTransactionListSheet.show(
       context: context,
@@ -1071,6 +1121,12 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                                       ),
                                     ],
                                   ],
+                                  // Tek seferlik bütçeler: seçili dönemle
+                                  // kesişenler — biten sonucuyla, süren
+                                  // tahminiyle. Servis kayıtlı değilse
+                                  // (yalıtılmış sayfa testleri) bölüm yok.
+                                  if (getIt.isRegistered<ForecastService>())
+                                    _tempBudgetSection(context),
                                   if (derived.payeeGroups.isNotEmpty &&
                                       !_payeesMirrorCategories(derived)) ...[
                                     const SizedBox(height: 24),
@@ -1085,6 +1141,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                                           derived.totals.totalExpense,
                                     ),
                                   ],
+                                  if (rangeContainsToday(_range))
+                                    const ForecastLinkTile(),
                                 ],
                               ],
                             ),

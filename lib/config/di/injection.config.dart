@@ -120,6 +120,7 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/filterin
     as _i528;
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart'
     as _i344;
+import 'package:cunehat/features/forecast/data/forecast_service.dart' as _i1015;
 import 'package:cunehat/features/investments/data/datasource/goal_local_datasource.dart'
     as _i1036;
 import 'package:cunehat/features/investments/data/datasource/investment_local_datasource.dart'
@@ -368,6 +369,18 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       dispose: (i) => i.dispose(),
     );
+    gh.lazySingleton<_i1015.ForecastService>(() => _i1015.ForecastService(
+          gh<_i504.WalletRepository>(),
+          gh<_i543.TransactionsRepository>(),
+          gh<_i788.RecurringTransactionRepository>(),
+          gh<_i198.DebtRepository>(),
+          gh<_i468.ReceivableRepository>(),
+          gh<_i94.BudgetRepository>(),
+          gh<_i746.TempBudgetRepository>(),
+          gh<_i851.GoalRepository>(),
+          gh<_i589.InvestmentRepository>(),
+          gh<_i896.CategoryRepository>(),
+        ));
     gh.factory<_i162.GetPendingRecurringTransactionsUsecase>(() =>
         _i162.GetPendingRecurringTransactionsUsecase(
             gh<_i788.RecurringTransactionRepository>()));
