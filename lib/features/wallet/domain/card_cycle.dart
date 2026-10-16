@@ -353,15 +353,24 @@ CardStatus computeCardStatus({
 /// tarihinde kalır: para o gün yer değiştirdi.
 DateTime cardPaymentDate(TransactionEntity t, CreditCardInfo card) {
   if (t.isSystem) return t.date;
+  final due = cardPaymentDay(t.date, card);
+  return DateTime(due.year, due.month, due.day, t.date.hour, t.date.minute,
+      t.date.second, t.date.millisecond);
+}
+
+/// [day]'de yapılan bir kart harcamasının ÖDENECEĞİ gün (gün çözünürlüğü):
+/// girdiği ekstrenin son ödemesi, o kesimin beyanı varsa bankanın tarihi.
+/// [cardPaymentDate]'in kayıt yerine takvim günü alan hâli — tahmin katmanı
+/// henüz yapılmamış harcamanın hangi döneme düşeceğini bununla bilir.
+DateTime cardPaymentDay(DateTime day, CreditCardInfo card) {
   final cycle = CardCycle(card);
-  final closing = cycle.periodContaining(t.date).end;
+  final closing = cycle.periodContaining(day).end;
   final declared = card.lastStatement;
   final due =
       declared != null && CardCycle.dateOnly(declared.closingDate) == closing
           ? declared.dueDate
           : cycle.dueFor(closing);
-  return DateTime(due.year, due.month, due.day, t.date.hour, t.date.minute,
-      t.date.second, t.date.millisecond);
+  return CardCycle.dateOnly(due);
 }
 
 /// [ledger]'ın ödeme gününe taşınmış KOPYASI (bkz. [cardPaymentDate]) —

@@ -50,32 +50,49 @@ class RecurringOccurrences {
     required DateTime from,
     required DateTime to,
   }) {
-    final fromDay = DateTime(from.year, from.month, from.day);
-    final toDay = DateTime(to.year, to.month, to.day);
-    if (toDay.isBefore(fromDay)) return 0;
-
     var total = 0.0;
     for (final t in templates) {
       if (!t.isActive) continue;
       if (t.type != TransactionTypeModel.expense) continue;
-
-      var date = DateTime(
-        t.nextExecutionDate.year,
-        t.nextExecutionDate.month,
-        t.nextExecutionDate.day,
-      );
-      var steps = 0;
-      while (!date.isAfter(toDay) && steps < maxBacklog) {
-        if (!date.isBefore(fromDay)) total += t.amount;
-        date = ApproveRecurringTransactionUsecase.nextExecutionDateAfter(
-          date,
-          t.frequency,
-          anchorDay: t.anchorDay,
-        );
-        steps++;
-      }
+      total += t.amount * occurrencesBetween(t, from: from, to: to).length;
     }
     return total;
+  }
+
+  /// [template]'in [from]–[to] penceresine (iki uç dahil, gün bazında) düşen
+  /// vade günleri, sıralı. Pasif şablonda boş.
+  ///
+  /// Vadesi [from]'dan ÖNCE kalmış kalemler dönmez (bkz.
+  /// [plannedExpenseTotal]'daki gerekçe): onları onay akışı gösterir. Tahmin
+  /// katmanı da aynı tanımı kullanır; iki yerde ayrı döngü olsaydı "günde ne
+  /// kadar harcayabilirim" ile "yaklaşanlar" listesi ayrışırdı.
+  static List<DateTime> occurrencesBetween(
+    RecurringTransactionEntity template, {
+    required DateTime from,
+    required DateTime to,
+  }) {
+    if (!template.isActive) return const [];
+    final fromDay = DateTime(from.year, from.month, from.day);
+    final toDay = DateTime(to.year, to.month, to.day);
+    if (toDay.isBefore(fromDay)) return const [];
+
+    final result = <DateTime>[];
+    var date = DateTime(
+      template.nextExecutionDate.year,
+      template.nextExecutionDate.month,
+      template.nextExecutionDate.day,
+    );
+    var steps = 0;
+    while (!date.isAfter(toDay) && steps < maxBacklog) {
+      if (!date.isBefore(fromDay)) result.add(date);
+      date = ApproveRecurringTransactionUsecase.nextExecutionDateAfter(
+        date,
+        template.frequency,
+        anchorDay: template.anchorDay,
+      );
+      steps++;
+    }
+    return result;
   }
 
   /// Bir şablon kaleminin aylık karşılığı — farklı frekanstaki şablonları
