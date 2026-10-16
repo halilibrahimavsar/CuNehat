@@ -12732,12 +12732,6 @@ abstract class AppLocalizations {
   /// **'Kesim {closing} · son ödeme {due}'**
   String forecastCardClosingDue(String closing, String due);
 
-  /// No description provided for @forecastCardBreakdown.
-  ///
-  /// In tr, this message translates to:
-  /// **'Şimdiye kadar {spent} · taksit {installments} · tahmini {pace}'**
-  String forecastCardBreakdown(String spent, String installments, String pace);
-
   /// No description provided for @forecastCardPending.
   ///
   /// In tr, this message translates to:
@@ -13001,6 +12995,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Şimdilik hayır'**
   String get forecastDigestOfferDecline;
+
+  /// No description provided for @forecastCardSoFar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şimdiye kadar {amount}'**
+  String forecastCardSoFar(String amount);
+
+  /// No description provided for @forecastCardInstallmentsPart.
+  ///
+  /// In tr, this message translates to:
+  /// **'taksit {amount}'**
+  String forecastCardInstallmentsPart(String amount);
+
+  /// No description provided for @forecastCardPacePart.
+  ///
+  /// In tr, this message translates to:
+  /// **'tahmini {amount}'**
+  String forecastCardPacePart(String amount);
 }
 
 class _AppLocalizationsDelegate

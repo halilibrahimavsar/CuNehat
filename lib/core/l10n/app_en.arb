@@ -4694,20 +4694,6 @@
       }
     }
   },
-  "forecastCardBreakdown": "So far {spent} · installments {installments} · estimated {pace}",
-  "@forecastCardBreakdown": {
-    "placeholders": {
-      "spent": {
-        "type": "String"
-      },
-      "installments": {
-        "type": "String"
-      },
-      "pace": {
-        "type": "String"
-      }
-    }
-  },
   "forecastCardPending": "Left on the closed statement {amount} · due {date}",
   "@forecastCardPending": {
     "placeholders": {
@@ -4866,5 +4852,29 @@
   "forecastDigestOfferTitle": "Send me this summary every Monday?",
   "forecastDigestOfferBody": "End-of-period outlook, tightest day and the week's payments in one notification. You can turn it off in Settings.",
   "forecastDigestOfferAccept": "Send it",
-  "forecastDigestOfferDecline": "Not now"
+  "forecastDigestOfferDecline": "Not now",
+  "forecastCardSoFar": "So far {amount}",
+  "@forecastCardSoFar": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastCardInstallmentsPart": "installments {amount}",
+  "@forecastCardInstallmentsPart": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastCardPacePart": "estimated {amount}",
+  "@forecastCardPacePart": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

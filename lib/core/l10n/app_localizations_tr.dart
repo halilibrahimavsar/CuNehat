@@ -7493,11 +7493,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String forecastCardBreakdown(String spent, String installments, String pace) {
-    return 'Şimdiye kadar $spent · taksit $installments · tahmini $pace';
-  }
-
-  @override
   String forecastCardPending(String amount, String date) {
     return 'Kesilmiş ekstreden kalan $amount · son ödeme $date';
   }
@@ -7680,4 +7675,19 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get forecastDigestOfferDecline => 'Şimdilik hayır';
+
+  @override
+  String forecastCardSoFar(String amount) {
+    return 'Şimdiye kadar $amount';
+  }
+
+  @override
+  String forecastCardInstallmentsPart(String amount) {
+    return 'taksit $amount';
+  }
+
+  @override
+  String forecastCardPacePart(String amount) {
+    return 'tahmini $amount';
+  }
 }

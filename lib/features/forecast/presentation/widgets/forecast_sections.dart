@@ -608,10 +608,10 @@ class _ForecastUpcomingCardState extends State<ForecastUpcomingCard> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          // Tahmini satır altındaki etiketle ayrılır; "~−2.200" gibi işaret
+          // yığını okunmuyordu (cihaz turu).
           Text(
-            e.certainty == ForecastCertainty.expected
-                ? '~${money.withSign(e.amount)}'
-                : money.withSign(e.amount),
+            money.withSign(e.amount),
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: AppType.strong,
               color: income
@@ -740,12 +740,18 @@ class ForecastCardsCard extends StatelessWidget {
                   ?.copyWith(color: scheme.onSurfaceVariant),
             ),
             Text(
-              l10n.forecastCardBreakdown(
-                money(cards[i].$2.walletId)(cards[i].$2.spentSoFar),
-                money(cards[i].$2.walletId)(
-                    cards[i].$2.installmentsUntilClosing),
-                money(cards[i].$2.walletId)(cards[i].$2.paceUntilClosing),
-              ),
+              // Yalnız katkısı olan parçalar: hız yokken "tahmini 0,00 ₺"
+              // yazmak tahmin yapılmış gibi okunuyordu (cihaz turu).
+              [
+                l10n.forecastCardSoFar(
+                    money(cards[i].$2.walletId)(cards[i].$2.spentSoFar)),
+                if (cards[i].$2.installmentsUntilClosing > 0)
+                  l10n.forecastCardInstallmentsPart(money(cards[i].$2.walletId)(
+                      cards[i].$2.installmentsUntilClosing)),
+                if (cards[i].$2.paceUntilClosing > 0)
+                  l10n.forecastCardPacePart(money(cards[i].$2.walletId)(
+                      cards[i].$2.paceUntilClosing)),
+              ].join(' · '),
               style: theme.textTheme.bodySmall
                   ?.copyWith(color: scheme.onSurfaceVariant),
             ),

@@ -83,21 +83,25 @@ class _DigestOfferCardState extends State<DigestOfferCard> {
               ),
             ],
           ),
-          Wrap(
-            alignment: WrapAlignment.end,
-            spacing: 8,
-            children: [
-              TextButton(
-                key: const ValueKey('forecast-digest-decline'),
-                onPressed: _decline,
-                child: Text(l10n.forecastDigestOfferDecline),
-              ),
-              FilledButton.tonal(
-                key: const ValueKey('forecast-digest-accept'),
-                onPressed: _accept,
-                child: Text(l10n.forecastDigestOfferAccept),
-              ),
-            ],
+          // Düğmeler sağda: sütun başa hizalı olduğundan Wrap kendi içeriği
+          // kadar daralıyor ve `alignment` etkisiz kalıyordu (cihaz turu).
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: Wrap(
+              spacing: 8,
+              children: [
+                TextButton(
+                  key: const ValueKey('forecast-digest-decline'),
+                  onPressed: _decline,
+                  child: Text(l10n.forecastDigestOfferDecline),
+                ),
+                FilledButton.tonal(
+                  key: const ValueKey('forecast-digest-accept'),
+                  onPressed: _accept,
+                  child: Text(l10n.forecastDigestOfferAccept),
+                ),
+              ],
+            ),
           ),
         ],
       ),

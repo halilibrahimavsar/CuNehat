@@ -7553,11 +7553,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String forecastCardBreakdown(String spent, String installments, String pace) {
-    return 'So far $spent · installments $installments · estimated $pace';
-  }
-
-  @override
   String forecastCardPending(String amount, String date) {
     return 'Left on the closed statement $amount · due $date';
   }
@@ -7740,4 +7735,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get forecastDigestOfferDecline => 'Not now';
+
+  @override
+  String forecastCardSoFar(String amount) {
+    return 'So far $amount';
+  }
+
+  @override
+  String forecastCardInstallmentsPart(String amount) {
+    return 'installments $amount';
+  }
+
+  @override
+  String forecastCardPacePart(String amount) {
+    return 'estimated $amount';
+  }
 }
