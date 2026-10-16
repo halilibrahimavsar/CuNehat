@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cunehat/features/main_feature/controllers/home_navigation_requests.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -60,6 +61,12 @@ class _NotificationTapListenerState extends State<NotificationTapListener>
 
   void _onNotificationTap(String payload) {
     if (!mounted) return;
+    if (payload == NotificationPayloads.forecast) {
+      // Tahmin uyarısı / haftalık özet → Gelecek sayfası. Ana sayfa henüz
+      // kurulmadıysa istek bekletilir (bkz. HomeNavigationRequests).
+      getIt<HomeNavigationRequests>().openSection(TransactionsSection.forecast);
+      return;
+    }
     if (payload != NotificationPayloads.pendingRecurring) return;
 
     // Hatırlatma diyaloğu bastırılır: kullanıcı zaten niyetini belli etti,

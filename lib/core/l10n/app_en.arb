@@ -4786,5 +4786,85 @@
         "type": "String"
       }
     }
-  }
+  },
+  "notifForecastCashTitle": "Balance heads-up",
+  "notifForecastCashBody": "{wallet}: at this rate it could dip below zero around {date}. Details on the Ahead page.",
+  "@notifForecastCashBody": {
+    "placeholders": {
+      "wallet": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "notifForecastBudgetTitle": "Budget outlook",
+  "notifForecastBudgetBody": "{name}: at this pace it fills up on {date}. To stay within: at most {amount} a day.",
+  "@notifForecastBudgetBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "notifForecastBudgetBodyShort": "{name}: at this pace it fills up on {date}.",
+  "@notifForecastBudgetBodyShort": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "notifDigestTitle": "Weekly summary",
+  "notifDigestExpense": "End-of-period spending ~{amount}.",
+  "@notifDigestExpense": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "notifDigestLowest": "Tightest day {date}: {amount}.",
+  "@notifDigestLowest": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "notifDigestPayments": "{count, plural, =1{1 planned payment this week: {total}.} other{{count} planned payments this week: {total}.}}",
+  "@notifDigestPayments": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "notifDigestNoPayments": "No planned payments this week.",
+  "notifDigestStaleTitle": "No entries for a week",
+  "notifDigestStaleBody": "Your outlook is getting stale; add your spending and the Ahead page updates.",
+  "forecastWarningsSetting": "Outlook alerts",
+  "forecastWarningsSettingDesc": "Warn me ahead if a budget will fill up early or my balance will dip below zero",
+  "weeklyDigestSetting": "Weekly summary",
+  "weeklyDigestSettingDesc": "Every Monday at 09:00: end-of-period outlook and the week's payments",
+  "forecastDigestOfferTitle": "Send me this summary every Monday?",
+  "forecastDigestOfferBody": "End-of-period outlook, tightest day and the week's payments in one notification. You can turn it off in Settings.",
+  "forecastDigestOfferAccept": "Send it",
+  "forecastDigestOfferDecline": "Not now"
 }

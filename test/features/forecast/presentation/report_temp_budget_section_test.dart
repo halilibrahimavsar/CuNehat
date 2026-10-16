@@ -21,7 +21,7 @@ class _FakeService extends Fake implements ForecastService {
 
   @override
   Future<ForecastResult> forecast({
-    required String userId,
+    required String? userId,
     required DateTimeRange period,
     DateTimeRange? previousPeriod,
     DateTime? today,

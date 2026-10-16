@@ -125,10 +125,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _lastSliderState = _navController.currentSliderState;
     _navController.horizontalController.addListener(_onSliderStateMaybeChanged);
     if (getIt.isRegistered<HomeNavigationRequests>()) {
-      getIt<HomeNavigationRequests>()
+      final requests = getIt<HomeNavigationRequests>()
         ..addListener(_onShowTransactions)
         ..sectionHandler = _onSectionRequested
         ..mainHandler = _onMainRequested;
+      // Bildirime dokunularak açıldıysa istenen bölüm ilk kareden sonra.
+      final pending = requests.takePendingSection();
+      if (pending != null) {
+        WidgetsBinding.instance
+            .addPostFrameCallback((_) => _onSectionRequested(pending));
+      }
     }
     _loadWallets();
     // Bekleyen işlemleri yükle. Uygulamaya dönüş ve bildirim dokunuşu

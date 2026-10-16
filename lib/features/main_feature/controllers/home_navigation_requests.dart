@@ -24,9 +24,25 @@ class HomeNavigationRequests extends ChangeNotifier {
   /// doğrudan erişemez (o, ana sayfanın durumunda).
   ValueChanged<TransactionsSection>? sectionHandler;
 
-  /// Sekme şeridinden bir bölüme geç.
-  void openSection(TransactionsSection section) =>
-      sectionHandler?.call(section);
+  /// Bir bölüme geç. Ana sayfa henüz kurulmadıysa (bildirime dokunarak
+  /// soğuk açılış) istek BEKLETİLİR ve ana sayfa bağlanınca uygulanır.
+  void openSection(TransactionsSection section) {
+    final handler = sectionHandler;
+    if (handler == null) {
+      _pendingSection = section;
+      return;
+    }
+    handler(section);
+  }
+
+  TransactionsSection? _pendingSection;
+
+  /// Bekleyen bölüm isteğini TÜKETİR (bir kez uygulanır).
+  TransactionsSection? takePendingSection() {
+    final s = _pendingSection;
+    _pendingSection = null;
+    return s;
+  }
 
   /// Ana bölümler (Birikim / İşlemler / Borç) arasında geçiş isteğini ana
   /// sayfaya ileten işleyici; [sectionHandler] ile aynı yaşam döngüsü.

@@ -121,6 +121,8 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/filterin
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart'
     as _i344;
 import 'package:cunehat/features/forecast/data/forecast_service.dart' as _i1015;
+import 'package:cunehat/features/forecast/domain/forecast_alert_monitor.dart'
+    as _i744;
 import 'package:cunehat/features/investments/data/datasource/goal_local_datasource.dart'
     as _i1036;
 import 'package:cunehat/features/investments/data/datasource/investment_local_datasource.dart'
@@ -462,13 +464,6 @@ extension GetItInjectableX on _i174.GetIt {
               gh<_i551.NotificationService>(),
               gh<_i534.ReminderSyncService>(),
             ));
-    gh.factory<_i1021.NotificationSettingsBloc>(
-        () => _i1021.NotificationSettingsBloc(
-              gh<_i721.NotificationSettingsService>(),
-              gh<_i551.NotificationService>(),
-              gh<_i534.ReminderSyncService>(),
-              gh<_i931.NotificationLocalizer>(),
-            ));
     gh.lazySingleton<_i186.GoogleDriveBackupService>(
       () => _i186.GoogleDriveBackupService(
         gh<_i348.DataSerializationService>(),
@@ -576,6 +571,14 @@ extension GetItInjectableX on _i174.GetIt {
               gh<_i788.RecurringTransactionRepository>(),
               gh<_i534.ReminderSyncService>(),
             ));
+    gh.factory<_i1021.NotificationSettingsBloc>(
+        () => _i1021.NotificationSettingsBloc(
+              gh<_i721.NotificationSettingsService>(),
+              gh<_i551.NotificationService>(),
+              gh<_i534.ReminderSyncService>(),
+              gh<_i931.NotificationLocalizer>(),
+              gh<_i744.ForecastAlertMonitor>(),
+            ));
     gh.factory<_i230.ReceivableBloc>(() => _i230.ReceivableBloc(
           getReceivablesUseCase: gh<_i866.GetReceivablesUseCase>(),
           addReceivableUseCase: gh<_i866.AddReceivableUseCase>(),
@@ -584,6 +587,20 @@ extension GetItInjectableX on _i174.GetIt {
           walletMetricsService: gh<_i239.WalletMetricsService>(),
           transactionsChangedNotifier: gh<_i777.TransactionsChangedNotifier>(),
         ));
+    gh.lazySingleton<_i744.ForecastAlertMonitor>(
+      () => _i744.ForecastAlertMonitor(
+        gh<_i1015.ForecastService>(),
+        gh<_i551.NotificationService>(),
+        gh<_i721.NotificationSettingsService>(),
+        gh<_i931.NotificationLocalizer>(),
+        gh<_i460.SharedPreferences>(),
+        gh<_i504.WalletRepository>(),
+        gh<_i698.AmountVisibilityCubit>(),
+        gh<_i777.TransactionsChangedNotifier>(),
+        gh<_i977.BudgetsChangedNotifier>(),
+      ),
+      dispose: (i) => i.dispose(),
+    );
     gh.factory<_i238.DebtBloc>(() => _i238.DebtBloc(
           getDebtsUseCase: gh<_i855.GetDebtsUseCase>(),
           addDebtUseCase: gh<_i855.AddDebtUseCase>(),

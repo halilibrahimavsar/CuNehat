@@ -7597,4 +7597,87 @@ class AppLocalizationsTr extends AppLocalizations {
   String forecastExcludedWallets(String names) {
     return 'Kur alınamadı, toplama katılmadı: $names';
   }
+
+  @override
+  String get notifForecastCashTitle => 'Bakiye uyarısı';
+
+  @override
+  String notifForecastCashBody(String wallet, String date) {
+    return '$wallet: bu gidişle $date civarı eksiye düşebilir. Ayrıntısı Gelecek sayfasında.';
+  }
+
+  @override
+  String get notifForecastBudgetTitle => 'Bütçe gidişatı';
+
+  @override
+  String notifForecastBudgetBody(String name, String date, String amount) {
+    return '$name: bu hızla $date dolacak. Sığması için günde en çok $amount.';
+  }
+
+  @override
+  String notifForecastBudgetBodyShort(String name, String date) {
+    return '$name: bu hızla $date dolacak.';
+  }
+
+  @override
+  String get notifDigestTitle => 'Haftalık özet';
+
+  @override
+  String notifDigestExpense(String amount) {
+    return 'Dönem sonu gider ~$amount.';
+  }
+
+  @override
+  String notifDigestLowest(String date, String amount) {
+    return 'En dar gün $date: $amount.';
+  }
+
+  @override
+  String notifDigestPayments(int count, String total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Bu hafta $count planlı ödeme: $total.',
+      one: 'Bu hafta 1 planlı ödeme: $total.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notifDigestNoPayments => 'Bu hafta planlı ödeme yok.';
+
+  @override
+  String get notifDigestStaleTitle => 'Bir haftadır kayıt yok';
+
+  @override
+  String get notifDigestStaleBody =>
+      'Tahminlerin bayatladı; harcamalarını ekleyince Gelecek sayfası güncellenir.';
+
+  @override
+  String get forecastWarningsSetting => 'Tahmin uyarıları';
+
+  @override
+  String get forecastWarningsSettingDesc =>
+      'Bütçe erken dolacaksa ya da bakiye eksiye düşecekse önceden haber ver';
+
+  @override
+  String get weeklyDigestSetting => 'Haftalık özet';
+
+  @override
+  String get weeklyDigestSettingDesc =>
+      'Her pazartesi 09:00\'da dönem sonu tahmini ve haftanın ödemeleri';
+
+  @override
+  String get forecastDigestOfferTitle =>
+      'Her pazartesi bu özeti göndereyim mi?';
+
+  @override
+  String get forecastDigestOfferBody =>
+      'Dönem sonu tahmini, en dar gün ve haftanın ödemeleri — tek bildirimle. Ayarlar\'dan kapatabilirsin.';
+
+  @override
+  String get forecastDigestOfferAccept => 'Gönder';
+
+  @override
+  String get forecastDigestOfferDecline => 'Şimdilik hayır';
 }

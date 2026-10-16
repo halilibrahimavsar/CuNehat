@@ -183,6 +183,28 @@ class _NotificationSettingsCardState extends State<NotificationSettingsCard>
                     .add(UpdateBudgetAlertsEnabled(value)),
               ),
 
+              SwitchListTile(
+                key: const ValueKey('setting-forecast-warnings'),
+                secondary: const Icon(Icons.update_rounded),
+                title: Text(context.l10n.forecastWarningsSetting),
+                subtitle: Text(context.l10n.forecastWarningsSettingDesc),
+                value: state.forecastWarningsEnabled,
+                onChanged: (value) => context
+                    .read<NotificationSettingsBloc>()
+                    .add(UpdateForecastWarningsEnabled(value)),
+              ),
+
+              SwitchListTile(
+                key: const ValueKey('setting-weekly-digest'),
+                secondary: const Icon(Icons.event_note_rounded),
+                title: Text(context.l10n.weeklyDigestSetting),
+                subtitle: Text(context.l10n.weeklyDigestSettingDesc),
+                value: state.weeklyDigestEnabled,
+                onChanged: (value) => context
+                    .read<NotificationSettingsBloc>()
+                    .add(UpdateWeeklyDigestEnabled(value)),
+              ),
+
               const Divider(height: 1),
               // Tanılama release'te de duruyor: bildirim gelmediğinde sebebi
               // ancak cihazda okunabiliyor (release'te debugPrint yok).
@@ -191,8 +213,7 @@ class _NotificationSettingsCardState extends State<NotificationSettingsCard>
                 title: Text(context.l10n.notificationDiagnosticsTitle),
                 subtitle: Text(context.l10n.notificationDiagnosticsSubtitle),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: () =>
-                    context.push(AppRoutes.notificationDiagnostics),
+                onTap: () => context.push(AppRoutes.notificationDiagnostics),
               ),
               const Divider(height: 1),
               Padding(
@@ -230,8 +251,8 @@ class _NotificationSettingsCardState extends State<NotificationSettingsCard>
             state.testNotificationDetail ?? ''),
       NotificationFailure.notDelivered =>
         l10n.notificationTestFailedNotDelivered,
-      NotificationFailure.platformError => l10n.notificationTestFailedPlatform(
-          state.testNotificationDetail ?? ''),
+      NotificationFailure.platformError =>
+        l10n.notificationTestFailedPlatform(state.testNotificationDetail ?? ''),
       // Sebep taşınmadıysa eski genel metin: yeni bir sebep eklenip burası
       // unutulursa kullanıcı boş ekran değil, hiç değilse bir uyarı görsün.
       null => l10n.notificationTestFailed,

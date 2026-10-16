@@ -10,10 +10,16 @@ class NotificationSettingsService {
   static const String _keyEnableDebt = 'notification_enable_debt';
   static const String _keyEnableRecurring = 'notification_enable_recurring';
   static const String _keyEnableBudget = 'notification_enable_budget';
+  static const String _keyForecastWarnings =
+      'notification_enable_forecast_warnings';
+  static const String _keyWeeklyDigest = 'notification_enable_weekly_digest';
+  static const String _keyWeeklyDigestOffered =
+      'notification_weekly_digest_offered';
 
   /// Eski sürümlerin motivasyon aralığına yazdığı TEK ATIŞLIK planların bir
   /// kez temizlendiğini işaretler.
-  static const String _keyLegacyRandomPurged = 'notification_legacy_random_purged';
+  static const String _keyLegacyRandomPurged =
+      'notification_legacy_random_purged';
 
   NotificationSettingsService(this._prefs);
 
@@ -60,5 +66,33 @@ class NotificationSettingsService {
 
   Future<void> setBudgetAlertsEnabled(bool enabled) async {
     await _prefs.setBool(_keyEnableBudget, enabled);
+  }
+
+  /// Tahmine dayalı erken uyarılar ("bu hızla 6 gün erken dolacak", "bakiye
+  /// eksiye düşebilir"). Varsayılan AÇIK: bütçe uyarıları gibi kaçırılmaması
+  /// gereken bir sinyal; monitör olay başına tek, günde en fazla bir uyarı
+  /// gönderir.
+  bool get isForecastWarningsEnabled =>
+      _prefs.getBool(_keyForecastWarnings) ?? true;
+
+  Future<void> setForecastWarningsEnabled(bool enabled) async {
+    await _prefs.setBool(_keyForecastWarnings, enabled);
+  }
+
+  /// Pazartesi sabahı haftalık özet. Varsayılan KAPALI: düzenli bir mesaj
+  /// kullanıcının seçimi olmalı (Gelecek sayfası bir kez teklif eder).
+  bool get isWeeklyDigestEnabled => _prefs.getBool(_keyWeeklyDigest) ?? false;
+
+  Future<void> setWeeklyDigestEnabled(bool enabled) async {
+    await _prefs.setBool(_keyWeeklyDigest, enabled);
+    await _prefs.setBool(_keyWeeklyDigestOffered, true);
+  }
+
+  /// Haftalık özet teklifi gösterildi mi (kabul ya da ret fark etmez).
+  bool get isWeeklyDigestOffered =>
+      _prefs.getBool(_keyWeeklyDigestOffered) ?? false;
+
+  Future<void> markWeeklyDigestOffered() async {
+    await _prefs.setBool(_keyWeeklyDigestOffered, true);
   }
 }

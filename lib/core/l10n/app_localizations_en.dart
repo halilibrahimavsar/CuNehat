@@ -7658,4 +7658,86 @@ class AppLocalizationsEn extends AppLocalizations {
   String forecastExcludedWallets(String names) {
     return 'No exchange rate, left out of the total: $names';
   }
+
+  @override
+  String get notifForecastCashTitle => 'Balance heads-up';
+
+  @override
+  String notifForecastCashBody(String wallet, String date) {
+    return '$wallet: at this rate it could dip below zero around $date. Details on the Ahead page.';
+  }
+
+  @override
+  String get notifForecastBudgetTitle => 'Budget outlook';
+
+  @override
+  String notifForecastBudgetBody(String name, String date, String amount) {
+    return '$name: at this pace it fills up on $date. To stay within: at most $amount a day.';
+  }
+
+  @override
+  String notifForecastBudgetBodyShort(String name, String date) {
+    return '$name: at this pace it fills up on $date.';
+  }
+
+  @override
+  String get notifDigestTitle => 'Weekly summary';
+
+  @override
+  String notifDigestExpense(String amount) {
+    return 'End-of-period spending ~$amount.';
+  }
+
+  @override
+  String notifDigestLowest(String date, String amount) {
+    return 'Tightest day $date: $amount.';
+  }
+
+  @override
+  String notifDigestPayments(int count, String total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count planned payments this week: $total.',
+      one: '1 planned payment this week: $total.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notifDigestNoPayments => 'No planned payments this week.';
+
+  @override
+  String get notifDigestStaleTitle => 'No entries for a week';
+
+  @override
+  String get notifDigestStaleBody =>
+      'Your outlook is getting stale; add your spending and the Ahead page updates.';
+
+  @override
+  String get forecastWarningsSetting => 'Outlook alerts';
+
+  @override
+  String get forecastWarningsSettingDesc =>
+      'Warn me ahead if a budget will fill up early or my balance will dip below zero';
+
+  @override
+  String get weeklyDigestSetting => 'Weekly summary';
+
+  @override
+  String get weeklyDigestSettingDesc =>
+      'Every Monday at 09:00: end-of-period outlook and the week\'s payments';
+
+  @override
+  String get forecastDigestOfferTitle => 'Send me this summary every Monday?';
+
+  @override
+  String get forecastDigestOfferBody =>
+      'End-of-period outlook, tightest day and the week\'s payments in one notification. You can turn it off in Settings.';
+
+  @override
+  String get forecastDigestOfferAccept => 'Send it';
+
+  @override
+  String get forecastDigestOfferDecline => 'Not now';
 }

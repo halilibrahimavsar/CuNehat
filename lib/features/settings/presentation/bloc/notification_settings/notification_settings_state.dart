@@ -9,6 +9,8 @@ class NotificationSettingsState extends Equatable {
     this.debtRemindersEnabled = true,
     this.recurringRemindersEnabled = true,
     this.budgetAlertsEnabled = true,
+    this.forecastWarningsEnabled = true,
+    this.weeklyDigestEnabled = false,
     this.systemPermissionGranted = true,
     this.canRequestPermission = true,
     this.testNotificationSentAt,
@@ -22,6 +24,12 @@ class NotificationSettingsState extends Equatable {
   final bool debtRemindersEnabled;
   final bool recurringRemindersEnabled;
   final bool budgetAlertsEnabled;
+
+  /// Tahmine dayalı erken uyarılar (bkz. `ForecastAlertMonitor`).
+  final bool forecastWarningsEnabled;
+
+  /// Pazartesi haftalık özeti.
+  final bool weeklyDigestEnabled;
 
   /// Sistem düzeyinde bildirim izni. `false` iken aşağıdaki anahtarların
   /// hiçbiri işe yaramaz — kart bunu açıkça söylemeli.
@@ -54,6 +62,8 @@ class NotificationSettingsState extends Equatable {
     bool? debtRemindersEnabled,
     bool? recurringRemindersEnabled,
     bool? budgetAlertsEnabled,
+    bool? forecastWarningsEnabled,
+    bool? weeklyDigestEnabled,
     bool? systemPermissionGranted,
     bool? canRequestPermission,
     DateTime? testNotificationSentAt,
@@ -70,6 +80,9 @@ class NotificationSettingsState extends Equatable {
       recurringRemindersEnabled:
           recurringRemindersEnabled ?? this.recurringRemindersEnabled,
       budgetAlertsEnabled: budgetAlertsEnabled ?? this.budgetAlertsEnabled,
+      forecastWarningsEnabled:
+          forecastWarningsEnabled ?? this.forecastWarningsEnabled,
+      weeklyDigestEnabled: weeklyDigestEnabled ?? this.weeklyDigestEnabled,
       systemPermissionGranted:
           systemPermissionGranted ?? this.systemPermissionGranted,
       canRequestPermission: canRequestPermission ?? this.canRequestPermission,
@@ -95,6 +108,8 @@ class NotificationSettingsState extends Equatable {
         debtRemindersEnabled,
         recurringRemindersEnabled,
         budgetAlertsEnabled,
+        forecastWarningsEnabled,
+        weeklyDigestEnabled,
         systemPermissionGranted,
         canRequestPermission,
         testNotificationSentAt,

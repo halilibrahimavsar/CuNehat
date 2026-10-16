@@ -92,16 +92,22 @@ class ForecastService {
     return out;
   }
 
-  /// [userId]'nin tüm cüzdanlarının tahmini, kimliğe göre.
+  /// [userId]'nin tüm cüzdanlarının tahmini, kimliğe göre. [userId] `null`
+  /// ise cihazdaki TÜM cüzdanlar (uygulama düzeyi bildirim monitörü; her
+  /// cüzdan kendi sahibinin kimliğiyle okunur).
   Future<ForecastResult> forecast({
-    required String userId,
+    required String? userId,
     required DateTimeRange period,
     DateTimeRange? previousPeriod,
     DateTime? today,
     int horizonDays = 30,
   }) async {
     final wallets = await _read<List<WalletEntity>>(
-        'cüzdanlar', () => _wallets.getWallets(userId), const []);
+        'cüzdanlar',
+        () => userId == null
+            ? _wallets.getAllWallets()
+            : _wallets.getWallets(userId),
+        const []);
     final templates = await _read<List<RecurringTransactionEntity>>(
         'düzenli şablonlar', _recurring.getAllTemplates, const []);
     final debts =
@@ -119,11 +125,12 @@ class ForecastService {
     for (final w in wallets) {
       final id = w.id;
       if (id == null) continue;
+      final uid = userId ?? w.userId;
       inputs.add(WalletForecastInput(
         wallet: w,
         ledger: await _read<List<TransactionEntity>>(
             'defter',
-            () => _transactions.getTransactions(userId: userId, walletId: id),
+            () => _transactions.getTransactions(userId: uid, walletId: id),
             const []),
         templates: [
           for (final t in templates)
@@ -141,10 +148,10 @@ class ForecastService {
             'tek seferlik bütçeler',
             () => _tempBudgets.getTempBudgets(id), const []),
         goals: await _read<List<GoalEntity>>('hedefler',
-            () => _goals.getGoals(userId: userId, walletId: id), const []),
+            () => _goals.getGoals(userId: uid, walletId: id), const []),
         investments: await _read<List<InvestmentEntity>>(
             'yatırımlar',
-            () => _investments.getInvestments(userId: userId, walletId: id),
+            () => _investments.getInvestments(userId: uid, walletId: id),
             const []),
       ));
     }

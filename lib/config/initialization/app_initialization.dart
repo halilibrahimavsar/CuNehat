@@ -34,6 +34,7 @@ import 'package:cunehat/features/debt_and_receivable/data/models/debt_calc_mode_
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_type_adapter.dart';
 import 'package:cunehat/features/budgets/data/models/budget_model.dart';
 import 'package:cunehat/features/budgets/data/models/temp_budget_model.dart';
+import 'package:cunehat/features/forecast/domain/forecast_alert_monitor.dart';
 import 'package:cunehat/features/budgets/data/datasources/local/temp_budget_local_datasource.dart';
 import 'package:cunehat/features/budgets/domain/services/budget_alert_monitor.dart';
 import 'package:cunehat/features/investments/presentation/widgets/color_adapter.dart';
@@ -113,6 +114,11 @@ class AppInitialization {
       // defteri değişimlerini dinler ve eşik aşımında bildirim atar (Budgets
       // sayfası açık olmasa da). lazySingleton olduğundan bir kez touch edilir.
       getIt<BudgetAlertMonitor>();
+
+      // Tahmin uyarıları ve haftalık özet: defter/bütçe değişimini ve
+      // uygulama yaşam döngüsünü dinler; kurucuda kaydolduğu için bir kez
+      // oluşturulmalı. İki ayar da kapalıysa tur ilk kapıda döner.
+      getIt<ForecastAlertMonitor>();
 
       // Otomatik Drive yedeği uygulama arka plana geçerken tetiklenir; dinleyici
       // servisin kurucusunda kaydolduğu için servis en az bir kez oluşturulmalı.

@@ -48,6 +48,24 @@ class UpdateBudgetAlertsEnabled extends NotificationSettingsEvent {
   List<Object> get props => [isEnabled];
 }
 
+class UpdateForecastWarningsEnabled extends NotificationSettingsEvent {
+  const UpdateForecastWarningsEnabled(this.isEnabled);
+
+  final bool isEnabled;
+
+  @override
+  List<Object> get props => [isEnabled];
+}
+
+class UpdateWeeklyDigestEnabled extends NotificationSettingsEvent {
+  const UpdateWeeklyDigestEnabled(this.isEnabled);
+
+  final bool isEnabled;
+
+  @override
+  List<Object> get props => [isEnabled];
+}
+
 /// Sistem bildirim iznini (yeniden) ister. Kullanıcı ilk açılışta "Şimdi
 /// Değil" dediyse tek dönüş yolu budur.
 class RequestNotificationPermission extends NotificationSettingsEvent {

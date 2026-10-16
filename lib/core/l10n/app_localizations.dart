@@ -12881,6 +12881,126 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kur alınamadı, toplama katılmadı: {names}'**
   String forecastExcludedWallets(String names);
+
+  /// No description provided for @notifForecastCashTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye uyarısı'**
+  String get notifForecastCashTitle;
+
+  /// No description provided for @notifForecastCashBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'{wallet}: bu gidişle {date} civarı eksiye düşebilir. Ayrıntısı Gelecek sayfasında.'**
+  String notifForecastCashBody(String wallet, String date);
+
+  /// No description provided for @notifForecastBudgetTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçe gidişatı'**
+  String get notifForecastBudgetTitle;
+
+  /// No description provided for @notifForecastBudgetBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name}: bu hızla {date} dolacak. Sığması için günde en çok {amount}.'**
+  String notifForecastBudgetBody(String name, String date, String amount);
+
+  /// No description provided for @notifForecastBudgetBodyShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name}: bu hızla {date} dolacak.'**
+  String notifForecastBudgetBodyShort(String name, String date);
+
+  /// No description provided for @notifDigestTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Haftalık özet'**
+  String get notifDigestTitle;
+
+  /// No description provided for @notifDigestExpense.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dönem sonu gider ~{amount}.'**
+  String notifDigestExpense(String amount);
+
+  /// No description provided for @notifDigestLowest.
+  ///
+  /// In tr, this message translates to:
+  /// **'En dar gün {date}: {amount}.'**
+  String notifDigestLowest(String date, String amount);
+
+  /// No description provided for @notifDigestPayments.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{Bu hafta 1 planlı ödeme: {total}.} other{Bu hafta {count} planlı ödeme: {total}.}}'**
+  String notifDigestPayments(int count, String total);
+
+  /// No description provided for @notifDigestNoPayments.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu hafta planlı ödeme yok.'**
+  String get notifDigestNoPayments;
+
+  /// No description provided for @notifDigestStaleTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir haftadır kayıt yok'**
+  String get notifDigestStaleTitle;
+
+  /// No description provided for @notifDigestStaleBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tahminlerin bayatladı; harcamalarını ekleyince Gelecek sayfası güncellenir.'**
+  String get notifDigestStaleBody;
+
+  /// No description provided for @forecastWarningsSetting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tahmin uyarıları'**
+  String get forecastWarningsSetting;
+
+  /// No description provided for @forecastWarningsSettingDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçe erken dolacaksa ya da bakiye eksiye düşecekse önceden haber ver'**
+  String get forecastWarningsSettingDesc;
+
+  /// No description provided for @weeklyDigestSetting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Haftalık özet'**
+  String get weeklyDigestSetting;
+
+  /// No description provided for @weeklyDigestSettingDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her pazartesi 09:00\'da dönem sonu tahmini ve haftanın ödemeleri'**
+  String get weeklyDigestSettingDesc;
+
+  /// No description provided for @forecastDigestOfferTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her pazartesi bu özeti göndereyim mi?'**
+  String get forecastDigestOfferTitle;
+
+  /// No description provided for @forecastDigestOfferBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dönem sonu tahmini, en dar gün ve haftanın ödemeleri — tek bildirimle. Ayarlar\'dan kapatabilirsin.'**
+  String get forecastDigestOfferBody;
+
+  /// No description provided for @forecastDigestOfferAccept.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gönder'**
+  String get forecastDigestOfferAccept;
+
+  /// No description provided for @forecastDigestOfferDecline.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şimdilik hayır'**
+  String get forecastDigestOfferDecline;
 }
 
 class _AppLocalizationsDelegate

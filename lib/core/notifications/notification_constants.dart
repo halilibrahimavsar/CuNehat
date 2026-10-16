@@ -22,6 +22,9 @@ class NotificationPayloads {
 
   /// Motivasyon hatırlatıcısı; özel bir hedefi yok.
   static const String dailyReminder = 'daily_reminder';
+
+  /// Tahmin uyarısı ya da haftalık özet: Gelecek sayfasını açar.
+  static const String forecast = 'forecast';
 }
 
 /// Android bildirim kanalları. Ayrı kanal = kullanıcı sistem ayarlarından
@@ -66,6 +69,15 @@ class ReminderIds {
   /// kategoride aylık bütçe de olabilir, iki uyarı birbirini ezmemeli).
   static int tempBudget(String tempBudgetId) =>
       'temp_budget_$tempBudgetId'.hashCode;
+
+  /// Tahmine dayalı erken uyarı; anahtar olayı tanımlar (bkz.
+  /// `ForecastWarning.key`).
+  static int forecastWarning(String key) => 'forecast_warn_$key'.hashCode;
+
+  /// Pazartesi haftalık özeti ve onun "bir haftadır kayıt yok" yedeği. TEK
+  /// kimlik: her yeniden planlama öncekini ezer.
+  static final int weeklyDigest = 'forecast_weekly_digest'.hashCode;
+  static final int weeklyDigestStale = 'forecast_weekly_digest_stale'.hashCode;
 
   /// Motivasyon hatırlatıcıları bu aralıktan sıralı kimlik alır; toplu iptal
   /// için aralığın sabit olması gerekir.

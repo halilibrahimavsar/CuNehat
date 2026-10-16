@@ -5020,5 +5020,85 @@
         "type": "String"
       }
     }
-  }
+  },
+  "notifForecastCashTitle": "Bakiye uyarısı",
+  "notifForecastCashBody": "{wallet}: bu gidişle {date} civarı eksiye düşebilir. Ayrıntısı Gelecek sayfasında.",
+  "@notifForecastCashBody": {
+    "placeholders": {
+      "wallet": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "notifForecastBudgetTitle": "Bütçe gidişatı",
+  "notifForecastBudgetBody": "{name}: bu hızla {date} dolacak. Sığması için günde en çok {amount}.",
+  "@notifForecastBudgetBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "notifForecastBudgetBodyShort": "{name}: bu hızla {date} dolacak.",
+  "@notifForecastBudgetBodyShort": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "notifDigestTitle": "Haftalık özet",
+  "notifDigestExpense": "Dönem sonu gider ~{amount}.",
+  "@notifDigestExpense": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "notifDigestLowest": "En dar gün {date}: {amount}.",
+  "@notifDigestLowest": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "notifDigestPayments": "{count, plural, =1{Bu hafta 1 planlı ödeme: {total}.} other{Bu hafta {count} planlı ödeme: {total}.}}",
+  "@notifDigestPayments": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "notifDigestNoPayments": "Bu hafta planlı ödeme yok.",
+  "notifDigestStaleTitle": "Bir haftadır kayıt yok",
+  "notifDigestStaleBody": "Tahminlerin bayatladı; harcamalarını ekleyince Gelecek sayfası güncellenir.",
+  "forecastWarningsSetting": "Tahmin uyarıları",
+  "forecastWarningsSettingDesc": "Bütçe erken dolacaksa ya da bakiye eksiye düşecekse önceden haber ver",
+  "weeklyDigestSetting": "Haftalık özet",
+  "weeklyDigestSettingDesc": "Her pazartesi 09:00'da dönem sonu tahmini ve haftanın ödemeleri",
+  "forecastDigestOfferTitle": "Her pazartesi bu özeti göndereyim mi?",
+  "forecastDigestOfferBody": "Dönem sonu tahmini, en dar gün ve haftanın ödemeleri — tek bildirimle. Ayarlar'dan kapatabilirsin.",
+  "forecastDigestOfferAccept": "Gönder",
+  "forecastDigestOfferDecline": "Şimdilik hayır"
 }

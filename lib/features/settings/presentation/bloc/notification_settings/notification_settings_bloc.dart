@@ -5,6 +5,7 @@ import '../../../../../core/notifications/notification_localizer.dart';
 import '../../../../../core/notifications/notification_service.dart';
 import '../../../../../core/services/notification_settings_service.dart';
 import '../../../../../core/services/reminder_sync_service.dart';
+import 'package:cunehat/features/forecast/domain/forecast_alert_monitor.dart';
 import 'notification_settings_event.dart';
 import 'notification_settings_state.dart';
 
@@ -15,13 +16,16 @@ class NotificationSettingsBloc
     this._settingsService,
     this._notificationService,
     this._reminderSync,
-    this._localizer,
-  ) : super(const NotificationSettingsState()) {
+    this._localizer, [
+    this._forecastMonitor,
+  ]) : super(const NotificationSettingsState()) {
     on<LoadNotificationSettings>(_onLoadNotificationSettings);
     on<UpdateRandomRemindersFrequency>(_onUpdateRandomRemindersFrequency);
     on<UpdateDebtRemindersEnabled>(_onUpdateDebtRemindersEnabled);
     on<UpdateRecurringRemindersEnabled>(_onUpdateRecurringRemindersEnabled);
     on<UpdateBudgetAlertsEnabled>(_onUpdateBudgetAlertsEnabled);
+    on<UpdateForecastWarningsEnabled>(_onUpdateForecastWarningsEnabled);
+    on<UpdateWeeklyDigestEnabled>(_onUpdateWeeklyDigestEnabled);
     on<RequestNotificationPermission>(_onRequestNotificationPermission);
     on<SendTestNotification>(_onSendTestNotification);
   }
@@ -30,6 +34,10 @@ class NotificationSettingsBloc
   final NotificationService _notificationService;
   final ReminderSyncService _reminderSync;
   final NotificationLocalizer _localizer;
+
+  /// Tahmin bildirimleri; ayar değişince hemen bir tur atar (özet planlanır
+  /// ya da iptal edilir). Verilmezse (eski testler) yalnız ayar yazılır.
+  final ForecastAlertMonitor? _forecastMonitor;
 
   /// Test bildirimi, planlanmış hatırlatmaların kimlik aralıklarına
   /// düşmeyecek sabit bir kimlik kullanır.
@@ -50,6 +58,8 @@ class NotificationSettingsBloc
       debtRemindersEnabled: _settingsService.isDebtRemindersEnabled,
       recurringRemindersEnabled: _settingsService.isRecurringRemindersEnabled,
       budgetAlertsEnabled: _settingsService.isBudgetAlertsEnabled,
+      forecastWarningsEnabled: _settingsService.isForecastWarningsEnabled,
+      weeklyDigestEnabled: _settingsService.isWeeklyDigestEnabled,
       systemPermissionGranted: granted,
       canRequestPermission: canRequest,
     ));
@@ -92,6 +102,25 @@ class NotificationSettingsBloc
     emit(state.copyWith(budgetAlertsEnabled: event.isEnabled));
     await _settingsService.setBudgetAlertsEnabled(event.isEnabled);
     // Bütçe uyarıları anlık gönderilir (planlanmaz); iptal edilecek bir şey yok.
+  }
+
+  Future<void> _onUpdateForecastWarningsEnabled(
+    UpdateForecastWarningsEnabled event,
+    Emitter<NotificationSettingsState> emit,
+  ) async {
+    emit(state.copyWith(forecastWarningsEnabled: event.isEnabled));
+    await _settingsService.setForecastWarningsEnabled(event.isEnabled);
+  }
+
+  Future<void> _onUpdateWeeklyDigestEnabled(
+    UpdateWeeklyDigestEnabled event,
+    Emitter<NotificationSettingsState> emit,
+  ) async {
+    emit(state.copyWith(weeklyDigestEnabled: event.isEnabled));
+    await _settingsService.setWeeklyDigestEnabled(event.isEnabled);
+    // Planlı özet hemen kurulmalı ya da İPTAL edilmeli: kapatıp pazartesi
+    // bildirim almak ayarın çalışmadığını düşündürürdü.
+    await _forecastMonitor?.run();
   }
 
   Future<void> _onRequestNotificationPermission(
@@ -155,8 +184,7 @@ class NotificationSettingsBloc
 
     // İzin kapalıysa banner'ın da güncellenmesi gerekiyor: kullanıcı izni
     // ekranın dışında kapatmış olabilir.
-    final noPermission =
-        result.failure == NotificationFailure.noAppPermission;
+    final noPermission = result.failure == NotificationFailure.noAppPermission;
     emit(state.copyWith(
       systemPermissionGranted: noPermission ? false : null,
       canRequestPermission: noPermission

@@ -6,6 +6,7 @@ import 'package:cunehat/core/notifications/notification_localizer.dart';
 import 'package:cunehat/core/notifications/notification_service.dart';
 import 'package:cunehat/core/services/notification_settings_service.dart';
 import 'package:cunehat/core/services/reminder_sync_service.dart';
+import 'package:cunehat/features/forecast/domain/forecast_alert_monitor.dart';
 import 'package:cunehat/features/settings/presentation/bloc/notification_settings/notification_settings_bloc.dart';
 import 'package:cunehat/features/settings/presentation/bloc/notification_settings/notification_settings_event.dart';
 import 'package:cunehat/features/settings/presentation/bloc/notification_settings/notification_settings_state.dart';
@@ -21,6 +22,8 @@ class MockNotificationSettingsService extends Mock
 class MockReminderSyncService extends Mock implements ReminderSyncService {}
 
 class MockNotificationLocalizer extends Mock implements NotificationLocalizer {}
+
+class MockForecastAlertMonitor extends Mock implements ForecastAlertMonitor {}
 
 void main() {
   late MockNotificationService notifications;
@@ -44,6 +47,8 @@ void main() {
     when(() => settings.isDebtRemindersEnabled).thenReturn(true);
     when(() => settings.isRecurringRemindersEnabled).thenReturn(true);
     when(() => settings.isBudgetAlertsEnabled).thenReturn(true);
+    when(() => settings.isForecastWarningsEnabled).thenReturn(true);
+    when(() => settings.isWeeklyDigestEnabled).thenReturn(false);
     when(reminderSync.syncAll).thenAnswer((_) async {});
   });
 
@@ -128,7 +133,8 @@ void main() {
     blocTest<NotificationSettingsBloc, NotificationSettingsState>(
       'sistem artık sormuyorsa istek yerine sistem ayarlarını açar',
       setUp: () {
-        when(notifications.canRequestPermissions).thenAnswer((_) async => false);
+        when(notifications.canRequestPermissions)
+            .thenAnswer((_) async => false);
         when(notifications.openSystemNotificationSettings)
             .thenAnswer((_) async => true);
       },
@@ -147,7 +153,8 @@ void main() {
       setUp: () {
         when(notifications.areNotificationsEnabled)
             .thenAnswer((_) async => false);
-        when(notifications.canRequestPermissions).thenAnswer((_) async => false);
+        when(notifications.canRequestPermissions)
+            .thenAnswer((_) async => false);
       },
       build: build,
       act: (bloc) => bloc.add(const LoadNotificationSettings()),
@@ -274,6 +281,60 @@ void main() {
             payload: any(named: 'payload'),
             channel: NotificationChannelKind.critical,
           )).called(1),
+    );
+  });
+
+  group('tahmin bildirimleri', () {
+    late MockForecastAlertMonitor monitor;
+
+    setUp(() {
+      monitor = MockForecastAlertMonitor();
+      when(monitor.run).thenAnswer((_) async {});
+      when(() => settings.setWeeklyDigestEnabled(any()))
+          .thenAnswer((_) async {});
+      when(() => settings.setForecastWarningsEnabled(any()))
+          .thenAnswer((_) async {});
+    });
+
+    NotificationSettingsBloc buildWithMonitor() => NotificationSettingsBloc(
+        settings, notifications, reminderSync, localizer, monitor);
+
+    blocTest<NotificationSettingsBloc, NotificationSettingsState>(
+      'yükleme iki anahtarı ayardan okur',
+      setUp: () {
+        when(notifications.areNotificationsEnabled)
+            .thenAnswer((_) async => true);
+        when(notifications.canRequestPermissions).thenAnswer((_) async => true);
+        when(() => settings.isWeeklyDigestEnabled).thenReturn(true);
+      },
+      build: buildWithMonitor,
+      act: (bloc) => bloc.add(const LoadNotificationSettings()),
+      verify: (bloc) {
+        expect(bloc.state.forecastWarningsEnabled, isTrue);
+        expect(bloc.state.weeklyDigestEnabled, isTrue);
+      },
+    );
+
+    blocTest<NotificationSettingsBloc, NotificationSettingsState>(
+      'haftalık özet anahtarı yazılır ve monitör HEMEN tur atar (plan '
+      'kurulur ya da iptal edilir)',
+      build: buildWithMonitor,
+      act: (bloc) => bloc.add(const UpdateWeeklyDigestEnabled(false)),
+      verify: (bloc) {
+        expect(bloc.state.weeklyDigestEnabled, isFalse);
+        verify(() => settings.setWeeklyDigestEnabled(false)).called(1);
+        verify(monitor.run).called(1);
+      },
+    );
+
+    blocTest<NotificationSettingsBloc, NotificationSettingsState>(
+      'erken uyarı anahtarı yazılır',
+      build: buildWithMonitor,
+      act: (bloc) => bloc.add(const UpdateForecastWarningsEnabled(false)),
+      verify: (bloc) {
+        expect(bloc.state.forecastWarningsEnabled, isFalse);
+        verify(() => settings.setForecastWarningsEnabled(false)).called(1);
+      },
     );
   });
 }
