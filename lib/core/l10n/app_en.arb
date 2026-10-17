@@ -4849,10 +4849,6 @@
   "forecastWarningsSettingDesc": "Warn me ahead if a budget will fill up early or my balance will dip below zero",
   "weeklyDigestSetting": "Weekly summary",
   "weeklyDigestSettingDesc": "Every Monday at 09:00: end-of-period outlook and the week's payments",
-  "forecastDigestOfferTitle": "Send me this summary every Monday?",
-  "forecastDigestOfferBody": "End-of-period outlook, tightest day and the week's payments in one notification. You can turn it off in Settings.",
-  "forecastDigestOfferAccept": "Send it",
-  "forecastDigestOfferDecline": "Not now",
   "forecastCardSoFar": "So far {amount}",
   "@forecastCardSoFar": {
     "placeholders": {

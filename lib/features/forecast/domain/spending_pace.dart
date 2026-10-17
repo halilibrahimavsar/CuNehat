@@ -116,13 +116,16 @@ class SpendingPace {
     int windowDays = defaultWindowDays,
     int minDays = minObservedDays,
   }) {
+    // Hiç kayıt yoksa gözlem de yoktur. Eskiden `null` "pencerenin tamamı
+    // gözlendi" sayılıyor ve yeni kullanıcıya 90 günlük SIFIR harcama hızı
+    // çıkıyordu: Gelecek sayfası güven kapısını göstermiyor, haftalık özet
+    // "dönem sonu gider ~0 ₺" yazıyordu.
+    if (trackingSince == null) return null;
     final day = CardCycle.dateOnly(today);
     final windowEnd = DateTime(day.year, day.month, day.day - 1);
     var windowStart = DateTime(day.year, day.month, day.day - windowDays);
-    if (trackingSince != null) {
-      final since = CardCycle.dateOnly(trackingSince);
-      if (since.isAfter(windowStart)) windowStart = since;
-    }
+    final since = CardCycle.dateOnly(trackingSince);
+    if (since.isAfter(windowStart)) windowStart = since;
     final observed = CardCycle.daysBetween(windowStart, windowEnd) + 1;
     if (observed < minDays) return null;
 

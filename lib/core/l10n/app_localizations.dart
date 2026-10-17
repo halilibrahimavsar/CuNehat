@@ -12972,30 +12972,6 @@ abstract class AppLocalizations {
   /// **'Her pazartesi 09:00\'da dönem sonu tahmini ve haftanın ödemeleri'**
   String get weeklyDigestSettingDesc;
 
-  /// No description provided for @forecastDigestOfferTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Her pazartesi bu özeti göndereyim mi?'**
-  String get forecastDigestOfferTitle;
-
-  /// No description provided for @forecastDigestOfferBody.
-  ///
-  /// In tr, this message translates to:
-  /// **'Dönem sonu tahmini, en dar gün ve haftanın ödemeleri — tek bildirimle. Ayarlar\'dan kapatabilirsin.'**
-  String get forecastDigestOfferBody;
-
-  /// No description provided for @forecastDigestOfferAccept.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gönder'**
-  String get forecastDigestOfferAccept;
-
-  /// No description provided for @forecastDigestOfferDecline.
-  ///
-  /// In tr, this message translates to:
-  /// **'Şimdilik hayır'**
-  String get forecastDigestOfferDecline;
-
   /// No description provided for @forecastCardSoFar.
   ///
   /// In tr, this message translates to:

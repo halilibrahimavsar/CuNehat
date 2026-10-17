@@ -13,7 +13,6 @@ import 'package:cunehat/features/forecast/data/forecast_service.dart';
 import 'package:cunehat/features/forecast/domain/forecast_combiner.dart';
 import 'package:cunehat/features/forecast/domain/forecast_models.dart';
 import 'package:cunehat/features/forecast/presentation/bloc/forecast_cubit.dart';
-import 'package:cunehat/features/forecast/presentation/widgets/digest_offer_card.dart';
 import 'package:cunehat/features/forecast/presentation/widgets/forecast_path_card.dart';
 import 'package:cunehat/features/forecast/presentation/widgets/forecast_sections.dart';
 import 'package:flutter/material.dart';
@@ -73,10 +72,6 @@ class ForecastView extends StatefulWidget {
 
 class _ForecastViewState extends State<ForecastView>
     with WidgetsBindingObserver {
-  /// Haftalık özet teklifi bu oturumda gösterilecek mi (açılışta bir kez
-  /// okunur; kart kendini gizler).
-  late final bool _offerDigest = DigestOfferCard.shouldShow();
-
   @override
   void initState() {
     super.initState();
@@ -254,7 +249,6 @@ class _ForecastViewState extends State<ForecastView>
             ),
         ],
         const SizedBox(height: 8),
-        if (_offerDigest) const DigestOfferCard(),
         if (f.pace == null && !f.isCard && combined == null) ...[
           AnalysisEmptyCard(
             key: const ValueKey('forecast-no-pace'),

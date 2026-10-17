@@ -10,7 +10,7 @@ class NotificationSettingsState extends Equatable {
     this.recurringRemindersEnabled = true,
     this.budgetAlertsEnabled = true,
     this.forecastWarningsEnabled = true,
-    this.weeklyDigestEnabled = false,
+    this.weeklyDigestEnabled = true,
     this.systemPermissionGranted = true,
     this.canRequestPermission = true,
     this.testNotificationSentAt,

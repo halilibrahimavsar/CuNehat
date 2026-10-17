@@ -7664,20 +7664,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Her pazartesi 09:00\'da dönem sonu tahmini ve haftanın ödemeleri';
 
   @override
-  String get forecastDigestOfferTitle =>
-      'Her pazartesi bu özeti göndereyim mi?';
-
-  @override
-  String get forecastDigestOfferBody =>
-      'Dönem sonu tahmini, en dar gün ve haftanın ödemeleri — tek bildirimle. Ayarlar\'dan kapatabilirsin.';
-
-  @override
-  String get forecastDigestOfferAccept => 'Gönder';
-
-  @override
-  String get forecastDigestOfferDecline => 'Şimdilik hayır';
-
-  @override
   String forecastCardSoFar(String amount) {
     return 'Şimdiye kadar $amount';
   }

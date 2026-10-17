@@ -7724,19 +7724,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Every Monday at 09:00: end-of-period outlook and the week\'s payments';
 
   @override
-  String get forecastDigestOfferTitle => 'Send me this summary every Monday?';
-
-  @override
-  String get forecastDigestOfferBody =>
-      'End-of-period outlook, tightest day and the week\'s payments in one notification. You can turn it off in Settings.';
-
-  @override
-  String get forecastDigestOfferAccept => 'Send it';
-
-  @override
-  String get forecastDigestOfferDecline => 'Not now';
-
-  @override
   String forecastCardSoFar(String amount) {
     return 'So far $amount';
   }

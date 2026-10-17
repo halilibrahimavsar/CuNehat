@@ -143,7 +143,11 @@ WeeklyDigest buildWeeklyDigest(WalletForecast w, {required DateTime from}) {
     expectedExpense: w.pace == null || period == null || w.isCard
         ? null
         : period.expectedExpense,
-    lowest: w.isCard ? null : w.lowestPoint(until: w.nextIncome?.date),
+    // Hız da planlı olay da yoksa yol düz bir çizgidir; "en dar gün: bugün"
+    // hiçbir şey söylemez (yeni kurulumda görülürdü).
+    lowest: w.isCard || (w.pace == null && w.events.isEmpty)
+        ? null
+        : w.lowestPoint(until: w.nextIncome?.date),
     paymentCount: count,
     paymentTotal: total,
   );

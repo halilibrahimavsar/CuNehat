@@ -225,6 +225,19 @@ class ForecastAlertMonitor with WidgetsBindingObserver {
     if (w == null) return;
     final at = nextDigestTime(now);
     final digest = buildWeeklyDigest(w, from: at);
+    await _cancelDigest();
+    // "Kayıt yok" yedeği her durumda kurulur: yeni başlayıp unutan kullanıcı
+    // tam da onu duymalı. Asıl özet ise söyleyecek bir şey yoksa gitmez —
+    // varsayılan açık olduğundan boş bir "haftalık özet" herkese giderdi.
+    await _notifications.scheduleNotification(
+      id: ReminderIds.weeklyDigestStale,
+      title: l10n.notifDigestStaleTitle,
+      body: l10n.notifDigestStaleBody,
+      scheduledDate: DateTime(at.year, at.month, at.day + 7, at.hour),
+      payload: NotificationPayloads.forecast,
+      channel: NotificationChannelKind.motivational,
+    );
+    if (digest.isEmpty) return;
     final money = MoneyWriter(currency: w.currency, visible: _visibility.state);
     final lowest = digest.lowest;
     final parts = <String>[
@@ -239,20 +252,11 @@ class ForecastAlertMonitor with WidgetsBindingObserver {
               digest.paymentCount, money(digest.paymentTotal)),
     ];
 
-    await _cancelDigest();
     await _notifications.scheduleNotification(
       id: ReminderIds.weeklyDigest,
       title: l10n.notifDigestTitle,
       body: parts.join(' '),
       scheduledDate: at,
-      payload: NotificationPayloads.forecast,
-      channel: NotificationChannelKind.motivational,
-    );
-    await _notifications.scheduleNotification(
-      id: ReminderIds.weeklyDigestStale,
-      title: l10n.notifDigestStaleTitle,
-      body: l10n.notifDigestStaleBody,
-      scheduledDate: DateTime(at.year, at.month, at.day + 7, at.hour),
       payload: NotificationPayloads.forecast,
       channel: NotificationChannelKind.motivational,
     );

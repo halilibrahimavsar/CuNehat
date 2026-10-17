@@ -148,4 +148,8 @@ void main() {
     expect(pace.observedDays, 90);
     expect(pace.windowStart, DateTime(2026, 8, 12));
   });
+
+  test('hiç kayıt yoksa (ilk kayıt bilinmiyor) hız YOK', () {
+    expect(SpendingPace.fit(const [], today: _today), isNull);
+  });
 }

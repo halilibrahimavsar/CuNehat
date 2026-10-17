@@ -143,7 +143,7 @@ void main() {
     now = DateTime(2026, 11, 10, 20);
   });
 
-  ForecastAlertMonitor build(_FakeForecasts forecasts,
+  ForecastAlertMonitor build(ForecastService forecasts,
           {AmountVisibilityCubit? visibility}) =>
       ForecastAlertMonitor.forTest(
         forecasts,
@@ -164,9 +164,15 @@ void main() {
         channel: any(named: 'channel'),
       ));
 
+  test('haftalık özet varsayılan AÇIK (kullanıcı kararı)', () {
+    expect(settings.isWeeklyDigestEnabled, isTrue);
+    expect(settings.isForecastWarningsEnabled, isTrue);
+  });
+
   test('iki ayar da kapalıysa tahmin HESAPLANMAZ, planlı özet iptal edilir',
       () async {
     await settings.setForecastWarningsEnabled(false);
+    await settings.setWeeklyDigestEnabled(false);
     final forecasts = _FakeForecasts(1000);
     await build(forecasts).run();
 
@@ -227,7 +233,6 @@ void main() {
       'haftalık özet: Pazartesi 09:00 TEK ATIŞLIK + bir hafta sonrasına '
       '"kayıt yok" yedeği; önce eskiler iptal', () async {
     await settings.setForecastWarningsEnabled(false);
-    await settings.setWeeklyDigestEnabled(true);
     await build(_FakeForecasts(20000)).run();
 
     final captured = verify(() => notifications.scheduleNotification(
@@ -239,14 +244,15 @@ void main() {
           channel: NotificationChannelKind.motivational,
         )).captured;
     expect(captured, hasLength(8));
-    expect(captured[0], ReminderIds.weeklyDigest);
-    expect(captured[1], tr.notifDigestTitle);
+    // Önce "kayıt yok" yedeği (her durumda), sonra asıl özet.
+    expect(captured[0], ReminderIds.weeklyDigestStale);
+    expect(captured[1], tr.notifDigestStaleTitle);
+    expect(captured[3], DateTime(2026, 11, 23, 9));
+    expect(captured[4], ReminderIds.weeklyDigest);
+    expect(captured[5], tr.notifDigestTitle);
     // Haftanın tek planlı ödemesi: 18 Kas kirası.
-    expect(captured[2], contains(tr.notifDigestPayments(1, '8.000,00 ₺')));
-    expect(captured[3], DateTime(2026, 11, 16, 9));
-    expect(captured[4], ReminderIds.weeklyDigestStale);
-    expect(captured[5], tr.notifDigestStaleTitle);
-    expect(captured[7], DateTime(2026, 11, 23, 9));
+    expect(captured[6], contains(tr.notifDigestPayments(1, '8.000,00 ₺')));
+    expect(captured[7], DateTime(2026, 11, 16, 9));
     verify(() => notifications.cancelNotification(ReminderIds.weeklyDigest))
         .called(1);
   });
@@ -274,4 +280,46 @@ void main() {
     expect(body, isNot(contains('8.000')));
     expect(body, contains('****'));
   });
+
+  test(
+      'söyleyecek bir şey yoksa (hız yok, plan yok) asıl özet GİTMEZ; '
+      '"kayıt yok" yedeği yine kurulur', () async {
+    await settings.setForecastWarningsEnabled(false);
+    await build(_EmptyForecasts()).run();
+
+    verify(() => notifications.scheduleNotification(
+          id: ReminderIds.weeklyDigestStale,
+          title: any(named: 'title'),
+          body: any(named: 'body'),
+          scheduledDate: any(named: 'scheduledDate'),
+          payload: any(named: 'payload'),
+          channel: any(named: 'channel'),
+        )).called(1);
+    verifyNever(() => notifications.scheduleNotification(
+          id: ReminderIds.weeklyDigest,
+          title: any(named: 'title'),
+          body: any(named: 'body'),
+          scheduledDate: any(named: 'scheduledDate'),
+          payload: any(named: 'payload'),
+          channel: any(named: 'channel'),
+        ));
+  });
+}
+
+/// Yeni kurulum: tek cüzdan, kayıt yok, şablon yok.
+class _EmptyForecasts extends Fake implements ForecastService {
+  @override
+  Future<ForecastResult> forecast({
+    required String? userId,
+    required DateTimeRange period,
+    DateTimeRange? previousPeriod,
+    DateTime? today,
+    int horizonDays = 30,
+  }) async =>
+      ForecastResult(
+        wallets: ForecastEngine(today: today!, period: period).projectAll([
+          WalletForecastInput(wallet: _wallet(0), ledger: const []),
+        ]),
+        categories: const [],
+      );
 }

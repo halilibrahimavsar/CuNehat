@@ -1,6 +1,4 @@
-import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
-import 'package:cunehat/core/services/notification_settings_service.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/budgets/domain/entities/temp_budget_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
@@ -19,7 +17,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 final _today = DateTime(2026, 11, 10);
 final _november =
@@ -326,50 +323,6 @@ void main() {
             categories: single.categories,
           ));
       expect(find.byKey(const ValueKey('forecast-scope')), findsNothing);
-    });
-  });
-
-  group('haftalık özet teklifi', () {
-    late NotificationSettingsService settings;
-
-    setUp(() async {
-      SharedPreferences.setMockInitialValues({});
-      settings =
-          NotificationSettingsService(await SharedPreferences.getInstance());
-      getIt.allowReassignment = true;
-      getIt.registerSingleton<NotificationSettingsService>(settings);
-    });
-
-    tearDown(() async => getIt.reset());
-
-    testWidgets('kabul: özet açılır, kart kaybolur, bir daha sorulmaz',
-        (tester) async {
-      await pump(tester, _result());
-      expect(
-          find.byKey(const ValueKey('forecast-digest-offer')), findsOneWidget);
-
-      await tester.tap(find.byKey(const ValueKey('forecast-digest-accept')));
-      await tester.pumpAndSettle();
-
-      expect(settings.isWeeklyDigestEnabled, isTrue);
-      expect(settings.isWeeklyDigestOffered, isTrue);
-      expect(find.byKey(const ValueKey('forecast-digest-offer')), findsNothing);
-    });
-
-    testWidgets('ret: özet KAPALI kalır ama bir daha sorulmaz', (tester) async {
-      await pump(tester, _result());
-      await tester.tap(find.byKey(const ValueKey('forecast-digest-decline')));
-      await tester.pumpAndSettle();
-
-      expect(settings.isWeeklyDigestEnabled, isFalse);
-      expect(settings.isWeeklyDigestOffered, isTrue);
-      expect(find.byKey(const ValueKey('forecast-digest-offer')), findsNothing);
-    });
-
-    testWidgets('daha önce soruldu ise kart çıkmaz', (tester) async {
-      await settings.markWeeklyDigestOffered();
-      await pump(tester, _result());
-      expect(find.byKey(const ValueKey('forecast-digest-offer')), findsNothing);
     });
   });
 }

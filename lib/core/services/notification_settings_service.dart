@@ -13,8 +13,6 @@ class NotificationSettingsService {
   static const String _keyForecastWarnings =
       'notification_enable_forecast_warnings';
   static const String _keyWeeklyDigest = 'notification_enable_weekly_digest';
-  static const String _keyWeeklyDigestOffered =
-      'notification_weekly_digest_offered';
 
   /// Eski sürümlerin motivasyon aralığına yazdığı TEK ATIŞLIK planların bir
   /// kez temizlendiğini işaretler.
@@ -79,20 +77,12 @@ class NotificationSettingsService {
     await _prefs.setBool(_keyForecastWarnings, enabled);
   }
 
-  /// Pazartesi sabahı haftalık özet. Varsayılan KAPALI: düzenli bir mesaj
-  /// kullanıcının seçimi olmalı (Gelecek sayfası bir kez teklif eder).
-  bool get isWeeklyDigestEnabled => _prefs.getBool(_keyWeeklyDigest) ?? false;
+  /// Pazartesi sabahı haftalık özet. Varsayılan AÇIK (kullanıcı kararı,
+  /// 17 Eki 2026): uygulamanın işi unutturmamak; özet boş haftada gitmez
+  /// (bkz. `ForecastAlertMonitor`), Ayarlar'dan kapatılır.
+  bool get isWeeklyDigestEnabled => _prefs.getBool(_keyWeeklyDigest) ?? true;
 
   Future<void> setWeeklyDigestEnabled(bool enabled) async {
     await _prefs.setBool(_keyWeeklyDigest, enabled);
-    await _prefs.setBool(_keyWeeklyDigestOffered, true);
-  }
-
-  /// Haftalık özet teklifi gösterildi mi (kabul ya da ret fark etmez).
-  bool get isWeeklyDigestOffered =>
-      _prefs.getBool(_keyWeeklyDigestOffered) ?? false;
-
-  Future<void> markWeeklyDigestOffered() async {
-    await _prefs.setBool(_keyWeeklyDigestOffered, true);
   }
 }

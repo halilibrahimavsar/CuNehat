@@ -203,6 +203,16 @@ void main() {
       expect(f.events.single.date, DateTime(2026, 12, 5));
     });
 
+    test('hiç kaydı olmayan YENİ cüzdanda hız yok; kapı 14 gün der', () {
+      final f = _single(WalletForecastInput(
+        wallet: _wallet('w', balance: 5000),
+        ledger: const [],
+      ));
+      expect(f.pace, isNull);
+      expect(f.daysUntilPace, 14);
+      expect(f.path.last.expected, 5000);
+    });
+
     test('14 günden az kayıtta hız YOK: yol yalnız kesin olaylarla çizilir',
         () {
       final f = _single(WalletForecastInput(
