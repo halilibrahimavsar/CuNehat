@@ -557,47 +557,58 @@ Security and stability
 
 ## Sürüm notları — 1.1.0 (versionCode 9)
 
-16 Eki 2026 · **ONAY BEKLİYOR.** Kapsam `f44a836e..` (`+8`'den sonrası): kredi
+18 Eki 2026 · **ONAY BEKLİYOR.** Kapsam `f44a836e..` (`+8`'den sonrası): kredi
 kartı release'te AÇIK (bayrak varsayılanı `true`), Rapor 2.0, taksit grubu,
-ana kasa, acemi/değer/basit turları, smoke düzeltmeleri. Şema 14→16
-(`migrateBackup` zinciri tam). Play önerileri: `enableEdgeToEdge()`, optimize
-kaynak küçültme, AGP 9.0.1 + Gradle 9.1.0; bitmap önerisi file_picker'ın
-bizde çalışmayan sıkıştırma yolu (kod değişikliği yok). Yerinde yükseltme
-provası `+8`→`+9` API 33 emülatörde geçti (demo veri, tutarlar aynı, logcat
-temiz, yeniden başlatmada 10/10 alarm geri kuruldu).
+ana kasa, acemi/değer/basit turları, smoke düzeltmeleri; 17–18 Eki'de
+**tek seferlik bütçe** ve **Gelecek** sayfası (tahmin, bütçe gidişatı,
+yaklaşanlar, tüm cüzdanlar; erken uyarı ve pazartesi haftalık özeti — ikisi
+de varsayılan AÇIK). Şema 14→17 (`migrateBackup` zinciri tam; 16→17 boş
+`tempBudgets`). Play önerileri: `enableEdgeToEdge()`, optimize kaynak
+küçültme, AGP 9.0.1 + Gradle 9.1.0; bitmap önerisi file_picker'ın bizde
+çalışmayan sıkıştırma yolu (kod değişikliği yok). Yerinde yükseltme
+provaları: `+8`→`+9` (şema 16) API 33 emülatörde geçti (demo veri, tutarlar
+aynı, logcat temiz, yeniden başlatmada 10/10 alarm geri kuruldu); şema
+16→17 API 35 emülatörde geçti (eski sürümün ürettiği gerçek v16 yedeği eski
+sürümde geri yüklendi, yeni sürüm üstüne kuruldu: bakiye ve işlemler aynı).
 
-### Türkçe (470 karakter, sınır 500)
+Notlar 500 karakter sınırına sığsın diye "daha kolay kullanım" maddeleri
+(hızlı form, cüzdanlar arası kaydırma, toplu kategori, düzenlemeyi geri al,
+görüş gönder) çıkarıldı; yer Gelecek ve tek seferlik bütçeye verildi.
+
+### Türkçe (417 karakter, sınır 500)
 
 ```
+Yeni: Gelecek
+• Ay sonu tahmini, maaşa kadar yetip yetmediği, yaklaşan ödemeler.
+• Bütçe erken dolacaksa önceden uyarı; pazartesi sabahı haftalık özet.
+
+Tek seferlik bütçe
+• Tatil, taşınma gibi bir dönem için tarih aralıklı bütçe.
+
 Kredi kartı
-• Kart cüzdanı: kesim ve son ödeme günü, limit, ekstre özeti, faiz tahmini.
-• Taksitler kendi ayına yazılır; kart borcu Borç ve Net'e katılır.
+• Kesim ve son ödeme günü, limit, ekstre özeti; taksitler kendi ayına.
 
 Daha anlaşılır rapor
-• Zaman çizgisi, önceki dönemle kıyas; kategoriye dokunup alt kırılıma in.
-• "Param nereye gidiyor?" ana ekranda tek satırda.
-
-Daha kolay kullanım
-• Hızlı kayıt formu, cüzdanlar arası kaydırma, toplu kategori değiştirme.
-• Düzenlemeyi de geri al; Ayarlar'dan görüş gönder.
+• Zaman çizgisi, önceki dönemle kıyas, alt kategoriye inme.
 
 Ve birçok düzeltme.
 ```
 
-### English (472 karakter, sınır 500)
+### English (438 karakter, sınır 500)
 
 ```
+New: Ahead
+• End-of-month outlook, whether you'll make it to payday, upcoming payments.
+• Early warning if a budget fills up too soon; weekly summary on Monday morning.
+
+One-time budgets
+• A dated budget for a holiday, a move or any period.
+
 Credit cards
-• Card wallet: statement and due dates, limit, statement summary, interest estimate.
-• Installments land in their own month; card debt counts in Debt and Net.
+• Closing and due dates, limit, statement summary; installments in their own month.
 
 Clearer report
-• Timeline and previous-period comparison; tap a category to drill down.
-• "Where does my money go?" in one line on the home screen.
-
-Easier to use
-• Quicker entry form, swipe between wallets, change categories in bulk.
-• Undo edits too; send feedback from Settings.
+• Timeline, previous-period comparison, drill into subcategories.
 
 Plus many fixes.
 ```
