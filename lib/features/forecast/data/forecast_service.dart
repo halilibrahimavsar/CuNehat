@@ -95,12 +95,18 @@ class ForecastService {
   /// [userId]'nin tüm cüzdanlarının tahmini, kimliğe göre. [userId] `null`
   /// ise cihazdaki TÜM cüzdanlar (uygulama düzeyi bildirim monitörü; her
   /// cüzdan kendi sahibinin kimliğiyle okunur).
+  ///
+  /// [walletId] verilirse yalnız o cüzdan için gereken girdiler okunur: o
+  /// cüzdan + bütün kart cüzdanları (kart ödemesinin ödeyen bacağı kartın
+  /// girdisinden üretilir, bkz. [ForecastEngine.projectAll]). Sonuçta kart
+  /// cüzdanlarının tahmini de bulunur; çağıran yalnız istediğini okur.
   Future<ForecastResult> forecast({
     required String? userId,
     required DateTimeRange period,
     DateTimeRange? previousPeriod,
     DateTime? today,
     int horizonDays = 30,
+    String? walletId,
   }) async {
     final wallets = await _read<List<WalletEntity>>(
         'cüzdanlar',
@@ -125,6 +131,9 @@ class ForecastService {
     for (final w in wallets) {
       final id = w.id;
       if (id == null) continue;
+      if (walletId != null && id != walletId && w.creditCard == null) {
+        continue;
+      }
       final uid = userId ?? w.userId;
       inputs.add(WalletForecastInput(
         wallet: w,

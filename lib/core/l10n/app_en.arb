@@ -4875,5 +4875,155 @@
     }
   },
   "forecastTodayInline": "today",
-  "forecastTomorrowInline": "tomorrow"
+  "forecastTomorrowInline": "tomorrow",
+  "blKickerBalance": "Balance",
+  "blKickerProjected": "Projected balance",
+  "blRelToday": "Today",
+  "blRelYesterday": "Yesterday",
+  "blRelTomorrow": "Tomorrow",
+  "blDeltaSpend": "spent",
+  "blDeltaIncome": "income",
+  "blDeltaMoved": "moved",
+  "blDeltaNone": "No activity this day",
+  "blDeltaRange": "range",
+  "blDeltaLoading": "Calculating the projection…",
+  "blDeltaNoForecast": "No projection for this day",
+  "blShowList": "List view",
+  "blShowLine": "Balance line",
+  "blPrevDay": "Previous day",
+  "blNextDay": "Next day",
+  "blChartLabel": "Balance line, selected day {day}",
+  "@blChartLabel": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "blLegendNone": "No spending",
+  "blLegendPlanned": "Planned items are on the receipt",
+  "blReceiptTitle": "Day receipt",
+  "blReceiptItems": "{count, plural, =1{1 item} other{{count} items}}",
+  "@blReceiptItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "blReceiptEmpty": "No receipt for this day",
+  "blReceiptEmptyNote": "A no-spend day. Add anything you forgot.",
+  "blReceiptAdd": "Add to this day",
+  "blReceiptNoPlans": "Nothing planned",
+  "blStampPlanned": "Planned",
+  "blTotalSpend": "Spent",
+  "blTotalIncome": "Income",
+  "blTotalMoved": "Moved",
+  "blTotalOut": "Expected out",
+  "blTotalIn": "Expected in",
+  "blEndOfDay": "End of day",
+  "blEndNow": "Now",
+  "blEndProjected": "Projected",
+  "blNoteLead": "Note:",
+  "blTagMoved": "Moved",
+  "blTagInstallment": "Installment {no}/{count}",
+  "@blTagInstallment": {
+    "placeholders": {
+      "no": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "blTagImported": "Statement",
+  "blTagReceipt": "Receipt",
+  "blTagPlanned": "Planned",
+  "blTagEstimated": "Estimated",
+  "blTimePlan": "Plan",
+  "blFactAfter": "Balance after",
+  "blFactCategory": "{category} this period",
+  "@blFactCategory": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "blFactTimes": "{count, plural, =1{once} other{{count} times}}",
+  "@blFactTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "blFactInstallmentsLeft": "Installments left",
+  "blFactReport": "In reports",
+  "blFactNotSpending": "not counted as spending",
+  "blFactDetails": "Details",
+  "blFactActions": "More actions",
+  "blRowExpand": "{title}, {amount}. Tap to show details",
+  "@blRowExpand": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "blNoteIncome": "Income day: {title}.",
+  "@blNoteIncome": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "blNoteAbove": "Spending is {percent}% above your 4-week daily average.",
+  "@blNoteAbove": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "blNoteBelow": "Spending is {percent}% below your 4-week daily average.",
+  "@blNoteBelow": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "blNoteNear": "Spending is close to your 4-week daily average.",
+  "blNoteMoved": "Money moves weren't counted as spending.",
+  "blNoteBiggest": "Biggest item: {title}.",
+  "@blNoteBiggest": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "blNoteStreak": "No spending for {days} days.",
+  "@blNoteStreak": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "blNoteNoRecords": "No records this day.",
+  "blNoteFuture": "{count, plural, =0{Nothing planned for this day.} =1{1 planned item expected. The grey band shows how far the estimate may drift.} other{{count} planned items expected. The grey band shows how far the estimate may drift.}}",
+  "@blNoteFuture": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -126,6 +126,11 @@ class TransactionSummaryStrip extends StatelessWidget {
   /// Listelenen bütün günler kapalı mı (ikonun yönü ve etiketi).
   final bool allDaysCollapsed;
 
+  /// Verilirse sayı satırında "Bakiye hattı" ikonu çizilir: liste
+  /// görünümünden varsayılan görünüme dönüş. Bakiye hattı çizilemiyorken
+  /// (arama/süzgeç etkin, tek günlük dönem) verilmez.
+  final VoidCallback? onShowBalanceLine;
+
   const TransactionSummaryStrip({
     super.key,
     required this.transactions,
@@ -136,6 +141,7 @@ class TransactionSummaryStrip extends StatelessWidget {
     this.onModeChanged,
     this.onToggleCollapseAll,
     this.allDaysCollapsed = false,
+    this.onShowBalanceLine,
     this.topCategories = const [],
     this.onOpenBreakdown,
   });
@@ -355,6 +361,23 @@ class TransactionSummaryStrip extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
+        if (onShowBalanceLine != null)
+          IconButton(
+            key: const ValueKey('tx-show-line'),
+            tooltip: context.l10n.blShowLine,
+            onPressed: onShowBalanceLine,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            // Yükseklik daralt düğmesiyle aynı (satır büyümesin, bkz. altta);
+            // dokunma hedefi genişlikten kazanılır — yanındaki düğmeyle
+            // arasında boşluk da kalır, yanlış dokunuş azalır.
+            style: IconButton.styleFrom(
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+            constraints: const BoxConstraints(minWidth: 44, minHeight: 28),
+            iconSize: 20,
+            color: muted,
+            icon: const Icon(Icons.show_chart_rounded),
+          ),
         if (onToggleCollapseAll != null)
           IconButton(
             key: const ValueKey('tx-collapse-all'),

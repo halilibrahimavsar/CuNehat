@@ -13007,6 +13007,366 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'yarın'**
   String get forecastTomorrowInline;
+
+  /// No description provided for @blKickerBalance.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye'**
+  String get blKickerBalance;
+
+  /// No description provided for @blKickerProjected.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tahmini bakiye'**
+  String get blKickerProjected;
+
+  /// No description provided for @blRelToday.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün'**
+  String get blRelToday;
+
+  /// No description provided for @blRelYesterday.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dün'**
+  String get blRelYesterday;
+
+  /// No description provided for @blRelTomorrow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yarın'**
+  String get blRelTomorrow;
+
+  /// No description provided for @blDeltaSpend.
+  ///
+  /// In tr, this message translates to:
+  /// **'harcama'**
+  String get blDeltaSpend;
+
+  /// No description provided for @blDeltaIncome.
+  ///
+  /// In tr, this message translates to:
+  /// **'gelir'**
+  String get blDeltaIncome;
+
+  /// No description provided for @blDeltaMoved.
+  ///
+  /// In tr, this message translates to:
+  /// **'taşıma'**
+  String get blDeltaMoved;
+
+  /// No description provided for @blDeltaNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu gün hareket yok'**
+  String get blDeltaNone;
+
+  /// No description provided for @blDeltaRange.
+  ///
+  /// In tr, this message translates to:
+  /// **'aralık'**
+  String get blDeltaRange;
+
+  /// No description provided for @blDeltaLoading.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tahmin hesaplanıyor…'**
+  String get blDeltaLoading;
+
+  /// No description provided for @blDeltaNoForecast.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu gün için tahmin yok'**
+  String get blDeltaNoForecast;
+
+  /// No description provided for @blShowList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste görünümü'**
+  String get blShowList;
+
+  /// No description provided for @blShowLine.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye hattı'**
+  String get blShowLine;
+
+  /// No description provided for @blPrevDay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önceki gün'**
+  String get blPrevDay;
+
+  /// No description provided for @blNextDay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonraki gün'**
+  String get blNextDay;
+
+  /// No description provided for @blChartLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye hattı, seçili gün {day}'**
+  String blChartLabel(String day);
+
+  /// No description provided for @blLegendNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Harcama yok'**
+  String get blLegendNone;
+
+  /// No description provided for @blLegendPlanned.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlı hareketler fişte'**
+  String get blLegendPlanned;
+
+  /// No description provided for @blReceiptTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gün fişi'**
+  String get blReceiptTitle;
+
+  /// No description provided for @blReceiptItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{1 kalem} other{{count} kalem}}'**
+  String blReceiptItems(int count);
+
+  /// No description provided for @blReceiptEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu gün fiş yok'**
+  String get blReceiptEmpty;
+
+  /// No description provided for @blReceiptEmptyNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Harcamasız bir gün. Unuttuğun bir şey varsa ekleyebilirsin.'**
+  String get blReceiptEmptyNote;
+
+  /// No description provided for @blReceiptAdd.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu güne ekle'**
+  String get blReceiptAdd;
+
+  /// No description provided for @blReceiptNoPlans.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlı hareket yok'**
+  String get blReceiptNoPlans;
+
+  /// No description provided for @blStampPlanned.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlı'**
+  String get blStampPlanned;
+
+  /// No description provided for @blTotalSpend.
+  ///
+  /// In tr, this message translates to:
+  /// **'Harcama'**
+  String get blTotalSpend;
+
+  /// No description provided for @blTotalIncome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelir'**
+  String get blTotalIncome;
+
+  /// No description provided for @blTotalMoved.
+  ///
+  /// In tr, this message translates to:
+  /// **'Para taşıma'**
+  String get blTotalMoved;
+
+  /// No description provided for @blTotalOut.
+  ///
+  /// In tr, this message translates to:
+  /// **'Beklenen çıkış'**
+  String get blTotalOut;
+
+  /// No description provided for @blTotalIn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Beklenen giriş'**
+  String get blTotalIn;
+
+  /// No description provided for @blEndOfDay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gün sonu'**
+  String get blEndOfDay;
+
+  /// No description provided for @blEndNow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şu an'**
+  String get blEndNow;
+
+  /// No description provided for @blEndProjected.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tahmini'**
+  String get blEndProjected;
+
+  /// No description provided for @blNoteLead.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not:'**
+  String get blNoteLead;
+
+  /// No description provided for @blTagMoved.
+  ///
+  /// In tr, this message translates to:
+  /// **'Para taşıma'**
+  String get blTagMoved;
+
+  /// No description provided for @blTagInstallment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taksit {no}/{count}'**
+  String blTagInstallment(int no, int count);
+
+  /// No description provided for @blTagImported.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekstre'**
+  String get blTagImported;
+
+  /// No description provided for @blTagReceipt.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fiş'**
+  String get blTagReceipt;
+
+  /// No description provided for @blTagPlanned.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlı'**
+  String get blTagPlanned;
+
+  /// No description provided for @blTagEstimated.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tahmini'**
+  String get blTagEstimated;
+
+  /// No description provided for @blTimePlan.
+  ///
+  /// In tr, this message translates to:
+  /// **'Plan'**
+  String get blTimePlan;
+
+  /// No description provided for @blFactAfter.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonrası bakiye'**
+  String get blFactAfter;
+
+  /// No description provided for @blFactCategory.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu dönem {category}'**
+  String blFactCategory(String category);
+
+  /// No description provided for @blFactTimes.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{1 kez} other{{count} kez}}'**
+  String blFactTimes(int count);
+
+  /// No description provided for @blFactInstallmentsLeft.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalan taksit'**
+  String get blFactInstallmentsLeft;
+
+  /// No description provided for @blFactReport.
+  ///
+  /// In tr, this message translates to:
+  /// **'Raporda'**
+  String get blFactReport;
+
+  /// No description provided for @blFactNotSpending.
+  ///
+  /// In tr, this message translates to:
+  /// **'gider sayılmaz'**
+  String get blFactNotSpending;
+
+  /// No description provided for @blFactDetails.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayrıntı'**
+  String get blFactDetails;
+
+  /// No description provided for @blFactActions.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer işlemler'**
+  String get blFactActions;
+
+  /// No description provided for @blRowExpand.
+  ///
+  /// In tr, this message translates to:
+  /// **'{title}, {amount}. Ayrıntıyı açmak için dokun'**
+  String blRowExpand(String title, String amount);
+
+  /// No description provided for @blNoteIncome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelir günü: {title}.'**
+  String blNoteIncome(String title);
+
+  /// No description provided for @blNoteAbove.
+  ///
+  /// In tr, this message translates to:
+  /// **'Harcama son 4 haftanın günlük ortalamasının %{percent} üstünde.'**
+  String blNoteAbove(int percent);
+
+  /// No description provided for @blNoteBelow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Harcama son 4 haftanın günlük ortalamasının %{percent} altında.'**
+  String blNoteBelow(int percent);
+
+  /// No description provided for @blNoteNear.
+  ///
+  /// In tr, this message translates to:
+  /// **'Harcama son 4 haftanın günlük ortalamasına yakın.'**
+  String get blNoteNear;
+
+  /// No description provided for @blNoteMoved.
+  ///
+  /// In tr, this message translates to:
+  /// **'Para taşıma hareketleri gider sayılmadı.'**
+  String get blNoteMoved;
+
+  /// No description provided for @blNoteBiggest.
+  ///
+  /// In tr, this message translates to:
+  /// **'En büyük kalem: {title}.'**
+  String blNoteBiggest(String title);
+
+  /// No description provided for @blNoteStreak.
+  ///
+  /// In tr, this message translates to:
+  /// **'{days} gündür harcama yok.'**
+  String blNoteStreak(int days);
+
+  /// No description provided for @blNoteNoRecords.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu gün kayıt yok.'**
+  String get blNoteNoRecords;
+
+  /// No description provided for @blNoteFuture.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =0{Bu gün için planlı bir hareket yok.} =1{1 planlı hareket bekleniyor. Gri bant tahminin ne kadar şaşabileceğini gösterir.} other{{count} planlı hareket bekleniyor. Gri bant tahminin ne kadar şaşabileceğini gösterir.}}'**
+  String blNoteFuture(int count);
 }
 
 class _AppLocalizationsDelegate

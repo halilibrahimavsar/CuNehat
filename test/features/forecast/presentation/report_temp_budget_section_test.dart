@@ -26,6 +26,7 @@ class _FakeService extends Fake implements ForecastService {
     DateTimeRange? previousPeriod,
     DateTime? today,
     int horizonDays = 30,
+    String? walletId,
   }) async =>
       result;
 }

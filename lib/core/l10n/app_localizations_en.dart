@@ -7746,4 +7746,229 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get forecastTomorrowInline => 'tomorrow';
+
+  @override
+  String get blKickerBalance => 'Balance';
+
+  @override
+  String get blKickerProjected => 'Projected balance';
+
+  @override
+  String get blRelToday => 'Today';
+
+  @override
+  String get blRelYesterday => 'Yesterday';
+
+  @override
+  String get blRelTomorrow => 'Tomorrow';
+
+  @override
+  String get blDeltaSpend => 'spent';
+
+  @override
+  String get blDeltaIncome => 'income';
+
+  @override
+  String get blDeltaMoved => 'moved';
+
+  @override
+  String get blDeltaNone => 'No activity this day';
+
+  @override
+  String get blDeltaRange => 'range';
+
+  @override
+  String get blDeltaLoading => 'Calculating the projection…';
+
+  @override
+  String get blDeltaNoForecast => 'No projection for this day';
+
+  @override
+  String get blShowList => 'List view';
+
+  @override
+  String get blShowLine => 'Balance line';
+
+  @override
+  String get blPrevDay => 'Previous day';
+
+  @override
+  String get blNextDay => 'Next day';
+
+  @override
+  String blChartLabel(String day) {
+    return 'Balance line, selected day $day';
+  }
+
+  @override
+  String get blLegendNone => 'No spending';
+
+  @override
+  String get blLegendPlanned => 'Planned items are on the receipt';
+
+  @override
+  String get blReceiptTitle => 'Day receipt';
+
+  @override
+  String blReceiptItems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get blReceiptEmpty => 'No receipt for this day';
+
+  @override
+  String get blReceiptEmptyNote => 'A no-spend day. Add anything you forgot.';
+
+  @override
+  String get blReceiptAdd => 'Add to this day';
+
+  @override
+  String get blReceiptNoPlans => 'Nothing planned';
+
+  @override
+  String get blStampPlanned => 'Planned';
+
+  @override
+  String get blTotalSpend => 'Spent';
+
+  @override
+  String get blTotalIncome => 'Income';
+
+  @override
+  String get blTotalMoved => 'Moved';
+
+  @override
+  String get blTotalOut => 'Expected out';
+
+  @override
+  String get blTotalIn => 'Expected in';
+
+  @override
+  String get blEndOfDay => 'End of day';
+
+  @override
+  String get blEndNow => 'Now';
+
+  @override
+  String get blEndProjected => 'Projected';
+
+  @override
+  String get blNoteLead => 'Note:';
+
+  @override
+  String get blTagMoved => 'Moved';
+
+  @override
+  String blTagInstallment(int no, int count) {
+    return 'Installment $no/$count';
+  }
+
+  @override
+  String get blTagImported => 'Statement';
+
+  @override
+  String get blTagReceipt => 'Receipt';
+
+  @override
+  String get blTagPlanned => 'Planned';
+
+  @override
+  String get blTagEstimated => 'Estimated';
+
+  @override
+  String get blTimePlan => 'Plan';
+
+  @override
+  String get blFactAfter => 'Balance after';
+
+  @override
+  String blFactCategory(String category) {
+    return '$category this period';
+  }
+
+  @override
+  String blFactTimes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count times',
+      one: 'once',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get blFactInstallmentsLeft => 'Installments left';
+
+  @override
+  String get blFactReport => 'In reports';
+
+  @override
+  String get blFactNotSpending => 'not counted as spending';
+
+  @override
+  String get blFactDetails => 'Details';
+
+  @override
+  String get blFactActions => 'More actions';
+
+  @override
+  String blRowExpand(String title, String amount) {
+    return '$title, $amount. Tap to show details';
+  }
+
+  @override
+  String blNoteIncome(String title) {
+    return 'Income day: $title.';
+  }
+
+  @override
+  String blNoteAbove(int percent) {
+    return 'Spending is $percent% above your 4-week daily average.';
+  }
+
+  @override
+  String blNoteBelow(int percent) {
+    return 'Spending is $percent% below your 4-week daily average.';
+  }
+
+  @override
+  String get blNoteNear => 'Spending is close to your 4-week daily average.';
+
+  @override
+  String get blNoteMoved => 'Money moves weren\'t counted as spending.';
+
+  @override
+  String blNoteBiggest(String title) {
+    return 'Biggest item: $title.';
+  }
+
+  @override
+  String blNoteStreak(int days) {
+    return 'No spending for $days days.';
+  }
+
+  @override
+  String get blNoteNoRecords => 'No records this day.';
+
+  @override
+  String blNoteFuture(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count planned items expected. The grey band shows how far the estimate may drift.',
+      one:
+          '1 planned item expected. The grey band shows how far the estimate may drift.',
+      zero: 'Nothing planned for this day.',
+    );
+    return '$_temp0';
+  }
 }

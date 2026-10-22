@@ -38,6 +38,7 @@ class _FakeForecasts extends Fake implements ForecastService {
     DateTimeRange? previousPeriod,
     DateTime? today,
     int horizonDays = 30,
+    String? walletId,
   }) async {
     calls++;
     final at = today!;
@@ -315,6 +316,7 @@ class _EmptyForecasts extends Fake implements ForecastService {
     DateTimeRange? previousPeriod,
     DateTime? today,
     int horizonDays = 30,
+    String? walletId,
   }) async =>
       ForecastResult(
         wallets: ForecastEngine(today: today!, period: period).projectAll([

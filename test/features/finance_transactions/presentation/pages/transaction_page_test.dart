@@ -9,6 +9,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/services/budgets_changed_notifier.dart';
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/core/services/recent_categories_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
@@ -28,11 +29,14 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_summary_strip.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_search_field.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
+import 'package:cunehat/features/forecast/data/forecast_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:cunehat/features/main_feature/utils/section_visibility.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:cunehat/features/finance_transactions/data/ledger_view_store.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/balance_line/balance_line_view.dart';
 import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -45,6 +49,8 @@ class _MockTransactionBloc extends MockBloc<TransactionEvent, TransactionState>
     implements TransactionBloc {}
 
 class _MockCategoryRepository extends Mock implements CategoryRepository {}
+
+class _MockForecastService extends Mock implements ForecastService {}
 
 class _MockOnboardingCoordinator extends Mock
     implements OnboardingCoordinator {}
@@ -147,7 +153,13 @@ void main() {
     ),
   ];
 
-  setUp(() {
+  setUp(() async {
+    // Bu dosya LİSTE görünümünü sınar; varsayılan görünüm bakiye hattı
+    // (bkz. balance_line_view_test.dart).
+    SharedPreferences.setMockInitialValues(
+        {LedgerViewStore.key: LedgerView.list.name});
+    getIt.registerSingleton<SharedPreferences>(
+        await SharedPreferences.getInstance());
     bloc = _MockTransactionBloc();
     categories = _MockCategoryRepository();
 
@@ -1181,6 +1193,156 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Hazır aralıklar'), findsNothing);
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('bakiye hattı (varsayılan görünüm)', () {
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      getIt.registerSingleton<SharedPreferences>(
+          await SharedPreferences.getInstance());
+    });
+
+    testWidgets('tercih yokken bakiye hattı açılır, liste değil',
+        (tester) async {
+      seed([txMarket, txFatura]);
+      await pumpPage(tester);
+
+      expect(find.byType(BalanceLineView), findsOneWidget);
+      expect(find.byType(TransactionSummaryStrip), findsNothing);
+      expect(find.byType(TransactionCard), findsNothing);
+    });
+
+    testWidgets('liste ↔ bakiye hattı geçişi tercihi saklar', (tester) async {
+      seed([txMarket, txFatura]);
+      await pumpPage(tester);
+      final prefs = getIt<SharedPreferences>();
+
+      await tester.tap(find.byKey(const ValueKey('bl-show-list')));
+      await tester.pumpAndSettle();
+      expect(find.byType(BalanceLineView), findsNothing);
+      expect(find.byType(TransactionCard), findsNWidgets(2));
+      expect(prefs.getString(LedgerViewStore.key), LedgerView.list.name);
+
+      await tester.tap(find.byKey(const ValueKey('tx-show-line')));
+      await tester.pumpAndSettle();
+      expect(find.byType(BalanceLineView), findsOneWidget);
+      expect(prefs.getString(LedgerViewStore.key), LedgerView.balanceLine.name);
+    });
+
+    testWidgets('arama etkinken sonuçlar LİSTEDE; aramayı silince geri döner',
+        (tester) async {
+      seed([txMarket, txFatura]);
+      await pumpPage(tester);
+
+      await tester.enterText(await openSearch(tester), 'elektrik');
+      await tester.pumpAndSettle();
+      expect(find.byType(BalanceLineView), findsNothing);
+      expect(find.text('Elektrik faturası'), findsOneWidget);
+      // Arama etkinken listeden bakiye hattına geçiş önerilmez.
+      expect(find.byKey(const ValueKey('tx-show-line')), findsNothing);
+
+      await tester.enterText(find.byType(TextField).first, '');
+      await tester.pumpAndSettle();
+      expect(find.byType(BalanceLineView), findsOneWidget);
+    });
+
+    testWidgets('boş cüzdanda bakiye hattı değil, karşılama durumu çıkar',
+        (tester) async {
+      seed(const []);
+      await pumpPage(tester);
+      expect(find.byType(BalanceLineView), findsNothing);
+    });
+
+    // ÖNCE: fişteki "Birden çok seç" seçimi başlatıyordu ama fişte seçili
+    // satır görünmüyordu — kullanıcı görmediği kayıtlara toplu işlem
+    // uygulayabilirdi.
+    testWidgets(
+        'fişten seçim başlayınca LİSTE açılır; seçim bitince hat döner, '
+        'tercih değişmez', (tester) async {
+      final txToday = TransactionEntity(
+        id: 'tx-bugun',
+        userId: 'u',
+        walletId: 'w1',
+        title: 'Simit',
+        tag: 'cat-market',
+        amount: 20,
+        date: DateTime(now.year, now.month, now.day, 9),
+        type: TransactionTypeModel.expense,
+      );
+      seed([txMarket, txToday]);
+      await pumpPage(tester);
+      expect(find.byType(BalanceLineView), findsOneWidget);
+
+      await tester.longPress(find.text('Simit'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Birden çok seç'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(BalanceLineView), findsNothing);
+      expect(
+          find.byKey(const ValueKey('ledger-selection-bar')), findsOneWidget);
+      expect(find.text('1 seçili'), findsOneWidget);
+      // Seçim sürerken hatta dönüş düğmesi ölü kalırdı: gösterilmez.
+      expect(find.byKey(const ValueKey('tx-show-line')), findsNothing);
+
+      // Seçim kipinde dokunmak seçimi kaldırır → kip biter.
+      await tester.tap(find.text('Simit'));
+      await tester.pumpAndSettle();
+      expect(find.byType(BalanceLineView), findsOneWidget);
+      expect(getIt<SharedPreferences>().getString(LedgerViewStore.key), isNull);
+    });
+
+    testWidgets(
+        'tahmin yalnız aktif cüzdan için istenir; bütçe değişince ve '
+        'uygulamaya dönünce yenilenir', (tester) async {
+      registerFallbackValue(
+          DateTimeRange(start: DateTime(2026), end: DateTime(2026, 1, 2)));
+      final service = _MockForecastService();
+      when(() => service.forecast(
+                userId: any(named: 'userId'),
+                period: any(named: 'period'),
+                horizonDays: any(named: 'horizonDays'),
+                walletId: any(named: 'walletId'),
+              ))
+          .thenAnswer(
+              (_) async => const ForecastResult(wallets: {}, categories: []));
+      getIt.registerSingleton<ForecastService>(service);
+      final budgets = BudgetsChangedNotifier();
+      getIt.registerSingleton<BudgetsChangedNotifier>(budgets);
+
+      seed([txMarket, txFatura]);
+      await pumpPage(tester);
+
+      // Ayın son günüyse dönemde gelecek yok, tahmin hiç istenmez.
+      final monthEnd = DateTime(now.year, now.month + 1, 0);
+      final calls = monthEnd.day == now.day ? 0 : 1;
+      verify(() => service.forecast(
+            userId: 'u',
+            period: any(named: 'period'),
+            horizonDays: any(named: 'horizonDays'),
+            walletId: 'w1',
+          )).called(calls);
+
+      budgets.notify();
+      await tester.pumpAndSettle();
+      verify(() => service.forecast(
+            userId: 'u',
+            period: any(named: 'period'),
+            horizonDays: any(named: 'horizonDays'),
+            walletId: 'w1',
+          )).called(calls);
+
+      // Uygulamaya dönüş: şablon/borç başka yerde değişmiş olabilir.
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      verify(() => service.forecast(
+            userId: 'u',
+            period: any(named: 'period'),
+            horizonDays: any(named: 'horizonDays'),
+            walletId: 'w1',
+          )).called(calls);
     });
   });
 }

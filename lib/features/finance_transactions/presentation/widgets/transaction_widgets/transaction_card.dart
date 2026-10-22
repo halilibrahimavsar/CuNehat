@@ -1,26 +1,18 @@
 import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
-import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/shared/widgets/money_text.dart';
-import 'package:cunehat/features/coupling/presentation/link_transaction_flow.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
-import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
-import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
-import 'package:cunehat/features/finance_transactions/presentation/pages/single_transaction_detail_page.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/ledger_selection.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_action_sheet.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_row_actions.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/core/config/feature_flags.dart';
 import 'package:cunehat/features/wallet/domain/card_cycle.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
-import 'package:cunehat/core/shared/focus.dart';
 
 /// Premium işlem kartı: kategori glyph'i, marka renkleri, baskın tutar.
 ///
@@ -58,43 +50,12 @@ class TransactionCard extends StatelessWidget {
     this.categoryLabel,
   });
 
-  String get _heroTag => 'tx_${item.transaction.id ?? item.hashCode}';
+  String get _heroTag => transactionHeroTag(item);
 
-  Future<void> _showActionSheet(BuildContext context, Color accent) async {
-    final t = item.transaction;
-
-    final selection = LedgerSelectionScope.maybeOf(context);
-    final action = await TransactionActionSheet.show(
-      context,
-      transaction: t,
-      accent: accent,
-      canSelect: selection != null,
-    );
-    if (action == null || !context.mounted) return;
-
-    // Kilitli (isSystem) işlemler için TransactionActionSheet zaten
-    // Düzenle/Sil/Bağla yerine bir bilgi notu gösterir; bu action'lar hiç
-    // dönmez, o yüzden burada tekrar isSystem kontrolüne gerek yok.
-    switch (action) {
-      case TransactionAction.edit:
-        _edit(context);
-      case TransactionAction.duplicate:
-        _duplicate(context);
-      case TransactionAction.delete:
-        await _delete(context);
-      case TransactionAction.link:
-        await startLinkTransactionFlow(
-          context,
-          transaction: t,
-          currency: context.walletById(t.walletId)?.currency ??
-              context.activeWalletCurrency,
-        );
-      case TransactionAction.removeTransfer:
-        await confirmAndRemoveTransfer(context, t);
-      case TransactionAction.select:
-        if (t.id case final id?) selection?.toggle(id);
-    }
-  }
+  /// Düzenle/kopyala/sil/bağla — bkz. [showTransactionRowActions]; fiş
+  /// satırı da aynı yoldan geçer.
+  Future<void> _showActionSheet(BuildContext context, Color accent) =>
+      showTransactionRowActions(context, item, accent);
 
   /// Seçilebilir mi: kategorisi toplu değiştirilebilen satırlar. Sistem ve
   /// benimsenmiş satırların etiketi kategori değildir.
@@ -102,52 +63,6 @@ class TransactionCard extends StatelessWidget {
       item.transaction.id != null &&
       !item.transaction.isSystem &&
       !item.transaction.isAdopted;
-
-  void _edit(BuildContext context) {
-    final t = item.transaction;
-    TransactionSheetHandler.showSheet(
-      context: context,
-      userId: t.userId,
-      walletId: t.walletId,
-      type: t.type,
-      initialTransaction: t,
-    );
-  }
-
-  /// Her hafta aynı markete giden kullanıcı aynı kaydı sıfırdan yazıyordu.
-  void _duplicate(BuildContext context) {
-    final t = item.transaction;
-    TransactionSheetHandler.showSheet(
-      context: context,
-      userId: t.userId,
-      walletId: t.walletId,
-      type: t.type,
-      prefill: t,
-    );
-  }
-
-  /// Onay VE geri alma birlikte; ikisi farklı hataları yakalar: onay
-  /// *yanlışlıkla* silmeyi durdurur, snackbar'daki "Geri al" (bkz.
-  /// [showDeletionMessage]) *bilerek* verilip pişman olunan kararı kurtarır.
-  ///
-  /// Bu yorumun eski hali "onay diyaloğu YOK" diyordu ve gerekçesi "kaydırma
-  /// hızlı yol, modal onu yavaşlatıyor"du. Kaydırma kaldırıldı (bkz. sınıf
-  /// dokümanı), yani o gerekçe de kalktı.
-  Future<void> _delete(BuildContext context) async {
-    final id = item.transaction.id;
-    if (id == null) return;
-
-    final confirmed = await ConfirmDialog.show(
-      context,
-      title: context.l10n.islemiSil,
-      message: context.l10n.islemSilOnayMesaji(item.transaction.title),
-      confirmText: context.l10n.sil,
-      danger: true,
-    );
-    if (!confirmed || !context.mounted) return;
-
-    context.read<TransactionBloc>().add(DeleteTransactionEvent(id));
-  }
 
   @override
   Widget build(BuildContext context) => _buildCard(context);
@@ -427,24 +342,12 @@ class TransactionCard extends StatelessWidget {
     );
   }
 
-  void _openDetail(BuildContext context) {
-    // Arama açıkken ayrıntıya geçilince dönüşte klavye kendiliğinden
-    // açılıyordu (route odağı geri verir); bkz. [releaseInputFocus].
-    releaseInputFocus();
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => BlocProvider.value(
-          value: context.read<TransactionBloc>(),
-          child: SingleTransactionDetailPage(
-            item: item,
-            heroTag: _heroTag,
-            categoryIcon: categoryIcon,
-            categoryLabel: categoryLabel,
-          ),
-        ),
-      ),
-    );
-  }
+  void _openDetail(BuildContext context) => openTransactionDetail(
+        context,
+        item,
+        categoryIcon: categoryIcon,
+        categoryLabel: categoryLabel,
+      );
 }
 
 /// Kartın sağındaki ⋮ — [TransactionActionSheet]'i açar.

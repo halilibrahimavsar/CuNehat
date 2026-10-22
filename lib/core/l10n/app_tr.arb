@@ -5109,5 +5109,155 @@
     }
   },
   "forecastTodayInline": "bugün",
-  "forecastTomorrowInline": "yarın"
+  "forecastTomorrowInline": "yarın",
+  "blKickerBalance": "Bakiye",
+  "blKickerProjected": "Tahmini bakiye",
+  "blRelToday": "Bugün",
+  "blRelYesterday": "Dün",
+  "blRelTomorrow": "Yarın",
+  "blDeltaSpend": "harcama",
+  "blDeltaIncome": "gelir",
+  "blDeltaMoved": "taşıma",
+  "blDeltaNone": "Bu gün hareket yok",
+  "blDeltaRange": "aralık",
+  "blDeltaLoading": "Tahmin hesaplanıyor…",
+  "blDeltaNoForecast": "Bu gün için tahmin yok",
+  "blShowList": "Liste görünümü",
+  "blShowLine": "Bakiye hattı",
+  "blPrevDay": "Önceki gün",
+  "blNextDay": "Sonraki gün",
+  "blChartLabel": "Bakiye hattı, seçili gün {day}",
+  "@blChartLabel": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "blLegendNone": "Harcama yok",
+  "blLegendPlanned": "Planlı hareketler fişte",
+  "blReceiptTitle": "Gün fişi",
+  "blReceiptItems": "{count, plural, =1{1 kalem} other{{count} kalem}}",
+  "@blReceiptItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "blReceiptEmpty": "Bu gün fiş yok",
+  "blReceiptEmptyNote": "Harcamasız bir gün. Unuttuğun bir şey varsa ekleyebilirsin.",
+  "blReceiptAdd": "Bu güne ekle",
+  "blReceiptNoPlans": "Planlı hareket yok",
+  "blStampPlanned": "Planlı",
+  "blTotalSpend": "Harcama",
+  "blTotalIncome": "Gelir",
+  "blTotalMoved": "Para taşıma",
+  "blTotalOut": "Beklenen çıkış",
+  "blTotalIn": "Beklenen giriş",
+  "blEndOfDay": "Gün sonu",
+  "blEndNow": "Şu an",
+  "blEndProjected": "Tahmini",
+  "blNoteLead": "Not:",
+  "blTagMoved": "Para taşıma",
+  "blTagInstallment": "Taksit {no}/{count}",
+  "@blTagInstallment": {
+    "placeholders": {
+      "no": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "blTagImported": "Ekstre",
+  "blTagReceipt": "Fiş",
+  "blTagPlanned": "Planlı",
+  "blTagEstimated": "Tahmini",
+  "blTimePlan": "Plan",
+  "blFactAfter": "Sonrası bakiye",
+  "blFactCategory": "Bu dönem {category}",
+  "@blFactCategory": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "blFactTimes": "{count, plural, =1{1 kez} other{{count} kez}}",
+  "@blFactTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "blFactInstallmentsLeft": "Kalan taksit",
+  "blFactReport": "Raporda",
+  "blFactNotSpending": "gider sayılmaz",
+  "blFactDetails": "Ayrıntı",
+  "blFactActions": "Diğer işlemler",
+  "blRowExpand": "{title}, {amount}. Ayrıntıyı açmak için dokun",
+  "@blRowExpand": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "blNoteIncome": "Gelir günü: {title}.",
+  "@blNoteIncome": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "blNoteAbove": "Harcama son 4 haftanın günlük ortalamasının %{percent} üstünde.",
+  "@blNoteAbove": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "blNoteBelow": "Harcama son 4 haftanın günlük ortalamasının %{percent} altında.",
+  "@blNoteBelow": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "blNoteNear": "Harcama son 4 haftanın günlük ortalamasına yakın.",
+  "blNoteMoved": "Para taşıma hareketleri gider sayılmadı.",
+  "blNoteBiggest": "En büyük kalem: {title}.",
+  "@blNoteBiggest": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "blNoteStreak": "{days} gündür harcama yok.",
+  "@blNoteStreak": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "blNoteNoRecords": "Bu gün kayıt yok.",
+  "blNoteFuture": "{count, plural, =0{Bu gün için planlı bir hareket yok.} =1{1 planlı hareket bekleniyor. Gri bant tahminin ne kadar şaşabileceğini gösterir.} other{{count} planlı hareket bekleniyor. Gri bant tahminin ne kadar şaşabileceğini gösterir.}}",
+  "@blNoteFuture": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

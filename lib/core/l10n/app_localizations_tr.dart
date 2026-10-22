@@ -7686,4 +7686,230 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get forecastTomorrowInline => 'yarın';
+
+  @override
+  String get blKickerBalance => 'Bakiye';
+
+  @override
+  String get blKickerProjected => 'Tahmini bakiye';
+
+  @override
+  String get blRelToday => 'Bugün';
+
+  @override
+  String get blRelYesterday => 'Dün';
+
+  @override
+  String get blRelTomorrow => 'Yarın';
+
+  @override
+  String get blDeltaSpend => 'harcama';
+
+  @override
+  String get blDeltaIncome => 'gelir';
+
+  @override
+  String get blDeltaMoved => 'taşıma';
+
+  @override
+  String get blDeltaNone => 'Bu gün hareket yok';
+
+  @override
+  String get blDeltaRange => 'aralık';
+
+  @override
+  String get blDeltaLoading => 'Tahmin hesaplanıyor…';
+
+  @override
+  String get blDeltaNoForecast => 'Bu gün için tahmin yok';
+
+  @override
+  String get blShowList => 'Liste görünümü';
+
+  @override
+  String get blShowLine => 'Bakiye hattı';
+
+  @override
+  String get blPrevDay => 'Önceki gün';
+
+  @override
+  String get blNextDay => 'Sonraki gün';
+
+  @override
+  String blChartLabel(String day) {
+    return 'Bakiye hattı, seçili gün $day';
+  }
+
+  @override
+  String get blLegendNone => 'Harcama yok';
+
+  @override
+  String get blLegendPlanned => 'Planlı hareketler fişte';
+
+  @override
+  String get blReceiptTitle => 'Gün fişi';
+
+  @override
+  String blReceiptItems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count kalem',
+      one: '1 kalem',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get blReceiptEmpty => 'Bu gün fiş yok';
+
+  @override
+  String get blReceiptEmptyNote =>
+      'Harcamasız bir gün. Unuttuğun bir şey varsa ekleyebilirsin.';
+
+  @override
+  String get blReceiptAdd => 'Bu güne ekle';
+
+  @override
+  String get blReceiptNoPlans => 'Planlı hareket yok';
+
+  @override
+  String get blStampPlanned => 'Planlı';
+
+  @override
+  String get blTotalSpend => 'Harcama';
+
+  @override
+  String get blTotalIncome => 'Gelir';
+
+  @override
+  String get blTotalMoved => 'Para taşıma';
+
+  @override
+  String get blTotalOut => 'Beklenen çıkış';
+
+  @override
+  String get blTotalIn => 'Beklenen giriş';
+
+  @override
+  String get blEndOfDay => 'Gün sonu';
+
+  @override
+  String get blEndNow => 'Şu an';
+
+  @override
+  String get blEndProjected => 'Tahmini';
+
+  @override
+  String get blNoteLead => 'Not:';
+
+  @override
+  String get blTagMoved => 'Para taşıma';
+
+  @override
+  String blTagInstallment(int no, int count) {
+    return 'Taksit $no/$count';
+  }
+
+  @override
+  String get blTagImported => 'Ekstre';
+
+  @override
+  String get blTagReceipt => 'Fiş';
+
+  @override
+  String get blTagPlanned => 'Planlı';
+
+  @override
+  String get blTagEstimated => 'Tahmini';
+
+  @override
+  String get blTimePlan => 'Plan';
+
+  @override
+  String get blFactAfter => 'Sonrası bakiye';
+
+  @override
+  String blFactCategory(String category) {
+    return 'Bu dönem $category';
+  }
+
+  @override
+  String blFactTimes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count kez',
+      one: '1 kez',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get blFactInstallmentsLeft => 'Kalan taksit';
+
+  @override
+  String get blFactReport => 'Raporda';
+
+  @override
+  String get blFactNotSpending => 'gider sayılmaz';
+
+  @override
+  String get blFactDetails => 'Ayrıntı';
+
+  @override
+  String get blFactActions => 'Diğer işlemler';
+
+  @override
+  String blRowExpand(String title, String amount) {
+    return '$title, $amount. Ayrıntıyı açmak için dokun';
+  }
+
+  @override
+  String blNoteIncome(String title) {
+    return 'Gelir günü: $title.';
+  }
+
+  @override
+  String blNoteAbove(int percent) {
+    return 'Harcama son 4 haftanın günlük ortalamasının %$percent üstünde.';
+  }
+
+  @override
+  String blNoteBelow(int percent) {
+    return 'Harcama son 4 haftanın günlük ortalamasının %$percent altında.';
+  }
+
+  @override
+  String get blNoteNear => 'Harcama son 4 haftanın günlük ortalamasına yakın.';
+
+  @override
+  String get blNoteMoved => 'Para taşıma hareketleri gider sayılmadı.';
+
+  @override
+  String blNoteBiggest(String title) {
+    return 'En büyük kalem: $title.';
+  }
+
+  @override
+  String blNoteStreak(int days) {
+    return '$days gündür harcama yok.';
+  }
+
+  @override
+  String get blNoteNoRecords => 'Bu gün kayıt yok.';
+
+  @override
+  String blNoteFuture(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count planlı hareket bekleniyor. Gri bant tahminin ne kadar şaşabileceğini gösterir.',
+      one:
+          '1 planlı hareket bekleniyor. Gri bant tahminin ne kadar şaşabileceğini gösterir.',
+      zero: 'Bu gün için planlı bir hareket yok.',
+    );
+    return '$_temp0';
+  }
 }

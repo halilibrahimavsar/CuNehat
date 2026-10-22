@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:cunehat/config/initialization/app_initialization.dart';
 import 'package:cunehat/config/app/app_providers.dart';
@@ -16,6 +18,14 @@ Future<void> main() async {
 
   // Binding'den hemen sonra: init sırasında oluşan hatalar da yakalansın.
   installGlobalErrorHandlers();
+
+  // Gömülü yazı tipinin OFL lisansı: Flutter yalnız paketlerin lisansını
+  // kendisi toplar, asset olarak gelen yazı tipininkini değil.
+  LicenseRegistry.addLicense(() async* {
+    final text =
+        await rootBundle.loadString('assets/fonts/JetBrainsMono-OFL.txt');
+    yield LicenseEntryWithLineBreaks(const ['JetBrains Mono'], text);
+  });
 
   try {
     runApp(await _buildApp());

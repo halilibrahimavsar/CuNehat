@@ -22,6 +22,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cunehat/features/finance_transactions/data/ledger_view_store.dart';
 import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:showcaseview/showcaseview.dart';
@@ -134,7 +136,13 @@ void main() {
         id: 'cat-maas', name: 'Maaş', iconName: 'payments', isExpense: false),
   ];
 
-  setUp(() {
+  setUp(() async {
+    // Bu dosya LİSTE görünümünü sınar; varsayılan görünüm bakiye hattı
+    // (bkz. balance_line_view_test.dart).
+    SharedPreferences.setMockInitialValues(
+        {LedgerViewStore.key: LedgerView.list.name});
+    getIt.registerSingleton<SharedPreferences>(
+        await SharedPreferences.getInstance());
     bloc = _MockTransactionBloc();
     categories = _MockCategoryRepository();
     final coordinator = _MockOnboardingCoordinator();

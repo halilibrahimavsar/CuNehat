@@ -163,6 +163,19 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
      - assets/images/google_logo.png
+     # JetBrains Mono'nun lisansı; açılışta LicenseRegistry'ye eklenir
+     # (Ayarlar → Hakkında → Lisanslar).
+     - assets/fonts/JetBrainsMono-OFL.txt
+
+  # Bakiye hattının gün fişi. Yalnız Latin + Türkçe + para sembolleri
+  # alt kümesi (pyftsubset; 2 kalınlık ~50 KB, tamamı ~550 KB). ₺ bu yazı
+  # tipinde YOK, sistem yazı tipine düşer.
+  fonts:
+    - family: JetBrainsMono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono-Regular.ttf
+        - asset: assets/fonts/JetBrainsMono-Bold.ttf
+          weight: 700
 
 flutter_launcher_icons:
   android: "launcher_icon"

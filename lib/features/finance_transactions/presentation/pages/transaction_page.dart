@@ -13,6 +13,7 @@ import 'dart:math' as math;
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/config/feature_flags.dart';
 import 'package:cunehat/core/error/error_handling.dart';
+import 'package:cunehat/core/services/budgets_changed_notifier.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'package:cunehat/core/messaging/deletion_undo_message.dart';
@@ -48,6 +49,13 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/core/shared/focus.dart';
+import 'package:cunehat/features/finance_transactions/data/ledger_view_store.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/balance_line/balance_line_series.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/balance_line/balance_line_view.dart';
+import 'package:cunehat/features/forecast/data/forecast_service.dart';
+import 'package:cunehat/features/forecast/domain/forecast_models.dart';
+import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -145,6 +153,37 @@ class _TransactionsViewState extends State<_TransactionsView> {
   double? _ledgerBalance;
   List<TransactionWithBalance> _ledger = const [];
 
+  /// Görünüm: bakiye hattı (varsayılan) ya da liste. Cihaz tercihi.
+  LedgerView _view = LedgerView.balanceLine;
+
+  /// Bakiye hattının gelecek günleri: aktif cüzdanın tahmini. Dönem bugünü
+  /// aşmıyorsa hiç istenmez.
+  WalletForecast? _forecast;
+  bool _forecastLoading = false;
+  String? _forecastKey;
+  int _forecastRequest = 0;
+
+  /// Tahminin defterde görünmeyen girdileri (bütçe, şablon, borç) başka
+  /// ekranda değişebilir; artınca tahmin anahtarı değişir ve yeniden istenir.
+  /// Bütçe değişiminde ve uygulamaya dönüşte artar.
+  int _forecastEpoch = 0;
+  StreamSubscription<void>? _budgetsSub;
+  AppLifecycleListener? _lifecycle;
+
+  /// Gece yarısı: "bugün" (seçili gün, kesikli çizginin başı) yeniden
+  /// hesaplansın. Yoksa açık kalan ekran dünü "Bugün" diye gösterirdi.
+  Timer? _midnight;
+
+  /// Çoklu seçim başladığında bakiye hattı geçici olarak listeye bırakır:
+  /// fişte seçili satır görünmez, kullanıcı görmediği kayıtları topluca
+  /// değiştirirdi. Seçim bitince hat geri gelir; tercih yazılmaz.
+  bool _selectionActive = false;
+
+  /// Bakiye hattı serisi; defter, dönem ve tahmin değişmedikçe aynı örnek
+  /// (grafik `shouldRepaint`i ve görünümün türev önbelleği kimliğe bakar).
+  BalanceLineSeries? _series;
+  Object? _seriesKey;
+
   /// Gün şeridinin ısı verisi; görünen küme değişmedikçe yeniden kurulmaz.
   static const _summaryService = DailySpendingSummaryService();
   List<TransactionWithBalance>? _summarySource;
@@ -156,6 +195,17 @@ class _TransactionsViewState extends State<_TransactionsView> {
     applyStoredPeriodPreferences(context.read<TransactionFilterCubit>());
     context.read<TransactionFilterCubit>().bindWallet(widget.wallet.id);
     _syncStatementCycle();
+    if (getIt.isRegistered<SharedPreferences>()) {
+      _view = LedgerViewStore(getIt<SharedPreferences>()).read();
+    }
+    _selection.addListener(_onSelectionChanged);
+    if (getIt.isRegistered<BudgetsChangedNotifier>()) {
+      _budgetsSub = getIt<BudgetsChangedNotifier>()
+          .stream
+          .listen((_) => _invalidateForecast());
+    }
+    _lifecycle = AppLifecycleListener(onResume: _invalidateForecast);
+    _scheduleMidnight();
     // Dışarıdan istenen dönem (ekstre içe aktarımı "Eklenenleri göster");
     // sayfa isteğe göre sonradan kurulduysa burada, zaten açıksa
     // dinleyicide uygulanır.
@@ -244,7 +294,11 @@ class _TransactionsViewState extends State<_TransactionsView> {
       getIt<HomeNavigationRequests>().removeListener(_applyRequestedPeriod);
     }
     _categoriesSub?.cancel();
+    _budgetsSub?.cancel();
+    _lifecycle?.dispose();
+    _midnight?.cancel();
     _collapse.dispose();
+    _selection.removeListener(_onSelectionChanged);
     _selection.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -379,6 +433,133 @@ class _TransactionsViewState extends State<_TransactionsView> {
     _summaries = _summaryService
         .buildDailySummaries(visible.map((e) => e.transaction).toList());
     return _summaries;
+  }
+
+  void _onSelectionChanged() {
+    if (_selection.active == _selectionActive || !mounted) return;
+    setState(() => _selectionActive = _selection.active);
+  }
+
+  void _invalidateForecast() {
+    if (!mounted) return;
+    setState(() => _forecastEpoch++);
+  }
+
+  void _scheduleMidnight() {
+    _midnight?.cancel();
+    final now = DateTime.now();
+    final next = DateTime(now.year, now.month, now.day + 1);
+    // Bir saniye pay: zamanlayıcı erken uyanırsa "bugün" hâlâ dün olur.
+    _midnight = Timer(next.difference(now) + const Duration(seconds: 1), () {
+      if (!mounted) return;
+      setState(() {});
+      _scheduleMidnight();
+    });
+  }
+
+  void _setView(LedgerView view) {
+    if (_view == view) return;
+    setState(() => _view = view);
+    if (getIt.isRegistered<SharedPreferences>()) {
+      unawaited(LedgerViewStore(getIt<SharedPreferences>()).write(view));
+    }
+  }
+
+  /// Dönemin gün sayısı (uçlar dahil).
+  static int _periodDays(DateTimeRange period) =>
+      dayOf(period.end).difference(dayOf(period.start)).inDays + 1;
+
+  /// Bakiye hattı bu durumda çizilebilir mi? Arama/süzgeç ya da tür kipi
+  /// etkinken soru "bu dönemde ne var" değil "şunu bul"dur — liste cevaplar.
+  /// Tek günlük dönemde çizgi tek nokta olur; çok uzun dönemde (tüm geçmiş)
+  /// gün başına piksel kalmaz.
+  bool _canShowBalanceLine({
+    required CombinedFilter filter,
+    required FinanceMode mode,
+    required DateTimeRange period,
+    required bool walletIsEmpty,
+  }) {
+    if (walletIsEmpty || mode != FinanceMode.compare) return false;
+    if (filter.dataFilter.hasActiveFilters) return false;
+    final days = _periodDays(period);
+    return days >= 2 && days <= 400;
+  }
+
+  /// Gelecek günlerin tahmini; anahtar değişince bir kez istenir. Build
+  /// içinden çağrılır ama durumu kareden SONRA değiştirir.
+  void _ensureForecast(
+      DateTimeRange period, List<TransactionWithBalance> ledger) {
+    final today = dayOf(DateTime.now());
+    final end = dayOf(period.end);
+    final needed = end.isAfter(today) && getIt.isRegistered<ForecastService>();
+    final key = needed
+        ? '${widget.wallet.id}|${period.start}|$end|$today|'
+            '${identityHashCode(ledger)}|${widget.wallet.balance}|'
+            '$_forecastEpoch'
+        : null;
+    if (key == _forecastKey) return;
+    _forecastKey = key;
+    final request = ++_forecastRequest;
+    if (key == null) {
+      if (_forecast != null || _forecastLoading) {
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          if (!mounted || request != _forecastRequest) return;
+          setState(() {
+            _forecast = null;
+            _forecastLoading = false;
+          });
+        });
+      }
+      return;
+    }
+    final horizon = end.difference(today).inDays.clamp(1, 120);
+    SchedulerBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || request != _forecastRequest) return;
+      setState(() => _forecastLoading = true);
+      // Hata hâlinde ÖNCEKİ tahmin korunur (yalnız aynı cüzdanınsa):
+      // yenileme artık her dönüşte çalışıyor, geçici bir okuma hatası
+      // çalışan bir hattı silmemeli.
+      var result = _forecast?.walletId == widget.wallet.id ? _forecast : null;
+      try {
+        final r = await getIt<ForecastService>().forecast(
+          userId: widget.userId,
+          period: period,
+          horizonDays: horizon,
+          walletId: widget.wallet.id,
+        );
+        result = r.wallets[widget.wallet.id];
+      } catch (e, st) {
+        reportError('İşlemler · bakiye hattı tahmini', e, st);
+      }
+      if (!mounted || request != _forecastRequest) return;
+      setState(() {
+        _forecast = result;
+        _forecastLoading = false;
+      });
+    });
+  }
+
+  BalanceLineSeries _seriesFor(
+      List<TransactionWithBalance> ledger, DateTimeRange period) {
+    final today = dayOf(DateTime.now());
+    final key = (
+      ledger,
+      period.start,
+      period.end,
+      today,
+      _forecast,
+      widget.wallet.balance
+    );
+    if (_series != null && _seriesKey == key) return _series!;
+    _seriesKey = key;
+    return _series = buildBalanceLineSeries(
+      ledger: ledger,
+      currentBalance: widget.wallet.balance,
+      period: period,
+      now: DateTime.now(),
+      forecastPath: _forecast?.path ?? const [],
+      forecastEvents: _forecast?.events ?? const [],
+    );
   }
 
   /// Kart bağlamında dönem EKSTRE dönemidir (bkz.
@@ -699,6 +880,35 @@ class _TransactionsViewState extends State<_TransactionsView> {
     required bool periodHasToday,
     required bool walletIsEmpty,
   }) {
+    final canShowLine = _canShowBalanceLine(
+      filter: filterState,
+      mode: mode,
+      period: period,
+      walletIsEmpty: walletIsEmpty,
+    );
+    if (canShowLine && _view == LedgerView.balanceLine && !_selectionActive) {
+      _ensureForecast(period, ledger);
+      return [
+        SliverToBoxAdapter(
+          child: PeriodTransition(
+            periodStart: period.start,
+            child: BalanceLineView(
+              series: _seriesFor(ledger, period),
+              ledger: ledger,
+              currency: context.activeWalletCurrency,
+              categoryLabels: _categoryLabels,
+              categoryIcons: _categoryIcons,
+              forecastLoading: _forecastLoading,
+              onAddForDay: (day) => _addForDay(day, mode),
+              onShowList: () => _setView(LedgerView.list),
+              onJumpToToday: periodHasToday ? null : cubit.jumpToToday,
+            ),
+          ),
+        ),
+        const SliverToBoxAdapter(child: SizedBox(height: 28)),
+      ];
+    }
+
     // Arama artık içeriğin ilk satırı DEĞİL: üst çubukta bir ikon (bkz.
     // [TransactionTopBar]). İçerik doğrudan özetle başlar.
     if (visible.isEmpty) {
@@ -763,6 +973,11 @@ class _TransactionsViewState extends State<_TransactionsView> {
                         ? _collapse.expandAll()
                         : _collapse.collapseAll(days),
                 allDaysCollapsed: _collapse.allCollapsed(days),
+                // Seçim sürerken hat zaten geçici olarak kapalı; düğme ölü
+                // kalırdı.
+                onShowBalanceLine: canShowLine && !_selectionActive
+                    ? () => _setView(LedgerView.balanceLine)
+                    : null,
                 // "Param nereye gidiyor?" — yalnız gider görünürken.
                 topCategories: mode == FinanceMode.income
                     ? const []
