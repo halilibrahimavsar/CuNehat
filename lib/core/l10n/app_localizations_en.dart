@@ -8131,7 +8131,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get blEndPlanned => 'Planned';
 
   @override
-  String get blPaceRow => 'Estimated everyday spending';
+  String get blPaceRow => 'Estimated spending';
 
   @override
   String get blTagPace => 'From pace';

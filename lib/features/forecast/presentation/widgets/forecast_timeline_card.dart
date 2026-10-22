@@ -1006,47 +1006,52 @@ class _TimelinePainter extends CustomPainter {
             ..strokeWidth = 2.5);
     }
 
-    // Akışlar: orta çizgiden yukarı giriş, aşağı çıkış; ortak ölçek.
+    // Akışlar: orta çizgiden yukarı giriş, aşağı çıkış. İki yön AYRI
+    // ölçekte: ortak ölçekte tek bir maaş 30.000 iken 230'luk abonelik 2px'e
+    // iniyordu — oysa plan görünümünün sorusu "hangi gün ne ödeyeceğim".
+    // Çıkışlar alanın çoğunu alır; tutarlar gün panelinde yazılı.
     final laneTop = topH + _laneGap;
     final laneH = size.height - laneTop;
-    final total = scale.maxUp + scale.maxDown;
-    final mid = total <= 0
-        ? laneTop + laneH / 2
-        : laneTop + laneH * (scale.maxUp / total);
+    final hasUp = scale.maxUp > 0.005;
+    final hasDown = scale.maxDown > 0.005;
+    final mid = hasUp && hasDown
+        ? laneTop + laneH * 0.35
+        : (hasUp ? size.height - 1 : laneTop + 1);
     canvas.drawLine(
         Offset(0, mid), Offset(size.width, mid), Paint()..color = guide);
-    if (total > 0) {
-      final k = laneH / total;
+    final upK = hasUp ? (mid - laneTop) / scale.maxUp : 0.0;
+    final downK = hasDown ? (size.height - mid) / scale.maxDown : 0.0;
+    if (hasUp || hasDown) {
       final w = (step * 0.6).clamp(2.0, 10.0);
-      double h(double v) => v <= 0 ? 0 : math.max(2.0, v * k);
+      double h(double v, double k) => v <= 0 ? 0 : math.max(2.0, v * k);
       for (var i = 0; i < n; i++) {
         final d = days[i];
         final left = x(i) - w / 2;
         var downEnd = mid;
         if (d.out > 0.005) {
-          final r = Rect.fromLTWH(left, mid, w, h(d.out));
+          final r = Rect.fromLTWH(left, mid, w, h(d.out, downK));
           canvas.drawRRect(
               RRect.fromRectAndRadius(r, const Radius.circular(1.5)),
               Paint()..color = out);
           downEnd = r.bottom;
         }
         if (estimates && d.estimatedOut > 0.005) {
-          final r = Rect.fromLTWH(left, downEnd, w, h(d.estimatedOut));
+          final r = Rect.fromLTWH(left, downEnd, w, h(d.estimatedOut, downK));
           canvas.drawRRect(
               RRect.fromRectAndRadius(r, const Radius.circular(1.5)),
               Paint()..color = violet);
         }
         var upEnd = mid;
         if (d.inn > 0.005) {
-          final r = Rect.fromLTWH(left, mid - h(d.inn), w, h(d.inn));
+          final r = Rect.fromLTWH(left, mid - h(d.inn, upK), w, h(d.inn, upK));
           canvas.drawRRect(
               RRect.fromRectAndRadius(r, const Radius.circular(1.5)),
               Paint()..color = inn);
           upEnd = r.top;
         }
         if (d.expectedIn > 0.005) {
-          final r = Rect.fromLTWH(
-              left + 0.75, upEnd - h(d.expectedIn), w - 1.5, h(d.expectedIn));
+          final hh = h(d.expectedIn, upK);
+          final r = Rect.fromLTWH(left + 0.75, upEnd - hh, w - 1.5, hh);
           canvas.drawRRect(
               RRect.fromRectAndRadius(r, const Radius.circular(1.5)),
               Paint()

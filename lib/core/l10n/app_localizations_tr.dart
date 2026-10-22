@@ -8073,7 +8073,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get blEndPlanned => 'Planlı';
 
   @override
-  String get blPaceRow => 'Tahmini serbest harcama';
+  String get blPaceRow => 'Tahmini harcama';
 
   @override
   String get blTagPace => 'Hızdan';

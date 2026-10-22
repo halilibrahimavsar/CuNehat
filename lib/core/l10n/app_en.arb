@@ -5186,7 +5186,7 @@
   "blTotalPlannedOut": "Planned out",
   "blTotalPlannedIn": "Planned in",
   "blEndPlanned": "Planned",
-  "blPaceRow": "Estimated everyday spending",
+  "blPaceRow": "Estimated spending",
   "blTagPace": "From pace",
   "blTagReceivable": "Expected · not in balance",
   "blCardEstimateRow": "{name} · estimated share of statement",

@@ -13569,7 +13569,7 @@ abstract class AppLocalizations {
   /// No description provided for @blPaceRow.
   ///
   /// In tr, this message translates to:
-  /// **'Tahmini serbest harcama'**
+  /// **'Tahmini harcama'**
   String get blPaceRow;
 
   /// No description provided for @blTagPace.

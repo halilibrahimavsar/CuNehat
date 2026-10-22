@@ -332,7 +332,7 @@ void main() {
 
       expect(find.textContaining('TAHMİNİ BAKİYE'), findsOneWidget);
       expect(find.byKey(const ValueKey('receipt-pace-row')), findsOneWidget);
-      expect(find.text('Tahmini serbest harcama'), findsOneWidget);
+      expect(find.text('Tahmini harcama'), findsOneWidget);
       // Hız 140 (100 + bugünün kalanı 40); çıkış 229,99 + 140 = 369,99;
       // 25.745,90 − 369,99 = 25.375,91.
       expect(find.textContaining('140,00'), findsOneWidget);

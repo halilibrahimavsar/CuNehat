@@ -5420,7 +5420,7 @@
   "blTotalPlannedOut": "Planlı çıkış",
   "blTotalPlannedIn": "Planlı giriş",
   "blEndPlanned": "Planlı",
-  "blPaceRow": "Tahmini serbest harcama",
+  "blPaceRow": "Tahmini harcama",
   "blTagPace": "Hızdan",
   "blTagReceivable": "Beklenen · bakiyeye katılmaz",
   "blCardEstimateRow": "{name} · ekstrenin tahmini payı",
