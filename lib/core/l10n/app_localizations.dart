@@ -12474,12 +12474,6 @@ abstract class AppLocalizations {
   /// **'Yaklaşan ödemeler ve dönem sonu'**
   String get simpleBarForecastSubtitle;
 
-  /// No description provided for @forecastHorizonCaption.
-  ///
-  /// In tr, this message translates to:
-  /// **'Önümüzdeki {days} gün'**
-  String forecastHorizonCaption(int days);
-
   /// No description provided for @forecastHeadlineNegative.
   ///
   /// In tr, this message translates to:
@@ -12492,23 +12486,11 @@ abstract class AppLocalizations {
   /// **'{income} gelene kadar ({date}) yetiyor'**
   String forecastHeadlineUntilIncome(String income, String date);
 
-  /// No description provided for @forecastHeadlineHorizonOk.
-  ///
-  /// In tr, this message translates to:
-  /// **'Önümüzdeki {days} gün yetiyor'**
-  String forecastHeadlineHorizonOk(int days);
-
   /// No description provided for @forecastLowestPoint.
   ///
   /// In tr, this message translates to:
   /// **'En dar gün {date}: {amount}'**
   String forecastLowestPoint(String date, String amount);
-
-  /// No description provided for @forecastLegendExpected.
-  ///
-  /// In tr, this message translates to:
-  /// **'Beklenen'**
-  String get forecastLegendExpected;
 
   /// No description provided for @forecastLegendRange.
   ///
@@ -12539,24 +12521,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Dönem sonu'**
   String get forecastPeriodTitle;
-
-  /// No description provided for @forecastExpectedExpense.
-  ///
-  /// In tr, this message translates to:
-  /// **'Beklenen gider'**
-  String get forecastExpectedExpense;
-
-  /// No description provided for @forecastExpectedIncome.
-  ///
-  /// In tr, this message translates to:
-  /// **'Beklenen gelir'**
-  String get forecastExpectedIncome;
-
-  /// No description provided for @forecastExpectedNet.
-  ///
-  /// In tr, this message translates to:
-  /// **'Beklenen net'**
-  String get forecastExpectedNet;
 
   /// No description provided for @forecastRangeLabel.
   ///
@@ -12714,12 +12678,6 @@ abstract class AppLocalizations {
   /// **'{name} · alacak'**
   String forecastEventReceivable(String name);
 
-  /// No description provided for @forecastUpcomingEmpty.
-  ///
-  /// In tr, this message translates to:
-  /// **'Önümüzdeki {days} günde planlı bir ödeme ya da gelir yok. Kira, maaş, abonelik gibi düzenli işlemleri ekledikçe burada görünürler.'**
-  String forecastUpcomingEmpty(int days);
-
   /// No description provided for @forecastCardsTitle.
   ///
   /// In tr, this message translates to:
@@ -12839,18 +12797,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Hedef tahmini yalnız son 90 günde hedefe eklediğin paradan gelir; değer artışı hesaba katılmaz.'**
   String get forecastHowGoals;
-
-  /// No description provided for @forecastLinkTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Önümüzdeki 30 gün'**
-  String get forecastLinkTitle;
-
-  /// No description provided for @forecastLinkBody.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ay sonu tahmini, yaklaşan ödemeler, bütçe gidişatı'**
-  String get forecastLinkBody;
 
   /// No description provided for @forecastLoadFailed.
   ///

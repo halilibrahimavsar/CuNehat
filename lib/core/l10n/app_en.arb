@@ -4497,14 +4497,6 @@
   },
   "menuForecast": "Ahead",
   "simpleBarForecastSubtitle": "Upcoming payments and period end",
-  "forecastHorizonCaption": "Next {days} days",
-  "@forecastHorizonCaption": {
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
   "forecastHeadlineNegative": "Could dip below zero around {date}",
   "@forecastHeadlineNegative": {
     "placeholders": {
@@ -4524,14 +4516,6 @@
       }
     }
   },
-  "forecastHeadlineHorizonOk": "Enough for the next {days} days",
-  "@forecastHeadlineHorizonOk": {
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
   "forecastLowestPoint": "Tightest day {date}: {amount}",
   "@forecastLowestPoint": {
     "placeholders": {
@@ -4543,7 +4527,6 @@
       }
     }
   },
-  "forecastLegendExpected": "Expected",
   "forecastLegendRange": "Likely range",
   "forecastCardPathTitle": "Card balance",
   "forecastNoPaceTitle": "A few more days of records needed",
@@ -4556,9 +4539,6 @@
     }
   },
   "forecastPeriodTitle": "End of period",
-  "forecastExpectedExpense": "Expected spending",
-  "forecastExpectedIncome": "Expected income",
-  "forecastExpectedNet": "Expected net",
   "forecastRangeLabel": "between {low} and {high}",
   "@forecastRangeLabel": {
     "placeholders": {
@@ -4667,14 +4647,6 @@
       }
     }
   },
-  "forecastUpcomingEmpty": "No planned payments or income in the next {days} days. Recurring items like rent, salary or subscriptions show up here once you add them.",
-  "@forecastUpcomingEmpty": {
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
   "forecastCardsTitle": "Cards",
   "forecastCardEstimate": "Next statement ~{amount}",
   "@forecastCardEstimate": {
@@ -4753,8 +4725,6 @@
   "forecastHowCard": "Card spending leaves your balance on the due date; a statement that hasn't closed yet is an estimate.",
   "forecastHowLegacy": "Recurring payments approved before this feature can't be told apart and may be included in the pace.",
   "forecastHowGoals": "Goal estimates only use what you added in the last 90 days; value growth is not counted.",
-  "forecastLinkTitle": "The next 30 days",
-  "forecastLinkBody": "End-of-month outlook, upcoming payments, budget outlook",
   "forecastLoadFailed": "Couldn't calculate the outlook. Pull down to try again.",
   "forecastScopeWallet": "This wallet",
   "forecastScopeAll": "All wallets",

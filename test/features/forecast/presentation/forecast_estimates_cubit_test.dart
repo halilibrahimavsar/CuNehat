@@ -53,4 +53,31 @@ void main() {
     expect(cubit.state, isTrue);
     expect(find.text(l10n.forecastEstimatesOnDesc), findsOneWidget);
   });
+
+  testWidgets('Ayarlar kipi ufku ve bildirimleri anlatan uzun açıklamayı yazar',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final cubit = ForecastEstimatesCubit(await SharedPreferences.getInstance());
+    addTearDown(cubit.close);
+    await tester.pumpWidget(MaterialApp(
+      locale: const Locale('tr'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(
+        body: BlocProvider.value(
+          value: cubit,
+          child: const ForecastEstimatesSwitch(settings: true),
+        ),
+      ),
+    ));
+    final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+    expect(find.text(l10n.forecastEstimatesSettingDesc), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('forecast-estimates-switch')));
+    await tester.pumpAndSettle();
+    expect(cubit.state, isTrue);
+    expect(
+        (await SharedPreferences.getInstance())
+            .getBool(ForecastEstimatesCubit.key),
+        isTrue);
+  });
 }

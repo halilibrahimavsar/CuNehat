@@ -4731,14 +4731,6 @@
   },
   "menuForecast": "Gelecek",
   "simpleBarForecastSubtitle": "Yaklaşan ödemeler ve dönem sonu",
-  "forecastHorizonCaption": "Önümüzdeki {days} gün",
-  "@forecastHorizonCaption": {
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
   "forecastHeadlineNegative": "Bu gidişle {date} civarı eksiye düşebilir",
   "@forecastHeadlineNegative": {
     "placeholders": {
@@ -4758,14 +4750,6 @@
       }
     }
   },
-  "forecastHeadlineHorizonOk": "Önümüzdeki {days} gün yetiyor",
-  "@forecastHeadlineHorizonOk": {
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
   "forecastLowestPoint": "En dar gün {date}: {amount}",
   "@forecastLowestPoint": {
     "placeholders": {
@@ -4777,7 +4761,6 @@
       }
     }
   },
-  "forecastLegendExpected": "Beklenen",
   "forecastLegendRange": "Olası aralık",
   "forecastCardPathTitle": "Kart borcu",
   "forecastNoPaceTitle": "Tahmin için biraz daha kayıt gerek",
@@ -4790,9 +4773,6 @@
     }
   },
   "forecastPeriodTitle": "Dönem sonu",
-  "forecastExpectedExpense": "Beklenen gider",
-  "forecastExpectedIncome": "Beklenen gelir",
-  "forecastExpectedNet": "Beklenen net",
   "forecastRangeLabel": "{low} – {high} arası",
   "@forecastRangeLabel": {
     "placeholders": {
@@ -4901,14 +4881,6 @@
       }
     }
   },
-  "forecastUpcomingEmpty": "Önümüzdeki {days} günde planlı bir ödeme ya da gelir yok. Kira, maaş, abonelik gibi düzenli işlemleri ekledikçe burada görünürler.",
-  "@forecastUpcomingEmpty": {
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
   "forecastCardsTitle": "Kartlar",
   "forecastCardEstimate": "Sıradaki ekstre ~{amount}",
   "@forecastCardEstimate": {
@@ -4987,8 +4959,6 @@
   "forecastHowCard": "Kart harcaması bakiyeden son ödeme gününde düşer; kesilmemiş ekstre tahminidir.",
   "forecastHowLegacy": "Bu özellikten önce onaylanmış düzenli ödemeler ayırt edilemez; hızın içinde kalmış olabilirler.",
   "forecastHowGoals": "Hedef tahmini yalnız son 90 günde hedefe eklediğin paradan gelir; değer artışı hesaba katılmaz.",
-  "forecastLinkTitle": "Önümüzdeki 30 gün",
-  "forecastLinkBody": "Ay sonu tahmini, yaklaşan ödemeler, bütçe gidişatı",
   "forecastLoadFailed": "Tahmin hesaplanamadı. Aşağı çekip yeniden dene.",
   "forecastScopeWallet": "Bu cüzdan",
   "forecastScopeAll": "Tüm cüzdanlar",

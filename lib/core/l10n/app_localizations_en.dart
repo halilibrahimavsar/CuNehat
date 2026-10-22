@@ -7379,11 +7379,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get simpleBarForecastSubtitle => 'Upcoming payments and period end';
 
   @override
-  String forecastHorizonCaption(int days) {
-    return 'Next $days days';
-  }
-
-  @override
   String forecastHeadlineNegative(String date) {
     return 'Could dip below zero around $date';
   }
@@ -7394,17 +7389,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String forecastHeadlineHorizonOk(int days) {
-    return 'Enough for the next $days days';
-  }
-
-  @override
   String forecastLowestPoint(String date, String amount) {
     return 'Tightest day $date: $amount';
   }
-
-  @override
-  String get forecastLegendExpected => 'Expected';
 
   @override
   String get forecastLegendRange => 'Likely range';
@@ -7428,15 +7415,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get forecastPeriodTitle => 'End of period';
-
-  @override
-  String get forecastExpectedExpense => 'Expected spending';
-
-  @override
-  String get forecastExpectedIncome => 'Expected income';
-
-  @override
-  String get forecastExpectedNet => 'Expected net';
 
   @override
   String forecastRangeLabel(String low, String high) {
@@ -7537,11 +7515,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String forecastUpcomingEmpty(int days) {
-    return 'No planned payments or income in the next $days days. Recurring items like rent, salary or subscriptions show up here once you add them.';
-  }
-
-  @override
   String get forecastCardsTitle => 'Cards';
 
   @override
@@ -7628,13 +7601,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get forecastHowGoals =>
       'Goal estimates only use what you added in the last 90 days; value growth is not counted.';
-
-  @override
-  String get forecastLinkTitle => 'The next 30 days';
-
-  @override
-  String get forecastLinkBody =>
-      'End-of-month outlook, upcoming payments, budget outlook';
 
   @override
   String get forecastLoadFailed =>

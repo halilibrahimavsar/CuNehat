@@ -5,6 +5,7 @@ import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:cunehat/features/settings/presentation/widgets/about_card.dart';
+import 'package:cunehat/features/forecast/presentation/widgets/forecast_estimates_switch.dart';
 import 'package:cunehat/features/settings/presentation/widgets/home_sections_card.dart';
 import 'package:cunehat/features/settings/presentation/widgets/security_settings_card.dart';
 import 'package:cunehat/features/settings/presentation/widgets/settings_header.dart';
@@ -84,6 +85,13 @@ class SettingsPage extends StatelessWidget {
                   SettingsHeader(title: context.l10n.settingsPeriodHeader),
                   const SizedBox(height: 8),
                   const PeriodSettingsCard(),
+                  // Tahmin katmanı: Gelecek'in ufku bu bölümdeki dönemden
+                  // gelir; anahtar Gelecek başlığında da var.
+                  const SizedBox(height: 8),
+                  const AppCard(
+                    padding: EdgeInsets.symmetric(vertical: 4),
+                    child: ForecastEstimatesSwitch(settings: true),
+                  ),
                   const SizedBox(height: 24),
                   SettingsHeader(title: context.l10n.security),
                   const SizedBox(height: 8),
