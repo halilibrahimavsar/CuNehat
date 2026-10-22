@@ -161,4 +161,22 @@ void main() {
     );
     expect(c.period!.realizedExpense, 350);
   });
+
+  test(
+      'plan yolu da toplanır; yetim kart ödemesinin kesin kısmı nakitten düşer',
+      () {
+    final c = combineForecasts(
+      _project([
+        WalletForecastInput(wallet: _wallet('a', 1000), ledger: const []),
+        WalletForecastInput(wallet: _wallet('b', 500), ledger: const []),
+        _card(),
+      ]).values,
+      currency: 'TRY',
+    );
+    expect(c.path.first.planned, 1500);
+    expect(_at(c, DateTime(2026, 11, 5)).planned, 1200);
+    final orphan =
+        c.events.singleWhere((e) => e.kind == ForecastEventKind.cardPayment);
+    expect(orphan.knownAmount, -300);
+  });
 }

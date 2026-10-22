@@ -68,6 +68,12 @@ class ForecastEvent {
   final int? installmentNo;
   final int? installmentCount;
 
+  /// [amount]'un KESİN kısmı (aynı işaretle): plan görünümü yalnız bunu
+  /// çizer ve toplar. Kesin olayda tamamı; kesilmemiş ekstrede kesime kadar
+  /// yazılmış harcama + taksitler (hız payı hariç); beklenen alacakta 0
+  /// (gelmemiş para plana katılmaz).
+  final double knownAmount;
+
   const ForecastEvent({
     required this.date,
     required this.amount,
@@ -83,26 +89,45 @@ class ForecastEvent {
     this.countsAsSpending = false,
     this.installmentNo,
     this.installmentCount,
+    double? knownAmount,
   })  : pathMin = pathMin ?? amount,
         pathExpected = pathExpected ?? amount,
-        pathMax = pathMax ?? amount;
+        pathMax = pathMax ?? amount,
+        knownAmount = knownAmount ??
+            (certainty == ForecastCertainty.known ? amount : 0.0);
 
   bool get isIncome => amount > 0;
+
+  /// Tahmini kısım (hızdan ya da beklentiden); kesin olayda 0.
+  double get estimatedAmount => amount - knownAmount;
+
+  bool get hasKnownPart => knownAmount.abs() > 0.005;
+  bool get hasEstimatedPart => estimatedAmount.abs() > 0.005;
 }
 
-/// Gün sonu bakiyesi: beklenen ve bant.
+/// Gün sonu bakiyesi: beklenen ve bant + yalnız kesin kalemlerle plan.
 class BalancePoint {
   final DateTime day;
   final double expected;
   final double low;
   final double high;
 
+  /// Yalnız kesin kısımlarla ([ForecastEvent.knownAmount]) bakiye: hız ve
+  /// beklenen alacak yok. Plan görünümünün çizgisi.
+  final double planned;
+
+  /// O gün hızdan düşülen serbest harcama (bugün için günün KALANI); hız
+  /// yoksa 0. Fiş, tahmini gün sonunu bununla açıklar.
+  final double paceSpend;
+
   const BalancePoint({
     required this.day,
     required this.expected,
     required this.low,
     required this.high,
-  });
+    double? planned,
+    this.paceSpend = 0,
+  }) : planned = planned ?? expected;
 }
 
 /// Dönem sonu tahmini (rapor evreni: kuplaj hareketleri hariç).
@@ -147,6 +172,10 @@ class PeriodOutlook {
       realizedExpense + knownExpense + paceExpenseHigh;
   double get expectedIncome => realizedIncome + knownIncome;
   double get expectedNet => expectedIncome - expectedExpense;
+
+  /// Hız olmadan: gerçekleşen + planlı.
+  double get plannedExpense => realizedExpense + knownExpense;
+  double get plannedNet => expectedIncome - plannedExpense;
 }
 
 /// Bütçenin dönem sonu gidişatı.
@@ -189,6 +218,10 @@ class BudgetOutlook {
   /// Bu hızla limitin dolacağı gün; dolmayacaksa ya da zaten dolduysa `null`.
   final DateTime? fillDate;
 
+  /// Yalnız planlı kalemlerle limitin dolacağı gün (hız yok); dolmayacaksa
+  /// ya da zaten dolduysa `null`.
+  final DateTime? plannedFillDate;
+
   /// Sığması için kalan günlerde günlük üst sınır; kalan pay yoksa `null`.
   final double? requiredDaily;
 
@@ -210,11 +243,15 @@ class BudgetOutlook {
     this.temp,
     this.categoryId,
     this.fillDate,
+    this.plannedFillDate,
     this.requiredDaily,
   });
 
   bool get isTemp => temp != null;
   double get expectedEnd => spent + knownRemaining + paceRemaining;
+
+  /// Hız olmadan dönem sonu: harcanan + planlı.
+  double get plannedEnd => spent + knownRemaining;
   double get expectedEndHigh => spent + knownRemaining + paceRemainingHigh;
 }
 
@@ -256,6 +293,10 @@ class CardOutlook {
     required this.paceUntilClosingLow,
     required this.paceUntilClosingHigh,
   });
+
+  /// Ekstrenin kesin kısmı: kesimden bugüne yazılan + kesime kadar düşecek
+  /// taksitler.
+  double get statementKnown => spentSoFar + installmentsUntilClosing;
 
   double get statementEstimate =>
       spentSoFar + installmentsUntilClosing + paceUntilClosing;
@@ -343,20 +384,28 @@ class WalletForecast {
   }
 
   /// Beklenen yolun en düşük noktası — [until] verilirse o günden ÖNCE.
-  BalancePoint? lowestPoint({DateTime? until}) {
+  BalancePoint? lowestPoint({DateTime? until}) => lowestPointOf(until: until);
+
+  /// Beklenen yolun sıfırın altına ilk indiği gün; inmiyorsa `null`.
+  BalancePoint? get firstNegative => firstNegativeOf();
+
+  /// [planned]: beklenen yerine yalnız kesin kalemlerle çizilen yol.
+  BalancePoint? lowestPointOf({DateTime? until, bool planned = false}) {
     BalancePoint? low;
     for (final p in path) {
       if (until != null && !p.day.isBefore(until)) break;
-      if (low == null || p.expected < low.expected) low = p;
+      if (low == null || _value(p, planned) < _value(low, planned)) low = p;
     }
     return low;
   }
 
-  /// Beklenen yolun sıfırın altına ilk indiği gün; inmiyorsa `null`.
-  BalancePoint? get firstNegative {
+  BalancePoint? firstNegativeOf({bool planned = false}) {
     for (final p in path) {
-      if (p.expected < -0.005) return p;
+      if (_value(p, planned) < -0.005) return p;
     }
     return null;
   }
+
+  static double _value(BalancePoint p, bool planned) =>
+      planned ? p.planned : p.expected;
 }

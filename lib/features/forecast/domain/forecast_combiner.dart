@@ -107,6 +107,8 @@ CombinedForecast combineForecasts(
   final expected = List<double>.filled(length, 0);
   final low = List<double>.filled(length, 0);
   final high = List<double>.filled(length, 0);
+  final planned = List<double>.filled(length, 0);
+  final paceSpend = List<double>.filled(length, 0);
   final days = <DateTime>[
     if (included.isNotEmpty)
       for (final p in included.first.path.take(length)) p.day,
@@ -117,6 +119,8 @@ CombinedForecast combineForecasts(
       expected[i] += w.path[i].expected * r;
       low[i] += w.path[i].low * r;
       high[i] += w.path[i].high * r;
+      planned[i] += w.path[i].planned * r;
+      paceSpend[i] += w.path[i].paceSpend * r;
     }
   }
 
@@ -145,6 +149,7 @@ CombinedForecast combineForecasts(
         certainty: e.certainty,
         title: e.title,
         sourceId: e.sourceId,
+        knownAmount: -e.knownAmount,
       );
       orphanEvents.add(out);
       final from = days.indexOf(e.date);
@@ -153,6 +158,7 @@ CombinedForecast combineForecasts(
         expected[i] += out.pathExpected * r;
         low[i] += out.pathMin * r;
         high[i] += out.pathMax * r;
+        planned[i] += out.knownAmount * r;
       }
     }
   }
@@ -164,6 +170,8 @@ CombinedForecast combineForecasts(
         expected: roundToCents(expected[i]),
         low: roundToCents(low[i]),
         high: roundToCents(high[i]),
+        planned: roundToCents(planned[i]),
+        paceSpend: roundToCents(paceSpend[i]),
       ),
   ];
 

@@ -394,6 +394,9 @@ class ForecastEngine {
           certainty: ForecastCertainty.expected,
           title: name,
           sourceId: w.id,
+          // Kesimden bugüne yazılan + kesime kadar düşecek taksitler zaten
+          // borç: plan görünümü ekstrenin bu kısmını kesin sayar.
+          knownAmount: roundToCents(sign * c.statementKnown),
         );
       }
     }
@@ -426,6 +429,8 @@ class ForecastEngine {
     var expected = start;
     var low = start;
     var high = start;
+    // Plan: yalnız kesin kısımlar — hız ve beklenen alacak yok.
+    var planned = start;
     final points = <BalancePoint>[];
     for (var i = 0; i <= horizonDays; i++) {
       final day = DateTime(today.year, today.month, today.day + i);
@@ -433,6 +438,7 @@ class ForecastEngine {
         expected += e.pathExpected;
         low += e.pathMin;
         high += e.pathMax;
+        planned += e.knownAmount;
       }
       final spend = i == 0
           ? _paceRestOfToday(pace, w.ledger)
@@ -446,6 +452,8 @@ class ForecastEngine {
         expected: roundToCents(expected),
         low: roundToCents(low),
         high: roundToCents(high),
+        planned: roundToCents(planned),
+        paceSpend: roundToCents(spend),
       ));
     }
     return points;
@@ -646,6 +654,7 @@ class ForecastEngine {
             {double known = 0,
             double paceSum = 0,
             DateTime? fill,
+            DateTime? plannedFill,
             double? required}) =>
         BudgetOutlook(
           id: id,
@@ -658,6 +667,7 @@ class ForecastEngine {
           paceRemaining: roundToCents(paceSum),
           paceRemainingHigh: roundToCents(paceSum * (pace?.highRatio ?? 1)),
           fillDate: fill,
+          plannedFillDate: plannedFill,
           requiredDaily: required,
           periodStart: start,
           periodEnd: end,
@@ -677,23 +687,28 @@ class ForecastEngine {
     final known = knownByDay.values.fold(0.0, (s, a) => s + a);
     final paceSum = _paceInPeriod(w, pace, inRange, end, tags);
 
-    // Dolma günü: gün gün biriktir (planlı + hız).
+    // Dolma günü: gün gün biriktir (planlı + hız); plan görünümü için ayrıca
+    // yalnız planlılarla.
     DateTime? fill;
+    DateTime? plannedFill;
     final over = moneyGte(spent, limit);
     if (!over) {
       var cum = spent;
+      var cumPlanned = spent;
       final first = today.isBefore(start) ? start : today;
       for (var d = first; !d.isAfter(end); d = CardCycle.nextDay(d)) {
         cum += knownByDay[d] ?? 0;
+        cumPlanned += knownByDay[d] ?? 0;
         if (pace != null && inRange(d)) {
           cum += d == today
               ? _tagRestOfToday(pace, w.ledger, tags)
               : pace.dailyForTags(tags);
         }
-        if (moneyGte(cum, limit)) {
-          fill = d;
-          break;
+        if (fill == null && moneyGte(cum, limit)) fill = d;
+        if (plannedFill == null && moneyGte(cumPlanned, limit)) {
+          plannedFill = d;
         }
+        if (fill != null && plannedFill != null) break;
       }
     }
 
@@ -715,7 +730,11 @@ class ForecastEngine {
       status = BudgetOutlookStatus.onTrack;
     }
     return make(status,
-        known: known, paceSum: paceSum, fill: fill, required: required);
+        known: known,
+        paceSum: paceSum,
+        fill: fill,
+        plannedFill: plannedFill,
+        required: required);
   }
 
   // --------------------------------------------------------------- hedef

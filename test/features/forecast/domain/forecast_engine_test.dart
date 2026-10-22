@@ -555,4 +555,189 @@ void main() {
       expect(g.arrival, DateTime(2028, 8, 10));
     });
   });
+
+  group('plan yolu (yalnız kesin kısımlar)', () {
+    test('hız plan yoluna GİRMEZ; günlük hız payı ayrıca taşınır', () {
+      final f = _single(WalletForecastInput(
+        wallet: _wallet('w'),
+        ledger: _daily(),
+        templates: [_template('Kira', 8000, DateTime(2026, 12, 1))],
+      ));
+      expect(f.path.first.planned, 20000);
+      expect(_at(f, DateTime(2026, 11, 30)).planned, 20000);
+      expect(_at(f, DateTime(2026, 12, 1)).planned, 12000);
+      expect(f.path.last.planned, 12000);
+      // Hız: bugünün kalanı (bugün harcama yok → tam gün) + her gün 100.
+      expect(f.path.first.paceSpend, 100);
+      expect(_at(f, DateTime(2026, 11, 20)).paceSpend, 100);
+      expect(f.path.last.expected, f.path.last.planned - 31 * 100);
+    });
+
+    test('bugün harcanan, bugünün hız payından düşülür', () {
+      final f = _single(WalletForecastInput(
+        wallet: _wallet('w', balance: 19940),
+        ledger: [..._daily(), _tx(DateTime(2026, 11, 10, 9), 60)],
+      ));
+      expect(f.path.first.paceSpend, 40);
+      expect(f.path.first.planned, 19940);
+    });
+
+    test('hız yokken plan yolu beklenen yolla AYNI', () {
+      final f = _single(WalletForecastInput(
+        wallet: _wallet('w', balance: 5000),
+        ledger: const [],
+        templates: [_template('Kira', 3000, DateTime(2026, 12, 1))],
+      ));
+      for (final p in f.path) {
+        expect(p.planned, p.expected);
+        expect(p.paceSpend, 0);
+      }
+    });
+
+    test('beklenen alacak plan yoluna katılmaz; kesin kısmı 0', () {
+      final f = _single(WalletForecastInput(
+        wallet: _wallet('w', balance: 5000),
+        ledger: const [],
+        receivables: [
+          ReceivableEntity(
+            id: 'r',
+            userId: 'u',
+            walletId: 'w',
+            debtorName: 'Ali',
+            amount: 1500,
+            dueDate: DateTime(2026, 11, 20),
+            createdAt: DateTime(2026, 11, 1),
+          ),
+        ],
+      ));
+      final e = f.events.single;
+      expect(e.knownAmount, 0);
+      expect(e.estimatedAmount, 1500);
+      expect(e.hasKnownPart, isFalse);
+      expect(f.path.last.planned, 5000);
+    });
+
+    test('kesin olayın kesin kısmı tutarın kendisi', () {
+      final f = _single(WalletForecastInput(
+        wallet: _wallet('w'),
+        ledger: const [],
+        templates: [_template('Kira', 8000, DateTime(2026, 12, 1))],
+      ));
+      final e = f.events.single;
+      expect(e.knownAmount, -8000);
+      expect(e.estimatedAmount, 0);
+      expect(e.hasEstimatedPart, isFalse);
+    });
+
+    test(
+        'kesilmemiş ekstrenin kesin kısmı = kesimden beri yazılan + kesime '
+        'kadar taksit; hız payı tahmini', () {
+      final today = DateTime(2026, 10, 30);
+      const cardInfo =
+          CreditCardInfo(closingDay: 25, dueDay: 5, paymentWalletId: 'bank');
+      final inputs = [
+        WalletForecastInput(
+          wallet: _wallet('card',
+              balance: -3700, card: cardInfo, createdAt: DateTime(2026, 9, 1)),
+          ledger: [
+            // 2–29 Eki her gün 100 → kartta hız var.
+            for (var i = 0; i < 28; i++)
+              _tx(DateTime(2026, 10, 2 + i, 12), 100, walletId: 'card'),
+            _tx(DateTime(2026, 11, 15), 200,
+                walletId: 'card', tag: 'tech', group: 'g', no: 2, count: 3),
+          ],
+        ),
+        WalletForecastInput(
+            wallet: _wallet('bank', balance: 5000), ledger: const []),
+      ];
+      final all = _engine(
+        today: today,
+        period: DateTimeRange(
+            start: DateTime(2026, 10, 1), end: DateTime(2026, 10, 31)),
+        horizon: 40,
+      ).projectAll(inputs);
+      final card = all['card']!.card!;
+      expect(card.paceUntilClosing, greaterThan(0));
+      expect(
+          card.statementKnown, card.spentSoFar + card.installmentsUntilClosing);
+
+      final bank = all['bank']!;
+      final estimate = bank.events
+          .firstWhere((e) => e.kind == ForecastEventKind.cardStatementEstimate);
+      expect(estimate.knownAmount, -card.statementKnown);
+      expect(estimate.estimatedAmount, closeTo(-card.paceUntilClosing, 0.01));
+      expect(estimate.hasKnownPart, isTrue);
+      expect(estimate.hasEstimatedPart, isTrue);
+
+      final due = _at(bank, card.nextDue);
+      expect(due.planned,
+          closeTo(5000 - card.pendingAmount - card.statementKnown, 0.01));
+      expect(due.expected,
+          closeTo(5000 - card.pendingAmount - card.statementEstimate, 0.01));
+    });
+
+    test('yol yardımcıları planlı yola da bakar', () {
+      final f = _single(WalletForecastInput(
+        wallet: _wallet('w', balance: 1000),
+        ledger: _daily(),
+        templates: [
+          _template('Kira', 3000, DateTime(2026, 11, 25)),
+          _template('Maaş', 30000, DateTime(2026, 12, 1),
+              income: true, tag: 'salary'),
+        ],
+      ));
+      // Beklenen yol hızla 20 Kas'ta eksiye iner; plan ancak kirayla.
+      expect(f.firstNegative!.day, DateTime(2026, 11, 20));
+      expect(f.firstNegativeOf(planned: true)!.day, DateTime(2026, 11, 25));
+      expect(f.lowestPointOf(until: DateTime(2026, 12, 1), planned: true)!.day,
+          DateTime(2026, 11, 25));
+    });
+
+    test('dönem sonu: planlı gider hız olmadan', () {
+      final f = _single(WalletForecastInput(
+        wallet: _wallet('w'),
+        ledger: [
+          ..._daily(),
+          _tx(DateTime(2026, 11, 1), 30000, tag: 'salary', income: true),
+        ],
+        templates: [_template('Netflix', 200, DateTime(2026, 11, 20))],
+      ));
+      final p = f.period!;
+      expect(p.plannedExpense, 900 + 200);
+      expect(p.plannedNet, 30000 - 1100);
+      expect(p.expectedExpense, greaterThan(p.plannedExpense));
+    });
+
+    test('bütçe: planlılarla dolma günü ayrı; hızla dolma günü değişmez', () {
+      final f = _single(WalletForecastInput(
+        wallet: _wallet('w'),
+        ledger: _daily(),
+        templates: [
+          _template('Market', 200, DateTime(2026, 11, 20), tag: 'food'),
+        ],
+        budgets: const [
+          BudgetEntity(categoryId: 'food', walletId: 'w', limitAmount: 1000)
+        ],
+      ));
+      final b = f.budgets.single;
+      expect(b.spent, 900);
+      expect(b.plannedEnd, 1100);
+      expect(b.fillDate, DateTime(2026, 11, 10));
+      expect(b.plannedFillDate, DateTime(2026, 11, 20));
+    });
+
+    test('bütçe: planlılar sığıyorsa planlı dolma günü yok', () {
+      final f = _single(WalletForecastInput(
+        wallet: _wallet('w'),
+        ledger: _daily(),
+        budgets: const [
+          BudgetEntity(categoryId: 'food', walletId: 'w', limitAmount: 2500)
+        ],
+      ));
+      final b = f.budgets.single;
+      expect(b.plannedEnd, 900);
+      expect(b.plannedFillDate, isNull);
+      expect(b.fillDate, isNotNull);
+    });
+  });
 }
