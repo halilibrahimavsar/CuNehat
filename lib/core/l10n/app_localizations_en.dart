@@ -8189,4 +8189,12 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String forecastChartLabel(String day) {
+    return 'Days ahead, selected day $day';
+  }
+
+  @override
+  String get forecastChartNoDay => 'no day selected';
 }

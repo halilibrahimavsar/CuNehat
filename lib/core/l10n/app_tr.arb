@@ -5468,5 +5468,14 @@
         "type": "int"
       }
     }
-  }
+  },
+  "forecastChartLabel": "Önümüzdeki günler, seçili gün {day}",
+  "@forecastChartLabel": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastChartNoDay": "gün seçilmedi"
 }

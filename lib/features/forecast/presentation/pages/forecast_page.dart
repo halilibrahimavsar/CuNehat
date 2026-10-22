@@ -1,10 +1,12 @@
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/money_colors.dart';
+import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/services/budgets_changed_notifier.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/features/credit_card/presentation/card_context_rail.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
 import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/analysis_empty_card.dart';
@@ -12,24 +14,27 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/repor
 import 'package:cunehat/features/forecast/data/forecast_service.dart';
 import 'package:cunehat/features/forecast/domain/forecast_combiner.dart';
 import 'package:cunehat/features/forecast/domain/forecast_models.dart';
+import 'package:cunehat/features/forecast/domain/forecast_horizon.dart';
 import 'package:cunehat/features/forecast/presentation/bloc/forecast_cubit.dart';
-import 'package:cunehat/features/forecast/presentation/widgets/forecast_path_card.dart';
+import 'package:cunehat/features/forecast/presentation/bloc/forecast_estimates_cubit.dart';
+import 'package:cunehat/features/forecast/presentation/widgets/forecast_estimates_switch.dart';
 import 'package:cunehat/features/forecast/presentation/widgets/forecast_sections.dart';
+import 'package:cunehat/features/forecast/presentation/widgets/forecast_timeline_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// "Gelecek" — İşlemler · İçgörü · Rapor yığınının dördüncü yüzü.
 ///
 /// Rol ayrımı: Rapor "ne oldu", İçgörü "şimdi ne yapmalıyım", Gelecek
-/// "bu gidişle ne olacak". Sayfa dönem seçicisi TAŞIMAZ: tahmin hep bugünden
-/// ileriye bakar; dönem sonu kartı kullanıcının dönem biriminde (maaş günü
-/// dahil) içinde bulunulan dönemi kullanır.
+/// "önümüzde ne var". Sayfa dönem seçicisi TAŞIMAZ: hep bugünden ileriye
+/// bakar; ufuk kullanıcının dönem biriminin sonudur (maaş günü dahil, bkz.
+/// [forecastHorizonEnd]).
+///
+/// İki katman: PLAN (varsayılan) yalnız kesin kalemleri tarihleriyle
+/// gösterir; TAHMİN anahtarı hızdan gelen kısmı MOR olarak üstüne ekler.
 class ForecastPage extends StatelessWidget {
   final String userId;
   final String walletId;
-
-  /// Bakiye yolculuğunun ufku.
-  static const int horizonDays = 30;
 
   const ForecastPage({super.key, required this.userId, required this.walletId});
 
@@ -49,10 +54,18 @@ class ForecastPage extends StatelessWidget {
               current.start.year, current.start.month, current.start.day - 1);
           return filter.periodPreferences.periodContaining(dayBefore);
         },
+        // `basePeriod()` DEĞİL: kart bağlamında ekstre döngüsünü döner.
+        horizonEndOf: (today) =>
+            forecastHorizonEnd(filter.periodPreferences, today),
         transactions: getIt<TransactionsChangedNotifier>(),
         budgets: getIt<BudgetsChangedNotifier>(),
       )..load(),
-      child: ForecastView(walletId: walletId),
+      // Ayarlar'da dönem birimi değişince ufuk bayat kalmasın.
+      child: BlocListener<TransactionFilterCubit, CombinedFilter>(
+        listener: (context, _) =>
+            context.read<ForecastCubit>().refreshIfStale(),
+        child: ForecastView(walletId: walletId),
+      ),
     );
   }
 }
@@ -64,7 +77,12 @@ class ForecastView extends StatefulWidget {
   /// Testler için sabit gün.
   final DateTime? today;
 
-  const ForecastView({super.key, required this.walletId, this.today});
+  /// Tahmin katmanı; verilmezse uygulama ayarından
+  /// ([ForecastEstimatesContext.forecastEstimates]).
+  final bool? estimates;
+
+  const ForecastView(
+      {super.key, required this.walletId, this.today, this.estimates});
 
   @override
   State<ForecastView> createState() => _ForecastViewState();
@@ -135,10 +153,16 @@ class _ForecastViewState extends State<ForecastView>
     final theme = Theme.of(context);
     final now = widget.today ?? DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
+    final estimates = widget.estimates ?? context.forecastEstimates;
     final visible = context.amountsVisible;
     final money = MoneyWriter(currency: f.currency, visible: visible);
     final labels = buildCategoryLabelMap(state.categories);
-    const horizon = ForecastPage.horizonDays;
+    final horizonEnd = state.horizonEnd ??
+        (f.path.isEmpty
+            ? today
+            : DateTime(f.path.last.day.year, f.path.last.day.month,
+                f.path.last.day.day));
+    final horizonDays = f.path.isEmpty ? 0 : f.path.length - 1;
     final all = state.scope == ForecastScope.all && state.wallets.length > 1;
 
     // Birleşik görünüm: toplamlar aktif cüzdanın biriminde.
@@ -154,6 +178,12 @@ class _ForecastViewState extends State<ForecastView>
     final currencies = {
       for (final w in state.wallets.values) w.walletId: w.currency,
     };
+    // Birleşik görünümde olaylar KENDİ biriminde: grafik ve sayılar için
+    // görüntü birimine çevrilir.
+    double rateOf(ForecastEvent e) {
+      final c = currencies[e.walletId] ?? f.currency;
+      return c == f.currency ? 1 : (state.rates[c] ?? 1);
+    }
 
     // Kartlar: bu hesaba bağlı olanlar ya da kartın kendisi; birleşikte hepsi.
     final cards = <(String, CardOutlook)>[
@@ -200,7 +230,8 @@ class _ForecastViewState extends State<ForecastView>
           children: [
             Expanded(
               child: ReportSectionHeader(
-                  title: l10n.forecastHorizonCaption(horizon)),
+                  title: l10n.forecastHorizonUntilDays(
+                      AppFormatters.dayMonth.format(horizonEnd), horizonDays)),
             ),
             IconButton(
               key: const ValueKey('forecast-how'),
@@ -211,6 +242,7 @@ class _ForecastViewState extends State<ForecastView>
             ),
           ],
         ),
+        const ForecastEstimatesSwitch(),
         if (state.wallets.length > 1) ...[
           const SizedBox(height: 4),
           SegmentedButton<ForecastScope>(
@@ -249,7 +281,7 @@ class _ForecastViewState extends State<ForecastView>
             ),
         ],
         const SizedBox(height: 8),
-        if (f.pace == null && !f.isCard && combined == null) ...[
+        if (estimates && f.pace == null && !f.isCard && combined == null) ...[
           AnalysisEmptyCard(
             key: const ValueKey('forecast-no-pace'),
             icon: Icons.hourglass_bottom_rounded,
@@ -258,12 +290,16 @@ class _ForecastViewState extends State<ForecastView>
           ),
           const SizedBox(height: 12),
         ],
-        ForecastPathCard(
+        ForecastTimelineCard(
           forecast: view,
           money: money,
           today: today,
-          horizonDays: horizon,
+          horizonEnd: horizonEnd,
+          estimates: estimates,
           showBand: combined?.hasPace,
+          rateOf: rateOf,
+          walletNames: all ? names : const {},
+          currencyOf: all ? currencies : const {},
         ),
         if (view.period != null && !view.isCard)
           section(
@@ -272,6 +308,7 @@ class _ForecastViewState extends State<ForecastView>
               period: view.period!,
               money: money,
               hasPace: combined?.hasPace ?? f.pace != null,
+              estimates: estimates,
             ),
           ),
         if (budgetGroups.isNotEmpty)
@@ -293,6 +330,7 @@ class _ForecastViewState extends State<ForecastView>
                     money: moneyOf(w.walletId),
                     today: today,
                     categoryLabels: labels,
+                    estimates: estimates,
                   ),
                   if (all) const SizedBox(height: 12),
                 ],
@@ -306,7 +344,8 @@ class _ForecastViewState extends State<ForecastView>
             overdue: view.overdue,
             money: money,
             today: today,
-            horizonDays: horizon,
+            horizonEnd: horizonEnd,
+            estimates: estimates,
             walletNames: all ? names : const {},
             currencyOf: all ? currencies : const {},
           ),
@@ -318,6 +357,7 @@ class _ForecastViewState extends State<ForecastView>
               cards: cards,
               money: money,
               today: today,
+              estimates: estimates,
               currencyOf: currencies,
             ),
           ),
@@ -327,6 +367,7 @@ class _ForecastViewState extends State<ForecastView>
             ForecastGoalsCard(
               goals: goals,
               money: money,
+              estimates: estimates,
               currencyOf: currencies,
             ),
           ),

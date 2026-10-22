@@ -5234,5 +5234,14 @@
         "type": "int"
       }
     }
-  }
+  },
+  "forecastChartLabel": "Days ahead, selected day {day}",
+  "@forecastChartLabel": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastChartNoDay": "no day selected"
 }

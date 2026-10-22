@@ -8132,4 +8132,12 @@ class AppLocalizationsTr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String forecastChartLabel(String day) {
+    return 'Önümüzdeki günler, seçili gün $day';
+  }
+
+  @override
+  String get forecastChartNoDay => 'gün seçilmedi';
 }

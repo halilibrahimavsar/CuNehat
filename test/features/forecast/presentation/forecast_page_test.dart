@@ -8,7 +8,9 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 import 'package:cunehat/features/forecast/data/forecast_service.dart';
 import 'package:cunehat/features/forecast/domain/forecast_engine.dart';
 import 'package:cunehat/features/forecast/presentation/bloc/forecast_cubit.dart';
+import 'package:cunehat/features/forecast/presentation/bloc/forecast_estimates_cubit.dart';
 import 'package:cunehat/features/forecast/presentation/pages/forecast_page.dart';
+import 'package:cunehat/features/forecast/presentation/widgets/forecast_timeline_card.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_frequency_enum.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_transaction_entity.dart';
 import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
@@ -18,6 +20,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final _today = DateTime(2026, 11, 10);
 final _november =
@@ -161,7 +164,9 @@ void main() {
   Future<AppLocalizations> pump(WidgetTester tester, ForecastResult result,
       {Size size = const Size(900, 4200),
       double textScale = 1,
-      Map<String, double> rates = const {}}) async {
+      Map<String, double> rates = const {},
+      bool? estimates = false,
+      ForecastEstimatesCubit? estimatesCubit}) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -186,9 +191,12 @@ void main() {
             .copyWith(textScaler: TextScaler.linear(textScale)),
         child: child!,
       ),
-      home: BlocProvider.value(
-        value: cubit..load(),
-        child: ForecastView(walletId: 'w', today: _today),
+      home: MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: cubit..load()),
+          if (estimatesCubit != null) BlocProvider.value(value: estimatesCubit),
+        ],
+        child: ForecastView(walletId: 'w', today: _today, estimates: estimates),
       ),
     ));
     await tester.pumpAndSettle();
@@ -196,9 +204,9 @@ void main() {
   }
 
   testWidgets(
-      'manşet maaşa kadar yetiyor der; dönem, bütçe, yaklaşanlar ve kart '
-      'bölümleri çizilir', (tester) async {
-    final l10n = await pump(tester, _result());
+      'TAHMİN: manşetin altında maaşa kadar yetiyor der; dönem, bütçe, '
+      'yaklaşanlar ve kart bölümleri çizilir', (tester) async {
+    final l10n = await pump(tester, _result(), estimates: true);
 
     expect(find.text(l10n.forecastHeadlineUntilIncome('Maaş', '25 Kas')),
         findsOneWidget);
@@ -236,9 +244,10 @@ void main() {
     expect(find.byKey(const ValueKey('forecast-cards-card')), findsOneWidget);
   });
 
-  testWidgets('az kayıtta tahmin uydurulmaz: kapı kartı ve kalan gün',
+  testWidgets('TAHMİN: az kayıtta tahmin uydurulmaz: kapı kartı ve kalan gün',
       (tester) async {
-    final l10n = await pump(tester, _result(withHistory: false));
+    final l10n =
+        await pump(tester, _result(withHistory: false), estimates: true);
 
     expect(find.byKey(const ValueKey('forecast-no-pace')), findsOneWidget);
     // İlk kayıt 8 Kas → 2 gün gözlem → 12 gün daha.
@@ -251,10 +260,104 @@ void main() {
         findsOneWidget);
   });
 
-  testWidgets('bakiye yetmeyecekse manşet UYARIR', (tester) async {
-    final l10n = await pump(tester, _result(balance: 1000));
+  testWidgets('TAHMİN: bakiye yetmeyecekse mor satır UYARIR', (tester) async {
+    final l10n = await pump(tester, _result(balance: 1000), estimates: true);
     // 1.000 − 100/gün − 15 Kas kart ödemesi (1.000) → 15 Kas'ta eksi.
     expect(find.text(l10n.forecastHeadlineNegative('15 Kas')), findsOneWidget);
+    // Plan (hızsız) eksiye inmiyor: manşet plan cümlesi kalır.
+    expect(find.text(l10n.forecastPlanHeadlineUntilIncome('Maaş', '25 Kas')),
+        findsOneWidget);
+  });
+
+  group('PLAN (varsayılan)', () {
+    testWidgets(
+        'manşet yalnız planlıyla konuşur; hız cümlesi, mor satır ve hız kapısı '
+        'yok', (tester) async {
+      final l10n = await pump(tester, _result(), estimates: null);
+
+      expect(find.text(l10n.forecastPlanHeadlineUntilIncome('Maaş', '25 Kas')),
+          findsOneWidget);
+      expect(find.byKey(const ValueKey('forecast-headline-estimate')),
+          findsNothing);
+      expect(find.text(l10n.forecastHeadlineUntilIncome('Maaş', '25 Kas')),
+          findsNothing);
+      // Bütçe: hızdan "25 Kas'ta dolar" demez; planlılarla kalan yazar.
+      expect(find.text(l10n.forecastBudgetFillsOn('25 Kas')), findsNothing);
+      expect(find.byKey(const ValueKey('forecast-budget-estimate-food')),
+          findsNothing);
+      expect(
+          find.byKey(const ValueKey('forecast-period-estimate')), findsNothing);
+      // Yaklaşanlar yine tarihleriyle.
+      expect(
+          find.descendant(
+              of: find.byKey(const ValueKey('forecast-upcoming-card')),
+              matching: find.text(l10n.forecastEventCardPayment('Bonus'))),
+          findsOneWidget);
+    });
+
+    testWidgets('planlı ödemeler bakiyeyi eksiye indiriyorsa manşet UYARIR',
+        (tester) async {
+      final l10n = await pump(tester, _result(balance: 500));
+      // 500 − 15 Kas kart ödemesi (1.000) → maaştan (25 Kas) önce eksi.
+      expect(find.text(l10n.forecastPlanHeadlineNegative('15 Kas')),
+          findsOneWidget);
+    });
+
+    testWidgets('az kayıtta hız kapısı kartı gösterilmez', (tester) async {
+      await pump(tester, _result(withHistory: false));
+      expect(find.byKey(const ValueKey('forecast-no-pace')), findsNothing);
+    });
+
+    testWidgets('güne dokununca o günün kalemleri panelde', (tester) async {
+      final l10n = await pump(tester, _result());
+      final panel = find.byKey(const ValueKey('forecast-day-panel'));
+      expect(
+          find.descendant(of: panel, matching: find.text(l10n.forecastDayHint)),
+          findsOneWidget);
+
+      // 15 Kas = bugünden 5 gün sonra (31 günlük ufuk).
+      final chart = tester.getRect(find.byType(ForecastTimelineChart));
+      final chartW = chart.width - 46;
+      final step = chartW / 31;
+      await tester.tapAt(Offset(chart.left + 46 + step * 5.5, chart.top + 20));
+      await tester.pumpAndSettle();
+
+      expect(
+          find.descendant(
+              of: panel,
+              matching: find.text(l10n.forecastEventCardPayment('Bonus'))),
+          findsOneWidget);
+      expect(
+          find.descendant(
+              of: panel,
+              matching: find.textContaining(l10n.forecastDaysAway(5))),
+          findsOneWidget);
+    });
+
+    testWidgets('anahtar tahmini AÇAR: mor katman eklenir, plan manşeti kalır',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final estimates =
+          ForecastEstimatesCubit(await SharedPreferences.getInstance());
+      addTearDown(estimates.close);
+      final l10n = await pump(tester, _result(),
+          estimates: null, estimatesCubit: estimates);
+      expect(find.byKey(const ValueKey('forecast-headline-estimate')),
+          findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('forecast-estimates-switch')));
+      await tester.pumpAndSettle();
+
+      expect(estimates.state, isTrue);
+      expect(find.byKey(const ValueKey('forecast-headline-estimate')),
+          findsOneWidget);
+      expect(find.text(l10n.forecastPlanHeadlineUntilIncome('Maaş', '25 Kas')),
+          findsOneWidget);
+      expect(find.byKey(const ValueKey('forecast-budget-estimate-food')),
+          findsOneWidget);
+      expect(find.byKey(const ValueKey('forecast-period-estimate')),
+          findsOneWidget);
+    });
   });
 
   testWidgets('"Nasıl hesaplandı?" hızı ve kırpılan tek seferlik kalemi yazar',
@@ -269,25 +372,35 @@ void main() {
     expect(find.textContaining('Telefon'), findsOneWidget);
   });
 
-  for (final scale in [1.0, 1.5]) {
-    for (final allWallets in [false, true]) {
-      testWidgets(
-          '360×800 telefonda (metin ölçeği $scale, '
-          '${allWallets ? 'tüm cüzdanlar' : 'bu cüzdan'}) taşma yok',
-          (tester) async {
-        final l10n = await pump(tester, _result(withUsd: true),
-            size: const Size(360, 800), textScale: scale);
-        if (allWallets) {
-          await tester.tap(find.text(l10n.forecastScopeAll));
+  for (final estimates in [false, true]) {
+    for (final (size, scale) in [
+      (const Size(360, 800), 1.0),
+      (const Size(360, 800), 1.5),
+      (const Size(320, 568), 1.3),
+    ]) {
+      for (final allWallets in [false, true]) {
+        testWidgets(
+            '${size.width.toInt()}×${size.height.toInt()} telefonda (metin '
+            'ölçeği $scale, ${allWallets ? 'tüm cüzdanlar' : 'bu cüzdan'}, '
+            '${estimates ? 'tahmin' : 'plan'}) taşma yok', (tester) async {
+          final l10n = await pump(tester, _result(withUsd: true),
+              size: size, textScale: scale, estimates: estimates);
+          if (allWallets) {
+            await tester.tap(find.text(l10n.forecastScopeAll));
+            await tester.pumpAndSettle();
+          }
+          // Gün paneli de açık olsun (en uzun hâli).
+          final chart = tester.getRect(find.byType(ForecastTimelineChart));
+          await tester.tapAt(Offset(chart.right - 4, chart.top + 20));
           await tester.pumpAndSettle();
-        }
-        final list = find.byKey(const ValueKey('forecast-list'));
-        for (var i = 0; i < 12; i++) {
-          await tester.drag(list, const Offset(0, -500));
-          await tester.pumpAndSettle();
-        }
-        expect(tester.takeException(), isNull);
-      });
+          final list = find.byKey(const ValueKey('forecast-list'));
+          for (var i = 0; i < 14; i++) {
+            await tester.drag(list, const Offset(0, -400));
+            await tester.pumpAndSettle();
+          }
+          expect(tester.takeException(), isNull);
+        });
+      }
     }
   }
 

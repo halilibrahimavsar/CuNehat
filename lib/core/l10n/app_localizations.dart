@@ -13649,6 +13649,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{count, plural, =0{Bu gün için planlı bir hareket yok.} =1{1 planlı hareket var. Çizgi yalnız planlı kalemlerle çizildi.} other{{count} planlı hareket var. Çizgi yalnız planlı kalemlerle çizildi.}}'**
   String blNoteFuturePlanned(int count);
+
+  /// No description provided for @forecastChartLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önümüzdeki günler, seçili gün {day}'**
+  String forecastChartLabel(String day);
+
+  /// No description provided for @forecastChartNoDay.
+  ///
+  /// In tr, this message translates to:
+  /// **'gün seçilmedi'**
+  String get forecastChartNoDay;
 }
 
 class _AppLocalizationsDelegate

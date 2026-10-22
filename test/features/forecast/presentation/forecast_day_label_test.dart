@@ -1,5 +1,5 @@
 import 'package:cunehat/core/l10n/app_localizations.dart';
-import 'package:cunehat/features/forecast/presentation/widgets/forecast_path_card.dart';
+import 'package:cunehat/features/forecast/presentation/widgets/forecast_timeline_card.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
