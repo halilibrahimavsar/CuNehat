@@ -14,6 +14,9 @@ class ReceiptPalette {
   final Color income;
   final Color moved;
   final Color stamp;
+
+  /// Tahmini satırlar (mor; krem kâğıtta ~6,7:1).
+  final Color estimate;
   final Color factFill;
   final Color shadow;
 
@@ -26,6 +29,7 @@ class ReceiptPalette {
     required this.income,
     required this.moved,
     required this.stamp,
+    required this.estimate,
     required this.factFill,
     required this.shadow,
   });
@@ -39,6 +43,7 @@ class ReceiptPalette {
     income: Color(0xFF2D6A1F),
     moved: Color(0xFF57554F),
     stamp: Color(0xFF9A2A1E),
+    estimate: Color(0xFF6D28D9),
     factFill: Color(0xFFEFE8DA),
     shadow: Color(0x330F172A),
   );
@@ -52,6 +57,7 @@ class ReceiptPalette {
     income: Color(0xFF2D6A1F),
     moved: Color(0xFF57554F),
     stamp: Color(0xFF9A2A1E),
+    estimate: Color(0xFF6D28D9),
     factFill: Color(0xFFE8E1D3),
     shadow: Color(0xB3000000),
   );

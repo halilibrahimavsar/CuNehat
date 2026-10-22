@@ -7376,8 +7376,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuForecast => 'Ahead';
 
   @override
-  String get simpleBarForecastSubtitle =>
-      'End-of-month outlook and upcoming payments';
+  String get simpleBarForecastSubtitle => 'Upcoming payments and period end';
 
   @override
   String forecastHorizonCaption(int days) {
@@ -7964,9 +7963,228 @@ class AppLocalizationsEn extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          '$count planned items expected. The grey band shows how far the estimate may drift.',
+          '$count planned items expected. The purple band shows how far the estimate may drift.',
       one:
-          '1 planned item expected. The grey band shows how far the estimate may drift.',
+          '1 planned item expected. The purple band shows how far the estimate may drift.',
+      zero: 'Nothing planned for this day.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get forecastEstimatesTitle => 'Show estimates';
+
+  @override
+  String get forecastEstimatesOnDesc =>
+      'Estimates from your spending pace are added in purple';
+
+  @override
+  String get forecastEstimatesOffDesc => 'Planned payments and income only';
+
+  @override
+  String get forecastEstimatesSettingDesc =>
+      'Adds estimates from your spending pace in purple to Future, the balance line and budget outlook. The horizon follows your period setting; notifications aren\'t affected.';
+
+  @override
+  String forecastHorizonUntilDays(String date, int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days',
+      one: '1 day',
+    );
+    return 'Until $date · $_temp0';
+  }
+
+  @override
+  String forecastPlanHeadlineNegative(String date) {
+    return 'Planned payments take you below zero $date';
+  }
+
+  @override
+  String forecastPlanHeadlineUntilIncome(String income, String date) {
+    return 'Planned payments are covered until $income arrives ($date)';
+  }
+
+  @override
+  String forecastPlanHeadlineOk(String date) {
+    return 'Planned payments are covered until $date';
+  }
+
+  @override
+  String forecastHeadlineOkUntil(String date) {
+    return 'At this pace it lasts until $date';
+  }
+
+  @override
+  String forecastPlanOutCount(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count payments: $amount',
+      one: '1 payment: $amount',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String forecastPlanInCount(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count inflows: $amount',
+      one: '1 inflow: $amount',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get forecastPlanNothing => 'No planned payments or income';
+
+  @override
+  String forecastCardSoFarTotal(String amount) {
+    return 'Next statement so far: $amount';
+  }
+
+  @override
+  String get forecastEstimateLabel => 'Estimate';
+
+  @override
+  String get forecastLegendPlanned => 'Planned balance';
+
+  @override
+  String get forecastLegendOut => 'Out';
+
+  @override
+  String get forecastLegendIn => 'In';
+
+  @override
+  String get forecastLegendEstimated => 'Estimated balance';
+
+  @override
+  String get forecastDayHint => 'Tap a day to see its items here';
+
+  @override
+  String get forecastDayNothing => 'Nothing planned this day';
+
+  @override
+  String forecastDayPlannedBalance(String amount) {
+    return 'Planned balance at day end: $amount';
+  }
+
+  @override
+  String forecastDayEstimatedBalance(String amount) {
+    return 'With estimate: $amount';
+  }
+
+  @override
+  String get forecastPlannedExpense => 'Planned spending';
+
+  @override
+  String get forecastPlannedIncome => 'Income';
+
+  @override
+  String get forecastPlannedNet => 'Planned net';
+
+  @override
+  String forecastEstimatedTotal(String amount) {
+    return 'With estimate ~$amount';
+  }
+
+  @override
+  String forecastBudgetPlannedFillsOn(String date) {
+    return 'Planned items fill it $date';
+  }
+
+  @override
+  String get forecastBudgetPlannedOver => 'Planned items exceed it';
+
+  @override
+  String forecastBudgetRoom(String amount) {
+    return '$amount left';
+  }
+
+  @override
+  String forecastBudgetPlannedEnd(String amount, String limit) {
+    return 'Planned $amount / $limit';
+  }
+
+  @override
+  String forecastDaysAway(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'in $days days',
+      one: 'tomorrow',
+      zero: 'today',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String forecastUpcomingEmptyUntil(String date) {
+    return 'No planned payments or income until $date. Recurring items like rent, salary or subscriptions show up here once you add them.';
+  }
+
+  @override
+  String get forecastSoFarShort => 'so far';
+
+  @override
+  String forecastEstimatedPart(String amount) {
+    return '+$amount estimated';
+  }
+
+  @override
+  String forecastGoalRemaining(String amount) {
+    return '$amount to go';
+  }
+
+  @override
+  String get forecastHowModes =>
+      'With estimates off, only planned items are shown: recurring items, instalments, loan payments and closed statements. With estimates on, the part that comes from your spending pace is added in purple; the planned part stays the same.';
+
+  @override
+  String forecastLinkTitleUntil(String date) {
+    return 'Until $date';
+  }
+
+  @override
+  String get forecastLinkBodyPlan =>
+      'Upcoming payments, period end, budget outlook';
+
+  @override
+  String get blKickerPlanned => 'Planned balance';
+
+  @override
+  String get blTotalPlannedOut => 'Planned out';
+
+  @override
+  String get blTotalPlannedIn => 'Planned in';
+
+  @override
+  String get blEndPlanned => 'Planned';
+
+  @override
+  String get blPaceRow => 'Estimated everyday spending';
+
+  @override
+  String get blTagPace => 'From pace';
+
+  @override
+  String get blTagReceivable => 'Expected · not in balance';
+
+  @override
+  String blCardEstimateRow(String name) {
+    return '$name · estimated share of statement';
+  }
+
+  @override
+  String blNoteFuturePlanned(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count planned items. The line uses planned items only.',
+      one: '1 planned item. The line uses planned items only.',
       zero: 'Nothing planned for this day.',
     );
     return '$_temp0';

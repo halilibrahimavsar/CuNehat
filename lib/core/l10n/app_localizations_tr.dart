@@ -7317,8 +7317,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get menuForecast => 'Gelecek';
 
   @override
-  String get simpleBarForecastSubtitle =>
-      'Ay sonu tahmini ve yaklaşan ödemeler';
+  String get simpleBarForecastSubtitle => 'Yaklaşan ödemeler ve dönem sonu';
 
   @override
   String forecastHorizonCaption(int days) {
@@ -7905,9 +7904,230 @@ class AppLocalizationsTr extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          '$count planlı hareket bekleniyor. Gri bant tahminin ne kadar şaşabileceğini gösterir.',
+          '$count planlı hareket bekleniyor. Mor bant tahminin ne kadar şaşabileceğini gösterir.',
       one:
-          '1 planlı hareket bekleniyor. Gri bant tahminin ne kadar şaşabileceğini gösterir.',
+          '1 planlı hareket bekleniyor. Mor bant tahminin ne kadar şaşabileceğini gösterir.',
+      zero: 'Bu gün için planlı bir hareket yok.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get forecastEstimatesTitle => 'Tahmini göster';
+
+  @override
+  String get forecastEstimatesOnDesc =>
+      'Harcama hızından gelen tahmin mor renkle eklendi';
+
+  @override
+  String get forecastEstimatesOffDesc => 'Yalnız planlı ödemeler ve gelirler';
+
+  @override
+  String get forecastEstimatesSettingDesc =>
+      'Gelecek, bakiye hattı ve bütçe gidişatında harcama hızından gelen tahmini mor renkle ekler. Ufuk dönem ayarından gelir; bildirimler bu ayardan etkilenmez.';
+
+  @override
+  String forecastHorizonUntilDays(String date, int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days gün',
+      one: '1 gün',
+    );
+    return '$date tarihine kadar · $_temp0';
+  }
+
+  @override
+  String forecastPlanHeadlineNegative(String date) {
+    return 'Planlı ödemelerle $date eksiye düşüyor';
+  }
+
+  @override
+  String forecastPlanHeadlineUntilIncome(String income, String date) {
+    return 'Planlı ödemeler $income gelene kadar ($date) karşılanıyor';
+  }
+
+  @override
+  String forecastPlanHeadlineOk(String date) {
+    return 'Planlı ödemeler $date tarihine kadar karşılanıyor';
+  }
+
+  @override
+  String forecastHeadlineOkUntil(String date) {
+    return 'Bu gidişle $date tarihine kadar yetiyor';
+  }
+
+  @override
+  String forecastPlanOutCount(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ödeme: $amount',
+      one: '1 ödeme: $amount',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String forecastPlanInCount(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count giriş: $amount',
+      one: '1 giriş: $amount',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get forecastPlanNothing => 'Planlı ödeme ya da gelir yok';
+
+  @override
+  String forecastCardSoFarTotal(String amount) {
+    return 'Sıradaki ekstre şimdiye kadar $amount';
+  }
+
+  @override
+  String get forecastEstimateLabel => 'Tahmin';
+
+  @override
+  String get forecastLegendPlanned => 'Planlı bakiye';
+
+  @override
+  String get forecastLegendOut => 'Çıkış';
+
+  @override
+  String get forecastLegendIn => 'Giriş';
+
+  @override
+  String get forecastLegendEstimated => 'Tahmini bakiye';
+
+  @override
+  String get forecastDayHint =>
+      'Bir güne dokun, o günün kalemleri burada görünsün';
+
+  @override
+  String get forecastDayNothing => 'Bu gün planlı hareket yok';
+
+  @override
+  String forecastDayPlannedBalance(String amount) {
+    return 'Gün sonu planlı bakiye $amount';
+  }
+
+  @override
+  String forecastDayEstimatedBalance(String amount) {
+    return 'Tahminle $amount';
+  }
+
+  @override
+  String get forecastPlannedExpense => 'Planlı gider';
+
+  @override
+  String get forecastPlannedIncome => 'Gelir';
+
+  @override
+  String get forecastPlannedNet => 'Planlı net';
+
+  @override
+  String forecastEstimatedTotal(String amount) {
+    return 'Tahminle ~$amount';
+  }
+
+  @override
+  String forecastBudgetPlannedFillsOn(String date) {
+    return 'Planlılarla $date doluyor';
+  }
+
+  @override
+  String get forecastBudgetPlannedOver => 'Planlılarla aşılıyor';
+
+  @override
+  String forecastBudgetRoom(String amount) {
+    return '$amount kaldı';
+  }
+
+  @override
+  String forecastBudgetPlannedEnd(String amount, String limit) {
+    return 'Planlı $amount / $limit';
+  }
+
+  @override
+  String forecastDaysAway(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days gün sonra',
+      one: 'yarın',
+      zero: 'bugün',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String forecastUpcomingEmptyUntil(String date) {
+    return '$date tarihine kadar planlı bir ödeme ya da gelir yok. Kira, maaş, abonelik gibi düzenli işlemleri ekledikçe burada görünürler.';
+  }
+
+  @override
+  String get forecastSoFarShort => 'şimdiye kadar';
+
+  @override
+  String forecastEstimatedPart(String amount) {
+    return '+$amount tahmini';
+  }
+
+  @override
+  String forecastGoalRemaining(String amount) {
+    return '$amount kaldı';
+  }
+
+  @override
+  String get forecastHowModes =>
+      'Tahmin kapalıyken yalnız planlı kalemler gösterilir: düzenli işlemler, taksitler, kredi taksitleri ve kesilmiş ekstreler. Tahmin açıkken harcama hızından gelen kısım mor renkle eklenir; planlı kısım değişmez.';
+
+  @override
+  String forecastLinkTitleUntil(String date) {
+    return '$date tarihine kadar';
+  }
+
+  @override
+  String get forecastLinkBodyPlan =>
+      'Yaklaşan ödemeler, dönem sonu, bütçe gidişatı';
+
+  @override
+  String get blKickerPlanned => 'Planlı bakiye';
+
+  @override
+  String get blTotalPlannedOut => 'Planlı çıkış';
+
+  @override
+  String get blTotalPlannedIn => 'Planlı giriş';
+
+  @override
+  String get blEndPlanned => 'Planlı';
+
+  @override
+  String get blPaceRow => 'Tahmini serbest harcama';
+
+  @override
+  String get blTagPace => 'Hızdan';
+
+  @override
+  String get blTagReceivable => 'Beklenen · bakiyeye katılmaz';
+
+  @override
+  String blCardEstimateRow(String name) {
+    return '$name · ekstrenin tahmini payı';
+  }
+
+  @override
+  String blNoteFuturePlanned(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count planlı hareket var. Çizgi yalnız planlı kalemlerle çizildi.',
+      one: '1 planlı hareket var. Çizgi yalnız planlı kalemlerle çizildi.',
       zero: 'Bu gün için planlı bir hareket yok.',
     );
     return '$_temp0';

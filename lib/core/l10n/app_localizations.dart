@@ -12471,7 +12471,7 @@ abstract class AppLocalizations {
   /// No description provided for @simpleBarForecastSubtitle.
   ///
   /// In tr, this message translates to:
-  /// **'Ay sonu tahmini ve yaklaşan ödemeler'**
+  /// **'Yaklaşan ödemeler ve dönem sonu'**
   String get simpleBarForecastSubtitle;
 
   /// No description provided for @forecastHorizonCaption.
@@ -13365,8 +13365,290 @@ abstract class AppLocalizations {
   /// No description provided for @blNoteFuture.
   ///
   /// In tr, this message translates to:
-  /// **'{count, plural, =0{Bu gün için planlı bir hareket yok.} =1{1 planlı hareket bekleniyor. Gri bant tahminin ne kadar şaşabileceğini gösterir.} other{{count} planlı hareket bekleniyor. Gri bant tahminin ne kadar şaşabileceğini gösterir.}}'**
+  /// **'{count, plural, =0{Bu gün için planlı bir hareket yok.} =1{1 planlı hareket bekleniyor. Mor bant tahminin ne kadar şaşabileceğini gösterir.} other{{count} planlı hareket bekleniyor. Mor bant tahminin ne kadar şaşabileceğini gösterir.}}'**
   String blNoteFuture(int count);
+
+  /// No description provided for @forecastEstimatesTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tahmini göster'**
+  String get forecastEstimatesTitle;
+
+  /// No description provided for @forecastEstimatesOnDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Harcama hızından gelen tahmin mor renkle eklendi'**
+  String get forecastEstimatesOnDesc;
+
+  /// No description provided for @forecastEstimatesOffDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız planlı ödemeler ve gelirler'**
+  String get forecastEstimatesOffDesc;
+
+  /// No description provided for @forecastEstimatesSettingDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelecek, bakiye hattı ve bütçe gidişatında harcama hızından gelen tahmini mor renkle ekler. Ufuk dönem ayarından gelir; bildirimler bu ayardan etkilenmez.'**
+  String get forecastEstimatesSettingDesc;
+
+  /// No description provided for @forecastHorizonUntilDays.
+  ///
+  /// In tr, this message translates to:
+  /// **'{date} tarihine kadar · {days, plural, =1{1 gün} other{{days} gün}}'**
+  String forecastHorizonUntilDays(String date, int days);
+
+  /// No description provided for @forecastPlanHeadlineNegative.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlı ödemelerle {date} eksiye düşüyor'**
+  String forecastPlanHeadlineNegative(String date);
+
+  /// No description provided for @forecastPlanHeadlineUntilIncome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlı ödemeler {income} gelene kadar ({date}) karşılanıyor'**
+  String forecastPlanHeadlineUntilIncome(String income, String date);
+
+  /// No description provided for @forecastPlanHeadlineOk.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlı ödemeler {date} tarihine kadar karşılanıyor'**
+  String forecastPlanHeadlineOk(String date);
+
+  /// No description provided for @forecastHeadlineOkUntil.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu gidişle {date} tarihine kadar yetiyor'**
+  String forecastHeadlineOkUntil(String date);
+
+  /// No description provided for @forecastPlanOutCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{1 ödeme: {amount}} other{{count} ödeme: {amount}}}'**
+  String forecastPlanOutCount(int count, String amount);
+
+  /// No description provided for @forecastPlanInCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{1 giriş: {amount}} other{{count} giriş: {amount}}}'**
+  String forecastPlanInCount(int count, String amount);
+
+  /// No description provided for @forecastPlanNothing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlı ödeme ya da gelir yok'**
+  String get forecastPlanNothing;
+
+  /// No description provided for @forecastCardSoFarTotal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sıradaki ekstre şimdiye kadar {amount}'**
+  String forecastCardSoFarTotal(String amount);
+
+  /// No description provided for @forecastEstimateLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tahmin'**
+  String get forecastEstimateLabel;
+
+  /// No description provided for @forecastLegendPlanned.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlı bakiye'**
+  String get forecastLegendPlanned;
+
+  /// No description provided for @forecastLegendOut.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çıkış'**
+  String get forecastLegendOut;
+
+  /// No description provided for @forecastLegendIn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Giriş'**
+  String get forecastLegendIn;
+
+  /// No description provided for @forecastLegendEstimated.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tahmini bakiye'**
+  String get forecastLegendEstimated;
+
+  /// No description provided for @forecastDayHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir güne dokun, o günün kalemleri burada görünsün'**
+  String get forecastDayHint;
+
+  /// No description provided for @forecastDayNothing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu gün planlı hareket yok'**
+  String get forecastDayNothing;
+
+  /// No description provided for @forecastDayPlannedBalance.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gün sonu planlı bakiye {amount}'**
+  String forecastDayPlannedBalance(String amount);
+
+  /// No description provided for @forecastDayEstimatedBalance.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tahminle {amount}'**
+  String forecastDayEstimatedBalance(String amount);
+
+  /// No description provided for @forecastPlannedExpense.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlı gider'**
+  String get forecastPlannedExpense;
+
+  /// No description provided for @forecastPlannedIncome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelir'**
+  String get forecastPlannedIncome;
+
+  /// No description provided for @forecastPlannedNet.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlı net'**
+  String get forecastPlannedNet;
+
+  /// No description provided for @forecastEstimatedTotal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tahminle ~{amount}'**
+  String forecastEstimatedTotal(String amount);
+
+  /// No description provided for @forecastBudgetPlannedFillsOn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlılarla {date} doluyor'**
+  String forecastBudgetPlannedFillsOn(String date);
+
+  /// No description provided for @forecastBudgetPlannedOver.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlılarla aşılıyor'**
+  String get forecastBudgetPlannedOver;
+
+  /// No description provided for @forecastBudgetRoom.
+  ///
+  /// In tr, this message translates to:
+  /// **'{amount} kaldı'**
+  String forecastBudgetRoom(String amount);
+
+  /// No description provided for @forecastBudgetPlannedEnd.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlı {amount} / {limit}'**
+  String forecastBudgetPlannedEnd(String amount, String limit);
+
+  /// No description provided for @forecastDaysAway.
+  ///
+  /// In tr, this message translates to:
+  /// **'{days, plural, =0{bugün} =1{yarın} other{{days} gün sonra}}'**
+  String forecastDaysAway(int days);
+
+  /// No description provided for @forecastUpcomingEmptyUntil.
+  ///
+  /// In tr, this message translates to:
+  /// **'{date} tarihine kadar planlı bir ödeme ya da gelir yok. Kira, maaş, abonelik gibi düzenli işlemleri ekledikçe burada görünürler.'**
+  String forecastUpcomingEmptyUntil(String date);
+
+  /// No description provided for @forecastSoFarShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'şimdiye kadar'**
+  String get forecastSoFarShort;
+
+  /// No description provided for @forecastEstimatedPart.
+  ///
+  /// In tr, this message translates to:
+  /// **'+{amount} tahmini'**
+  String forecastEstimatedPart(String amount);
+
+  /// No description provided for @forecastGoalRemaining.
+  ///
+  /// In tr, this message translates to:
+  /// **'{amount} kaldı'**
+  String forecastGoalRemaining(String amount);
+
+  /// No description provided for @forecastHowModes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tahmin kapalıyken yalnız planlı kalemler gösterilir: düzenli işlemler, taksitler, kredi taksitleri ve kesilmiş ekstreler. Tahmin açıkken harcama hızından gelen kısım mor renkle eklenir; planlı kısım değişmez.'**
+  String get forecastHowModes;
+
+  /// No description provided for @forecastLinkTitleUntil.
+  ///
+  /// In tr, this message translates to:
+  /// **'{date} tarihine kadar'**
+  String forecastLinkTitleUntil(String date);
+
+  /// No description provided for @forecastLinkBodyPlan.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yaklaşan ödemeler, dönem sonu, bütçe gidişatı'**
+  String get forecastLinkBodyPlan;
+
+  /// No description provided for @blKickerPlanned.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlı bakiye'**
+  String get blKickerPlanned;
+
+  /// No description provided for @blTotalPlannedOut.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlı çıkış'**
+  String get blTotalPlannedOut;
+
+  /// No description provided for @blTotalPlannedIn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlı giriş'**
+  String get blTotalPlannedIn;
+
+  /// No description provided for @blEndPlanned.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlı'**
+  String get blEndPlanned;
+
+  /// No description provided for @blPaceRow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tahmini serbest harcama'**
+  String get blPaceRow;
+
+  /// No description provided for @blTagPace.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hızdan'**
+  String get blTagPace;
+
+  /// No description provided for @blTagReceivable.
+  ///
+  /// In tr, this message translates to:
+  /// **'Beklenen · bakiyeye katılmaz'**
+  String get blTagReceivable;
+
+  /// No description provided for @blCardEstimateRow.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} · ekstrenin tahmini payı'**
+  String blCardEstimateRow(String name);
+
+  /// No description provided for @blNoteFuturePlanned.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =0{Bu gün için planlı bir hareket yok.} =1{1 planlı hareket var. Çizgi yalnız planlı kalemlerle çizildi.} other{{count} planlı hareket var. Çizgi yalnız planlı kalemlerle çizildi.}}'**
+  String blNoteFuturePlanned(int count);
 }
 
 class _AppLocalizationsDelegate

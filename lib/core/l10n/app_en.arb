@@ -4496,7 +4496,7 @@
     }
   },
   "menuForecast": "Ahead",
-  "simpleBarForecastSubtitle": "End-of-month outlook and upcoming payments",
+  "simpleBarForecastSubtitle": "Upcoming payments and period end",
   "forecastHorizonCaption": "Next {days} days",
   "@forecastHorizonCaption": {
     "placeholders": {
@@ -5018,8 +5018,217 @@
     }
   },
   "blNoteNoRecords": "No records this day.",
-  "blNoteFuture": "{count, plural, =0{Nothing planned for this day.} =1{1 planned item expected. The grey band shows how far the estimate may drift.} other{{count} planned items expected. The grey band shows how far the estimate may drift.}}",
+  "blNoteFuture": "{count, plural, =0{Nothing planned for this day.} =1{1 planned item expected. The purple band shows how far the estimate may drift.} other{{count} planned items expected. The purple band shows how far the estimate may drift.}}",
   "@blNoteFuture": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "forecastEstimatesTitle": "Show estimates",
+  "forecastEstimatesOnDesc": "Estimates from your spending pace are added in purple",
+  "forecastEstimatesOffDesc": "Planned payments and income only",
+  "forecastEstimatesSettingDesc": "Adds estimates from your spending pace in purple to Future, the balance line and budget outlook. The horizon follows your period setting; notifications aren't affected.",
+  "forecastHorizonUntilDays": "Until {date} · {days, plural, =1{1 day} other{{days} days}}",
+  "@forecastHorizonUntilDays": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "forecastPlanHeadlineNegative": "Planned payments take you below zero {date}",
+  "@forecastPlanHeadlineNegative": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastPlanHeadlineUntilIncome": "Planned payments are covered until {income} arrives ({date})",
+  "@forecastPlanHeadlineUntilIncome": {
+    "placeholders": {
+      "income": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastPlanHeadlineOk": "Planned payments are covered until {date}",
+  "@forecastPlanHeadlineOk": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastHeadlineOkUntil": "At this pace it lasts until {date}",
+  "@forecastHeadlineOkUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastPlanOutCount": "{count, plural, =1{1 payment: {amount}} other{{count} payments: {amount}}}",
+  "@forecastPlanOutCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastPlanInCount": "{count, plural, =1{1 inflow: {amount}} other{{count} inflows: {amount}}}",
+  "@forecastPlanInCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastPlanNothing": "No planned payments or income",
+  "forecastCardSoFarTotal": "Next statement so far: {amount}",
+  "@forecastCardSoFarTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastEstimateLabel": "Estimate",
+  "forecastLegendPlanned": "Planned balance",
+  "forecastLegendOut": "Out",
+  "forecastLegendIn": "In",
+  "forecastLegendEstimated": "Estimated balance",
+  "forecastDayHint": "Tap a day to see its items here",
+  "forecastDayNothing": "Nothing planned this day",
+  "forecastDayPlannedBalance": "Planned balance at day end: {amount}",
+  "@forecastDayPlannedBalance": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastDayEstimatedBalance": "With estimate: {amount}",
+  "@forecastDayEstimatedBalance": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastPlannedExpense": "Planned spending",
+  "forecastPlannedIncome": "Income",
+  "forecastPlannedNet": "Planned net",
+  "forecastEstimatedTotal": "With estimate ~{amount}",
+  "@forecastEstimatedTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastBudgetPlannedFillsOn": "Planned items fill it {date}",
+  "@forecastBudgetPlannedFillsOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastBudgetPlannedOver": "Planned items exceed it",
+  "forecastBudgetRoom": "{amount} left",
+  "@forecastBudgetRoom": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastBudgetPlannedEnd": "Planned {amount} / {limit}",
+  "@forecastBudgetPlannedEnd": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastDaysAway": "{days, plural, =0{today} =1{tomorrow} other{in {days} days}}",
+  "@forecastDaysAway": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "forecastUpcomingEmptyUntil": "No planned payments or income until {date}. Recurring items like rent, salary or subscriptions show up here once you add them.",
+  "@forecastUpcomingEmptyUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastSoFarShort": "so far",
+  "forecastEstimatedPart": "+{amount} estimated",
+  "@forecastEstimatedPart": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastGoalRemaining": "{amount} to go",
+  "@forecastGoalRemaining": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastHowModes": "With estimates off, only planned items are shown: recurring items, instalments, loan payments and closed statements. With estimates on, the part that comes from your spending pace is added in purple; the planned part stays the same.",
+  "forecastLinkTitleUntil": "Until {date}",
+  "@forecastLinkTitleUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastLinkBodyPlan": "Upcoming payments, period end, budget outlook",
+  "blKickerPlanned": "Planned balance",
+  "blTotalPlannedOut": "Planned out",
+  "blTotalPlannedIn": "Planned in",
+  "blEndPlanned": "Planned",
+  "blPaceRow": "Estimated everyday spending",
+  "blTagPace": "From pace",
+  "blTagReceivable": "Expected · not in balance",
+  "blCardEstimateRow": "{name} · estimated share of statement",
+  "@blCardEstimateRow": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "blNoteFuturePlanned": "{count, plural, =0{Nothing planned for this day.} =1{1 planned item. The line uses planned items only.} other{{count} planned items. The line uses planned items only.}}",
+  "@blNoteFuturePlanned": {
     "placeholders": {
       "count": {
         "type": "int"

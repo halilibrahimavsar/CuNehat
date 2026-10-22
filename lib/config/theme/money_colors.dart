@@ -39,6 +39,18 @@ abstract final class MoneyColors {
   static Color moved(Brightness brightness) =>
       brightness == Brightness.dark ? _movedDark : _movedLight;
 
+  /// TAHMİN: hızdan ya da beklentiden türeyen her şey (Gelecek, bakiye
+  /// hattının gelecek kısmı, bütçe gidişatı). Planlı kalemler kendi
+  /// renginde ve düz kalır; tahmini kısım mor ve kesikli çizilir. Mor bu
+  /// uygulamada başka bir anlam taşımıyor (amber = uyarı ve altın).
+  static const Color forecast = AppGradients.neutral;
+
+  /// Tahmin METNİ — [forecast] metin olarak açık zeminde 4,2:1 kalıyor.
+  static Color forecastText(Brightness brightness) =>
+      brightness == Brightness.dark
+          ? AppPalette.forecastOnDark
+          : AppPalette.forecastOnLight;
+
   /// Gelir METNİ. [income] bir vurgu rengidir (çubuk, ikon, dolgu); açık
   /// zeminde yazı olarak 2,5:1 veriyor — yeşil tutarlar düşük kontrastla
   /// okunuyordu. Bu ton açık kartta 5,5:1, koyu kartta 9:1

@@ -4730,7 +4730,7 @@
     }
   },
   "menuForecast": "Gelecek",
-  "simpleBarForecastSubtitle": "Ay sonu tahmini ve yaklaşan ödemeler",
+  "simpleBarForecastSubtitle": "Yaklaşan ödemeler ve dönem sonu",
   "forecastHorizonCaption": "Önümüzdeki {days} gün",
   "@forecastHorizonCaption": {
     "placeholders": {
@@ -5252,8 +5252,217 @@
     }
   },
   "blNoteNoRecords": "Bu gün kayıt yok.",
-  "blNoteFuture": "{count, plural, =0{Bu gün için planlı bir hareket yok.} =1{1 planlı hareket bekleniyor. Gri bant tahminin ne kadar şaşabileceğini gösterir.} other{{count} planlı hareket bekleniyor. Gri bant tahminin ne kadar şaşabileceğini gösterir.}}",
+  "blNoteFuture": "{count, plural, =0{Bu gün için planlı bir hareket yok.} =1{1 planlı hareket bekleniyor. Mor bant tahminin ne kadar şaşabileceğini gösterir.} other{{count} planlı hareket bekleniyor. Mor bant tahminin ne kadar şaşabileceğini gösterir.}}",
   "@blNoteFuture": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "forecastEstimatesTitle": "Tahmini göster",
+  "forecastEstimatesOnDesc": "Harcama hızından gelen tahmin mor renkle eklendi",
+  "forecastEstimatesOffDesc": "Yalnız planlı ödemeler ve gelirler",
+  "forecastEstimatesSettingDesc": "Gelecek, bakiye hattı ve bütçe gidişatında harcama hızından gelen tahmini mor renkle ekler. Ufuk dönem ayarından gelir; bildirimler bu ayardan etkilenmez.",
+  "forecastHorizonUntilDays": "{date} tarihine kadar · {days, plural, =1{1 gün} other{{days} gün}}",
+  "@forecastHorizonUntilDays": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "forecastPlanHeadlineNegative": "Planlı ödemelerle {date} eksiye düşüyor",
+  "@forecastPlanHeadlineNegative": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastPlanHeadlineUntilIncome": "Planlı ödemeler {income} gelene kadar ({date}) karşılanıyor",
+  "@forecastPlanHeadlineUntilIncome": {
+    "placeholders": {
+      "income": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastPlanHeadlineOk": "Planlı ödemeler {date} tarihine kadar karşılanıyor",
+  "@forecastPlanHeadlineOk": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastHeadlineOkUntil": "Bu gidişle {date} tarihine kadar yetiyor",
+  "@forecastHeadlineOkUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastPlanOutCount": "{count, plural, =1{1 ödeme: {amount}} other{{count} ödeme: {amount}}}",
+  "@forecastPlanOutCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastPlanInCount": "{count, plural, =1{1 giriş: {amount}} other{{count} giriş: {amount}}}",
+  "@forecastPlanInCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastPlanNothing": "Planlı ödeme ya da gelir yok",
+  "forecastCardSoFarTotal": "Sıradaki ekstre şimdiye kadar {amount}",
+  "@forecastCardSoFarTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastEstimateLabel": "Tahmin",
+  "forecastLegendPlanned": "Planlı bakiye",
+  "forecastLegendOut": "Çıkış",
+  "forecastLegendIn": "Giriş",
+  "forecastLegendEstimated": "Tahmini bakiye",
+  "forecastDayHint": "Bir güne dokun, o günün kalemleri burada görünsün",
+  "forecastDayNothing": "Bu gün planlı hareket yok",
+  "forecastDayPlannedBalance": "Gün sonu planlı bakiye {amount}",
+  "@forecastDayPlannedBalance": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastDayEstimatedBalance": "Tahminle {amount}",
+  "@forecastDayEstimatedBalance": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastPlannedExpense": "Planlı gider",
+  "forecastPlannedIncome": "Gelir",
+  "forecastPlannedNet": "Planlı net",
+  "forecastEstimatedTotal": "Tahminle ~{amount}",
+  "@forecastEstimatedTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastBudgetPlannedFillsOn": "Planlılarla {date} doluyor",
+  "@forecastBudgetPlannedFillsOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastBudgetPlannedOver": "Planlılarla aşılıyor",
+  "forecastBudgetRoom": "{amount} kaldı",
+  "@forecastBudgetRoom": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastBudgetPlannedEnd": "Planlı {amount} / {limit}",
+  "@forecastBudgetPlannedEnd": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastDaysAway": "{days, plural, =0{bugün} =1{yarın} other{{days} gün sonra}}",
+  "@forecastDaysAway": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "forecastUpcomingEmptyUntil": "{date} tarihine kadar planlı bir ödeme ya da gelir yok. Kira, maaş, abonelik gibi düzenli işlemleri ekledikçe burada görünürler.",
+  "@forecastUpcomingEmptyUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastSoFarShort": "şimdiye kadar",
+  "forecastEstimatedPart": "+{amount} tahmini",
+  "@forecastEstimatedPart": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastGoalRemaining": "{amount} kaldı",
+  "@forecastGoalRemaining": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastHowModes": "Tahmin kapalıyken yalnız planlı kalemler gösterilir: düzenli işlemler, taksitler, kredi taksitleri ve kesilmiş ekstreler. Tahmin açıkken harcama hızından gelen kısım mor renkle eklenir; planlı kısım değişmez.",
+  "forecastLinkTitleUntil": "{date} tarihine kadar",
+  "@forecastLinkTitleUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastLinkBodyPlan": "Yaklaşan ödemeler, dönem sonu, bütçe gidişatı",
+  "blKickerPlanned": "Planlı bakiye",
+  "blTotalPlannedOut": "Planlı çıkış",
+  "blTotalPlannedIn": "Planlı giriş",
+  "blEndPlanned": "Planlı",
+  "blPaceRow": "Tahmini serbest harcama",
+  "blTagPace": "Hızdan",
+  "blTagReceivable": "Beklenen · bakiyeye katılmaz",
+  "blCardEstimateRow": "{name} · ekstrenin tahmini payı",
+  "@blCardEstimateRow": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "blNoteFuturePlanned": "{count, plural, =0{Bu gün için planlı bir hareket yok.} =1{1 planlı hareket var. Çizgi yalnız planlı kalemlerle çizildi.} other{{count} planlı hareket var. Çizgi yalnız planlı kalemlerle çizildi.}}",
+  "@blNoteFuturePlanned": {
     "placeholders": {
       "count": {
         "type": "int"

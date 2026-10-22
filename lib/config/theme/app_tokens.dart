@@ -48,6 +48,12 @@ abstract final class AppPalette {
   static const Color incomeOnTintDark = Color(0xFF34D399);
   static const Color expenseOnTintLight = Color(0xFFBE123C);
   static const Color expenseOnTintDark = Color(0xFFFB7185);
+
+  /// Tahmin METNİ (mor). Vurgu moru (`AppGradients.neutral`) beyaz üstünde
+  /// 4,2:1 — metin için yetmiyor; bu tonlar iki temada da 4,5:1'in üstünde
+  /// (`money_colors_test.dart`).
+  static const Color forecastOnLight = Color(0xFF7C3AED);
+  static const Color forecastOnDark = Color(0xFFA78BFA);
 }
 
 /// Köşe yarıçapları. Üç değer + hap.

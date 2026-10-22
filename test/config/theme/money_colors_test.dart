@@ -47,6 +47,13 @@ void main() {
       expect(_contrast(color, card), greaterThanOrEqualTo(4.5));
     });
 
+    test('${entry.key}: tahmin metni sayfa ve kart zemininde okunur (4,5:1)',
+        () {
+      final color = MoneyColors.forecastText(brightness);
+      expect(_contrast(color, page), greaterThanOrEqualTo(4.5));
+      expect(_contrast(color, card), greaterThanOrEqualTo(4.5));
+    });
+
     test('${entry.key}: işaretli tutar işaretine göre boyanır', () {
       expect(
         MoneyColors.signedText(10, brightness),
@@ -70,5 +77,14 @@ void main() {
     const white = Color(0xFFFFFFFF);
     expect(_contrast(MoneyColors.income, white), lessThan(4.5));
     expect(_contrast(MoneyColors.expense, white), lessThan(4.5));
+    expect(_contrast(MoneyColors.forecast, white), lessThan(4.5));
+  });
+
+  test('fişin tahmin moru krem kâğıtta okunur (4,5:1)', () {
+    const paperLight = Color(0xFFFCF8EF);
+    const paperDark = Color(0xFFF3EEE4);
+    const estimate = Color(0xFF6D28D9);
+    expect(_contrast(estimate, paperLight), greaterThanOrEqualTo(4.5));
+    expect(_contrast(estimate, paperDark), greaterThanOrEqualTo(4.5));
   });
 }
