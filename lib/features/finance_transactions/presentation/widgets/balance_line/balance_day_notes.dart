@@ -54,9 +54,12 @@ class NoRecordsNote extends DayNote {
 }
 
 /// Gelecek gün: kaç planlı/tahmini hareket bekleniyor (0 olabilir).
+/// [estimates]: tahmin katmanı açık mı (not mor bandı mı, yalnız planlı
+/// kalemleri mi anlatır).
 class FutureNote extends DayNote {
   final int count;
-  const FutureNote(this.count);
+  final bool estimates;
+  const FutureNote(this.count, {this.estimates = false});
 }
 
 /// Günlük gider toplamları (harcama evreni) — notların taban çizgisi.
@@ -80,8 +83,11 @@ List<DayNote> buildDayNotes({
   required BalanceDay day,
   required Map<DateTime, double> dailyExpense,
   required DateTime? firstRecord,
+  bool estimates = false,
 }) {
-  if (day.isFuture) return [FutureNote(day.events.length)];
+  if (day.isFuture) {
+    return [FutureNote(day.events.length, estimates: estimates)];
+  }
 
   final notes = <DayNote>[];
   final incomes = [

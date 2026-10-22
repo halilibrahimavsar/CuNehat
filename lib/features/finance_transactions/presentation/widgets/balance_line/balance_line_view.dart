@@ -1,4 +1,5 @@
 import 'package:cunehat/config/theme/app_tokens.dart';
+import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/motion/app_motion.dart';
 import 'package:cunehat/core/shared/widgets/money_text.dart';
@@ -185,10 +186,12 @@ class _BalanceLineViewState extends State<BalanceLineView> {
                   key: ValueKey(day.day),
                   day: day,
                   currency: widget.currency,
+                  estimates: series.estimates,
                   notes: buildDayNotes(
                     day: day,
                     dailyExpense: _dailyExpense,
                     firstRecord: _firstRecord,
+                    estimates: series.estimates,
                   ),
                   categoryLabels: widget.categoryLabels,
                   categoryIcons: widget.categoryIcons,
@@ -229,9 +232,16 @@ class _BalanceLineViewState extends State<BalanceLineView> {
     final scheme = theme.colorScheme;
     final locale = Localizations.localeOf(context);
     final rel = _relative(context, day);
+    final estimates = widget.series.estimates;
+    // Tahmini gelecek gün: başlık ve rakam MOR (uygulamanın tahmin rengi).
+    final estimated = day.isFuture && estimates;
+    final violet = MoneyColors.forecastText(theme.brightness);
     final kicker = [
       upperForLocale(
-          day.isFuture ? l10n.blKickerProjected : l10n.blKickerBalance, locale),
+          day.isFuture
+              ? (estimates ? l10n.blKickerProjected : l10n.blKickerPlanned)
+              : l10n.blKickerBalance,
+          locale),
       if (rel != null) upperForLocale(rel, locale),
       upperForLocale(_fullDate(context, day.day), locale),
     ].join(' · ');
@@ -257,7 +267,7 @@ class _BalanceLineViewState extends State<BalanceLineView> {
                   fontSize: 12,
                   letterSpacing: 1,
                   height: 1.3,
-                  color: scheme.onSurfaceVariant,
+                  color: estimated ? violet : scheme.onSurfaceVariant,
                 ),
               ),
             ),
@@ -306,7 +316,7 @@ class _BalanceLineViewState extends State<BalanceLineView> {
                         fontWeight: FontWeight.w700,
                         letterSpacing: -1.2,
                         height: 1.1,
-                        color: scheme.onSurface,
+                        color: estimated ? violet : scheme.onSurface,
                       ),
                     ),
                   ),
@@ -347,11 +357,13 @@ class _BalanceLineViewState extends State<BalanceLineView> {
                   : l10n.blDeltaNoForecast,
               style: muted)
         ];
-      } else {
+      } else if (widget.series.estimates) {
         // MoneyText (görünürlük sarmalayıcısı) sınırlı genişlikte TÜM
         // satırı kaplar: Wrap içinde her parça ayrı satıra düşüyordu
         // (görüntüde). Sınırsız Row'da kendi boyuna iner; dar ekranda
         // FittedBox küçültür (eskiden 72px taşıyordu).
+        final range =
+            muted?.copyWith(color: MoneyColors.forecastText(theme.brightness));
         parts = [
           FittedBox(
             fit: BoxFit.scaleDown,
@@ -359,20 +371,31 @@ class _BalanceLineViewState extends State<BalanceLineView> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('${l10n.blDeltaRange} ', style: muted),
+                Text('${l10n.blDeltaRange} ', style: range),
                 MoneyText(
                     amount: day.low ?? day.balance!,
                     currency: widget.currency,
-                    style: muted),
-                Text(' – ', style: muted),
+                    style: range),
+                Text(' – ', style: range),
                 MoneyText(
                     amount: day.high ?? day.balance!,
                     currency: widget.currency,
-                    style: muted),
+                    style: range),
               ],
             ),
           ),
         ];
+      } else {
+        // Plan: günün kesin hareketleri (geçmiş günlerle aynı dil).
+        parts = [
+          if (day.expense > 0) part(day.expense, true, l10n.blDeltaSpend),
+          if (day.income > 0) part(day.income, false, l10n.blDeltaIncome),
+          if (day.moved != 0)
+            part(day.moved.abs(), day.moved < 0, l10n.blDeltaMoved),
+        ];
+        if (parts.isEmpty) {
+          parts.add(Text(l10n.blReceiptNoPlans, style: muted));
+        }
       }
     } else {
       parts = [

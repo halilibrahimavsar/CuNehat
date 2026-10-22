@@ -43,6 +43,11 @@ class DayReceipt extends StatefulWidget {
   /// Kayıtsız geçmiş güne "ekle"; verilmezse düğme çizilmez.
   final VoidCallback? onAdd;
 
+  /// Tahmin katmanı (gelecek gün): kapalıyken fiş yalnız kesin kalemleri
+  /// yazar; açıkken tahmini kısımlar ve günün hız payı MOR satırlar olur.
+  /// Her iki modda önceki gün + giriş − çıkış = gün sonu.
+  final bool estimates;
+
   const DayReceipt({
     super.key,
     required this.day,
@@ -52,6 +57,7 @@ class DayReceipt extends StatefulWidget {
     required this.categoryIcons,
     required this.categoryStats,
     this.onAdd,
+    this.estimates = false,
   });
 
   @override
@@ -82,6 +88,7 @@ class _DayReceiptState extends State<DayReceipt> {
       locale,
     );
     final count = day.entryCount;
+    final paceRow = _hasPaceRow;
 
     return DefaultTextStyle(
       style: base,
@@ -119,12 +126,13 @@ class _DayReceiptState extends State<DayReceipt> {
                       style: base.copyWith(fontSize: 12, color: p.muted),
                     ),
                     _Rule(color: p.rule, top: 12, bottom: 6),
-                    if (day.isEmpty)
+                    if (day.isEmpty && !paceRow)
                       _empty(context, p, base)
                     else ...[
                       for (final e in day.items) _txRow(context, e, p, base),
                       for (final e in day.events)
-                        _eventRow(context, e, p, base),
+                        ..._eventRows(context, e, p, base),
+                      if (paceRow) _paceRow(context, p, base),
                       _Rule(color: p.rule, top: 8, bottom: 8),
                       ..._totals(context, p, base),
                     ],
@@ -303,30 +311,101 @@ class _DayReceiptState extends State<DayReceipt> {
     );
   }
 
-  Widget _eventRow(
+  /// Gelecek günde tahmin açıkken günün hız payı satırı çizilir mi.
+  bool get _hasPaceRow =>
+      widget.estimates &&
+      widget.day.isFuture &&
+      widget.day.estimatedSpend > 0.005;
+
+  /// Planlı/tahmini olayın satır(lar)ı. Kesilmemiş ekstre tahminde İKİ
+  /// satırdır: kesin kısım (planlı) + hız payı (mor). Beklenen alacak
+  /// bakiyeye katılmaz; etiketi bunu söyler.
+  List<Widget> _eventRows(
       BuildContext context, ForecastEvent e, ReceiptPalette p, TextStyle base) {
     final l10n = context.l10n;
     final moved =
         !e.countsAsSpending && e.kind != ForecastEventKind.recurringIncome;
+    final title = forecastEventTitle(l10n, e);
+    final estimates = widget.estimates;
+
+    Widget row({
+      required String title,
+      required double amount,
+      required String sub,
+      required Color color,
+      Color? subColor,
+    }) =>
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: _line(
+            context,
+            time: _up(context, l10n.blTimePlan),
+            title: title,
+            amount: SignedMoneyText(
+              amount: amount.abs(),
+              isExpense: amount < 0,
+              currency: widget.currency,
+              style: base.copyWith(
+                  fontSize: 14, fontWeight: FontWeight.w700, color: color),
+            ),
+            sub: sub,
+            subColor: subColor,
+            p: p,
+            base: base,
+          ),
+        );
+
+    if (e.kind == ForecastEventKind.receivable) {
+      return [
+        row(
+          title: title,
+          amount: e.amount,
+          sub: _up(context, l10n.blTagReceivable),
+          color: estimates ? p.estimate : p.muted,
+          subColor: estimates ? p.estimate : null,
+        ),
+      ];
+    }
+    return [
+      if (e.hasKnownPart)
+        row(
+          title: title,
+          amount: e.knownAmount,
+          sub: _up(context, l10n.blTagPlanned),
+          color: _amountColor(p, moved: moved, income: e.knownAmount > 0),
+        ),
+      if (estimates && e.hasEstimatedPart)
+        row(
+          title: e.kind == ForecastEventKind.cardStatementEstimate
+              ? l10n.blCardEstimateRow(e.title)
+              : title,
+          amount: e.estimatedAmount,
+          sub: _up(context, l10n.blTagEstimated),
+          color: p.estimate,
+          subColor: p.estimate,
+        ),
+    ];
+  }
+
+  /// Tahmin açıkken: günün hız payı ("tahmini serbest harcama").
+  Widget _paceRow(BuildContext context, ReceiptPalette p, TextStyle base) {
+    final l10n = context.l10n;
     return Padding(
+      key: const ValueKey('receipt-pace-row'),
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: _line(
         context,
-        time: _up(context, l10n.blTimePlan),
-        title: forecastEventTitle(l10n, e),
+        time: '~',
+        title: l10n.blPaceRow,
         amount: SignedMoneyText(
-          amount: e.amount.abs(),
-          isExpense: e.amount < 0,
+          amount: widget.day.estimatedSpend,
+          isExpense: true,
           currency: widget.currency,
           style: base.copyWith(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: _amountColor(p, moved: moved, income: e.amount > 0),
-          ),
+              fontSize: 14, fontWeight: FontWeight.w700, color: p.estimate),
         ),
-        sub: e.certainty == ForecastCertainty.known
-            ? _up(context, l10n.blTagPlanned)
-            : _up(context, l10n.blTagEstimated),
+        sub: _up(context, l10n.blTagPace),
+        subColor: p.estimate,
         p: p,
         base: base,
       ),
@@ -342,6 +421,7 @@ class _DayReceiptState extends State<DayReceipt> {
     required String sub,
     required ReceiptPalette p,
     required TextStyle base,
+    Color? subColor,
   }) {
     return LayoutBuilder(builder: (context, constraints) {
       // Dar satırda (320dp ya da büyük yazı) saat sütunu başlığa yer
@@ -421,7 +501,9 @@ class _DayReceiptState extends State<DayReceipt> {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: base.copyWith(
-                    fontSize: 12, color: p.muted, letterSpacing: 0.3),
+                    fontSize: 12,
+                    color: subColor ?? p.muted,
+                    letterSpacing: 0.3),
               ),
             ),
         ],
@@ -542,7 +624,9 @@ class _DayReceiptState extends State<DayReceipt> {
     final style = base.copyWith(fontSize: 12);
     final value = style.copyWith(fontWeight: FontWeight.w700);
 
-    Widget row(String k, double amount, {required bool isExpense}) => Padding(
+    Widget row(String k, double amount,
+            {required bool isExpense, Color? color}) =>
+        Padding(
           padding: const EdgeInsets.symmetric(vertical: 3),
           // spaceBetween: tutar sağa yaslanır. `Expanded` etiket + `Flexible`
           // tutar satırı ikiye bölüyor, tutar ortada kalıyordu (görüntüde).
@@ -559,7 +643,7 @@ class _DayReceiptState extends State<DayReceipt> {
                     amount: amount,
                     isExpense: isExpense,
                     currency: widget.currency,
-                    style: value,
+                    style: value.copyWith(color: color),
                   ),
                 ),
               ),
@@ -568,15 +652,35 @@ class _DayReceiptState extends State<DayReceipt> {
         );
 
     if (day.isFuture) {
-      final out = day.events
-          .where((e) => e.amount < 0)
-          .fold<double>(0, (s, e) => s - e.amount);
-      final inn = day.events
-          .where((e) => e.amount > 0)
-          .fold<double>(0, (s, e) => s + e.amount);
+      // Toplamlar BAKİYEYE GİREN kısımdır: planda kesin kısım, tahminde
+      // beklenen yol payı + günün hız payı. Beklenen alacak ikisinde de
+      // dışarıda (yola katılmaz) — eskiden tutarın tamamı toplanıyordu ve
+      // fişin toplamı gün sonuyla tutmuyordu.
+      final estimates = widget.estimates;
+      var out = estimates ? day.estimatedSpend : 0.0;
+      var inn = 0.0;
+      var estimatedOut = out > 0.005;
+      for (final e in day.events) {
+        final a = estimates ? e.pathExpected : e.knownAmount;
+        if (a < 0) {
+          out -= a;
+          if (estimates && e.hasEstimatedPart) estimatedOut = true;
+        } else {
+          inn += a;
+        }
+      }
       return [
-        if (out > 0) row(_up(context, l10n.blTotalOut), out, isExpense: true),
-        if (inn > 0) row(_up(context, l10n.blTotalIn), inn, isExpense: false),
+        if (out > 0.005)
+          row(
+              _up(context,
+                  estimates ? l10n.blTotalOut : l10n.blTotalPlannedOut),
+              out,
+              isExpense: true,
+              color: estimatedOut ? p.estimate : null),
+        if (inn > 0.005)
+          row(_up(context, estimates ? l10n.blTotalIn : l10n.blTotalPlannedIn),
+              inn,
+              isExpense: false),
       ];
     }
     return [
@@ -593,12 +697,17 @@ class _DayReceiptState extends State<DayReceipt> {
   Widget _endLine(BuildContext context, ReceiptPalette p, TextStyle base) {
     final l10n = context.l10n;
     final day = widget.day;
+    final estimated = day.isFuture && widget.estimates;
     final label = day.isFuture
-        ? _up(context, l10n.blEndProjected)
+        ? _up(
+            context, widget.estimates ? l10n.blEndProjected : l10n.blEndPlanned)
         : day.isToday
             ? _up(context, l10n.blEndNow)
             : _up(context, l10n.blEndOfDay);
-    final valueStyle = base.copyWith(fontSize: 16, fontWeight: FontWeight.w700);
+    final valueStyle = base.copyWith(
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        color: estimated ? p.estimate : null);
     return Container(
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.only(top: 8),
@@ -659,7 +768,9 @@ String dayNotesText(AppLocalizations l10n, List<DayNote> notes) => [
           BiggestNote(:final title) => l10n.blNoteBiggest(title),
           StreakNote(:final days) => l10n.blNoteStreak(days),
           NoRecordsNote() => l10n.blNoteNoRecords,
-          FutureNote(:final count) => l10n.blNoteFuture(count),
+          FutureNote(:final count, :final estimates) => estimates
+              ? l10n.blNoteFuture(count)
+              : l10n.blNoteFuturePlanned(count),
         },
     ].join(' ');
 

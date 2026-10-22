@@ -1,12 +1,15 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:cunehat/core/shared/motion/app_motion.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/balance_line/balance_line_series.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Dönemin bakiye çizgisi: geçmiş düz, gelecek kesikli + belirsizlik bandı.
+/// Dönemin bakiye çizgisi: geçmiş düz; gelecek PLANDA yalnız kesin
+/// kalemlerle soluk basamak, TAHMİNDE üstüne mor kesikli beklenen çizgi +
+/// mor belirsizlik bandı (bkz. [BalanceLineSeries.estimates]).
 ///
 /// **Gün seçici de budur.** Dokunmak ya da parmağı yatayda gezdirmek günü
 /// seçer; ekran okuyucuda kaydırıcı gibi artır/azalt ile gezilir. Çizginin
@@ -15,8 +18,8 @@ import 'package:flutter/services.dart';
 ///
 /// Çizgi BASAMAKLIDIR: bakiye gün içinde kayıtlarla sıçrar, iki gün arası
 /// eğik bir çizgi "bakiye yavaş yavaş eridi" gibi yanlış bir hikâye anlatır.
-/// Gelecek ise düz parçalı (L): orası zaten bir tahmin, basamak kesinlik ima
-/// ederdi.
+/// Planlı gelecek de basamaklıdır (ödeme gününde sıçrar); tahmin ise düz
+/// parçalı (L): hız her güne yayılır, basamak kesinlik ima ederdi.
 class BalanceLineChart extends StatefulWidget {
   final BalanceLineSeries series;
   final int selectedIndex;
@@ -87,7 +90,8 @@ class _BalanceLineChartState extends State<BalanceLineChart>
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final days = widget.series.days;
     final i = widget.selectedIndex;
     final dayName = days.isEmpty ? '' : widget.semanticDay(days[i]);
@@ -120,8 +124,10 @@ class _BalanceLineChartState extends State<BalanceLineChart>
                   series: widget.series,
                   cursor: _cursor.value,
                   line: scheme.primary,
-                  future: scheme.onSurfaceVariant,
-                  band: scheme.onSurface.withValues(alpha: 0.07),
+                  planned: scheme.primary.withValues(alpha: 0.55),
+                  estimate: MoneyColors.forecast,
+                  band: MoneyColors.forecast.withValues(
+                      alpha: theme.brightness == Brightness.dark ? 0.18 : 0.12),
                   guide: scheme.outlineVariant,
                   cursorColor: scheme.onSurface.withValues(alpha: 0.28),
                   surface: scheme.surface,
@@ -139,7 +145,12 @@ class _BalanceLinePainter extends CustomPainter {
   final BalanceLineSeries series;
   final double cursor;
   final Color line;
-  final Color future;
+
+  /// Planlı gelecek (soluk, düz basamak).
+  final Color planned;
+
+  /// Tahmin (mor): kesikli beklenen çizgi, imleç halkası.
+  final Color estimate;
   final Color band;
   final Color guide;
   final Color cursorColor;
@@ -149,7 +160,8 @@ class _BalanceLinePainter extends CustomPainter {
     required this.series,
     required this.cursor,
     required this.line,
-    required this.future,
+    required this.planned,
+    required this.estimate,
     required this.band,
     required this.guide,
     required this.cursorColor,
@@ -198,47 +210,77 @@ class _BalanceLinePainter extends CustomPainter {
     final lastPast =
         days.lastIndexWhere((d) => !d.isFuture && d.balance != null);
 
-    // Gelecek: bant + kesikli beklenen yol, bugünden (ya da dönemin ilk
-    // gününden) başlar.
+    // Gelecek: bugünden (ya da dönemin ilk gününden) başlar.
     final futureIdx = [
       for (var i = 0; i < days.length; i++)
         if (days[i].isFuture && days[i].balance != null) i,
     ];
     if (futureIdx.isNotEmpty) {
       final anchor = lastPast >= 0 ? lastPast : null;
-      final bandPath = Path();
-      final hiPts = <Offset>[
-        if (anchor != null) Offset(x(anchor), y(days[anchor].balance!)),
-        for (final i in futureIdx)
-          Offset(x(i), y(days[i].high ?? days[i].balance!)),
-      ];
-      final loPts = <Offset>[
-        for (final i in futureIdx.reversed)
-          Offset(x(i), y(days[i].low ?? days[i].balance!)),
-        if (anchor != null) Offset(x(anchor), y(days[anchor].balance!)),
-      ];
-      bandPath.addPolygon([...hiPts, ...loPts], true);
-      canvas.drawPath(bandPath, Paint()..color = band);
+      final anchorValue = anchor == null ? null : days[anchor].balance!;
 
-      final expected = Path();
-      var first = true;
-      for (final p in [
-        if (anchor != null) Offset(x(anchor), y(days[anchor].balance!)),
-        for (final i in futureIdx) Offset(x(i), y(days[i].balance!)),
-      ]) {
-        first ? expected.moveTo(p.dx, p.dy) : expected.lineTo(p.dx, p.dy);
-        first = false;
+      if (series.estimates) {
+        // Mor bant: tahminin ne kadar şaşabileceği.
+        final hiPts = <Offset>[
+          if (anchor != null) Offset(x(anchor), y(anchorValue!)),
+          for (final i in futureIdx)
+            Offset(x(i), y(days[i].high ?? days[i].balance!)),
+        ];
+        final loPts = <Offset>[
+          for (final i in futureIdx.reversed)
+            Offset(x(i), y(days[i].low ?? days[i].balance!)),
+          if (anchor != null) Offset(x(anchor), y(anchorValue!)),
+        ];
+        canvas.drawPath(Path()..addPolygon([...hiPts, ...loPts], true),
+            Paint()..color = band);
       }
-      _dashedPath(
-          canvas,
-          expected,
-          Paint()
-            ..color = future
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 2
-            ..strokeJoin = StrokeJoin.round,
-          4,
-          5);
+
+      // Planlı basamak: yalnız kesin kalemler; ödeme gününde sıçrar.
+      final plannedPath = Path();
+      double? prev = anchorValue;
+      if (anchor != null) plannedPath.moveTo(x(anchor), y(anchorValue!));
+      for (final i in futureIdx) {
+        final v = days[i].planned ?? days[i].balance!;
+        if (prev == null) {
+          plannedPath.moveTo(x(i), y(v));
+        } else {
+          plannedPath
+            ..lineTo(x(i), y(prev))
+            ..lineTo(x(i), y(v));
+        }
+        prev = v;
+      }
+      canvas.drawPath(
+        plannedPath,
+        Paint()
+          ..color = planned
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = series.estimates ? 1.5 : 2.5
+          ..strokeJoin = StrokeJoin.round
+          ..strokeCap = StrokeCap.round,
+      );
+
+      if (series.estimates) {
+        final expected = Path();
+        var first = true;
+        for (final p in [
+          if (anchor != null) Offset(x(anchor), y(anchorValue!)),
+          for (final i in futureIdx) Offset(x(i), y(days[i].balance!)),
+        ]) {
+          first ? expected.moveTo(p.dx, p.dy) : expected.lineTo(p.dx, p.dy);
+          first = false;
+        }
+        _dashedPath(
+            canvas,
+            expected,
+            Paint()
+              ..color = estimate
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 2
+              ..strokeJoin = StrokeJoin.round,
+            4,
+            5);
+      }
     }
 
     // Geçmiş: basamaklı çizgi + altında solan dolgu.
@@ -292,7 +334,7 @@ class _BalanceLinePainter extends CustomPainter {
             c,
             5,
             Paint()
-              ..color = future
+              ..color = series.estimates ? estimate : line
               ..style = PaintingStyle.stroke
               ..strokeWidth = 2);
       } else {
@@ -344,7 +386,8 @@ class _BalanceLinePainter extends CustomPainter {
       old.series != series ||
       old.cursor != cursor ||
       old.line != line ||
-      old.future != future ||
+      old.planned != planned ||
+      old.band != band ||
       old.surface != surface;
 }
 

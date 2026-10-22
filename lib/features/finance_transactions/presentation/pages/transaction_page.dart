@@ -51,6 +51,7 @@ import 'package:cunehat/features/finance_transactions/domain/entities/category_e
 import 'package:cunehat/core/shared/focus.dart';
 import 'package:cunehat/features/finance_transactions/data/ledger_view_store.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/balance_line/balance_line_series.dart';
+import 'package:cunehat/features/forecast/presentation/bloc/forecast_estimates_cubit.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/balance_line/balance_line_view.dart';
 import 'package:cunehat/features/forecast/data/forecast_service.dart';
 import 'package:cunehat/features/forecast/domain/forecast_models.dart';
@@ -539,8 +540,10 @@ class _TransactionsViewState extends State<_TransactionsView> {
     });
   }
 
-  BalanceLineSeries _seriesFor(
-      List<TransactionWithBalance> ledger, DateTimeRange period) {
+  /// [estimates]: tahmin katmanı (uygulama ayarı). Anahtar çevrilince seri
+  /// AYNI tahminden yeniden kurulur — tahmin yeniden hesaplanmaz.
+  BalanceLineSeries _seriesFor(List<TransactionWithBalance> ledger,
+      DateTimeRange period, bool estimates) {
     final today = dayOf(DateTime.now());
     final key = (
       ledger,
@@ -548,7 +551,8 @@ class _TransactionsViewState extends State<_TransactionsView> {
       period.end,
       today,
       _forecast,
-      widget.wallet.balance
+      widget.wallet.balance,
+      estimates,
     );
     if (_series != null && _seriesKey == key) return _series!;
     _seriesKey = key;
@@ -557,6 +561,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
       currentBalance: widget.wallet.balance,
       period: period,
       now: DateTime.now(),
+      estimates: estimates,
       forecastPath: _forecast?.path ?? const [],
       forecastEvents: _forecast?.events ?? const [],
     );
@@ -893,7 +898,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
           child: PeriodTransition(
             periodStart: period.start,
             child: BalanceLineView(
-              series: _seriesFor(ledger, period),
+              series: _seriesFor(ledger, period, context.forecastEstimates),
               ledger: ledger,
               currency: context.activeWalletCurrency,
               categoryLabels: _categoryLabels,

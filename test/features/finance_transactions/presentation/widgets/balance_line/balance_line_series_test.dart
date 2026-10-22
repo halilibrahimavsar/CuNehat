@@ -47,6 +47,7 @@ void main() {
       ], currentBalance: 1000);
 
       final s = buildBalanceLineSeries(
+        estimates: true,
         ledger: ledger,
         currentBalance: 1000,
         period: period,
@@ -73,7 +74,11 @@ void main() {
       ], currentBalance: 500);
 
       final s = buildBalanceLineSeries(
-          ledger: ledger, currentBalance: 500, period: period, now: now);
+          estimates: true,
+          ledger: ledger,
+          currentBalance: 500,
+          period: period,
+          now: now);
 
       expect(s.days[0].balance, 200);
       expect(s.days[9].balance, 500);
@@ -87,7 +92,11 @@ void main() {
       ], currentBalance: 100);
 
       final day = buildBalanceLineSeries(
-              ledger: ledger, currentBalance: 100, period: period, now: now)
+              estimates: true,
+              ledger: ledger,
+              currentBalance: 100,
+              period: period,
+              now: now)
           .days[6];
 
       expect(day.items.map((e) => e.transaction.id), ['sabah', 'aksam']);
@@ -101,7 +110,11 @@ void main() {
       ], currentBalance: 1000);
 
       final day = buildBalanceLineSeries(
-              ledger: ledger, currentBalance: 1000, period: period, now: now)
+              estimates: true,
+              ledger: ledger,
+              currentBalance: 1000,
+              period: period,
+              now: now)
           .days[7];
 
       expect(day.expense, 60);
@@ -116,6 +129,7 @@ void main() {
       ], currentBalance: 900);
 
       final s = buildBalanceLineSeries(
+        estimates: true,
         ledger: ledger,
         currentBalance: 900,
         period: period,
@@ -152,6 +166,7 @@ void main() {
 
     test('geçmiş dönemde bugün yok; açılış seçimi son gün', () {
       final s = buildBalanceLineSeries(
+        estimates: true,
         ledger: const [],
         currentBalance: 0,
         period: DateTimeRange(
@@ -177,7 +192,11 @@ void main() {
       ];
       final ledger = buildLedger(transactions: txs, currentBalance: 1000);
       final s = buildBalanceLineSeries(
-          ledger: ledger, currentBalance: 1000, period: period, now: now);
+          estimates: true,
+          ledger: ledger,
+          currentBalance: 1000,
+          period: period,
+          now: now);
 
       final notes = buildDayNotes(
         day: dayOf(s, 20),
@@ -197,7 +216,11 @@ void main() {
         _tx('x', DateTime(2026, 10, 20, 9), 100),
       ], currentBalance: 1000);
       final s = buildBalanceLineSeries(
-          ledger: ledger, currentBalance: 1000, period: period, now: now);
+          estimates: true,
+          ledger: ledger,
+          currentBalance: 1000,
+          period: period,
+          now: now);
 
       final notes = buildDayNotes(
         day: dayOf(s, 20),
@@ -215,7 +238,11 @@ void main() {
         _tx('x', DateTime(2026, 10, 20, 9), 15),
       ], currentBalance: 1000);
       final s = buildBalanceLineSeries(
-          ledger: ledger, currentBalance: 1000, period: period, now: now);
+          estimates: true,
+          ledger: ledger,
+          currentBalance: 1000,
+          period: period,
+          now: now);
 
       final notes = buildDayNotes(
         day: dayOf(s, 20),
@@ -230,7 +257,11 @@ void main() {
         _tx('ilk', DateTime(2026, 10, 10, 9), 5),
       ], currentBalance: 100);
       final s = buildBalanceLineSeries(
-          ledger: ledger, currentBalance: 100, period: period, now: now);
+          estimates: true,
+          ledger: ledger,
+          currentBalance: 100,
+          period: period,
+          now: now);
       final daily = dailyExpenseOf(ledger);
 
       final onFirst = buildDayNotes(
@@ -256,7 +287,11 @@ void main() {
         _tx('t', DateTime(2026, 10, 16, 12), 100, system: true),
       ], currentBalance: 50000);
       final s = buildBalanceLineSeries(
-          ledger: ledger, currentBalance: 50000, period: period, now: now);
+          estimates: true,
+          ledger: ledger,
+          currentBalance: 50000,
+          period: period,
+          now: now);
 
       final notes = buildDayNotes(
           day: dayOf(s, 16),
@@ -273,7 +308,11 @@ void main() {
         _tx('b', DateTime(2026, 10, 17, 11), 410, title: 'Yemek siparişi'),
       ], currentBalance: 1000);
       final s = buildBalanceLineSeries(
-          ledger: ledger, currentBalance: 1000, period: period, now: now);
+          estimates: true,
+          ledger: ledger,
+          currentBalance: 1000,
+          period: period,
+          now: now);
 
       final notes = buildDayNotes(
           day: dayOf(s, 17),
@@ -284,11 +323,162 @@ void main() {
 
     test('gelecek gün yalnız bekleyen hareket sayısını söyler', () {
       final s = buildBalanceLineSeries(
-          ledger: const [], currentBalance: 0, period: period, now: now);
+          estimates: true,
+          ledger: const [],
+          currentBalance: 0,
+          period: period,
+          now: now);
       final notes = buildDayNotes(
           day: dayOf(s, 30), dailyExpense: const {}, firstRecord: null);
       expect(notes, [isA<FutureNote>()]);
       expect((notes.single as FutureNote).count, 0);
+    });
+  });
+
+  group('plan / tahmin', () {
+    final today = DateTime(2026, 10, 22);
+    final path = [
+      BalancePoint(
+          day: today,
+          expected: 880,
+          low: 870,
+          high: 890,
+          planned: 900,
+          paceSpend: 20),
+      BalancePoint(
+          day: DateTime(2026, 10, 23),
+          expected: 850,
+          low: 830,
+          high: 870,
+          planned: 900,
+          paceSpend: 30),
+      BalancePoint(
+          day: DateTime(2026, 10, 24),
+          expected: 820,
+          low: 790,
+          high: 850,
+          planned: 900,
+          paceSpend: 30),
+      BalancePoint(
+          day: DateTime(2026, 10, 25),
+          expected: 220,
+          low: 150,
+          high: 450,
+          planned: 500,
+          paceSpend: 50),
+      BalancePoint(
+          day: DateTime(2026, 10, 26),
+          expected: 100,
+          low: 20,
+          high: 330,
+          planned: 500,
+          paceSpend: 50),
+    ];
+    final events = [
+      ForecastEvent(
+        date: DateTime(2026, 10, 25),
+        amount: -100,
+        walletId: 'w',
+        kind: ForecastEventKind.recurringExpense,
+        certainty: ForecastCertainty.known,
+        title: 'Netflix',
+        countsAsSpending: true,
+      ),
+      // Kesilmemiş ekstre: 300 kesin (harcandı), 200 hızdan.
+      ForecastEvent(
+        date: DateTime(2026, 10, 25),
+        amount: -500,
+        walletId: 'w',
+        kind: ForecastEventKind.cardStatementEstimate,
+        certainty: ForecastCertainty.expected,
+        title: 'Bonus',
+        knownAmount: -300,
+      ),
+      ForecastEvent(
+        date: DateTime(2026, 10, 25),
+        amount: 200,
+        pathMin: 0,
+        pathExpected: 0,
+        pathMax: 200,
+        walletId: 'w',
+        kind: ForecastEventKind.receivable,
+        certainty: ForecastCertainty.expected,
+        title: 'Ali',
+      ),
+      // Kesin kısmı OLMAYAN ekstre tahmini.
+      ForecastEvent(
+        date: DateTime(2026, 10, 26),
+        amount: -70,
+        walletId: 'w',
+        kind: ForecastEventKind.cardStatementEstimate,
+        certainty: ForecastCertainty.expected,
+        title: 'Axess',
+        knownAmount: 0,
+      ),
+    ];
+    final ledger = buildLedger(transactions: [
+      _tx('a', DateTime(2026, 10, 20, 10), 100),
+    ], currentBalance: 900);
+
+    BalanceLineSeries build(bool estimates) => buildBalanceLineSeries(
+          estimates: estimates,
+          ledger: ledger,
+          currentBalance: 900,
+          period: period,
+          now: now,
+          forecastPath: path,
+          forecastEvents: events,
+        );
+
+    test('PLAN: bakiye yalnız kesin kalemler, bant yok, hız payı yok', () {
+      final s = build(false);
+      expect(s.estimates, isFalse);
+      final d25 = s.days[24];
+      expect(d25.balance, 500);
+      expect(d25.planned, 500);
+      expect((d25.low, d25.high), (null, null));
+      expect(d25.estimatedSpend, 0);
+      // Alacak bilgi olarak kalır ama toplamlara girmez; ekstre kesin
+      // kısmıyla.
+      expect(d25.events.map((e) => e.title), ['Netflix', 'Bonus', 'Ali']);
+      expect(d25.expense, 100);
+      expect(d25.moved, -300);
+      expect(d25.income, 0);
+      // Yalnız tahmini olan ekstre plan gününde yok.
+      expect(s.days[25].events, isEmpty);
+    });
+
+    test('TAHMİN: beklenen yol + bant + günün hız payı', () {
+      final s = build(true);
+      expect(s.estimates, isTrue);
+      final d25 = s.days[24];
+      expect(d25.balance, 220);
+      expect(d25.planned, 500);
+      expect((d25.low, d25.high), (150, 450));
+      expect(d25.estimatedSpend, 50);
+      expect(d25.moved, -500);
+      expect(s.days[25].events.single.title, 'Axess');
+      // İlk gelecek gün bugünün kalan hız payını da taşır.
+      expect(s.days[22].estimatedSpend, 30 + 20);
+    });
+
+    test('ölçek planlı çizgiyi de kapsar', () {
+      final (lo, hi) = build(true).valueRange!;
+      expect(lo, lessThanOrEqualTo(20));
+      expect(hi, greaterThanOrEqualTo(1000));
+    });
+
+    test('gelecek notu moda göre', () {
+      final s = build(false);
+      final plan = buildDayNotes(
+          day: s.days[24], dailyExpense: const {}, firstRecord: null);
+      expect((plan.single as FutureNote).estimates, isFalse);
+      final est = buildDayNotes(
+          day: s.days[24],
+          dailyExpense: const {},
+          firstRecord: null,
+          estimates: true);
+      expect((est.single as FutureNote).estimates, isTrue);
     });
   });
 }

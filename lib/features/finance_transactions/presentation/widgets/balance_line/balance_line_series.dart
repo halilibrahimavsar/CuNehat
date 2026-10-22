@@ -20,9 +20,18 @@ class BalanceDay {
   /// günlere UZANMAZ, uydurma bir düz çizgi çizilmez.
   final double? balance;
 
-  /// Tahmin bandı (yalnız gelecekte).
+  /// Tahmin bandı (yalnız gelecekte ve tahmin açıkken).
   final double? low;
   final double? high;
+
+  /// Gelecekte yalnız kesin kalemlerle bakiye (plan). Plan görünümünde
+  /// [balance] ile aynı; tahminde grafiğin ince planlı çizgisi.
+  final double? planned;
+
+  /// Gelecekte (tahmin açıkken) o gün hızdan beklenen serbest harcama;
+  /// fişin "tahmini serbest harcama" satırı. İlk gelecek gün bugünün
+  /// kalanını da taşır: fişin toplamı gün sonuyla TUTSUN.
+  final double estimatedSpend;
 
   /// Günün defter satırları ESKİDEN YENİYE: fiş yukarıdan aşağı, günün
   /// akışıyla okunur. Gelecekte boş.
@@ -43,6 +52,8 @@ class BalanceDay {
     required this.balance,
     this.low,
     this.high,
+    this.planned,
+    this.estimatedSpend = 0,
     this.items = const [],
     this.events = const [],
     this.income = 0,
@@ -63,7 +74,15 @@ class BalanceLineSeries {
   /// Bugünün indeksi; dönem bugünü kapsamıyorsa -1.
   final int todayIndex;
 
-  const BalanceLineSeries({required this.days, required this.todayIndex});
+  /// Tahmin katmanı açık mı: gelecek günler beklenen yolla (hız dahil, mor)
+  /// mı, yalnız kesin kalemlerle (plan) mı kuruldu.
+  final bool estimates;
+
+  const BalanceLineSeries({
+    required this.days,
+    required this.todayIndex,
+    this.estimates = false,
+  });
 
   bool get isEmpty => days.isEmpty;
 
@@ -97,6 +116,7 @@ class BalanceLineSeries {
       take(d.balance);
       take(d.low);
       take(d.high);
+      take(d.planned);
     }
     if (lo == null) return null;
     return (lo!, hi!);
@@ -118,19 +138,27 @@ double signedAmount(TransactionWithBalance e) =>
 /// İleri tarihli defter satırları (kart taksitleri) bugünden sonraki günlere
 /// defterden DEĞİL tahminden düşer: tahmin motoru onları zaten `scheduled`
 /// olayı olarak sayıyor, ikisi birden gösterilse aynı taksit iki kez görünür.
+///
+/// [estimates] kapalıyken (plan) gelecek günler yalnız KESİN kalemlerle
+/// kurulur: bakiye `planned`, bant yok, olaylar kesin kısmıyla (kesin kısmı
+/// olmayan tahmin düşer; beklenen alacak bilgi olarak kalır ama toplamlara
+/// girmez). Açıkken beklenen yol + bant + günün hız payı.
 BalanceLineSeries buildBalanceLineSeries({
   required List<TransactionWithBalance> ledger,
   required double currentBalance,
   required DateTimeRange period,
   required DateTime now,
+  required bool estimates,
   List<BalancePoint> forecastPath = const [],
   List<ForecastEvent> forecastEvents = const [],
 }) {
   final start = dateOnly(period.start);
   final end = dateOnly(period.end);
   final today = dateOnly(now);
+  final tomorrow = DateTime(today.year, today.month, today.day + 1);
   if (end.isBefore(start)) {
-    return const BalanceLineSeries(days: [], todayIndex: -1);
+    return BalanceLineSeries(
+        days: const [], todayIndex: -1, estimates: estimates);
   }
 
   final byDay = <DateTime, List<TransactionWithBalance>>{};
@@ -167,24 +195,40 @@ BalanceLineSeries buildBalanceLineSeries({
 
     if (day.isAfter(today)) {
       final p = pathByDay[day];
-      final events = eventsByDay[day] ?? const <ForecastEvent>[];
+      final all = eventsByDay[day] ?? const <ForecastEvent>[];
+      final events = estimates
+          ? all
+          : [
+              for (final e in all)
+                if (e.hasKnownPart || e.kind == ForecastEventKind.receivable) e,
+            ];
       double income = 0, expense = 0, moved = 0;
       for (final e in events) {
+        // Bakiyeye giren kısım: planda kesin kısım, tahminde beklenen yol
+        // payı (alacakta ikisi de 0).
+        final a = estimates ? e.pathExpected : e.knownAmount;
+        if (a == 0) continue;
         if (e.countsAsSpending) {
-          expense -= e.amount;
-        } else if (e.amount > 0 &&
-            e.kind == ForecastEventKind.recurringIncome) {
-          income += e.amount;
+          expense -= a;
+        } else if (a > 0 && e.kind == ForecastEventKind.recurringIncome) {
+          income += a;
         } else {
-          moved += e.amount;
+          moved += a;
         }
+      }
+      var spend = 0.0;
+      if (estimates && p != null) {
+        spend = p.paceSpend;
+        if (day == tomorrow) spend += pathByDay[today]?.paceSpend ?? 0;
       }
       days.add(BalanceDay(
         day: day,
         kind: BalanceDayKind.future,
-        balance: p?.expected,
-        low: p?.low,
-        high: p?.high,
+        balance: p == null ? null : (estimates ? p.expected : p.planned),
+        low: estimates ? p?.low : null,
+        high: estimates ? p?.high : null,
+        planned: p?.planned,
+        estimatedSpend: spend,
         events: events,
         income: income,
         expense: expense,
@@ -220,5 +264,6 @@ BalanceLineSeries buildBalanceLineSeries({
       moved: moved,
     ));
   }
-  return BalanceLineSeries(days: days, todayIndex: todayIndex);
+  return BalanceLineSeries(
+      days: days, todayIndex: todayIndex, estimates: estimates);
 }

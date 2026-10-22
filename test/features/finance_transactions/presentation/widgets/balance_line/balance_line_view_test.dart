@@ -61,6 +61,7 @@ void main() {
 
   BalanceLineSeries series({List<ForecastEvent> events = const []}) =>
       buildBalanceLineSeries(
+        estimates: true,
         ledger: ledger,
         currentBalance: 25745.90,
         period: period,
@@ -269,5 +270,113 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('aralık'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  group('plan / tahmin', () {
+    // Bugün 22 Eki: gün sonu 25.745,90; günün kalan hız payı 40. Yarın
+    // Netflix (−229,99) + hız 100.
+    BalanceLineSeries withPace({
+      required bool estimates,
+      List<ForecastEvent> extra = const [],
+    }) =>
+        buildBalanceLineSeries(
+          estimates: estimates,
+          ledger: ledger,
+          currentBalance: 25745.90,
+          period: period,
+          now: now,
+          forecastPath: [
+            BalancePoint(
+                day: DateTime(2026, 10, 22),
+                expected: 25705.90,
+                low: 25705.90,
+                high: 25705.90,
+                planned: 25745.90,
+                paceSpend: 40),
+            BalancePoint(
+                day: DateTime(2026, 10, 23),
+                expected: 25375.91,
+                low: 25300,
+                high: 25450,
+                planned: 25515.91,
+                paceSpend: 100),
+          ],
+          forecastEvents: [netflix, ...extra],
+        );
+
+    Future<void> tomorrow(WidgetTester tester, BalanceLineSeries s) async {
+      await pump(tester, s: s);
+      await tester.tap(find.byKey(const ValueKey('bl-next')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets(
+        'PLAN: planlı bakiye, planlı çıkış; aralık ve hız satırı yok; '
+        'toplam gün sonuyla tutar', (tester) async {
+      await tomorrow(tester, withPace(estimates: false));
+
+      expect(find.textContaining('PLANLI BAKİYE'), findsOneWidget);
+      expect(find.text('PLANLI ÇIKIŞ'), findsOneWidget);
+      expect(find.textContaining('aralık'), findsNothing);
+      expect(find.byKey(const ValueKey('receipt-pace-row')), findsNothing);
+      expect(find.text('TAHMİNİ'), findsNothing);
+      // 25.745,90 − 229,99 = 25.515,91
+      expect(find.textContaining('229,99'), findsWidgets);
+      expect(find.textContaining('25.515,91'), findsWidgets);
+    });
+
+    testWidgets(
+        'TAHMİN: hız satırı (bugünün kalanı dahil) mor; toplam gün sonuyla '
+        'tutar', (tester) async {
+      await tomorrow(tester, withPace(estimates: true));
+
+      expect(find.textContaining('TAHMİNİ BAKİYE'), findsOneWidget);
+      expect(find.byKey(const ValueKey('receipt-pace-row')), findsOneWidget);
+      expect(find.text('Tahmini serbest harcama'), findsOneWidget);
+      // Hız 140 (100 + bugünün kalanı 40); çıkış 229,99 + 140 = 369,99;
+      // 25.745,90 − 369,99 = 25.375,91.
+      expect(find.textContaining('140,00'), findsOneWidget);
+      expect(find.textContaining('369,99'), findsOneWidget);
+      expect(find.textContaining('25.375,91'), findsWidgets);
+      expect(find.textContaining('aralık'), findsOneWidget);
+    });
+
+    testWidgets('alacak satırı bakiyeye katılmaz, toplamda yok',
+        (tester) async {
+      final ali = ForecastEvent(
+        date: DateTime(2026, 10, 23),
+        amount: 500,
+        pathMin: 0,
+        pathExpected: 0,
+        pathMax: 500,
+        walletId: 'w',
+        kind: ForecastEventKind.receivable,
+        certainty: ForecastCertainty.expected,
+        title: 'Ali',
+      );
+      await tomorrow(tester, withPace(estimates: false, extra: [ali]));
+
+      expect(find.textContaining('BAKİYEYE KATILMAZ'), findsOneWidget);
+      expect(find.text('PLANLI GİRİŞ'), findsNothing);
+      expect(find.textContaining('25.515,91'), findsWidgets);
+    });
+
+    testWidgets('TAHMİN: ekstre tahmini iki satır — kesin + mor pay',
+        (tester) async {
+      final bonus = ForecastEvent(
+        date: DateTime(2026, 10, 23),
+        amount: -800,
+        walletId: 'w',
+        kind: ForecastEventKind.cardStatementEstimate,
+        certainty: ForecastCertainty.expected,
+        title: 'Bonus',
+        knownAmount: -600,
+      );
+      await tomorrow(tester, withPace(estimates: true, extra: [bonus]));
+
+      expect(find.textContaining('600,00'), findsWidgets);
+      expect(find.textContaining('200,00'), findsWidgets);
+      expect(find.text('Bonus · ekstrenin tahmini payı'), findsOneWidget);
+    });
   });
 }
