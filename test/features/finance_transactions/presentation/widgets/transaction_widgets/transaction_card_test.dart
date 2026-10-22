@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
+import 'package:cunehat/core/shared/widgets/money_text.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
@@ -18,6 +19,7 @@ import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
@@ -251,6 +253,102 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('ödeme'), findsNothing);
   });
+
+  testWidgets(
+      'dar satırda kart ödemesi notu çipin altına iner; ikisi de kesilmez',
+      (tester) async {
+    // Çip ile "ödeme 5 Kas" aynı satırı yarı yarıya paylaşıyordu: 360dp'de
+    // "Yeme-…" / "ödeme 5 …", 320dp + büyük yazıda çip BOŞ kalıyordu. (Test
+    // fontu gerçeğinden geniş: 480dp burada o dar satırı kurar.)
+    tester.view.physicalSize = const Size(480, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    final card = WalletEntity(
+      id: 'card',
+      userId: 'user_123',
+      name: 'card',
+      balance: 0,
+      debt: 0,
+      credit: 0,
+      investment: 0,
+      colorHex: '0xFF000000',
+      iconName: 'wallet',
+      createdAt: DateTime(2026, 1, 1),
+      openingBalance: 0,
+      creditCard: const CreditCardInfo(closingDay: 25, dueDay: 5),
+    );
+    final walletBloc = _MockWalletBloc();
+    when(() => walletBloc.state).thenReturn(WalletLoadedSt([card], card));
+    final tx = TransactionEntity(
+      id: 'c1',
+      userId: 'user_123',
+      walletId: 'card',
+      title: 'Akşam',
+      tag: 'Yemek',
+      amount: 1500,
+      date: DateTime(2026, 10, 6, 14, 30),
+      type: TransactionTypeModel.expense,
+    );
+    when(() => mockTransactionBloc.state).thenReturn(TransactionLoaded(
+      groupedTransactions: const {},
+      allTransactions: [tx],
+    ));
+
+    await tester.pumpWidget(BlocProvider<WalletBloc>.value(
+      value: walletBloc,
+      child: buildTestableWidget(TransactionCard(
+        item: TransactionWithBalance(transaction: tx, balanceAfter: 0),
+        categoryLabel: 'Yeme-İçme',
+      )),
+    ));
+    await tester.pumpAndSettle();
+
+    for (final text in ['Yeme-İçme', 'ödeme 5 Kas']) {
+      final paragraph = tester.renderObject<RenderParagraph>(find.text(text));
+      expect(paragraph.didExceedMaxLines, isFalse, reason: text);
+    }
+  });
+
+  // 320dp + 1,3 yazıda tutar satırın üçte birini alıyor, başlık "TREND…"
+  // oluyordu: dar satırda tutar başlığın yanından kategori satırının altına
+  // iner.
+  for (final (width, scale, below) in const [
+    (320.0, 1.3, true),
+    (480.0, 1.0, false),
+  ]) {
+    testWidgets(
+        '${width.toInt()}dp, yazı $scale: tutar ${below ? 'alt satırda' : 'başlığın yanında'}',
+        (tester) async {
+      tester.view.physicalSize = Size(width, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      final tx = createTx(isSystem: false, id: 'narrow')
+          .copyWith(title: 'TRENDYOL.COM (1/3)');
+      when(() => mockTransactionBloc.state).thenReturn(TransactionLoaded(
+        groupedTransactions: {
+          testDate: [tx]
+        },
+        allTransactions: [tx],
+      ));
+      await tester.pumpWidget(MediaQuery(
+        data: MediaQueryData(
+            size: Size(width, 800), textScaler: TextScaler.linear(scale)),
+        child: buildTestableWidget(TransactionCard(
+          item: TransactionWithBalance(transaction: tx, balanceAfter: 0),
+        )),
+      ));
+      await tester.pumpAndSettle();
+
+      final title = tester.getRect(find.text('TRENDYOL.COM (1/3)'));
+      final amount = tester.getRect(find.byType(SignedMoneyText));
+      if (below) {
+        expect(amount.top, greaterThanOrEqualTo(title.bottom));
+      } else {
+        expect(amount.left, greaterThan(title.left));
+        expect(amount.top, lessThan(title.bottom));
+      }
+    });
+  }
 
   group('başlık kategorinin adıysa çip onu TEKRARLAMAZ', () {
     // Not yazılmayan kayıtta başlık kategori adına düşer; satır "Yemek /

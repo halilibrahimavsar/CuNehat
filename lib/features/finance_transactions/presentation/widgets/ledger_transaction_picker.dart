@@ -27,6 +27,7 @@ Future<TransactionEntity?> showLedgerTransactionPicker(
   return showModalBottomSheet<TransactionEntity>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (_) => LedgerTransactionPicker(
       userId: userId,

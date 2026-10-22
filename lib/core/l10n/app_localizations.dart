@@ -4655,6 +4655,12 @@ abstract class AppLocalizations {
   /// **'Ham metni göster'**
   String get bankImportShowRaw;
 
+  /// No description provided for @bankImportRawTextTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF\'ten okunan metin'**
+  String get bankImportRawTextTitle;
+
   /// No description provided for @bankImportPdfRawTitle.
   ///
   /// In tr, this message translates to:

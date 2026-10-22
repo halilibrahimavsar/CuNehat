@@ -2545,6 +2545,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bankImportShowRaw => 'Show raw text';
 
   @override
+  String get bankImportRawTextTitle => 'Text read from the PDF';
+
+  @override
   String get bankImportPdfRawTitle => 'Couldn\'t recognize the PDF text';
 
   @override

@@ -47,6 +47,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_top_bar.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
+import 'package:cunehat/core/shared/focus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -265,6 +266,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
     }
     final hasExpense = rows.any((t) => t.isExpense);
     final hasIncome = rows.any((t) => t.isIncome);
+    releaseInputFocus();
     final picked = await showCategoryPickerSheet(
       context: context,
       isExpense: hasExpense,
@@ -392,6 +394,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
     showModalBottomSheet(
       context: parentContext,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
         return BlocProvider.value(
@@ -601,69 +604,81 @@ class _TransactionsViewState extends State<_TransactionsView> {
               backgroundColor: Colors.transparent,
               body: LedgerSelectionScope(
                 selection: _selection,
-                child: Column(
-                  children: [
-                    // Cüzdan ↔ bağlı kartları (yalnız kartı olan cüzdanda).
-                    // Hap satırı YOK: hesap ↔ kart geçişi üst çubuktaki kart
-                    // düğmesinde. Burada yalnız borç/öde şeridi ve son ödeme
-                    // bantları kalır.
-                    const CardContextRail(showPills: false),
-                    // Seçim kipinde üst çubuğun yerini seçim çubuğu alır:
-                    // süzgeç/dönem o sırada değişmez, seçili satırlar ekrandan
-                    // kaybolup "görünmeyen satırlara uygulandı" olmaz.
-                    ListenableBuilder(
-                      listenable: _selection,
-                      builder: (context, topBar) => _selection.active
-                          ? _SelectionBar(
-                              count: _selection.count,
-                              onClose: _selection.clear,
-                              onRecategorize: () => _recategorizeSelected(
-                                  state.currentTransactions),
-                            )
-                          : topBar!,
-                      child: TransactionTopBar(
-                        filter: filterState,
-                        periodLabel: statementPeriodLabel(cubit, context.l10n),
-                        // Boş cüzdanda aranacak bir şey yok. Yüklenirken
-                        // gizlenmez: kaydı olan kullanıcıda düğmeler her
-                        // açılışta sonradan belirirdi.
-                        showTools: !walletIsEmpty || isLoading,
-                        categoryLabels: _categoryLabels,
-                        onModeChanged: cubit.setFinanceMode,
-                        onPeriodStep: cubit.stepPeriod,
-                        onPeriodPick: () => pickSharedPeriod(context),
-                        onFilterTap: () => _showFilterSheet(context),
-                        onSearchChanged: cubit.setSearchQuery,
-                        onDataFilterChanged: cubit.setDataFilter,
-                        onClearCategories: () => cubit.setCategories(const {}),
-                        onClearPriceRange: () => cubit.setPriceRange(null),
-                        onClearSearch: () => cubit.setSearchQuery(null),
-                        // Çip satırındaki "Temizle" görünen TÜM çipleri kaldırır,
-                        // tür çipi dahil; dönem korunur.
-                        onClearAllFilters: () => cubit
-                          ..clearDataFilters()
-                          ..setFinanceMode(FinanceMode.compare),
+                child: LayoutBuilder(
+                  builder: (context, constraints) => Column(
+                    children: [
+                      // Cüzdan ↔ bağlı kartları (yalnız kartı olan cüzdanda).
+                      // Hap satırı YOK: hesap ↔ kart geçişi üst çubuktaki kart
+                      // düğmesinde. Burada yalnız borç/öde şeridi ve son ödeme
+                      // bantları kalır.
+                      //
+                      // Gövde çok kısaldığında (klavye açık: arama) şerit
+                      // çekilir: 568dp'lik telefonda klavye + gecikme şeridi
+                      // arama sonuçlarına tek satır bırakıyordu. Ölçüt gövdenin
+                      // GERÇEK yüksekliği — iç Scaffold klavyeyi MediaQuery'den
+                      // siliyor.
+                      if (constraints.maxHeight >=
+                          MediaQuery.textScalerOf(context).scale(220))
+                        const CardContextRail(showPills: false),
+                      // Seçim kipinde üst çubuğun yerini seçim çubuğu alır:
+                      // süzgeç/dönem o sırada değişmez, seçili satırlar ekrandan
+                      // kaybolup "görünmeyen satırlara uygulandı" olmaz.
+                      ListenableBuilder(
+                        listenable: _selection,
+                        builder: (context, topBar) => _selection.active
+                            ? _SelectionBar(
+                                count: _selection.count,
+                                onClose: _selection.clear,
+                                onRecategorize: () => _recategorizeSelected(
+                                    state.currentTransactions),
+                              )
+                            : topBar!,
+                        child: TransactionTopBar(
+                          filter: filterState,
+                          periodLabel:
+                              statementPeriodLabel(cubit, context.l10n),
+                          // Boş cüzdanda aranacak bir şey yok. Yüklenirken
+                          // gizlenmez: kaydı olan kullanıcıda düğmeler her
+                          // açılışta sonradan belirirdi.
+                          showTools: !walletIsEmpty || isLoading,
+                          categoryLabels: _categoryLabels,
+                          onModeChanged: cubit.setFinanceMode,
+                          onPeriodStep: cubit.stepPeriod,
+                          onPeriodPick: () => pickSharedPeriod(context),
+                          onFilterTap: () => _showFilterSheet(context),
+                          onSearchChanged: cubit.setSearchQuery,
+                          onDataFilterChanged: cubit.setDataFilter,
+                          onClearCategories: () =>
+                              cubit.setCategories(const {}),
+                          onClearPriceRange: () => cubit.setPriceRange(null),
+                          onClearSearch: () => cubit.setSearchQuery(null),
+                          // Çip satırındaki "Temizle" görünen TÜM çipleri kaldırır,
+                          // tür çipi dahil; dönem korunur.
+                          onClearAllFilters: () => cubit
+                            ..clearDataFilters()
+                            ..setFinanceMode(FinanceMode.compare),
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      child: isLoading && walletIsEmpty
-                          ? const TransactionListSkeleton()
-                          : CustomScrollView(
-                              controller: _scrollController,
-                              slivers: _buildSlivers(
-                                context: context,
-                                cubit: cubit,
-                                filterState: filterState,
-                                ledger: ledger,
-                                visible: visible,
-                                mode: mode,
-                                period: period,
-                                periodHasToday: periodHasToday,
-                                walletIsEmpty: walletIsEmpty,
+                      Expanded(
+                        child: isLoading && walletIsEmpty
+                            ? const TransactionListSkeleton()
+                            : CustomScrollView(
+                                controller: _scrollController,
+                                slivers: _buildSlivers(
+                                  context: context,
+                                  cubit: cubit,
+                                  filterState: filterState,
+                                  ledger: ledger,
+                                  visible: visible,
+                                  mode: mode,
+                                  period: period,
+                                  periodHasToday: periodHasToday,
+                                  walletIsEmpty: walletIsEmpty,
+                                ),
                               ),
-                            ),
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );

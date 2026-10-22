@@ -74,7 +74,13 @@ class _ErrorLogPageState extends State<ErrorLogPage> {
     return Scaffold(
       backgroundColor: scheme.surface,
       appBar: AppBar(
-        title: Text(l10n.errorLogTitle),
+        // Sığmazsa küçülür: üç eylem düğmesiyle dar ekranda "Hata …" diye
+        // kesiliyordu.
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: AlignmentDirectional.centerStart,
+          child: Text(l10n.errorLogTitle),
+        ),
         actions: [
           IconButton(
             tooltip: l10n.errorLogCopy,

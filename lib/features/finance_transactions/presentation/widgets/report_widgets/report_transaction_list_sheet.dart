@@ -61,6 +61,7 @@ class ReportTransactionListSheet extends StatelessWidget {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => BlocProvider.value(
         value: transactionBloc,
@@ -150,21 +151,25 @@ class ReportTransactionListSheet extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Row(
+                // Wrap: sığmazsa tutar alt satıra iner. Row'da başlık dar
+                // sütunda kelimenin ortasından bölünüyordu ("harcamala / r").
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 12,
                   children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: theme.textTheme.titleLarge
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
+                    Text(
+                      title,
+                      style: theme.textTheme.titleLarge
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(width: 12),
                     Text(
                       money(total),
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: isExpense ? MoneyColors.expense : MoneyColors.income,
+                        color: isExpense
+                            ? MoneyColors.expense
+                            : MoneyColors.income,
                       ),
                     ),
                   ],

@@ -79,6 +79,7 @@ class CreditCardSetupSheet extends StatefulWidget {
     return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => CreditCardSetupSheet(
         userId: userId,
@@ -545,7 +546,7 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
                               : null,
                         ),
                         const SizedBox(height: 12),
-                        Row(
+                        _PairOrStack(
                           children: [
                             Expanded(
                               child: _dayField(
@@ -722,9 +723,7 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
                                       CrossAxisAlignment.stretch,
                                   children: [
                                     const SizedBox(height: 12),
-                                    Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                    _PairOrStack(
                                       children: [
                                         Expanded(
                                           flex: 3,
@@ -791,9 +790,7 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
                                         style: theme.textTheme.bodySmall,
                                       ),
                                       const SizedBox(height: 8),
-                                      Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                      _PairOrStack(
                                         children: [
                                           Expanded(
                                             child: TextFormField(
@@ -887,8 +884,7 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
         );
     return [
       _sectionLabel(l10n.kkBolumFaiz),
-      Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      _PairOrStack(
         children: [
           Expanded(
             child: field(_monthlyRate, l10n.kkAylikFaiz,
@@ -1097,5 +1093,53 @@ class _ColorRow extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+/// İki alanı yan yana dizer; her birine [_minField] (yazı ölçeğiyle
+/// büyütülmüş) yer kalmıyorsa alt alta. `Row`'da 320dp + büyük yazıda
+/// etiketler "Hesap kesim…" / "Son ödeme g…", "Banka (i…" / "Son 4 …",
+/// "Aylık akdi…" / "Aylık geci…" diye kesiliyor, hangi alana ne yazılacağı
+/// görünmüyordu.
+class _PairOrStack extends StatelessWidget {
+  final List<Widget> children;
+
+  const _PairOrStack({required this.children});
+
+  static const double _minField = 150;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(builder: (context, constraints) {
+      final fields = children.whereType<Expanded>().toList();
+      final min = MediaQuery.textScalerOf(context).scale(_minField);
+      final gaps = (children.length - fields.length) * 10;
+      final narrowest = fields.isEmpty
+          ? double.infinity
+          : fields
+              .map((f) =>
+                  (constraints.maxWidth - gaps) *
+                  f.flex /
+                  fields.fold<int>(0, (a, e) => a + e.flex))
+              .reduce((a, b) => a < b ? a : b);
+      if (narrowest >= min) {
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: children,
+        );
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final c in children)
+            if (c is Expanded)
+              c.child
+            else if (c is SizedBox)
+              SizedBox(height: c.width)
+            else
+              c,
+        ],
+      );
+    });
   }
 }

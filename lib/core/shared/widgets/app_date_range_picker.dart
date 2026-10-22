@@ -79,6 +79,7 @@ class AppDateRangePicker {
       // aralık hiç seçilemiyordu. Menü artık içeriği kadar yer alır,
       // sığmazsa kendi içinde kayar (bkz. [_QuickMenuSheet]).
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (sheetContext) => _QuickMenuSheet(options: options),
     );
   }

@@ -48,8 +48,9 @@ class AboutCard extends StatelessWidget {
                 color: scheme.onSurface,
               ),
             ),
+            // Sabitten: elle yazılmış '1.0.0' 1.1.0'da da 1.0.0 gösteriyordu.
             trailing: Text(
-              '1.0.0',
+              kAppVersionName,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: scheme.onSurfaceVariant,

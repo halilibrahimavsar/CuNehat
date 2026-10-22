@@ -130,18 +130,19 @@ class _CardDebtRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  // Wrap: sığmazsa tutar alt satıra iner; Row'da 320dp +
+                  // büyük yazıda kart adı "Bonu…" diye kesiliyordu.
+                  Wrap(
+                    spacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      Flexible(
-                        child: Text(
-                          last4 == null ? card.name : '${card.name} ••$last4',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                        ),
+                      Text(
+                        last4 == null ? card.name : '${card.name} ••$last4',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall
+                            ?.copyWith(fontWeight: FontWeight.w700),
                       ),
-                      const SizedBox(width: 8),
                       Text(
                         money(debt),
                         style: theme.textTheme.titleSmall?.copyWith(

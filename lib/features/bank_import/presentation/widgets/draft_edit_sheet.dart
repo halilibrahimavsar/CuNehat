@@ -34,6 +34,7 @@ Future<DraftEdit?> showDraftEditSheet(
   return showModalBottomSheet<DraftEdit>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     showDragHandle: true,
     builder: (_) => _DraftEditSheet(
       draft: draft,

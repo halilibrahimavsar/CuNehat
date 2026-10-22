@@ -77,6 +77,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) {
         return BlocProvider.value(
@@ -111,8 +112,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
         // (bkz. [ReportCategoryDataBuilder.includeSystemMovements]).
         final universe =
             dataBuilder.universeIn(sourceOf(state.currentTransactions));
-        final fullList =
-            dataBuilder.buildFull(universe, isExpense: isExpense);
+        final fullList = dataBuilder.buildFull(universe, isExpense: isExpense);
         final categoryDataList = switch (sliceMode) {
           ReportSliceMode.full => fullList,
           ReportSliceMode.pie => dataBuilder.buildPie(fullList),
@@ -142,8 +142,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
         final display = displayOf;
         final transactionsWithBalance = updatedCategory.transactions
             .map((t) => TransactionWithBalance(
-                transaction: display == null ? t : display(t),
-                balanceAfter: 0))
+                transaction: display == null ? t : display(t), balanceAfter: 0))
             .toList();
 
         return Container(
@@ -192,24 +191,35 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 12),
+                        // Wrap: sığmazsa tutar alt satıra iner; Row'da ad
+                        // tireden bölünüyordu ("Yeme- / İçme").
                         Expanded(
-                          child: Text(
-                            updatedCategory.isDirect
-                                ? context.l10n.dogrudanKategoriSec(
-                                    updatedCategory.labelIn(
-                                        context, categoryLabels))
-                                : updatedCategory.labelIn(
-                                    context, categoryLabels),
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          money(updatedCategory.totalAmount),
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: isExpense ? MoneyColors.expense : MoneyColors.income,
+                          child: Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 12,
+                            children: [
+                              Text(
+                                updatedCategory.isDirect
+                                    ? context.l10n.dogrudanKategoriSec(
+                                        updatedCategory.labelIn(
+                                            context, categoryLabels))
+                                    : updatedCategory.labelIn(
+                                        context, categoryLabels),
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                money(updatedCategory.totalAmount),
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: isExpense
+                                      ? MoneyColors.expense
+                                      : MoneyColors.income,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -306,7 +316,9 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: budgetExceeded ? MoneyColors.expense : MoneyColors.income,
+                      color: budgetExceeded
+                          ? MoneyColors.expense
+                          : MoneyColors.income,
                     ),
                   ),
                   const SizedBox(width: 8),

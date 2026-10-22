@@ -52,6 +52,7 @@ Future<CategoryEntity?> showCategoryPickerSheet({
   return showModalBottomSheet<CategoryEntity>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (_) => CategoryPickerSheet(
       isExpense: isExpense,

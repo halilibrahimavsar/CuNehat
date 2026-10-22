@@ -434,7 +434,11 @@ class _Headline extends StatelessWidget {
                 increaseIsGood: increaseIsGood,
               ),
               const SizedBox(width: 4),
-              Text(context.l10n.reportTrendVsPrevious, style: muted),
+              // Flexible: 320dp + büyük yazıda rozetle birlikte 26px
+              // taşıyordu (Wrap satırı genişliği aşan çocuğu bölmez).
+              Flexible(
+                child: Text(context.l10n.reportTrendVsPrevious, style: muted),
+              ),
             ],
           )
         else if (noPrevious)
@@ -452,11 +456,20 @@ class _Context extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Text(
-      lines.join('  ·  '),
-      style: theme.textTheme.bodySmall?.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-      ),
+    final style = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+    // Her parça ayrı Text: sığmayan parça BÜTÜN olarak alt satıra iner.
+    // Tek metinde satır tutarla birimin arasından bölünüyordu (320dp + büyük
+    // yazıda "Net +12.880,00" / "₺").
+    return Wrap(
+      key: const ValueKey('report-trend-context'),
+      spacing: 6,
+      children: [
+        for (var i = 0; i < lines.length; i++)
+          Text(i < lines.length - 1 ? '${lines[i]}  ·' : lines[i],
+              style: style),
+      ],
     );
   }
 }

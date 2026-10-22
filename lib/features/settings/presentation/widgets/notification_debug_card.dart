@@ -39,11 +39,13 @@ class NotificationDebugCard extends StatelessWidget {
             children: [
               Icon(Icons.bug_report_outlined, size: 18, color: scheme.tertiary),
               const SizedBox(width: 8),
-              Text(
-                'Bildirim duman testi (yalnız debug)',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: scheme.tertiary,
+              Expanded(
+                child: Text(
+                  'Bildirim duman testi (yalnız debug)',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: scheme.tertiary,
+                  ),
                 ),
               ),
             ],

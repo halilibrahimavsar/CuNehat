@@ -69,6 +69,7 @@ class AddCustomSheet extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) => AddCustomSheet(
         walletId: walletId,

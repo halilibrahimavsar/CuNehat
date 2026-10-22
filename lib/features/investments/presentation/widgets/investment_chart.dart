@@ -226,7 +226,11 @@ class _InvestmentChartState extends State<InvestmentChart> {
     return PieChartSectionData(
       color: slice.color,
       value: slice.value,
-      title: slice.percent >= InvestmentChart._inlineLabelMinPercent
+      // Tek dilimli halkada (%100) etiket yazılmaz: açıklama satırı zaten
+      // söylüyor ve "%100,0" halkadan taşıp ortadaki toplamın üstüne
+      // biniyordu.
+      title: slice.percent >= InvestmentChart._inlineLabelMinPercent &&
+              slice.percent < 99.95
           ? formatPercent(slice.percent, decimals: 1)
           : '',
       radius: selected ? 48 : 42,
@@ -320,38 +324,51 @@ class _InvestmentChartState extends State<InvestmentChart> {
                     ),
                   ),
                   const SizedBox(width: 10),
+                  // Wrap: sığmazsa tutar + yüzde alt satıra iner. Row'da
+                  // 320dp + büyük yazıda ad "Özel v…" diye kesiliyordu.
                   Expanded(
-                    child: Text(
-                      slice.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurface.withValues(alpha: 0.9),
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    money(slice.value),
-                    maxLines: 1,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontSize: 12,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(minWidth: 44),
-                    child: Text(
-                      formatPercent(slice.percent, decimals: 1),
-                      textAlign: TextAlign.end,
-                      maxLines: 1,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: scheme.onSurface,
-                      ),
+                    child: Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      children: [
+                        Text(
+                          slice.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: scheme.onSurface.withValues(alpha: 0.9),
+                            fontSize: 13,
+                          ),
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              money(slice.value),
+                              maxLines: 1,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontSize: 12,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(minWidth: 44),
+                              child: Text(
+                                formatPercent(slice.percent, decimals: 1),
+                                textAlign: TextAlign.end,
+                                maxLines: 1,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: scheme.onSurface,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ],

@@ -404,15 +404,17 @@ class OptionalDueDatePill extends StatelessWidget {
             children: [
               Icon(Icons.event_available_rounded, size: 18, color: accent),
               const SizedBox(width: 12),
-              Text(
-                context.l10n.vadeOpsiyonelLabel,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: cs.onSurfaceVariant,
-                  fontWeight: FontWeight.w500,
+              Expanded(
+                child: Text(
+                  context.l10n.vadeOpsiyonelLabel,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: cs.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               Text(
                 date == null
                     ? context.l10n.vadeSecilmedi
@@ -472,15 +474,17 @@ class DueDatePill extends StatelessWidget {
             children: [
               Icon(Icons.calendar_today_rounded, size: 18, color: accent),
               const SizedBox(width: 12),
-              Text(
-                isDebt ? context.l10n.baslangicLabel : context.l10n.vadeLabel,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: cs.onSurfaceVariant,
-                  fontWeight: FontWeight.w500,
+              Expanded(
+                child: Text(
+                  isDebt ? context.l10n.baslangicLabel : context.l10n.vadeLabel,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: cs.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               Text(
                 AppFormatters.dateLong.format(date),
                 style: TextStyle(

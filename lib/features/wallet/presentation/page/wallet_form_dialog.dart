@@ -502,8 +502,11 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
         children: [
           Icon(icon, color: color, size: 18),
           const SizedBox(width: 8),
-          Text(label, style: TextStyle(fontSize: 14, color: cs.onSurface)),
-          const Spacer(),
+          Expanded(
+            child: Text(label,
+                style: TextStyle(fontSize: 14, color: cs.onSurface)),
+          ),
+          const SizedBox(width: 8),
           Text(
             formatMoney(value),
             style: TextStyle(
@@ -813,6 +816,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (context) => IconPicker(
         selectedIcon: _selectedIconName,
         iconColor: WalletColors.hexToColor(_selectedColorHex),
@@ -839,7 +843,10 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
             enableAlpha: false,
             displayThumbColor: true,
             showLabel: true,
-            pickerAreaHeightPercent: 0.8,
+            // Kısa ekranda daha basık: %80'de 568dp'lik telefonda kanal
+            // etiketleri (R G B) ilk bakışta yarıdan kesiliyordu.
+            pickerAreaHeightPercent:
+                MediaQuery.sizeOf(context).height < 700 ? 0.5 : 0.8,
           ),
         ),
         actions: [

@@ -1,4 +1,5 @@
 // ignore_for_file: deprecated_member_use
+import 'package:cunehat/core/shared/focus.dart';
 
 import 'package:flutter/material.dart';
 import 'dart:ui';
@@ -159,8 +160,12 @@ class AnimatedScaffoldWrapperState extends State<AnimatedScaffoldWrapper>
       // ile çakışmaz: biri tepeyi, öteki dibi alır.
       useSafeArea: true,
       builder: (context) {
+        // Kısa ekranda daha yüksek açılır: %60, 568dp'lik telefonda başlık
+        // ve alt eylem çubuğundan sonra desteye hiç yer bırakmıyordu —
+        // cüzdan kartı düğmelerin arkasında kalıyordu.
+        final tall = MediaQuery.sizeOf(context).height >= 700;
         return DraggableScrollableSheet(
-          initialChildSize: 0.6, // Start at 70% of screen
+          initialChildSize: tall ? 0.6 : 0.9,
           minChildSize: 0.3, // Can be dragged down to 50%
           maxChildSize: 0.95, // Can be dragged up to 95%
           builder: (context, scrollController) => walletContent,
@@ -183,6 +188,9 @@ class AnimatedScaffoldWrapperState extends State<AnimatedScaffoldWrapper>
       drawer: widget.drawer,
       onDrawerChanged: (isOpened) {
         if (isOpened) {
+          // Çekmeceden açılan sayfalardan dönüşte defterin arama klavyesi
+          // kendiliğinden açılıyordu (bkz. [releaseInputFocus]).
+          releaseInputFocus();
           _drawerController.forward();
         } else {
           _drawerController.reverse();

@@ -197,14 +197,15 @@ class _DataExportImportCardContent extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Text(
-                    context.l10n.dataExportImport,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
+                  Expanded(
+                    child: Text(
+                      context.l10n.dataExportImport,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                      ),
                     ),
                   ),
-                  const Spacer(),
                   if (isLoading)
                     const SizedBox(
                       width: 16,

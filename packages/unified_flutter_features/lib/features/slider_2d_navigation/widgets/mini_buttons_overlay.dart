@@ -79,11 +79,19 @@ class _MiniButtonsOverlayState extends State<MiniButtonsOverlay>
               builder: (context, child) {
                 final curvedValue =
                     Curves.easeOutBack.transform(_controller.value);
+                // Ekran içinde tut: topuz soldayken uçtaki düğme (ve
+                // etiketi) 320dp ekranda sol kenardan taşıyordu.
+                final maxLeft = MediaQuery.sizeOf(context).width -
+                    SliderConfig.miniButtonLayoutWidth -
+                    8;
+                final left = (widget.position.dx +
+                        widget.knobSize.width / 2 +
+                        (offsetX * curvedValue) -
+                        30)
+                    .clamp(8.0, math.max(8.0, maxLeft))
+                    .toDouble();
                 return Positioned(
-                  left: widget.position.dx +
-                      widget.knobSize.width / 2 +
-                      (offsetX * curvedValue) -
-                      30,
+                  left: left,
                   top: widget.position.dy +
                       widget.knobSize.height / 2 +
                       (offsetY * curvedValue) -

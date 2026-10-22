@@ -476,7 +476,16 @@ class WalletDeckCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                        if (active) _ActiveChip(color: on),
+                        if (active)
+                          // Dar ekranda yalnız simge: yazılı rozet adı "Maaş
+                          // he…" diye kesiyordu; "aktif" bilgisi kartın
+                          // altındaki "Aktif cüzdan" düğmesinde de yazılı.
+                          _ActiveChip(
+                            color: on,
+                            compact: MediaQuery.sizeOf(context).width /
+                                    MediaQuery.textScalerOf(context).scale(1) <
+                                360,
+                          ),
                       ],
                     ),
                     const Spacer(),
@@ -569,11 +578,18 @@ class WalletDeckCard extends StatelessWidget {
 
 class _ActiveChip extends StatelessWidget {
   final Color color;
+  final bool compact;
 
-  const _ActiveChip({required this.color});
+  const _ActiveChip({required this.color, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
+    if (compact) {
+      return Semantics(
+        label: context.l10n.aktif,
+        child: Icon(Icons.check_circle_rounded, size: 18, color: color),
+      );
+    }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(

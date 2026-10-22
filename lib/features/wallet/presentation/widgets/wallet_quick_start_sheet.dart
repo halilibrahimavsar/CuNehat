@@ -74,6 +74,7 @@ class WalletQuickStartSheet extends StatelessWidget {
     return showModalBottomSheet<WalletQuickStartAction>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => WalletQuickStartSheet(walletName: walletName),
     );

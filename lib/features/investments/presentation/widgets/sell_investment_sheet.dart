@@ -63,6 +63,7 @@ class SellInvestmentSheet extends StatefulWidget {
     return showModalBottomSheet<InvestmentSaleRequest>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) => SellInvestmentSheet(
         investment: investment,
@@ -535,8 +536,11 @@ class _SellInvestmentSheetState extends State<SellInvestmentSheet> {
     required IconData icon,
   }) {
     return InputDecoration(
-      hintText: hint,
-      hintStyle: TextStyle(
+      // Etiket (ipucu değil): alanlar dolu açılıyor ve ipucu dolu alanda
+      // görünmüyor — satışta iki "12.000"ün hangisinin satılan değer,
+      // hangisinin cüzdana girecek tutar olduğu okunmuyordu.
+      label: Text(hint, maxLines: 1, overflow: TextOverflow.ellipsis),
+      labelStyle: TextStyle(
           color: cs.onSurfaceVariant.withValues(alpha: 0.7),
           fontWeight: FontWeight.w400),
       prefixIcon: Icon(icon,

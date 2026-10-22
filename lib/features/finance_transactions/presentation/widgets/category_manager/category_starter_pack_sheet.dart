@@ -26,6 +26,7 @@ Future<int?> showCategoryStarterPack(
   return showModalBottomSheet<int>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     // Kapatmak serbest: sayfanın kendi "Şimdilik atla" düğmesi var ve atlayan
     // kullanıcı kategori yöneticisinin boş durumundan geri dönebiliyor.
     // (`isDismissible: false` yalnız dışa dokunuşu engelliyor, sürükleme ve

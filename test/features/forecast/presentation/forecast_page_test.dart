@@ -1,3 +1,4 @@
+import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/budgets/domain/entities/temp_budget_entity.dart';
@@ -288,6 +289,22 @@ void main() {
       });
     }
   }
+
+  // Cihazda 320dp + 1,3 yazı ölçeğinde "Bugün" ile bir haftalık etiket üst
+  // üste biniyordu (sabit 7 günlük adım). Taşma istisnası ATMAZ — etiketin
+  // varlığına bakılır.
+  testWidgets('bakiye grafiği dar ekranda haftalık etiketi seyreltir',
+      (tester) async {
+    final week = AppFormatters.dayMonth.format(DateTime(2026, 11, 17));
+    final twoWeeks = AppFormatters.dayMonth.format(DateTime(2026, 11, 24));
+
+    await pump(tester, _result(), size: const Size(411, 900));
+    expect(find.text(week), findsOneWidget);
+
+    await pump(tester, _result(), size: const Size(320, 900), textScale: 1.3);
+    expect(find.text(week), findsNothing);
+    expect(find.text(twoWeeks), findsOneWidget);
+  });
 
   group('tüm cüzdanlar', () {
     testWidgets(

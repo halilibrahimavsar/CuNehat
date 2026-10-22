@@ -601,28 +601,39 @@ class _SingleTransactionDetailPageState
     final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 14),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: scheme.onSurfaceVariant),
-          const SizedBox(width: 12),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              color: scheme.onSurfaceVariant,
-            ),
-          ),
-          const Spacer(),
-          valueWidget ??
-              Text(
-                value ?? '',
+      // Değer kendi genişliğini alır (en çok satırın %60'ı), etiket kalanı.
+      // Spacer'lı düzende 320dp + büyük yazıda "İşlem sonrası bakiye"
+      // satırı 38px taşıyor, "Gider" kesiliyordu.
+      child: LayoutBuilder(
+        builder: (context, constraints) => Row(
+          children: [
+            Icon(icon, size: 18, color: scheme.onSurfaceVariant),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
                 style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: valueColor ?? scheme.onSurface,
+                  fontSize: 13,
+                  color: scheme.onSurfaceVariant,
                 ),
               ),
-        ],
+            ),
+            const SizedBox(width: 12),
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.6),
+              child: valueWidget ??
+                  Text(
+                    value ?? '',
+                    textAlign: TextAlign.end,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: valueColor ?? scheme.onSurface,
+                    ),
+                  ),
+            ),
+          ],
+        ),
       ),
     );
   }

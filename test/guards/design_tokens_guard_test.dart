@@ -23,7 +23,7 @@ void main() {
   const rawPaletteBaseline = 281;
   const offScaleFontSizeBaseline = 207;
   const offScaleRadiusBaseline = 141;
-  const heavyWeightBaseline = 97;
+  const heavyWeightBaseline = 95;
 
   final sources = _dartSources();
 

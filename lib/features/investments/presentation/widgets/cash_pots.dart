@@ -395,6 +395,7 @@ class CashPotFormSheet extends StatefulWidget {
     return showModalBottomSheet<CashPotFormResult>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => CashPotFormSheet(
         goals: goals,
@@ -506,7 +507,9 @@ class _CashPotFormSheetState extends State<CashPotFormSheet> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [AmountInputFormatter()],
             decoration: InputDecoration(
-              labelText: l10n.kasaAcilisTutari,
+              // `labelText` tek satırda kesiliyordu ("…(isteğe b…"); boş
+              // alanda etiket iki satıra sarar.
+              label: Text(l10n.kasaAcilisTutari, maxLines: 2),
               helperText: l10n.kasaAcilisTutariYardim,
               suffixText: widget.currency,
               border: const OutlineInputBorder(),
@@ -598,6 +601,7 @@ class CashPotMoveSheet extends StatefulWidget {
     return showModalBottomSheet<CashPotMoveResult>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => CashPotMoveSheet(
         pot: pot,

@@ -5,6 +5,7 @@ import '../../../../../core/constants/app_constants.dart';
 import '../../../../../core/extensions/context_extensions.dart';
 import '../../../../../core/notifications/notification_diagnostics.dart';
 import '../../../../../core/shared/widgets/app_card.dart';
+import '../../../../../core/shared/widgets/row_action_sheet.dart';
 import '../../../../../core/enums/notification_frequency.dart';
 import '../bloc/notification_settings/notification_settings_bloc.dart';
 import '../bloc/notification_settings/notification_settings_event.dart';
@@ -84,29 +85,18 @@ class _NotificationSettingsCardState extends State<NotificationSettingsCard>
               const Divider(height: 1),
 
               // Random Reminders
+              // Satırın tamamı seçim sayfasını açar; seçili değer alt yazıda.
+              // Sağda DropdownButton vardı: en uzun seçeneğin genişliğini alıp
+              // 320dp + büyük yazıda başlığı harf harf alt alta diziyordu.
               ListTile(
+                key: const ValueKey('setting-reminder-frequency'),
                 leading: const Icon(Icons.notifications_active),
                 title: Text(context.l10n.randomReminders),
                 subtitle: Text(
                   _getFrequencyLabel(context, state.randomRemindersFrequency),
                 ),
-                trailing: DropdownButton<NotificationFrequency>(
-                  value: state.randomRemindersFrequency,
-                  underline: const SizedBox(),
-                  items: NotificationFrequency.values.map((freq) {
-                    return DropdownMenuItem(
-                      value: freq,
-                      child: Text(_getFrequencyLabel(context, freq)),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      context
-                          .read<NotificationSettingsBloc>()
-                          .add(UpdateRandomRemindersFrequency(value));
-                    }
-                  },
-                ),
+                trailing: const Icon(Icons.arrow_drop_down),
+                onTap: () => _pickFrequency(context, state),
               ),
               // Kullanıcı "Çok (Günde 3)" seçerken ne geleceğini bilmiyordu.
               // Saatler de yazılıyor: hatırlatmalar artık rastgele değil sabit
@@ -264,6 +254,29 @@ class _NotificationSettingsCardState extends State<NotificationSettingsCard>
       .map((slot) => '${slot.hour.toString().padLeft(2, '0')}:'
           '${slot.minute.toString().padLeft(2, '0')}')
       .join(', ');
+
+  Future<void> _pickFrequency(
+      BuildContext context, NotificationSettingsState state) async {
+    final bloc = context.read<NotificationSettingsBloc>();
+    final picked = await RowActionSheet.show<NotificationFrequency>(
+      context,
+      title: context.l10n.randomReminders,
+      icon: Icons.notifications_active,
+      accent: Theme.of(context).colorScheme.primary,
+      keyPrefix: 'reminder-frequency',
+      actions: [
+        for (final freq in NotificationFrequency.values)
+          RowAction(
+            value: freq,
+            icon: freq == state.randomRemindersFrequency
+                ? Icons.radio_button_checked
+                : Icons.radio_button_unchecked,
+            title: _getFrequencyLabel(context, freq),
+          ),
+      ],
+    );
+    if (picked != null) bloc.add(UpdateRandomRemindersFrequency(picked));
+  }
 
   String _getFrequencyLabel(
       BuildContext context, NotificationFrequency frequency) {

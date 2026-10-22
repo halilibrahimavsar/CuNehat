@@ -108,52 +108,55 @@ class _BulkCategoryDialogState extends State<BulkCategoryDialog> {
             ),
           ),
           const SizedBox(height: 8),
-          Text(widget.message, style: theme.textTheme.bodyMedium),
-          if (widget.rows.length > 3)
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () => setState(() {
-                  if (allChecked) {
-                    _checked.clear();
-                  } else {
-                    _checked.addAll([for (final (i, _) in widget.rows) i]);
-                  }
-                }),
-                child: Text(allChecked
-                    ? l10n.bankImportDeselectAll
-                    : l10n.bankImportSelectAll),
-              ),
-            )
-          else
-            const SizedBox(height: 8),
-          // Uzun listede diyalog ekranı taşmasın: liste kendi içinde kayar ve
-          // başlık/düğmelerden ARTAN yüksekliğe sığar (`Flexible`). Yalnız
-          // sabit bir tavan (%45) vermek alçak ekranda yetmiyordu — 360×640'ta
-          // diyalog 172px taşıyordu (ölçüldü).
+          // Açıklama + "tümü/hiçbiri" + satırlar TEK kaydırma alanında, düğmeler
+          // sabit: ayrı duruyorken 568dp + büyük yazıda başlık ve açıklamadan
+          // sonra listeye bir satırlık yer kalıyordu. Kaydırınca açıklama
+          // yukarı çekilir. `Flexible`: alan başlık ve düğmelerden ARTAN
+          // yüksekliğe sığar (360×640'ta diyalog 172px taşıyordu).
           Flexible(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.sizeOf(context).height * 0.45,
-              ),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  border: Border.all(color: cs.outlineVariant),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    padding: EdgeInsets.zero,
-                    itemCount: widget.rows.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
-                    itemBuilder: (context, k) {
-                      final (index, draft) = widget.rows[k];
-                      return _row(context, index, draft);
-                    },
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(widget.message, style: theme.textTheme.bodyMedium),
+                  if (widget.rows.length > 3)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () => setState(() {
+                          if (allChecked) {
+                            _checked.clear();
+                          } else {
+                            _checked
+                                .addAll([for (final (i, _) in widget.rows) i]);
+                          }
+                        }),
+                        child: Text(allChecked
+                            ? l10n.bankImportDeselectAll
+                            : l10n.bankImportSelectAll),
+                      ),
+                    )
+                  else
+                    const SizedBox(height: 8),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: cs.outlineVariant),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Column(
+                        children: [
+                          for (var k = 0; k < widget.rows.length; k++) ...[
+                            if (k > 0) const Divider(height: 1),
+                            _row(context, widget.rows[k].$1, widget.rows[k].$2),
+                          ],
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),

@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
+import 'package:cunehat/core/shared/focus.dart';
 
 /// Cüzdanlar arası transfer sheet'i.
 ///
@@ -52,6 +53,7 @@ class TransferSheet extends StatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => TransferSheet(
         wallets: wallets,
@@ -235,6 +237,7 @@ class _TransferSheetState extends State<TransferSheet> {
   }
 
   Future<void> _pickDate() async {
+    releaseInputFocus();
     final picked = await showDatePicker(
       context: context,
       initialDate: _date,
@@ -367,11 +370,13 @@ class _TransferSheetState extends State<TransferSheet> {
                     children: [
                       Icon(Icons.swap_horiz_rounded, color: cs.primary),
                       const SizedBox(width: 10),
-                      Text(
-                        context.l10n.cuzdanlarArasiTransfer,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
+                      Expanded(
+                        child: Text(
+                          context.l10n.cuzdanlarArasiTransfer,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
                     ],

@@ -22,6 +22,7 @@ Future<void> showLeftoverReviewSheet(
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (_) => BlocProvider<BankImportCubit>.value(
       value: cubit,

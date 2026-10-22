@@ -30,6 +30,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cunehat/core/shared/widgets/field_hint.dart';
+import 'package:cunehat/core/shared/focus.dart';
 
 /// Borç / alacak ekleme & düzenleme için sıfırdan tasarlanmış modern sayfa.
 ///
@@ -281,6 +282,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
   }
 
   Future<void> _pickDate() async {
+    releaseInputFocus();
     final picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
@@ -291,6 +293,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
   }
 
   Future<void> _pickPersonalDueDate() async {
+    releaseInputFocus();
     final picked = await showDatePicker(
       context: context,
       initialDate: _personalDueDate ?? _selectedDate,

@@ -19,6 +19,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/categ
 import 'package:cunehat/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
+import 'package:cunehat/core/shared/widgets/scrollable_center.dart';
 import 'package:flutter/material.dart';
 
 /// Tek türün (gelir **ya da** gider) kategori yönetim gövdesi.
@@ -462,33 +463,31 @@ class CategoryManagerViewState extends State<CategoryManagerView> {
 
   Widget _buildEmptyState() {
     final cs = Theme.of(context).colorScheme;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.category_outlined, size: 64, color: cs.onSurfaceVariant),
-            const SizedBox(height: 16),
-            Text(
-              context.l10n.henuzKategoriYok,
-              style: TextStyle(fontSize: 16, color: cs.onSurfaceVariant),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              context.l10n.asagidakiButondanEkleyebilirsiniz,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
-            ),
-            const SizedBox(height: 20),
-            // Başlangıç paketini atlayan kullanıcının geri dönebileceği tek yol.
-            FilledButton.tonalIcon(
-              onPressed: openStarterPack,
-              icon: const Icon(Icons.auto_awesome, size: 18),
-              label: Text(context.l10n.oneriSetindenBasla),
-            ),
-          ],
-        ),
+    return ScrollableCenter(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.category_outlined, size: 64, color: cs.onSurfaceVariant),
+          const SizedBox(height: 16),
+          Text(
+            context.l10n.henuzKategoriYok,
+            style: TextStyle(fontSize: 16, color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            context.l10n.asagidakiButondanEkleyebilirsiniz,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: 20),
+          // Başlangıç paketini atlayan kullanıcının geri dönebileceği tek yol.
+          FilledButton.tonalIcon(
+            onPressed: openStarterPack,
+            icon: const Icon(Icons.auto_awesome, size: 18),
+            label: Text(context.l10n.oneriSetindenBasla),
+          ),
+        ],
       ),
     );
   }

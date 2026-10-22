@@ -122,6 +122,7 @@ class BankImportMappingView extends StatelessWidget {
     final picked = await showModalBottomSheet<ColumnRole>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       showDragHandle: true,
       builder: (ctx) => _RoleSheet(
         columnLabel: columnLabel(ctx, _table, _m, col),

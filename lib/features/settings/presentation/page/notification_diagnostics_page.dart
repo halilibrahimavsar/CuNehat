@@ -67,7 +67,13 @@ class _NotificationDiagnosticsPageState
     return Scaffold(
       backgroundColor: scheme.surface,
       appBar: AppBar(
-        title: Text(l10n.notificationDiagnosticsTitle),
+        // Sığmazsa küçülür: yenile düğmesiyle dar ekranda "Bildirim
+        // tanıla…" diye kesiliyordu.
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: AlignmentDirectional.centerStart,
+          child: Text(l10n.notificationDiagnosticsTitle),
+        ),
         actions: [
           IconButton(
             tooltip: l10n.notificationDiagnosticsRefresh,

@@ -255,11 +255,18 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  context.l10n.cuzdanlarim,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                // Tek satır, sığmazsa küçülür: dar ekranda "Cüzdanları / m"
+                // diye harfin ortasından bölünüyordu.
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    context.l10n.cuzdanlarim,
+                    maxLines: 1,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 // NET kırılım (hesaplar − kart borcu − krediler +

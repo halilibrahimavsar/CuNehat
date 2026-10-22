@@ -49,6 +49,7 @@ import 'package:cunehat/features/forecast/data/forecast_service.dart';
 import 'package:cunehat/features/forecast/domain/forecast_models.dart';
 import 'package:cunehat/features/forecast/presentation/widgets/forecast_link_tile.dart';
 import 'package:cunehat/features/forecast/presentation/widgets/report_temp_budget_section.dart';
+import 'package:cunehat/core/shared/widgets/scrollable_center.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -1230,47 +1231,45 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
-    return Padding(
+    return ScrollableCenter(
       padding: const EdgeInsets.symmetric(vertical: 24.0),
-      child: Center(
-        child: AppCard(
-          section: AppSection.transactions,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: scheme.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.pie_chart_outline_rounded,
-                  size: 48,
-                  color: scheme.primary,
-                ),
+      child: AppCard(
+        section: AppSection.transactions,
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: scheme.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
               ),
-              const SizedBox(height: 16),
-              Text(
-                message ?? context.l10n.reportNoDataTitle,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: scheme.onSurface,
-                ),
+              child: Icon(
+                Icons.pie_chart_outline_rounded,
+                size: 48,
+                color: scheme.primary,
               ),
-              const SizedBox(height: 6),
-              Text(
-                context.l10n.buDonemIcinHenuz,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-                ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              message ?? context.l10n.reportNoDataTitle,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: scheme.onSurface,
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              context.l10n.buDonemIcinHenuz,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -41,7 +41,11 @@ class CardDueChip extends StatelessWidget {
     final text = paid
         // Ay adıyla: "15.10.26" gün/ay sırası belirsiz okunuyordu ve dar
         // satırda ikiye kırılıyordu.
-        ? l10n.kkSonrakiKesim(AppFormatters.dayMonth.format(s.nextClosing))
+        // Gün ile ay arası bölünmez boşluk: çip iki satıra sararken tarih
+        // "25 / Eki" diye bölünmesin, satır "kesim:"den sonra kırılsın.
+        ? l10n.kkSonrakiKesim(AppFormatters.dayMonth
+            .format(s.nextClosing)
+            .replaceAll(' ', '\u00A0'))
         : s.isCarrying
             ? l10n.kkAsgariOdendi
             : s.daysToDue > 0
@@ -60,10 +64,11 @@ class CardDueChip extends StatelessWidget {
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(8),
       ),
+      // İki satıra kadar sarar: dar satırda (320dp + büyük yazı, yanında
+      // "Öde" düğmesi) "Sonraki kesim: 25 …" diye tarih kesiliyordu.
       child: Text(
         text,
-        maxLines: 1,
-        softWrap: false,
+        maxLines: 2,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontSize: 12,
@@ -420,6 +425,7 @@ class CardDetailsSheet extends StatelessWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       showDragHandle: true,
       builder: (_) => BlocProvider.value(
         value: bloc,

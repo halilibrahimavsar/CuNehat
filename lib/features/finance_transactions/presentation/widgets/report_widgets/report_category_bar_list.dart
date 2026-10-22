@@ -173,27 +173,43 @@ class _Row extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
+                  // Wrap: sığarsa ad solda, rozet + tutar sağda; sığmazsa
+                  // rozet + tutar alt satıra iner. Row'da 320dp + büyük
+                  // yazıda ad "Ye…" diye iki harfe iniyordu.
                   Expanded(
-                    child: Text(
-                      label,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: scheme.onSurface,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  ReportChangeBadge(
-                    percent: item.changePercent,
-                    increaseIsGood: increaseIsGood,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    amountText,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: scheme.onSurfaceVariant,
+                    child: Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 6,
+                      runSpacing: 2,
+                      children: [
+                        Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: scheme.onSurface,
+                          ),
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ReportChangeBadge(
+                              percent: item.changePercent,
+                              increaseIsGood: increaseIsGood,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              amountText,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                   if (drills)

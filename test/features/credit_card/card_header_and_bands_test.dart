@@ -388,7 +388,8 @@ void main() {
 
       final next = CardCycle(card.creditCard!).nextClosing(DateTime.now());
       expect(
-        find.text('Sonraki kesim: ${DateFormat.MMMd('tr_TR').format(next)}'),
+        find.text('Sonraki kesim: '
+            '${DateFormat.MMMd('tr_TR').format(next).replaceAll(' ', '\u00A0')}'),
         findsOneWidget,
       );
       expect(find.textContaining(RegExp(r'\d{2}\.\d{2}\.\d{2}')), findsNothing);

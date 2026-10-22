@@ -6,6 +6,7 @@ import 'package:cunehat/core/error/error_handling.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
+import 'package:cunehat/core/shared/focus.dart';
 import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/app_date_range_picker.dart';
@@ -263,38 +264,49 @@ class TempBudgetCard extends StatelessWidget {
                   children: [
                     Text(
                       budget.name,
-                      maxLines: 1,
+                      // İki satır: "Bayram alışveri…" — ad kartın kimliği.
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleMedium
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),
-                    Text(
-                      tempBudgetRangeLabel(budget, today: today),
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(color: scheme.onSurfaceVariant),
+                    // Rozet adla aynı satırı paylaşınca 320dp'de ikisi de
+                    // kesiliyordu ("Kapad…", "2 gün …"); tarihin yanında
+                    // durur, sığmazsa alta iner, ad tüm genişliği alır.
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          tempBudgetRangeLabel(budget, today: today),
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.15),
+                            borderRadius: AppRadius.controlAll,
+                            border:
+                                Border.all(color: color.withValues(alpha: 0.3)),
+                          ),
+                          child: Text(
+                            tempBudgetStatusText(l10n, budget, today,
+                                currency: currency),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: color,
+                              fontWeight: AppType.strong,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
-                ),
-              ),
-              Flexible(
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.15),
-                    borderRadius: AppRadius.controlAll,
-                    border: Border.all(color: color.withValues(alpha: 0.3)),
-                  ),
-                  child: Text(
-                    tempBudgetStatusText(l10n, budget, today,
-                        currency: currency),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: color,
-                      fontWeight: AppType.strong,
-                    ),
-                  ),
                 ),
               ),
               RowMenuButton(
@@ -507,6 +519,7 @@ class _TempBudgetFormSheetState extends State<TempBudgetFormSheet> {
   }
 
   Future<void> _addCategory(FormFieldState<List<String>> field) async {
+    releaseInputFocus();
     final picked = await showCategoryPickerSheet(
       context: context,
       isExpense: true,

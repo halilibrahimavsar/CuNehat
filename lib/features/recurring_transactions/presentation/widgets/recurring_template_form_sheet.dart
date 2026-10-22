@@ -5,6 +5,7 @@ import 'package:cunehat/core/error/error_handling.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
+import 'package:cunehat/core/shared/focus.dart';
 import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
 import 'package:cunehat/core/shared/widgets/labeled_segment.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
@@ -156,6 +157,7 @@ class _RecurringTemplateFormSheetState
   Future<void> _pickCategory() async {
     final walletId = _walletId;
     if (walletId == null) return;
+    releaseInputFocus();
     final picked = await showCategoryPickerSheet(
       context: context,
       isExpense: _isExpense,
@@ -176,6 +178,7 @@ class _RecurringTemplateFormSheetState
     final first = _date.isBefore(today)
         ? DateTime(_date.year, _date.month, _date.day)
         : today;
+    releaseInputFocus();
     final picked = await showDatePicker(
       context: context,
       initialDate: _date,

@@ -9,6 +9,8 @@ class LocalAuthConstants {
   static const double pinDotSpacing = 12.0;
   static const double numpadButtonSize = 75.0;
   static const double numpadSpacing = 20.0;
+  static const double numpadButtonSizeCompact = 64.0;
+  static const double numpadSpacingCompact = 12.0;
   static const double pinDotShadowBlurRadius = 10.0;
   static const double pinDotShadowSpreadRadius = 2.0;
   static const double backgroundLockOpacity = 0.55;

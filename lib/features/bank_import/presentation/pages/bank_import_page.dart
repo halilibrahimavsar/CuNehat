@@ -67,7 +67,10 @@ class _BankImportPageState extends State<BankImportPage> {
             appBar: hideChrome
                 ? null
                 : AppBar(
-                    title: Text(context.l10n.bankImportTitle),
+                    // Çekmecedeki adla aynı, kısa: "Banka ekstresi içe
+                    // aktar" 320dp'de "…içe…" diye kesiliyordu; ne yapıldığı
+                    // zaten gövdenin ilk cümlesinde.
+                    title: Text(context.l10n.drawerBankImportTitle),
                     actions: const [_RawTextAction()],
                   ),
             body: switch (state) {
@@ -147,8 +150,10 @@ class _RawTextAction extends StatelessWidget {
   void _show(BuildContext context, String text) {
     showDialog<void>(
       context: context,
+      // Kendi başlığı: "PDF metni tanınamadı"yı ödünç alıyordu, ekstre
+      // başarıyla okunduğunda da "tanınamadı" yazıyordu.
       builder: (ctx) => AlertDialog(
-        title: Text(ctx.l10n.bankImportPdfRawTitle),
+        title: Text(ctx.l10n.bankImportRawTextTitle),
         content: SizedBox(
           width: double.maxFinite,
           child: SingleChildScrollView(
@@ -263,6 +268,10 @@ class _SetupStepState extends State<_SetupStep> {
               const SizedBox(height: 4),
               DropdownButton<String>(
                 isExpanded: true,
+                // Menüde öğeler iki satıra sarar ("Maaş hesabı › Bonus
+                // Kart" dar ekranda kartın adını kesiyordu); kapalı düğme
+                // tek satır kalır.
+                itemHeight: null,
                 value: _walletId,
                 items: [
                   // Kart, sahibinin hemen altında "Hesap › Kart" olarak:
@@ -279,6 +288,7 @@ class _SetupStepState extends State<_SetupStep> {
                           Expanded(
                             child: Text(
                               familyLabel(w, wallets),
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -533,28 +543,31 @@ class _CategorySuggestionStepState extends State<_CategorySuggestionStep> {
 
   @override
   Widget build(BuildContext context) {
+    // Açıklama listenin İLK öğesi: sabit dururken 568dp + büyük yazıda
+    // önerilere yalnız iki satırlık yer kalıyordu.
+    final header = Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.l10n.bankImportCategorySuggestionTitle,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            context.l10n.bankImportCategorySuggestionHint,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+    );
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                context.l10n.bankImportCategorySuggestionTitle,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                context.l10n.bankImportCategorySuggestionHint,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
-        ),
         Expanded(
           child: ListView(
             children: [
+              header,
               for (final s in widget.state.suggestions)
                 CheckboxListTile(
                   value: _approved.contains(s),

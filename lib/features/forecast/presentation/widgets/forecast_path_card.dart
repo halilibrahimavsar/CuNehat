@@ -282,111 +282,122 @@ class _PathChart extends StatelessWidget {
           dotData: const FlDotData(show: false),
         );
 
-    return LineChart(
-      LineChartData(
-        minX: 0,
-        maxX: (path.length - 1).toDouble(),
-        minY: minV - pad,
-        maxY: maxV + pad,
-        lineBarsData: [
-          if (hasBand) edge((p) => p.low),
-          if (hasBand) edge((p) => p.high),
-          expected,
-        ],
-        betweenBarsData: [
-          if (hasBand)
-            BetweenBarsData(
-              fromIndex: 0,
-              toIndex: 1,
-              color: color.withValues(alpha: 0.14),
+    // Etiketler haftalık ritimde (bugünden 7, 14… gün sonra) kalır; dar ekran
+    // ya da büyük yazıda sığmazsa ritim iki-üç haftaya açılır. Sabit 7 günde
+    // 320dp + 1,3 yazı ölçeğinde "Bugün" ile "26 Eki" üst üste biniyordu.
+    return LayoutBuilder(builder: (context, constraints) {
+      final fitStep = dateLabelStep(
+        pointCount: path.length,
+        availableWidth: constraints.maxWidth - kValueAxisWidth,
+        slotWidth: scaledDateLabelSlot(context),
+      );
+      final labelEvery = 7 * math.max(1, (fitStep / 7).ceil());
+      return LineChart(
+        LineChartData(
+          minX: 0,
+          maxX: (path.length - 1).toDouble(),
+          minY: minV - pad,
+          maxY: maxV + pad,
+          lineBarsData: [
+            if (hasBand) edge((p) => p.low),
+            if (hasBand) edge((p) => p.high),
+            expected,
+          ],
+          betweenBarsData: [
+            if (hasBand)
+              BetweenBarsData(
+                fromIndex: 0,
+                toIndex: 1,
+                color: color.withValues(alpha: 0.14),
+              ),
+          ],
+          lineTouchData: LineTouchData(
+            touchTooltipData: LineTouchTooltipData(
+              fitInsideHorizontally: true,
+              fitInsideVertically: true,
+              getTooltipItems: (spots) => [
+                for (final s in spots)
+                  if (s.barIndex == (hasBand ? 2 : 0))
+                    LineTooltipItem(
+                      '${forecastDayLabel(l10n, path[s.x.toInt()].day, today)}\n'
+                      '${money(path[s.x.toInt()].expected)}',
+                      TextStyle(
+                        color: scheme.onInverseSurface,
+                        fontWeight: AppType.strong,
+                        fontSize: AppType.caption,
+                      ),
+                    )
+                  else
+                    null,
+              ],
             ),
-        ],
-        lineTouchData: LineTouchData(
-          touchTooltipData: LineTouchTooltipData(
-            fitInsideHorizontally: true,
-            fitInsideVertically: true,
-            getTooltipItems: (spots) => [
-              for (final s in spots)
-                if (s.barIndex == (hasBand ? 2 : 0))
-                  LineTooltipItem(
-                    '${forecastDayLabel(l10n, path[s.x.toInt()].day, today)}\n'
-                    '${money(path[s.x.toInt()].expected)}',
-                    TextStyle(
-                      color: scheme.onInverseSurface,
-                      fontWeight: AppType.strong,
-                      fontSize: AppType.caption,
-                    ),
-                  )
-                else
-                  null,
-            ],
           ),
-        ),
-        extraLinesData: ExtraLinesData(horizontalLines: [
-          if (crossesZero || minV < 0)
-            HorizontalLine(
-              y: 0,
-              color: MoneyColors.bad.withValues(alpha: 0.55),
+          extraLinesData: ExtraLinesData(horizontalLines: [
+            if (crossesZero || minV < 0)
+              HorizontalLine(
+                y: 0,
+                color: MoneyColors.bad.withValues(alpha: 0.55),
+                strokeWidth: 1,
+                dashArray: const [4, 3],
+              ),
+          ]),
+          titlesData: FlTitlesData(
+            rightTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: kValueAxisWidth,
+                interval: yInterval > 0 ? yInterval : 1,
+                getTitlesWidget: (value, meta) {
+                  if (value < minV || value > maxV || !money.visible) {
+                    return const SizedBox.shrink();
+                  }
+                  return SideTitleWidget(
+                    axisSide: meta.axisSide,
+                    child: Text(money.compact(value, symbol: false),
+                        style: chartAxisLabelStyle(scheme)),
+                  );
+                },
+              ),
+            ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 22,
+                interval: 1,
+                getTitlesWidget: (value, meta) {
+                  final i = value.toInt();
+                  if (value != value.roundToDouble() ||
+                      i < 0 ||
+                      i >= path.length ||
+                      i % labelEvery != 0) {
+                    return const SizedBox.shrink();
+                  }
+                  return SideTitleWidget(
+                    axisSide: meta.axisSide,
+                    fitInside: SideTitleFitInsideData.fromTitleMeta(meta),
+                    child: Text(forecastDayLabel(l10n, path[i].day, today),
+                        style: chartAxisLabelStyle(scheme)),
+                  );
+                },
+              ),
+            ),
+          ),
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            horizontalInterval: yInterval > 0 ? yInterval : 1,
+            getDrawingHorizontalLine: (_) => FlLine(
+              color: scheme.onSurface.withValues(alpha: 0.08),
               strokeWidth: 1,
-              dashArray: const [4, 3],
-            ),
-        ]),
-        titlesData: FlTitlesData(
-          rightTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: kValueAxisWidth,
-              interval: yInterval > 0 ? yInterval : 1,
-              getTitlesWidget: (value, meta) {
-                if (value < minV || value > maxV || !money.visible) {
-                  return const SizedBox.shrink();
-                }
-                return SideTitleWidget(
-                  axisSide: meta.axisSide,
-                  child: Text(money.compact(value, symbol: false),
-                      style: chartAxisLabelStyle(scheme)),
-                );
-              },
             ),
           ),
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 22,
-              interval: 1,
-              getTitlesWidget: (value, meta) {
-                final i = value.toInt();
-                if (value != value.roundToDouble() ||
-                    i < 0 ||
-                    i >= path.length ||
-                    i % 7 != 0) {
-                  return const SizedBox.shrink();
-                }
-                return SideTitleWidget(
-                  axisSide: meta.axisSide,
-                  fitInside: SideTitleFitInsideData.fromTitleMeta(meta),
-                  child: Text(forecastDayLabel(l10n, path[i].day, today),
-                      style: chartAxisLabelStyle(scheme)),
-                );
-              },
-            ),
-          ),
+          borderData: FlBorderData(show: false),
         ),
-        gridData: FlGridData(
-          show: true,
-          drawVerticalLine: false,
-          horizontalInterval: yInterval > 0 ? yInterval : 1,
-          getDrawingHorizontalLine: (_) => FlLine(
-            color: scheme.onSurface.withValues(alpha: 0.08),
-            strokeWidth: 1,
-          ),
-        ),
-        borderData: FlBorderData(show: false),
-      ),
-    );
+      );
+    });
   }
 }

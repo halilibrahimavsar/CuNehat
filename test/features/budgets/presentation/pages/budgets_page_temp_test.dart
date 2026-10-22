@@ -6,6 +6,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
+import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/budgets/domain/entities/temp_budget_entity.dart';
 import 'package:cunehat/features/budgets/presentation/bloc/budgets_bloc.dart';
 import 'package:cunehat/features/budgets/presentation/bloc/budgets_event.dart';
@@ -16,6 +17,7 @@ import 'package:cunehat/features/finance_transactions/domain/repositories/catego
 import 'package:cunehat/features/finance_transactions/domain/services/wallet_category_service.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -120,8 +122,9 @@ void main() {
 
   tearDown(() async => getIt.reset());
 
-  Future<AppLocalizations> pumpPage(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(800, 1600);
+  Future<AppLocalizations> pumpPage(WidgetTester tester,
+      {Size size = const Size(800, 1600), double textScale = 1}) async {
+    tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
@@ -130,16 +133,21 @@ void main() {
           BlocProvider<WalletBloc>.value(value: wallets),
           BlocProvider<AppAuthBloc>.value(value: auth),
         ],
-        child: const MaterialApp(
-          locale: Locale('tr'),
-          localizationsDelegates: [
+        child: MaterialApp(
+          locale: const Locale('tr'),
+          localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          home: BudgetsPage(),
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: TextScaler.linear(textScale)),
+            child: child!,
+          ),
+          home: const BudgetsPage(),
         ),
       ),
     );
@@ -186,6 +194,33 @@ void main() {
     expect(find.descendant(of: done, matching: find.textContaining('aştı')),
         findsOneWidget);
   });
+
+  // Cihazda 320dp + 1,3 yazı ölçeğinde özet rozeti kesiliyor, "Harcanan" ile
+  // "Limit" yapışıp taşıyor, tek seferlik kartta ad ile rozet ikisi birden
+  // kısalıyordu.
+  for (final scale in [1.0, 1.3, 2.0]) {
+    testWidgets('320dp telefonda (yazı ölçeği $scale) bütçe kartları taşmaz',
+        (tester) async {
+      when(() => budgets.state).thenReturn(BudgetsLoaded(const [
+        BudgetEntity(
+            categoryId: 'market',
+            walletId: 'w',
+            limitAmount: 1250000,
+            spentAmount: 987654.32),
+      ], tempBudgets: [
+        active
+      ]));
+      await pumpPage(tester, size: const Size(320, 4000), textScale: scale);
+
+      expect(tester.takeException(), isNull);
+      // Ad rozetle yarışmaz: "Tatil" kısalmadan tek satırda sığar. 2,0'da
+      // test fontu (her harf tam kare) gerçeğinin ~iki katı geniş, ölçülmez.
+      if (scale <= 1.3) {
+        final name = tester.renderObject<RenderParagraph>(find.text('Tatil'));
+        expect(name.didExceedMaxLines, isFalse);
+      }
+    });
+  }
 
   testWidgets('"+" → tek seferlik: boş formda üç doğrulama, kayıt yok',
       (tester) async {

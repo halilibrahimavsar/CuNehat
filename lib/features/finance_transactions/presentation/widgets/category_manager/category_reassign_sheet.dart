@@ -18,6 +18,7 @@ Future<CategoryEntity?> showCategoryReassignSheet({
   return showModalBottomSheet<CategoryEntity>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (context) => _CategoryReassignSheet(
       deleted: deleted,

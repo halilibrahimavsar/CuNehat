@@ -19,8 +19,16 @@ class AppDialogSurface extends StatelessWidget {
   Widget build(BuildContext context) {
     final surface =
         Theme.of(context).extension<AppSurface>() ?? AppSurface.light;
+    // Dar ekranda kenar boşlukları küçülür: varsayılan 40dp yatay pay +
+    // 20dp iç dolgu 320dp'lik telefonda içeriğe ~200dp bırakıyordu; iki
+    // düğme yan yana sığmıyor, alt alta dizilince klavyeyle birlikte metin
+    // alanı eziliyordu.
+    final narrow = MediaQuery.sizeOf(context).width < 360;
 
     return Dialog(
+      insetPadding: narrow
+          ? const EdgeInsets.symmetric(horizontal: 16, vertical: 24)
+          : null,
       backgroundColor: Colors.transparent,
       elevation: 0,
       shadowColor: Colors.transparent,
@@ -35,7 +43,7 @@ class AppDialogSurface extends StatelessWidget {
             boxShadow: surface.ambientShadow,
           ),
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(narrow ? 16 : 20),
             child: child,
           ),
         ),

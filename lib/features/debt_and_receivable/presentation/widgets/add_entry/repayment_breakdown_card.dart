@@ -41,7 +41,8 @@ class RepaymentBreakdownCard extends StatelessWidget {
     // Görünürlük DIŞARIDA okunur: AnimatedBuilder yalnız kendi builder'ını
     // yeniden çalıştırıyor, `watch` bağımlılığı ise bu build'e yazılmalı ki
     // göz düğmesine basıldığında kart da yeniden çizilsin.
-    final money = MoneyWriter(currency: currency, visible: context.amountsVisible);
+    final money =
+        MoneyWriter(currency: currency, visible: context.amountsVisible);
 
     return AnimatedBuilder(
       animation: Listenable.merge([
@@ -86,26 +87,34 @@ class RepaymentBreakdownCard extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Text(
-                  context.l10n.toplamGeriOdeme,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: cs.onSurface,
+            // Wrap: sığmazsa tutar alt satıra (sağa) iner. Row'da büyük
+            // tutar etiketi "Toplam / geri / ödeme" diye üç satıra eziyordu.
+            SizedBox(
+              width: double.infinity,
+              child: Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                runAlignment: WrapAlignment.end,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                children: [
+                  Text(
+                    context.l10n.toplamGeriOdeme,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: cs.onSurface,
+                    ),
                   ),
-                ),
-                const Spacer(),
-                Text(
-                  hasData ? money(total) : '—',
-                  style: TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w900,
-                    color: accent,
+                  Text(
+                    hasData ? money(total) : '—',
+                    style: TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w900,
+                      color: accent,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         );
@@ -129,15 +138,17 @@ class _SummaryRow extends StatelessWidget {
 
     return Row(
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: cs.onSurfaceVariant,
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: cs.onSurfaceVariant,
+            ),
           ),
         ),
-        const Spacer(),
+        const SizedBox(width: 8),
         Text(
           value,
           style: TextStyle(

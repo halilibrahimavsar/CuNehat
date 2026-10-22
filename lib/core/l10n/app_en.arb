@@ -1172,6 +1172,7 @@
   "bankImportStepAddRest": "Add the rest",
   "bankImportStepCancelAll": "Cancel all",
   "bankImportShowRaw": "Show raw text",
+  "bankImportRawTextTitle": "Text read from the PDF",
   "bankImportPdfRawTitle": "Couldn't recognize the PDF text",
   "bankImportPdfRawHint": "We extracted the text but couldn't recognize the transaction rows. Copy the text below and share it; the parser will be tuned to your bank's layout.",
   "bankImportScannedPdfTitle": "This PDF is a scanned image",

@@ -1,5 +1,6 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/shared/focus.dart';
 import 'package:cunehat/core/shared/motion/app_motion.dart';
 import 'package:cunehat/core/shared/widgets/labeled_segment.dart';
 import 'package:cunehat/features/finance_transactions/domain/period_preferences.dart';
@@ -68,8 +69,7 @@ class PeriodUnitEditor extends StatelessWidget {
             PeriodUnit.week => _WeekStart(value: value, onChanged: onChanged),
             PeriodUnit.biweek =>
               _BiweekAnchor(value: value, onChanged: onChanged),
-            PeriodUnit.month =>
-              _MonthStart(value: value, onChanged: onChanged),
+            PeriodUnit.month => _MonthStart(value: value, onChanged: onChanged),
           },
         ),
         const SizedBox(height: 10),
@@ -145,6 +145,7 @@ class _BiweekAnchor extends StatelessWidget {
             title: Text(l10n.periodBiweekAnchorLabel),
             trailing: TextButton(
               onPressed: () async {
+                releaseInputFocus();
                 final picked = await showDatePicker(
                   context: context,
                   initialDate: value.biweekAnchor ?? anchor,

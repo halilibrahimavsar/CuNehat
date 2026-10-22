@@ -94,8 +94,10 @@ class _CategoriesPageState extends State<CategoriesPage>
         bottom: TabBar(
           controller: _tabs,
           tabs: [
-            Tab(text: context.l10n.giderKategorileri),
-            Tab(text: context.l10n.gelirKategorileri),
+            // `Tab(text:)` tek satıra kilitlidir: dar ekranda "Gider
+            // kategorile…" diye soluklaşıyordu. Etiket iki satıra sarar.
+            Tab(child: _TabText(context.l10n.giderKategorileri)),
+            Tab(child: _TabText(context.l10n.gelirKategorileri)),
           ],
         ),
       ),
@@ -138,4 +140,18 @@ class _CategoriesPageState extends State<CategoriesPage>
             ),
     );
   }
+}
+
+class _TabText extends StatelessWidget {
+  final String text;
+
+  const _TabText(this.text);
+
+  @override
+  Widget build(BuildContext context) => Text(
+        text,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+      );
 }

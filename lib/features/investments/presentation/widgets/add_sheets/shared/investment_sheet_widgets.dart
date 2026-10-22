@@ -8,6 +8,8 @@ import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/ledger_transaction_picker.dart';
 import 'package:cunehat/features/investments/domain/entities/goal_entity.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/purchase_payment.dart';
+import 'package:cunehat/core/shared/widgets/amount_font_fit.dart';
+import 'package:cunehat/core/shared/focus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -110,6 +112,14 @@ class InvestmentAmountCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Tutar alanının stili: hem ölçüm (AmountFontFit) hem alan aynı yazıyı
+    // kullanır, ölçülen genişlik çizilenle birebir olsun.
+    final style = TextStyle(
+      fontSize: 40,
+      fontWeight: FontWeight.w800,
+      color: valueColor,
+      height: 1.0,
+    );
     final cs = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
@@ -142,28 +152,26 @@ class InvestmentAmountCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Flexible(
-                child: TextField(
+                child: AmountFontFit(
                   controller: controller,
-                  textAlign: TextAlign.right,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: [AmountInputFormatter()],
-                  onChanged: (_) => onChanged(),
-                  cursorColor: accent,
-                  style: TextStyle(
-                    fontSize: 40,
-                    fontWeight: FontWeight.w800,
-                    color: valueColor,
-                    height: 1.0,
-                  ),
-                  decoration: InputDecoration(
-                    isCollapsed: true,
-                    border: InputBorder.none,
-                    hintText: '0',
-                    hintStyle: TextStyle(
-                      fontSize: 40,
-                      fontWeight: FontWeight.w800,
-                      color: accent.withValues(alpha: 0.3),
+                  style: style,
+                  builder: (context, fontSize) => TextField(
+                    controller: controller,
+                    textAlign: TextAlign.right,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [AmountInputFormatter()],
+                    onChanged: (_) => onChanged(),
+                    cursorColor: accent,
+                    style: style.copyWith(fontSize: fontSize),
+                    decoration: InputDecoration(
+                      isCollapsed: true,
+                      border: InputBorder.none,
+                      hintText: '0',
+                      hintStyle: style.copyWith(
+                        fontSize: fontSize,
+                        color: accent.withValues(alpha: 0.3),
+                      ),
                     ),
                   ),
                 ),
@@ -238,38 +246,45 @@ class InvestmentFilledField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return TextField(
-      controller: controller,
-      readOnly: readOnly,
-      keyboardType: keyboardType,
-      inputFormatters: inputFormatters,
-      textCapitalization: keyboardType == null
-          ? TextCapitalization.sentences
-          : TextCapitalization.none,
-      onChanged: (_) => onChanged(),
-      style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w500),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(
-            color: cs.onSurfaceVariant.withValues(alpha: 0.7),
-            fontWeight: FontWeight.w400),
-        prefixIcon: Icon(icon,
-            size: 20, color: cs.onSurfaceVariant.withValues(alpha: 0.8)),
-        suffixIcon: readOnly
-            ? Icon(Icons.lock_outline_rounded,
-                size: 18, color: cs.onSurfaceVariant)
-            : null,
-        filled: true,
-        fillColor: cs.onSurface.withValues(alpha: 0.04),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: accent, width: 1.6),
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) => TextField(
+        controller: controller,
+        readOnly: readOnly,
+        keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
+        textCapitalization: keyboardType == null
+            ? TextCapitalization.sentences
+            : TextCapitalization.none,
+        onChanged: (_) => onChanged(),
+        style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w500),
+        decoration: InputDecoration(
+          hintText: hint,
+          // İpucu alanın etiketi: tek satırda dar ekranda "Maliyet (ödediğin
+          // tut…" diye kesiliyordu. İki satır yalnız alan BOŞKEN: görünmeyen
+          // ipucu da yer ayırtıyor, dolu alan iki satır boyunda kalıyordu.
+          hintMaxLines: controller.text.isEmpty ? 2 : 1,
+          hintStyle: TextStyle(
+              color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+              fontWeight: FontWeight.w400),
+          prefixIcon: Icon(icon,
+              size: 20, color: cs.onSurfaceVariant.withValues(alpha: 0.8)),
+          suffixIcon: readOnly
+              ? Icon(Icons.lock_outline_rounded,
+                  size: 18, color: cs.onSurfaceVariant)
+              : null,
+          filled: true,
+          fillColor: cs.onSurface.withValues(alpha: 0.04),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(color: accent, width: 1.6),
+          ),
         ),
       ),
     );
@@ -569,71 +584,77 @@ class InvestmentQuantityAndFetch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final field = InvestmentFilledField(
+      controller: quantityController,
+      hint: unitLabel ?? context.l10n.adet,
+      icon: Icons.numbers_rounded,
+      accent: accent,
+      onChanged: onQuantityChanged,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      // Adet para değildir; 0,125 gr gibi hassas girişe izin ver.
+      inputFormatters: [AmountInputFormatter(decimalDigits: 4)],
+    );
+    final fetch = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          flex: 2,
-          child: InvestmentFilledField(
-            controller: quantityController,
-            hint: unitLabel ?? context.l10n.adet,
-            icon: Icons.numbers_rounded,
-            accent: accent,
-            onChanged: onQuantityChanged,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            // Adet para değildir; 0,125 gr gibi hassas girişe izin ver.
-            inputFormatters: [AmountInputFormatter(decimalDigits: 4)],
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          flex: 3,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(
-                height: 56, // Match InvestmentFilledField height
-                child: ElevatedButton.icon(
-                  onPressed: isLoading ? null : onFetch,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: accent.shade600,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  icon: isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white))
-                      : const Icon(Icons.refresh_rounded),
-                  label: Text(
-                    context.l10n.hesapla,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700, fontSize: 15),
-                  ),
-                ),
+        SizedBox(
+          height: 56, // Match InvestmentFilledField height
+          child: ElevatedButton.icon(
+            onPressed: isLoading ? null : onFetch,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: accent.shade600,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
               ),
-              if (fetchedMessage != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8, left: 4),
-                  child: Text(
-                    fetchedMessage!,
-                    style: TextStyle(
-                      color: fetchedColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-            ],
+            ),
+            icon: isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white))
+                : const Icon(Icons.refresh_rounded),
+            label: Text(
+              context.l10n.hesapla,
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+            ),
           ),
         ),
+        if (fetchedMessage != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8, left: 4),
+            child: Text(
+              fetchedMessage!,
+              style: TextStyle(
+                color: fetchedColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
       ],
     );
+    // Dar ekranda alt alta: 2:3 bölüşümde miktar alanı 320dp + büyük yazıda
+    // ~90dp'ye iniyor, birim ipucu "Gr…" diye kesiliyordu.
+    return LayoutBuilder(builder: (context, constraints) {
+      final minField = MediaQuery.textScalerOf(context).scale(140);
+      if ((constraints.maxWidth - 10) * 2 / 5 < minField) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [field, const SizedBox(height: 10), fetch],
+        );
+      }
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(flex: 2, child: field),
+          const SizedBox(width: 10),
+          Expanded(flex: 3, child: fetch),
+        ],
+      );
+    });
   }
 }
 
@@ -686,6 +707,7 @@ class InvestmentPurchaseRow extends StatelessWidget {
   });
 
   Future<void> _pickDate(BuildContext context) async {
+    releaseInputFocus();
     final picked = await showDatePicker(
       context: context,
       initialDate: date,
@@ -841,8 +863,7 @@ class InvestmentPurchaseRow extends StatelessWidget {
                   const Spacer(),
                 TextButton(
                   onPressed: () => _pickLedgerRow(context),
-                  style: TextButton.styleFrom(
-                      foregroundColor: accent.shade700),
+                  style: TextButton.styleFrom(foregroundColor: accent.shade700),
                   child: Text(tx == null
                       ? l10n.defterSatiriSecDugme
                       : l10n.defterSatiriDegistir),
@@ -949,7 +970,8 @@ class _PaymentOption extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                      style:
+                          TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
                     ),
                   ],
                 ),

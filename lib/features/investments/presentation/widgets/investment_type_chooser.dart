@@ -19,6 +19,10 @@ class InvestmentTypeChooser extends StatelessWidget {
   }) {
     return showModalBottomSheet<InvestmentType>(
       context: context,
+      // Yükseklik içeriğe göre: varsayılan (ekranın yarısı) küçük telefonda
+      // dört seçeneğe yetmiyor, "Nakit kasası" alttan kesiliyordu.
+      isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) => InvestmentTypeChooser(allowCash: allowCash),
     );
@@ -39,66 +43,69 @@ class InvestmentTypeChooser extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 4),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: cs.onSurface.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(2),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 4),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: cs.onSurface.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      context.l10n.varlikTuruSec,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: cs.onSurface,
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        context.l10n.varlikTuruSec,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: cs.onSurface,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            _tile(
-              context,
-              icon: Icons.monetization_on_rounded,
-              color: Colors.amber.shade700,
-              title: context.l10n.yeniAltinEkle,
-              type: InvestmentType.gold,
-            ),
-            _tile(
-              context,
-              icon: Icons.trending_up_rounded,
-              color: Colors.blue,
-              title: context.l10n.yeniHisseEkle,
-              type: InvestmentType.stock,
-            ),
-            _tile(
-              context,
-              icon: Icons.account_balance_wallet_rounded,
-              color: Colors.purple,
-              title: context.l10n.yeniOzelYatirimEkle,
-              type: InvestmentType.custom,
-            ),
-            if (allowCash)
               _tile(
                 context,
-                icon: Icons.savings_rounded,
-                color: const Color(0xFF26A69A),
-                title: context.l10n.yeniNakitKasasiEkle,
-                type: InvestmentType.cash,
+                icon: Icons.monetization_on_rounded,
+                color: Colors.amber.shade700,
+                title: context.l10n.yeniAltinEkle,
+                type: InvestmentType.gold,
               ),
-            const SizedBox(height: 8),
-          ],
+              _tile(
+                context,
+                icon: Icons.trending_up_rounded,
+                color: Colors.blue,
+                title: context.l10n.yeniHisseEkle,
+                type: InvestmentType.stock,
+              ),
+              _tile(
+                context,
+                icon: Icons.account_balance_wallet_rounded,
+                color: Colors.purple,
+                title: context.l10n.yeniOzelYatirimEkle,
+                type: InvestmentType.custom,
+              ),
+              if (allowCash)
+                _tile(
+                  context,
+                  icon: Icons.savings_rounded,
+                  color: const Color(0xFF26A69A),
+                  title: context.l10n.yeniNakitKasasiEkle,
+                  type: InvestmentType.cash,
+                ),
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
     );

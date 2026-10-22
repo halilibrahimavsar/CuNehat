@@ -19,6 +19,7 @@ import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
+import 'package:cunehat/core/shared/widgets/scrollable_center.dart';
 import '../../domain/entities/recurring_transaction_entity.dart';
 import '../../domain/services/recurring_occurrences.dart';
 import '../../domain/usecases/get_all_recurring_templates_usecase.dart';
@@ -304,8 +305,11 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage>
         return RefreshIndicator(
           onRefresh: _loadTemplates,
           child: ListView.separated(
+            // FAB payı: şablonlar sekmesindeki gibi. Yoksa son kartın
+            // "Onayla" düğmesi "+"nın altında kalıyordu.
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 32)
-                .plusSystemBottom(context),
+                .plusSystemBottom(context)
+                .plusFabClearance(),
             itemCount: pending.length,
             separatorBuilder: (_, __) => const SizedBox(height: 10),
             itemBuilder: (context, index) => PendingRecurringRow(
@@ -397,7 +401,15 @@ class _TabLabel extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Flexible(child: Text(text, overflow: TextOverflow.ellipsis)),
+        // İki satıra sarar: dar ekranda "Onay bekle…" diye kesiliyordu.
+        Flexible(
+          child: Text(
+            text,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+          ),
+        ),
         const SizedBox(width: 6),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
@@ -607,7 +619,7 @@ class _EmptyTemplates extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return ScrollableCenter(
       child: EmptyState(
         icon: Icons.event_repeat_rounded,
         title: context.l10n.henuzDuzenliIslemYok,
@@ -724,7 +736,12 @@ class _TemplateCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Row(
+                // Wrap: sığmazsa tarih rozetin altına iner; Row'da "01 Kas
+                // 2…" diye yıl ve göreli gün ("6 gün sonra") kayboluyordu.
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -744,17 +761,14 @@ class _TemplateCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        template.isActive
-                            ? '$dateStr · ${_relativeLabel(context, template.nextExecutionDate)}'
-                            : context.l10n.duraklatildi,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.labelSmall
-                            ?.copyWith(color: scheme.onSurfaceVariant),
-                      ),
+                    Text(
+                      template.isActive
+                          ? '$dateStr · ${_relativeLabel(context, template.nextExecutionDate)}'
+                          : context.l10n.duraklatildi,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelSmall
+                          ?.copyWith(color: scheme.onSurfaceVariant),
                     ),
                   ],
                 ),

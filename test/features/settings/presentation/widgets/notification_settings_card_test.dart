@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 
 class MockNotificationSettingsBloc
     extends MockBloc<NotificationSettingsEvent, NotificationSettingsState>
@@ -146,6 +147,27 @@ void main() {
           '${slot.minute.toString().padLeft(2, '0')}';
       expect(find.textContaining(text), findsOneWidget);
     }
+  });
+
+  testWidgets('hatırlatma sıklığı satırın tamamından seçilir', (tester) async {
+    // Sağdaki DropdownButton en uzun seçeneğin genişliğini alıyordu; 320dp +
+    // büyük yazıda başlık harf harf alt alta diziliyordu.
+    whenListen(
+      bloc,
+      const Stream<NotificationSettingsState>.empty(),
+      initialState: const NotificationSettingsState(),
+    );
+
+    await tester.pumpWidget(host());
+    await tester.pump();
+
+    await tester.tap(find.text('Motive edici hatırlatıcılar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('reminder-frequency-high')));
+    await tester.pumpAndSettle();
+
+    verify(() => bloc
+        .add(const UpdateRandomRemindersFrequency(NotificationFrequency.high)));
   });
 
   testWidgets('tanılama satırı release derlemesinde de durur', (tester) async {

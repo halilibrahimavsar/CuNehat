@@ -30,6 +30,7 @@ Future<CategoryEntity?> showCategoryForm({
   return await showModalBottomSheet<CategoryEntity>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (context) => CategoryFormSheet(
       isExpense: isExpense,
@@ -244,7 +245,9 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
       items: [
         DropdownMenuItem<String?>(
           value: null,
-          child: Text(context.l10n.ustKategoriYok),
+          // Ellipsis: dar alanda "Ana kategori (üst" diye sert kesiliyordu.
+          child: Text(context.l10n.ustKategoriYok,
+              maxLines: 1, overflow: TextOverflow.ellipsis),
         ),
         for (final root in _roots)
           DropdownMenuItem<String?>(
@@ -367,6 +370,7 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (context) => IconPicker(
         selectedIcon: _selectedIcon,
         onIconSelected: (icon) {

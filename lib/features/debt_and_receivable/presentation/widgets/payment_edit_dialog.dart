@@ -1,5 +1,6 @@
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/shared/focus.dart';
 import 'package:cunehat/core/shared/widgets/app_dialog_surface.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
@@ -88,6 +89,7 @@ class _PaymentEditDialogState extends State<PaymentEditDialog> {
   }
 
   Future<void> _pickDate() async {
+    releaseInputFocus();
     final picked = await showDatePicker(
       context: context,
       initialDate: _clamp(_date),
@@ -126,61 +128,79 @@ class _PaymentEditDialogState extends State<PaymentEditDialog> {
                 color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _amountController,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [AmountInputFormatter()],
-              decoration: InputDecoration(
-                labelText: context.l10n.labelOdemeTutari,
-                suffixText: currencySymbol(widget.currency),
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                // Girdi SINIRI: göz düğmesinden bilerek muaf. "En fazla
-                // **** ₺" yazan bir yardım metni formu kullanılamaz kılar.
-                helperText: context.l10n.maksimumFormatmoneyRemaining(
-                    formatMoney(widget.maxAmount, currency: widget.currency)),
-              ),
-              validator: (value) => validateAmountInput(
-                value ?? '',
-                max: widget.maxAmount,
-                maxExceededMessage: context.l10n.odenecekTutardanFazlaOlamaz,
-              ),
-            ),
-            const SizedBox(height: 14),
-            InkWell(
-              onTap: _pickDate,
-              borderRadius: BorderRadius.circular(12),
-              child: InputDecorator(
-                decoration: InputDecoration(
-                  labelText: context.l10n.labelOdemeTarihi,
-                  prefixIcon: const Icon(Icons.calendar_today),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
+            const SizedBox(height: 8),
+            // Alanlar kaydırılabilir, başlık ve düğmeler sabit: tek sütunda
+            // klavye açılınca 568dp'lik telefonda diyalog 204px taşıyor,
+            // tarih/not/düğmeler görünmez oluyordu.
+            Flexible(
+              child: SingleChildScrollView(
+                // Üst boşluk: kayan alanın kenarı ilk alanın yüzen etiketini
+                // kırpmasın.
+                padding: const EdgeInsets.only(top: 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextFormField(
+                      controller: _amountController,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [AmountInputFormatter()],
+                      decoration: InputDecoration(
+                        labelText: context.l10n.labelOdemeTutari,
+                        suffixText: currencySymbol(widget.currency),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        // Girdi SINIRI: göz düğmesinden bilerek muaf. "En fazla
+                        // **** ₺" yazan bir yardım metni formu kullanılamaz kılar.
+                        helperText: context.l10n.maksimumFormatmoneyRemaining(
+                            formatMoney(widget.maxAmount,
+                                currency: widget.currency)),
+                      ),
+                      validator: (value) => validateAmountInput(
+                        value ?? '',
+                        max: widget.maxAmount,
+                        maxExceededMessage:
+                            context.l10n.odenecekTutardanFazlaOlamaz,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    InkWell(
+                      onTap: _pickDate,
+                      borderRadius: BorderRadius.circular(12),
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: context.l10n.labelOdemeTarihi,
+                          prefixIcon: const Icon(Icons.calendar_today),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: Text(AppFormatters.dateLong.format(_date)),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    TextFormField(
+                      controller: _notesController,
+                      maxLines: 2,
+                      decoration: InputDecoration(
+                        labelText: context.l10n.labelNotOpsiyonel,
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ],
                 ),
-                child: Text(AppFormatters.dateLong.format(_date)),
-              ),
-            ),
-            const SizedBox(height: 14),
-            TextFormField(
-              controller: _notesController,
-              maxLines: 2,
-              decoration: InputDecoration(
-                labelText: context.l10n.labelNotOpsiyonel,
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
             const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            OverflowBar(
+              alignment: MainAxisAlignment.end,
+              spacing: 8,
               children: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
                   child: Text(context.l10n.iptal),
                 ),
-                const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: _submit,
                   child: Text(context.l10n.kaydet),

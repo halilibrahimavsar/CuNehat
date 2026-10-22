@@ -1,4 +1,5 @@
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/shared/focus.dart';
 import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
@@ -84,6 +85,7 @@ class _InstallmentGroupEditSheetState extends State<InstallmentGroupEditSheet> {
   double? get _parsedTotal => parseMoneyInput(_total.text);
 
   Future<void> _pickCategory() async {
+    releaseInputFocus();
     final picked = await showCategoryPickerSheet(
       context: context,
       isExpense: _first.isExpense,

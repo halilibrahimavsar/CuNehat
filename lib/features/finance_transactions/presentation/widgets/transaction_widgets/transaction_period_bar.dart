@@ -64,19 +64,36 @@ class TransactionPeriodBar extends StatelessWidget {
                     // Etiket dar ekranda kırpılmak yerine küçülür: "Karşılaştırma"
                     // modunda segment + filtre düğmesi bu satırı 360dp'de
                     // ~140dp'ye indiriyor.
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        text,
+                    //
+                    // Önce İKİ satıra sarar ("Ekstre ·" / aralık), ancak o da
+                    // sığmazsa küçülür: tek satıra küçülten düzende kart
+                    // bağlamının "Ekstre · 26 Eyl – 25 Eki" etiketi 320dp +
+                    // büyük yazıda ~8px'e iniyor, okunmuyordu.
+                    child: LayoutBuilder(builder: (context, constraints) {
+                      final style = TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
+                        color: scheme.onSurface,
+                      );
+                      final painter = TextPainter(
+                        text: TextSpan(text: text, style: style),
+                        textDirection: Directionality.of(context),
+                        textScaler: MediaQuery.textScalerOf(context),
                         maxLines: 1,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.2,
-                          color: scheme.onSurface,
+                      )..layout();
+                      final fits = painter.width <= constraints.maxWidth;
+                      painter.dispose();
+                      return FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          fits ? text : text.replaceFirst(' · ', ' ·\n'),
+                          maxLines: 2,
+                          textAlign: TextAlign.center,
+                          style: style,
                         ),
-                      ),
-                    ),
+                      );
+                    }),
                   ),
                 ),
               ),

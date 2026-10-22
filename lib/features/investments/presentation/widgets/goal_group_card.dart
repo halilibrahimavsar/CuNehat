@@ -157,44 +157,44 @@ class GoalGroupCard extends StatelessWidget {
                     reached: reached,
                   ),
                   const SizedBox(height: 8),
-                  Row(
+                  // Kalan + varlık sayısı ve düğmeler aynı satırı paylaşınca
+                  // 320dp + büyük yazıda "Kalan …" okunmayacak kadar
+                  // küçülüyordu (FittedBox). Metin Wrap'te tam boy kalır,
+                  // sığmazsa düğmeler alt satıra iner.
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
                     children: [
-                      Expanded(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: AlignmentDirectional.centerStart,
-                          child: Text(
-                            reached
-                                ? context.l10n.hedefeUlasildi
-                                : context.l10n
-                                    .hedefKalanTutar(money(progress.remaining)),
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color:
-                                  reached ? Colors.green : cs.onSurfaceVariant,
-                            ),
-                          ),
+                      Text(
+                        reached
+                            ? context.l10n.hedefeUlasildi
+                            : context.l10n
+                                .hedefKalanTutar(money(progress.remaining)),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: reached ? Colors.green : cs.onSurfaceVariant,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          context.l10n.hedefUyeSayisi(progress.members.length),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: cs.onSurfaceVariant,
-                          ),
+                      Text(
+                        context.l10n.hedefUyeSayisi(progress.members.length),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: cs.onSurfaceVariant,
                         ),
                       ),
-                      // Kapalı kartta da ekleme yolu: tam genişlik düğme
-                      // yalnız kart AÇIKKEN görünüyordu, yani hedefe varlık
-                      // eklemek için önce karta dokunmak gerektiğini bilmek
-                      // gerekiyordu. Açıkken alttaki düğme zaten var.
-                      if (!expanded) _compactAdd(context, accent),
-                      _menu(context, cs),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Kapalı kartta da ekleme yolu: tam genişlik düğme
+                          // yalnız kart AÇIKKEN görünüyordu, yani hedefe varlık
+                          // eklemek için önce karta dokunmak gerektiğini bilmek
+                          // gerekiyordu. Açıkken alttaki düğme zaten var.
+                          if (!expanded) _compactAdd(context, accent),
+                          _menu(context, cs),
+                        ],
+                      ),
                     ],
                   ),
                 ],

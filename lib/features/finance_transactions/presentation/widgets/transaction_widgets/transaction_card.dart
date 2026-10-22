@@ -20,6 +20,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/shared/focus.dart';
 
 /// Premium işlem kartı: kategori glyph'i, marka renkleri, baskın tutar.
 ///
@@ -180,8 +181,30 @@ class TransactionCard extends StatelessWidget {
       // 17px yerine 34px çiziliyor ve başlık sütununu 40dp'ye düşürüp satırı
       // 24px taşırıyordu (ölçüldü). Tutar artık satırın en çok [_amountShare]
       // kadarını alabilir, fazlası `scaleDown` ile küçülür.
-      child: LayoutBuilder(
-        builder: (context, constraints) => Row(
+      //
+      // Dar satırda (320dp ya da büyük yazı) tutar başlığın YANINDAN alınıp
+      // kategori satırının altına iner: yan yana dururken tutar satırın
+      // üçte birini alıyor, başlık/kategori/not ~90dp'ye sıkışıp "PAY/…",
+      // "Alışv…", "ödeme …" oluyordu.
+      child: LayoutBuilder(builder: (context, constraints) {
+        final compact = constraints.maxWidth <
+            MediaQuery.textScalerOf(context).scale(_compactBelow);
+        final amount = FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: compact ? Alignment.centerLeft : Alignment.centerRight,
+          child: SignedMoneyText(
+            amount: t.amount,
+            isExpense: t.isExpense,
+            currency: context.activeWalletCurrency,
+            style: TextStyle(
+              color: accent,
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+              letterSpacing: -0.5,
+            ),
+          ),
+        );
+        return Row(
           children: [
             // Kategori glyph'i (yoksa yön oku fallback)
             Hero(
@@ -227,7 +250,11 @@ class TransactionCard extends StatelessWidget {
                       Flexible(
                         child: Text(
                           t.title,
-                          maxLines: 1,
+                          // İki satır: tutar sütunu başlığı ortadaki dar
+                          // alana sıkıştırıyor; 320dp + büyük yazıda
+                          // "TRENDYOL.COM (1/3)" "TREND…" oluyor, taksit
+                          // bilgisi kayboluyordu.
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w600,
@@ -268,65 +295,68 @@ class TransactionCard extends StatelessWidget {
                       // çip aynı sözcüğü ikinci kez yazıyordu ("Yemek / Yemek").
                       final chipRepeatsTitle =
                           t.tag.isNotEmpty && _titleRepeatsCategory(context, t);
+                      final Widget? chip = chipRepeatsTitle
+                          ? null
+                          : t.tag.isNotEmpty
+                              ? _categoryChip(context, accent, t.tag)
+                              // Kategorisiz düz satır: çip HİÇ çizilmiyordu,
+                              // eksiklik görünmüyordu. Uyarı tonunda çağrı.
+                              : !t.isSystem
+                                  ? _categoryChip(
+                                      context,
+                                      Theme.of(context).colorScheme.error,
+                                      t.tag,
+                                    )
+                                  : null;
+                      final metaText = Text(
+                        meta,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                          fontSize: 12,
+                        ),
+                      );
+                      // Ödeme günü saat gibi düşürülemez; çiple aynı satırı
+                      // yarı yarıya paylaşınca 360dp'de ikisi de kesiliyor,
+                      // 320dp + büyük yazıda çip BOŞ kalıyordu. Sığmazsa alt
+                      // satıra iner.
+                      if (payment != null) {
+                        return Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [if (chip != null) chip, metaText],
+                        );
+                      }
                       return Row(
                         children: [
-                          if (chipRepeatsTitle)
-                            const SizedBox.shrink()
-                          else if (t.tag.isNotEmpty)
-                            _categoryChip(context, accent, t.tag)
-                          // Kategorisiz düz satır: çip HİÇ çizilmiyordu,
-                          // eksiklik görünmüyordu. Uyarı tonunda çağrı.
-                          else if (!t.isSystem)
-                            _categoryChip(
-                              context,
-                              Theme.of(context).colorScheme.error,
-                              t.tag,
-                            ),
+                          if (chip != null) Flexible(child: chip),
                           if (meta.isNotEmpty) ...[
-                            if (!chipRepeatsTitle) const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                meta,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: scheme.onSurfaceVariant
-                                      .withValues(alpha: 0.7),
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
+                            if (chip != null) const SizedBox(width: 8),
+                            Flexible(child: metaText),
                           ],
                         ],
                       );
                     },
                   ),
+                  if (compact) ...[
+                    const SizedBox(height: 6),
+                    amount,
+                  ],
                 ],
               ),
             ),
 
-            const SizedBox(width: 8),
-
-            // Baskın tutar
-            ConstrainedBox(
-              constraints:
-                  BoxConstraints(maxWidth: constraints.maxWidth * _amountShare),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerRight,
-                child: SignedMoneyText(
-                  amount: t.amount,
-                  isExpense: t.isExpense,
-                  currency: context.activeWalletCurrency,
-                  style: TextStyle(
-                    color: accent,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
-                    letterSpacing: -0.5,
-                  ),
-                ),
+            if (!compact) ...[
+              const SizedBox(width: 8),
+              // Baskın tutar
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                    maxWidth: constraints.maxWidth * _amountShare),
+                child: amount,
               ),
-            ),
+            ],
 
             // Eylem menüsü: uzun basmanın GÖRÜNÜR karşılığı. Seçim kipinde
             // gizlenir (genişliği korunur ki satır zıplamasın).
@@ -339,10 +369,14 @@ class TransactionCard extends StatelessWidget {
                   _ActionButton(onTap: () => _showActionSheet(context, accent)),
             ),
           ],
-        ),
-      ),
+        );
+      }),
     );
   }
+
+  /// Satır bu genişliğin (yazı ölçeğiyle büyütülmüş) altındaysa tutar alt
+  /// satıra iner: 360dp/1,0'da yan yana (300dp), 320dp ya da 1,3 yazıda alt.
+  static const double _compactBelow = 280;
 
   /// Tutarın satırdan alabileceği en büyük pay. Normal ölçekte tutar bunun
   /// altında kalır (ölçüldü: 328dp'lik kartta "-749,90 ₺" 69dp), yani sınır
@@ -370,32 +404,33 @@ class TransactionCard extends StatelessWidget {
   }
 
   Widget _categoryChip(BuildContext context, Color accent, String tag) {
-    return Flexible(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(
-          color: accent.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          // Kategorisiz satır (ör. transfer bağı kaldırılmış ekstre satırı)
-          // BOŞ bir çip çiziyordu: eksik olduğu görünmüyordu.
-          tag.isEmpty
-              ? context.l10n.txKategoriSec
-              : categoryLabel ?? context.translateSystemTag(tag),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: accent.withValues(alpha: 0.95),
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        // Kategorisiz satır (ör. transfer bağı kaldırılmış ekstre satırı)
+        // BOŞ bir çip çiziyordu: eksik olduğu görünmüyordu.
+        tag.isEmpty
+            ? context.l10n.txKategoriSec
+            : categoryLabel ?? context.translateSystemTag(tag),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: accent.withValues(alpha: 0.95),
         ),
       ),
     );
   }
 
   void _openDetail(BuildContext context) {
+    // Arama açıkken ayrıntıya geçilince dönüşte klavye kendiliğinden
+    // açılıyordu (route odağı geri verir); bkz. [releaseInputFocus].
+    releaseInputFocus();
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => BlocProvider.value(

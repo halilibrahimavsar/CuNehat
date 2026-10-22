@@ -110,29 +110,38 @@ class PendingRecurringRow extends StatelessWidget {
                 backlog: backlog,
                 enabled: !busy,
               ),
-              const Spacer(),
-              TextButton(
-                onPressed: busy
-                    ? null
-                    : () => context
-                        .read<PendingRecurringBloc>()
-                        .add(SkipTransactionEvent(template)),
-                child: Text(l10n.buVadeyiAtla),
-              ),
-              const SizedBox(width: 4),
-              FilledButton(
-                onPressed: busy
-                    ? null
-                    : () => context
-                        .read<PendingRecurringBloc>()
-                        .add(ApproveTransactionEvent(template)),
-                child: busy
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(l10n.onayla),
+              // Düğmeler sağda; sığmazsa alt alta (Row'da 320dp + büyük
+              // yazıda "Onayla" kartın dışına 26px taşıyordu).
+              Expanded(
+                child: OverflowBar(
+                  alignment: MainAxisAlignment.end,
+                  overflowAlignment: OverflowBarAlignment.end,
+                  spacing: 4,
+                  children: [
+                    TextButton(
+                      onPressed: busy
+                          ? null
+                          : () => context
+                              .read<PendingRecurringBloc>()
+                              .add(SkipTransactionEvent(template)),
+                      child: Text(l10n.buVadeyiAtla),
+                    ),
+                    FilledButton(
+                      onPressed: busy
+                          ? null
+                          : () => context
+                              .read<PendingRecurringBloc>()
+                              .add(ApproveTransactionEvent(template)),
+                      child: busy
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(l10n.onayla),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -260,63 +269,104 @@ Future<void> showPendingAmountOverrideDialog(
   RecurringTransactionEntity template,
 ) {
   final bloc = context.read<PendingRecurringBloc>();
-  final amountController =
-      TextEditingController(text: formatAmountForInput(template.amount));
-
   return showDialog<void>(
     context: context,
-    builder: (dialogContext) {
-      final scheme = Theme.of(dialogContext).colorScheme;
-      return AppDialogSurface(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              dialogContext.l10n.islemiDuzenle,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: scheme.onSurface,
+    builder: (_) => _AmountOverrideDialog(template: template, bloc: bloc),
+  );
+}
+
+/// Denetleyici diyaloğun KENDİ ömrüne bağlı: eskiden `showDialog`
+/// tamamlanınca (`whenComplete`) siliniyordu, ama diyaloğun kapanış
+/// animasyonu metin alanını hâlâ çiziyordu — silinmiş denetleyici kullanıldı
+/// (debug'da kırmızı ekran, cihazda görüldü).
+class _AmountOverrideDialog extends StatefulWidget {
+  final RecurringTransactionEntity template;
+  final PendingRecurringBloc bloc;
+
+  const _AmountOverrideDialog({required this.template, required this.bloc});
+
+  @override
+  State<_AmountOverrideDialog> createState() => _AmountOverrideDialogState();
+}
+
+class _AmountOverrideDialogState extends State<_AmountOverrideDialog> {
+  late final TextEditingController amountController =
+      TextEditingController(text: formatAmountForInput(widget.template.amount));
+
+  @override
+  void dispose() {
+    amountController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final template = widget.template;
+    final bloc = widget.bloc;
+    final scheme = Theme.of(context).colorScheme;
+    return AppDialogSurface(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Başlık + alan kaydırılabilir, düğmeler sabit: klavye açıkken
+          // 568dp'lik telefonda diyalog 54px taşıyordu; yalnız alan kayınca
+          // da başlık ve iki düğme arasında eziliyordu.
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.l10n.islemiDuzenle,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: scheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: amountController,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.labelYeniTutar,
+                    ),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [AmountInputFormatter()],
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: amountController,
-              autofocus: true,
-              decoration: InputDecoration(
-                labelText: dialogContext.l10n.labelYeniTutar,
+          ),
+          const SizedBox(height: 12),
+          OverflowBar(
+            alignment: MainAxisAlignment.end,
+            overflowAlignment: OverflowBarAlignment.end,
+            spacing: 8,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(context.l10n.iptal),
               ),
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [AmountInputFormatter()],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  child: Text(dialogContext.l10n.iptal),
-                ),
-                const SizedBox(width: 8),
-                FilledButton(
-                  onPressed: () {
-                    final newAmount = parseMoneyInput(amountController.text) ??
-                        template.amount;
-                    if (newAmount > 0) {
-                      bloc.add(ApproveTransactionEvent(template,
-                          overrideAmount: newAmount));
-                      Navigator.pop(dialogContext);
-                    }
-                  },
-                  child: Text(dialogContext.l10n.kaydetVeOnayla),
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-    },
-  ).whenComplete(amountController.dispose);
+              FilledButton(
+                onPressed: () {
+                  final newAmount =
+                      parseMoneyInput(amountController.text) ?? template.amount;
+                  if (newAmount > 0) {
+                    bloc.add(ApproveTransactionEvent(template,
+                        overrideAmount: newAmount));
+                    Navigator.pop(context);
+                  }
+                },
+                child: Text(context.l10n.kaydetVeOnayla),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }

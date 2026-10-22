@@ -305,14 +305,15 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
-                context.l10n.googleDriveBackup,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.onSurface,
+              Expanded(
+                child: Text(
+                  context.l10n.googleDriveBackup,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
                 ),
               ),
-              const Spacer(),
               if (_isLoading)
                 const SizedBox(
                   width: 16,

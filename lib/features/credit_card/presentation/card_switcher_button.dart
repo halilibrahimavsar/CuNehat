@@ -390,6 +390,7 @@ class CardSwitchSheet extends StatelessWidget {
                             showModalBottomSheet<void>(
                               context: navigator.context,
                               isScrollControlled: true,
+                              useSafeArea: true,
                               showDragHandle: true,
                               builder: (_) => BlocProvider.value(
                                 value: bloc,

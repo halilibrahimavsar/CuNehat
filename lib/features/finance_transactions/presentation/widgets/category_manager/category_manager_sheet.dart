@@ -15,6 +15,7 @@ Future<bool?> showCategoryManager({
   return await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (context) =>
         CategoryManagerSheet(walletId: walletId, isExpense: isExpense),

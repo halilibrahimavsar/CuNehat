@@ -6,6 +6,7 @@ import 'package:cunehat/core/shared/widgets/labeled_segment.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_controller.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
+import 'package:cunehat/core/shared/widgets/amount_font_fit.dart';
 import 'package:flutter/material.dart';
 
 // ============================================================ Amount hero
@@ -92,43 +93,48 @@ class AmountHero extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Flexible(
-                  child: TextField(
+                  child: AmountFontFit(
                     controller: controller.amountController,
-                    focusNode: focusNode,
-                    textAlign: TextAlign.right,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [AmountInputFormatter()],
-                    onChanged: (_) {
-                      if (controller.error.value != null) {
-                        controller.error.value = null;
-                      }
-                      // Yeni kayda başlandı: önceki kaydın onayı çekilir.
-                      if (controller.lastSaved.value != null) {
-                        controller.lastSaved.value = null;
-                      }
-                    },
-                    style: TextStyle(
-                      fontSize: 40,
-                      fontWeight: FontWeight.w700,
-                      // Yazılan tutar METİN tonuyla: gelir yeşili açık zeminde
-                      // yazı olarak 2,5:1 veriyordu.
-                      color: isExpense
-                          ? MoneyColors.expenseText(
-                              Theme.of(context).brightness)
-                          : MoneyColors.incomeText(
-                              Theme.of(context).brightness),
-                      height: 1.0,
-                    ),
-                    cursorColor: accent,
-                    decoration: InputDecoration(
-                      isCollapsed: true,
-                      border: InputBorder.none,
-                      hintText: '0',
-                      hintStyle: TextStyle(
-                        fontSize: 40,
+                    style: const TextStyle(
+                        fontSize: 40, fontWeight: FontWeight.w700),
+                    builder: (context, fontSize) => TextField(
+                      controller: controller.amountController,
+                      focusNode: focusNode,
+                      textAlign: TextAlign.right,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [AmountInputFormatter()],
+                      onChanged: (_) {
+                        if (controller.error.value != null) {
+                          controller.error.value = null;
+                        }
+                        // Yeni kayda başlandı: önceki kaydın onayı çekilir.
+                        if (controller.lastSaved.value != null) {
+                          controller.lastSaved.value = null;
+                        }
+                      },
+                      style: TextStyle(
+                        fontSize: fontSize,
                         fontWeight: FontWeight.w700,
-                        color: accent.withValues(alpha: 0.25),
+                        // Yazılan tutar METİN tonuyla: gelir yeşili açık zeminde
+                        // yazı olarak 2,5:1 veriyordu.
+                        color: isExpense
+                            ? MoneyColors.expenseText(
+                                Theme.of(context).brightness)
+                            : MoneyColors.incomeText(
+                                Theme.of(context).brightness),
+                        height: 1.0,
+                      ),
+                      cursorColor: accent,
+                      decoration: InputDecoration(
+                        isCollapsed: true,
+                        border: InputBorder.none,
+                        hintText: '0',
+                        hintStyle: TextStyle(
+                          fontSize: fontSize,
+                          fontWeight: FontWeight.w700,
+                          color: accent.withValues(alpha: 0.25),
+                        ),
                       ),
                     ),
                   ),

@@ -100,6 +100,7 @@ Future<void> pickSharedPeriod(BuildContext context) async {
   final result = await showModalBottomSheet<_PeriodSheetResult>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (_) => _PeriodSheet(
       unit: cubit.periodPreferences.unit,

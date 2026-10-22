@@ -32,6 +32,7 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_picker_sheet.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
+import 'package:cunehat/core/shared/focus.dart';
 
 /// İnceleme listesinde hangi taslakların gösterileceği.
 enum _ReviewFilter {
@@ -375,52 +376,72 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                 _effectiveFilter == _ReviewFilter.uncategorized)
         ? _uncategorizedGroupCount
         : 0;
+    // Kısa ekranda özet kartı listenin İLK öğesi: sabit başlıkta (en çok
+    // %38) dururken 568dp + büyük yazıda araç çubuğu ve alt panelden sonra
+    // satırlara ~50dp kalıyordu, hiçbir hareket görünmüyordu. Listede durunca
+    // kaydırmayla yukarı çekilir.
+    final cardInList = !widget.fullscreen &&
+        !_searching &&
+        MediaQuery.sizeOf(context).height < 700;
     final headers = [
+      if (cardInList) _statusCard(context),
       if (groups > 0) _groupTile(context, groups),
       if (showKnownTile) _knownTile(context, hidden),
     ];
-    return Column(
-      children: [
-        // Aranırken (klavye açık) özet kartı çekilir: kart kaydırılmayan
-        // başlıkta duruyor ve birkaç uyarı varken klavyeyle birlikte sayfayı
-        // taşırıyordu (cihazda ölçüldü: 41px). Kart tam ekranda olduğu gibi
-        // kaybolmaz, odak bırakılınca geri gelir.
-        //
-        // Ölçüt klavye yüksekliği DEĞİL: Scaffold gövdenin MediaQuery'sinden
-        // alt boşluğu siliyor (orada klavye hep "kapalı"), `View` ise
-        // değişince yeniden çizim tetiklemiyor.
-        //
-        // Kart ayrıca ekranın en çok %38'ine sınırlanır ve kendi içinde
-        // kayar: kaydırılmayan başlıkta olduğu için birkaç uyarı + öneri
-        // şeridi + kart künyesi dar/alçak ekranda sayfayı taşırıyordu
-        // (ölçüldü: 360×780'de 13px) ve listeye hiç yer kalmıyordu.
-        if (!widget.fullscreen && !_searching)
-          ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.sizeOf(context).height * 0.38,
+    // Gövde çok alçaldığında (klavye açık: arama ya da üstte açılan satır
+    // düzenleme sayfası) alt panel çekilir: 568dp'lik telefonda klavyeyle
+    // araç çubuğu + alt panel gövdeye sığmıyor, sayfa 49px taşıyordu.
+    // Ölçüt gövdenin GERÇEK yüksekliği (bkz. aşağıdaki not: MediaQuery'de
+    // klavye görünmez).
+    return LayoutBuilder(
+      builder: (context, constraints) => Column(
+        children: [
+          // Aranırken (klavye açık) özet kartı çekilir: kart kaydırılmayan
+          // başlıkta duruyor ve birkaç uyarı varken klavyeyle birlikte sayfayı
+          // taşırıyordu (cihazda ölçüldü: 41px). Kart tam ekranda olduğu gibi
+          // kaybolmaz, odak bırakılınca geri gelir.
+          //
+          // Ölçüt klavye yüksekliği DEĞİL: Scaffold gövdenin MediaQuery'sinden
+          // alt boşluğu siliyor (orada klavye hep "kapalı"), `View` ise
+          // değişince yeniden çizim tetiklemiyor.
+          //
+          // Kart ayrıca ekranın en çok %38'ine sınırlanır ve kendi içinde
+          // kayar: kaydırılmayan başlıkta olduğu için birkaç uyarı + öneri
+          // şeridi + kart künyesi dar/alçak ekranda sayfayı taşırıyordu
+          // (ölçüldü: 360×780'de 13px) ve listeye hiç yer kalmıyordu.
+          if (!widget.fullscreen && !_searching && !cardInList)
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(context).height * 0.38,
+              ),
+              child: SingleChildScrollView(child: _statusCard(context)),
             ),
-            child: SingleChildScrollView(child: _statusCard(context)),
+          _toolbar(context),
+          Expanded(
+            child: visible.isEmpty && headers.length == (cardInList ? 1 : 0)
+                ? Center(child: Text(context.l10n.bankImportNoMatch))
+                : ListView.separated(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    itemCount: visible.length + headers.length,
+                    separatorBuilder: (_, __) =>
+                        const Divider(height: 1, indent: 16, endIndent: 16),
+                    itemBuilder: (context, k) {
+                      if (k < headers.length) return headers[k];
+                      final (index, draft) = visible[k - headers.length];
+                      return _row(context, index, draft);
+                    },
+                  ),
           ),
-        _toolbar(context),
-        Expanded(
-          child: visible.isEmpty && headers.isEmpty
-              ? Center(child: Text(context.l10n.bankImportNoMatch))
-              : ListView.separated(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  itemCount: visible.length + headers.length,
-                  separatorBuilder: (_, __) =>
-                      const Divider(height: 1, indent: 16, endIndent: 16),
-                  itemBuilder: (context, k) {
-                    if (k < headers.length) return headers[k];
-                    final (index, draft) = visible[k - headers.length];
-                    return _row(context, index, draft);
-                  },
-                ),
-        ),
-        _bottomBar(context),
-      ],
+          if (constraints.maxHeight >=
+              MediaQuery.textScalerOf(context).scale(_minBodyForBottomBar))
+            _bottomBar(context),
+        ],
+      ),
     );
   }
+
+  /// Alt panelin (uyarı + toplam + "ekle") gösterildiği en alçak gövde.
+  static const double _minBodyForBottomBar = 340;
 
   /// "Benzer N grubu tek seferde kategorile ›" — benzer hareketler sayfasını
   /// açar. Tek satır: etiket ile eylem aynı metindir.
@@ -769,6 +790,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (ctx) => SafeArea(
         child: ConstrainedBox(
           constraints: BoxConstraints(
@@ -1415,6 +1437,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     required bool initialIsExpense,
     String? currentId,
   }) async {
+    releaseInputFocus();
     final picked = await showCategoryPickerSheet(
       context: context,
       isExpense: initialIsExpense,

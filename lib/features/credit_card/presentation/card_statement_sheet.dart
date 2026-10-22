@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/shared/focus.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/currencies.dart';
@@ -34,6 +35,7 @@ class CardStatementSheet extends StatefulWidget {
     return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => CardStatementSheet(card: card, status: status),
     );
@@ -72,6 +74,7 @@ class _CardStatementSheetState extends State<CardStatementSheet> {
 
   Future<void> _pick({required bool closing}) async {
     final initial = closing ? _closing : _due;
+    releaseInputFocus();
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
@@ -166,6 +169,9 @@ class _CardStatementSheetState extends State<CardStatementSheet> {
                       Expanded(
                         child: Text(
                           '${l10n.kkEkstreBilgisi} · ${widget.card.name}',
+                          // Kart adı başlığın asıl bilgisi: dar ekranda
+                          // "Bonus …" diye kesiliyordu.
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontSize: 18,
@@ -179,15 +185,28 @@ class _CardStatementSheetState extends State<CardStatementSheet> {
                   Text(l10n.kkEkstreSayfaAciklama,
                       style: theme.textTheme.bodySmall),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                          child: dateTile(l10n.kkKesimTarihi, _closing, true)),
-                      const SizedBox(width: 10),
-                      Expanded(
-                          child: dateTile(l10n.kkSonOdemeTarihi, _due, false)),
-                    ],
-                  ),
+                  // Yan yana sığmazsa alt alta: 320dp + büyük yazıda
+                  // etiketler "Hesap k…" / "Son öd…" diye kesiliyor, tarih
+                  // "25.09.2 / 6" diye ikiye bölünüyordu.
+                  LayoutBuilder(builder: (context, constraints) {
+                    final closing =
+                        dateTile(l10n.kkKesimTarihi, _closing, true);
+                    final due = dateTile(l10n.kkSonOdemeTarihi, _due, false);
+                    final minTile = MediaQuery.textScalerOf(context).scale(150);
+                    if ((constraints.maxWidth - 10) / 2 < minTile) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [closing, const SizedBox(height: 12), due],
+                      );
+                    }
+                    return Row(
+                      children: [
+                        Expanded(child: closing),
+                        const SizedBox(width: 10),
+                        Expanded(child: due),
+                      ],
+                    );
+                  }),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _balance,

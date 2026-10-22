@@ -58,6 +58,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
+import 'package:cunehat/core/shared/widgets/scrollable_center.dart';
 
 /// "Akıllı İçgörüler" — transactions sekmesinin ilk swipe sayfası.
 ///
@@ -853,43 +854,41 @@ class _InsightsViewState extends State<_InsightsView> {
   Widget _buildEmptyState(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    return Padding(
+    return ScrollableCenter(
       padding: const EdgeInsets.all(24.0),
-      child: Center(
-        child: AppCard(
-          section: AppSection.transactions,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: scheme.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.insights_rounded,
-                    size: 48, color: scheme.primary),
+      child: AppCard(
+        section: AppSection.transactions,
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: scheme.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
               ),
-              const SizedBox(height: 16),
-              Text(
-                context.l10n.detayGosterilecekIslemYok,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: scheme.onSurface,
-                ),
+              child:
+                  Icon(Icons.insights_rounded, size: 48, color: scheme.primary),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              context.l10n.detayGosterilecekIslemYok,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: scheme.onSurface,
               ),
-              const SizedBox(height: 6),
-              Text(
-                context.l10n.gelirVeyaGiderKaydettikten,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-                ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              context.l10n.gelirVeyaGiderKaydettikten,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

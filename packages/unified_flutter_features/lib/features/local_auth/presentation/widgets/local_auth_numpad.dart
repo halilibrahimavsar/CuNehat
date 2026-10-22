@@ -18,8 +18,20 @@ class LocalAuthNumpad extends StatelessWidget {
     required this.onBiometric,
   });
 
+  /// Kısa ekran eşiği: tam boy tuş takımı 360dp. 568dp yüksekliğindeki
+  /// telefonda başlık ve noktalarla birlikte sığmıyor, "0" ve silme tuşu
+  /// ilk bakışta ekranın altında kalıyordu.
+  static const double compactBelowHeight = 680;
+
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).height < compactBelowHeight;
+    final size = compact
+        ? LocalAuthConstants.numpadButtonSizeCompact
+        : LocalAuthConstants.numpadButtonSize;
+    final spacing = compact
+        ? LocalAuthConstants.numpadSpacingCompact
+        : LocalAuthConstants.numpadSpacing;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 40),
       child: Column(
@@ -31,28 +43,32 @@ class LocalAuthNumpad extends StatelessWidget {
                 for (var j = 1; j <= 3; j++)
                   _NumberButton(
                     digit: (i * 3 + j).toString(),
+                    size: size,
                     isLockedOut: isLockedOut,
                     onTap: onDigit,
                   ),
               ],
             ),
-            const SizedBox(height: LocalAuthConstants.numpadSpacing),
+            SizedBox(height: spacing),
           ],
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _ActionButton(
                 icon: showBiometric ? Icons.fingerprint_rounded : null,
+                size: size,
                 isLockedOut: isLockedOut,
                 onTap: onBiometric,
               ),
               _NumberButton(
                 digit: '0',
+                size: size,
                 isLockedOut: isLockedOut,
                 onTap: onDigit,
               ),
               _ActionButton(
                 icon: Icons.backspace_outlined,
+                size: size,
                 isLockedOut: isLockedOut,
                 onTap: onBackspace,
               ),
@@ -66,10 +82,12 @@ class LocalAuthNumpad extends StatelessWidget {
 
 class _NumberButton extends StatelessWidget {
   final String digit;
+  final double size;
   final bool isLockedOut;
   final ValueChanged<String> onTap;
 
   const _NumberButton({
+    required this.size,
     required this.digit,
     required this.isLockedOut,
     required this.onTap,
@@ -78,7 +96,6 @@ class _NumberButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    const size = LocalAuthConstants.numpadButtonSize;
     final radius = BorderRadius.circular(size / 2);
     final isEnabled = !isLockedOut;
 
@@ -129,10 +146,12 @@ class _NumberButton extends StatelessWidget {
 
 class _ActionButton extends StatelessWidget {
   final IconData? icon;
+  final double size;
   final bool isLockedOut;
   final VoidCallback onTap;
 
   const _ActionButton({
+    required this.size,
     required this.icon,
     required this.isLockedOut,
     required this.onTap,
@@ -141,11 +160,10 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    const size = LocalAuthConstants.numpadButtonSize;
     final radius = BorderRadius.circular(size / 2);
     final isEnabled = !isLockedOut;
 
-    if (icon == null) return const SizedBox(width: size);
+    if (icon == null) return SizedBox(width: size);
     return InkWell(
       onTap: isEnabled ? onTap : null,
       borderRadius: radius,

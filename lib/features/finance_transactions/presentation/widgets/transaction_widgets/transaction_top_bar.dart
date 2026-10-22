@@ -118,131 +118,141 @@ class _TransactionTopBarState extends State<TransactionTopBar> {
     final l10n = context.l10n;
     final hasQuery = dataFilter.searchQuery?.trim().isNotEmpty ?? false;
 
-    return Material(
-      // Material (renkli Container değil): dönem okları ve filtre düğmesi
-      // InkWell/InkResponse kullanıyor; opak bir DecoratedBox araya girerse
-      // mürekkep dalgası ARKASINA boyanır ve görünmez olur.
-      color: Theme.of(context).colorScheme.surface,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-            horizontal: 16, vertical: _verticalPadding),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              height: _controlRow,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: AnimatedSwitcher(
-                      duration: motion.d(AppMotion.medium),
-                      switchInCurve: AppMotion.enter,
-                      switchOutCurve: AppMotion.exit,
-                      // Arama ikonun olduğu yerden (sağdan) gelir, dönem
-                      // soldan geri döner.
-                      transitionBuilder: (child, animation) {
-                        final isSearch =
-                            child.key == const ValueKey('tx-search-field');
-                        return FadeTransition(
-                          opacity: animation,
-                          child: SlideTransition(
-                            position: Tween(
-                              begin: Offset(isSearch ? 0.12 : -0.12, 0),
-                              end: Offset.zero,
-                            ).animate(animation),
-                            child: child,
-                          ),
-                        );
-                      },
-                      child: _searchOpen
-                          ? TransactionSearchField(
-                              key: const ValueKey('tx-search-field'),
-                              value: dataFilter.searchQuery,
-                              onChanged: widget.onSearchChanged,
-                              focusNode: _searchFocus,
-                              autofocus: true,
-                              onClose: _closeSearch,
-                            )
-                          : TransactionPeriodBar(
-                              key: const ValueKey('tx-period-bar'),
-                              range: DateTimeRange(
-                                start: filter.viewFilter.startDate,
-                                end: filter.viewFilter.endDate,
+    // Arama açıkken geri önce aramayı kapatır (sorgu çipte kalır). Eskiden
+    // ana sayfada tek geri uygulamayı kapatıyordu, arama da kaybolmuyordu.
+    return PopScope(
+      canPop: !_searchOpen,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _closeSearch();
+      },
+      child: Material(
+        // Material (renkli Container değil): dönem okları ve filtre düğmesi
+        // InkWell/InkResponse kullanıyor; opak bir DecoratedBox araya girerse
+        // mürekkep dalgası ARKASINA boyanır ve görünmez olur.
+        color: Theme.of(context).colorScheme.surface,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+              horizontal: 16, vertical: _verticalPadding),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: _controlRow,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: AnimatedSwitcher(
+                        duration: motion.d(AppMotion.medium),
+                        switchInCurve: AppMotion.enter,
+                        switchOutCurve: AppMotion.exit,
+                        // Arama ikonun olduğu yerden (sağdan) gelir, dönem
+                        // soldan geri döner.
+                        transitionBuilder: (child, animation) {
+                          final isSearch =
+                              child.key == const ValueKey('tx-search-field');
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SlideTransition(
+                              position: Tween(
+                                begin: Offset(isSearch ? 0.12 : -0.12, 0),
+                                end: Offset.zero,
+                              ).animate(animation),
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: _searchOpen
+                            ? TransactionSearchField(
+                                key: const ValueKey('tx-search-field'),
+                                value: dataFilter.searchQuery,
+                                onChanged: widget.onSearchChanged,
+                                focusNode: _searchFocus,
+                                autofocus: true,
+                                onClose: _closeSearch,
+                              )
+                            : TransactionPeriodBar(
+                                key: const ValueKey('tx-period-bar'),
+                                range: DateTimeRange(
+                                  start: filter.viewFilter.startDate,
+                                  end: filter.viewFilter.endDate,
+                                ),
+                                onStep: widget.onPeriodStep,
+                                onPick: widget.onPeriodPick,
+                                label: widget.periodLabel,
                               ),
-                              onStep: widget.onPeriodStep,
-                              onPick: widget.onPeriodPick,
-                              label: widget.periodLabel,
+                      ),
+                    ),
+                    // Arama ve süzgeç yalnız aranacak bir şey varken durur (bkz.
+                    // [TransactionTopBar.showTools]); ilk kayıtla birlikte
+                    // yerlerine kayarak gelirler.
+                    AnimatedSize(
+                      duration: motion.d(AppMotion.medium),
+                      curve: AppMotion.standard,
+                      alignment: Alignment.centerLeft,
+                      child: !widget.showTools
+                          ? const SizedBox(height: _controlRow)
+                          : Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Arama açıkken ikon çekilir; alanın kendi ×
+                                // düğmesi kapatır.
+                                AnimatedSize(
+                                  duration: motion.d(AppMotion.medium),
+                                  curve: AppMotion.standard,
+                                  child: _searchOpen
+                                      ? const SizedBox(height: _controlRow)
+                                      : Padding(
+                                          padding:
+                                              const EdgeInsets.only(left: 8),
+                                          child: _BarIconButton(
+                                            key: const ValueKey(
+                                                'tx-search-open'),
+                                            icon: Icons.search_rounded,
+                                            label: l10n.txSearchOpen,
+                                            active: hasQuery,
+                                            onTap: _openSearch,
+                                          ),
+                                        ),
+                                ),
+                                const SizedBox(width: 8),
+                                _BarIconButton(
+                                  key: const ValueKey('tx-filter-open'),
+                                  icon: Icons.tune_rounded,
+                                  label: l10n.txOpenFilters,
+                                  tooltip: l10n.filtreler,
+                                  // Arama kendi ikonunda gösterilir; filtre
+                                  // noktası yalnız panelin kendi filtrelerine
+                                  // bakar.
+                                  active: dataFilter
+                                      .copyWith(clearSearchQuery: true)
+                                      .hasActiveFilters,
+                                  onTap: widget.onFilterTap,
+                                ),
+                              ],
                             ),
                     ),
-                  ),
-                  // Arama ve süzgeç yalnız aranacak bir şey varken durur (bkz.
-                  // [TransactionTopBar.showTools]); ilk kayıtla birlikte
-                  // yerlerine kayarak gelirler.
-                  AnimatedSize(
-                    duration: motion.d(AppMotion.medium),
-                    curve: AppMotion.standard,
-                    alignment: Alignment.centerLeft,
-                    child: !widget.showTools
-                        ? const SizedBox(height: _controlRow)
-                        : Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Arama açıkken ikon çekilir; alanın kendi ×
-                              // düğmesi kapatır.
-                              AnimatedSize(
-                                duration: motion.d(AppMotion.medium),
-                                curve: AppMotion.standard,
-                                child: _searchOpen
-                                    ? const SizedBox(height: _controlRow)
-                                    : Padding(
-                                        padding: const EdgeInsets.only(left: 8),
-                                        child: _BarIconButton(
-                                          key: const ValueKey('tx-search-open'),
-                                          icon: Icons.search_rounded,
-                                          label: l10n.txSearchOpen,
-                                          active: hasQuery,
-                                          onTap: _openSearch,
-                                        ),
-                                      ),
-                              ),
-                              const SizedBox(width: 8),
-                              _BarIconButton(
-                                key: const ValueKey('tx-filter-open'),
-                                icon: Icons.tune_rounded,
-                                label: l10n.txOpenFilters,
-                                tooltip: l10n.filtreler,
-                                // Arama kendi ikonunda gösterilir; filtre
-                                // noktası yalnız panelin kendi filtrelerine
-                                // bakar.
-                                active: dataFilter
-                                    .copyWith(clearSearchQuery: true)
-                                    .hasActiveFilters,
-                                onTap: widget.onFilterTap,
-                              ),
-                            ],
-                          ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            if (ActiveFilterChips.hasChipsFor(
-                dataFilter, filter.viewFilter.financeMode,
-                includeSearch: !_searchOpen)) ...[
-              const SizedBox(height: _gap),
-              ActiveFilterChips(
-                dataFilter: dataFilter,
-                mode: filter.viewFilter.financeMode,
-                onClearMode: () => widget.onModeChanged(FinanceMode.compare),
-                categoryLabels: widget.categoryLabels,
-                onClearCategories: widget.onClearCategories,
-                onClearPriceRange: widget.onClearPriceRange,
-                onClearSearch: widget.onClearSearch,
-                onClearAll: widget.onClearAllFilters,
-                onChanged: widget.onDataFilterChanged,
-                showSearch: !_searchOpen,
-              ),
+              if (ActiveFilterChips.hasChipsFor(
+                  dataFilter, filter.viewFilter.financeMode,
+                  includeSearch: !_searchOpen)) ...[
+                const SizedBox(height: _gap),
+                ActiveFilterChips(
+                  dataFilter: dataFilter,
+                  mode: filter.viewFilter.financeMode,
+                  onClearMode: () => widget.onModeChanged(FinanceMode.compare),
+                  categoryLabels: widget.categoryLabels,
+                  onClearCategories: widget.onClearCategories,
+                  onClearPriceRange: widget.onClearPriceRange,
+                  onClearSearch: widget.onClearSearch,
+                  onClearAll: widget.onClearAllFilters,
+                  onChanged: widget.onDataFilterChanged,
+                  showSearch: !_searchOpen,
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

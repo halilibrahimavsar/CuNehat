@@ -74,6 +74,7 @@ class AddStockSheet extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) => AddStockSheet(
         walletId: walletId,

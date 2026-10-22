@@ -1193,6 +1193,7 @@
   "bankImportStepAddRest": "Kalanları ekle",
   "bankImportStepCancelAll": "Tümünü iptal",
   "bankImportShowRaw": "Ham metni göster",
+  "bankImportRawTextTitle": "PDF'ten okunan metin",
   "bankImportPdfRawTitle": "PDF metni tanınamadı",
   "bankImportPdfRawHint": "Metni çıkardık ama hareket satırlarını tanıyamadık. Aşağıdaki metni kopyalayıp paylaş; ayrıştırıcı bankanın düzenine göre ayarlanacak.",
   "bankImportScannedPdfTitle": "Bu PDF taranmış bir görüntü",

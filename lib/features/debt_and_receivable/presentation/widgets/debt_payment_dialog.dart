@@ -25,6 +25,7 @@ import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/shared/focus.dart';
 
 /// Borç Ödeme Dialog'u - Kullanıcının borç ödemesi yapmasını sağlar.
 ///
@@ -308,6 +309,7 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
   }
 
   Future<void> _selectDate() async {
+    releaseInputFocus();
     final picked = await showDatePicker(
       context: context,
       initialDate: _clampToPickerRange(_paymentDate),
@@ -341,8 +343,11 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
     final mq = MediaQuery.of(context);
     // Diyalog kabuğu içeriğe sonsuz yükseklik veriyor; ConstrainedBox bunu
     // filtreler ve SingleChildScrollView sınırlı alanda scroll eder → taşma yok.
+    // Alt sınır YOK: 380'e sabitlenen taban 568dp'lik telefonda diyaloğu
+    // 64px taşırıyor, "Ödemeyi kaydet" düğmesini diyalogun dışına itiyordu.
+    // Kaydırma alanı ayrıca `Flexible`: kalan yükseklikten fazlasını almaz.
     final maxH =
-        (mq.size.height - mq.viewInsets.bottom - 250).clamp(380.0, 700.0);
+        (mq.size.height - mq.viewInsets.bottom - 250).clamp(120.0, 700.0);
 
     final remaining = _debt.remainingAmount;
     final totalDebt = _debt.totalDebtAmount;
@@ -361,176 +366,179 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
         children: [
           _buildHeader(context, isDark),
           const SizedBox(height: 12),
-          ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: maxH),
-            child: SingleChildScrollView(
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Borç Özeti
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? cs.primary.withValues(alpha: 0.15)
-                            : cs.primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
+          Flexible(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: maxH),
+              child: SingleChildScrollView(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Borç Özeti
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
                           color: isDark
-                              ? cs.primary.withValues(alpha: 0.35)
-                              : cs.primary.withValues(alpha: 0.2),
+                              ? cs.primary.withValues(alpha: 0.15)
+                              : cs.primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isDark
+                                ? cs.primary.withValues(alpha: 0.35)
+                                : cs.primary.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _debt.title,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                            const SizedBox(height: 8),
+                            _buildInfoRow(context.l10n.toplamBorcLabel,
+                                _money(totalDebt)),
+                            _buildInfoRow(
+                                context.l10n.odenenLabel, _money(totalPaid),
+                                color: Colors.green),
+                            const Divider(height: 16),
+                            // Gecikme faizi borcun KENDİSİ değil; kalan ana para
+                            // ile ayrı satırlarda durur, ikisinin toplamı
+                            // "ödenecek toplam"dır.
+                            _buildInfoRow(
+                                context.l10n.kalanLabel, _money(remaining),
+                                color: Colors.red,
+                                isBold: !moneyIsPositive(outstandingInterest)),
+                            if (moneyIsPositive(outstandingInterest)) ...[
+                              _buildInfoRow(context.l10n.gecikmeFaiziLabel,
+                                  _money(outstandingInterest),
+                                  color: Colors.red),
+                              const Divider(height: 16),
+                              _buildInfoRow(context.l10n.odenecekToplamLabel,
+                                  _money(payoff),
+                                  color: Colors.red, isBold: true),
+                            ],
+                          ],
                         ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _debt.title,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                          const SizedBox(height: 8),
-                          _buildInfoRow(
-                              context.l10n.toplamBorcLabel, _money(totalDebt)),
-                          _buildInfoRow(
-                              context.l10n.odenenLabel, _money(totalPaid),
-                              color: Colors.green),
-                          const Divider(height: 16),
-                          // Gecikme faizi borcun KENDİSİ değil; kalan ana para
-                          // ile ayrı satırlarda durur, ikisinin toplamı
-                          // "ödenecek toplam"dır.
-                          _buildInfoRow(
-                              context.l10n.kalanLabel, _money(remaining),
-                              color: Colors.red,
-                              isBold: !moneyIsPositive(outstandingInterest)),
-                          if (moneyIsPositive(outstandingInterest)) ...[
-                            _buildInfoRow(context.l10n.gecikmeFaiziLabel,
-                                _money(outstandingInterest),
-                                color: Colors.red),
-                            const Divider(height: 16),
-                            _buildInfoRow(context.l10n.odenecekToplamLabel,
-                                _money(payoff),
-                                color: Colors.red, isBold: true),
-                          ],
-                        ],
-                      ),
-                    ),
 
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
-                    // Hızlı seçim chip'leri — defterden satır seçiliyken tutar
-                    // o satırındır, çip onu değiştiremez.
-                    if (_ledgerTx == null) ...[
-                      _buildQuickPayOptions(payoff, outstandingInterest),
-                      const SizedBox(height: 12),
-                    ],
+                      // Hızlı seçim chip'leri — defterden satır seçiliyken tutar
+                      // o satırındır, çip onu değiştiremez.
+                      if (_ledgerTx == null) ...[
+                        _buildQuickPayOptions(payoff, outstandingInterest),
+                        const SizedBox(height: 12),
+                      ],
 
-                    // Ödeme Tutarı
-                    TextFormField(
-                      controller: _amountController,
-                      readOnly: _ledgerTx != null,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: [AmountInputFormatter()],
-                      onChanged: (_) {
-                        // Faiz payı önizlemesi tutara bağlı → her değişimde
-                        // yeniden çiz.
-                        setState(() => _activeQuickPay = null);
-                      },
-                      decoration: InputDecoration(
-                        labelText: context.l10n.labelOdemeTutari,
-                        hintText: '0,00',
-                        prefixIcon: const Icon(Icons.attach_money),
-                        suffixText: currencySymbol(widget.currency),
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        helperText: context.l10n
-                            .maksimumFormatmoneyRemaining(_plainMoney(payoff)),
-                      ),
-                      validator: (value) => validateAmountInput(
-                        value ?? '',
-                        max: payoff,
-                        maxExceededMessage: moneyIsPositive(outstandingInterest)
-                            ? context.l10n.odenecekTutardanFazlaOlamaz
-                            : context.l10n.kalanTutardanFazlaOlamaz,
-                      ),
-                    ),
-
-                    // Mahsup sırası kullanıcıya görünür olmalı: girilen tutarın
-                    // bir kısmı borcu değil faizi kapatıyor.
-                    if (moneyIsPositive(outstandingInterest))
-                      _buildAllocationHint(outstandingInterest),
-
-                    _buildLedgerPayment(cs),
-
-                    const SizedBox(height: 16),
-
-                    // Ödeme Tarihi — defterden seçilen satırın günü kilitlidir.
-                    InkWell(
-                      onTap: _ledgerTx == null ? _selectDate : null,
-                      borderRadius: BorderRadius.circular(12),
-                      child: InputDecorator(
+                      // Ödeme Tutarı
+                      TextFormField(
+                        controller: _amountController,
+                        readOnly: _ledgerTx != null,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        inputFormatters: [AmountInputFormatter()],
+                        onChanged: (_) {
+                          // Faiz payı önizlemesi tutara bağlı → her değişimde
+                          // yeniden çiz.
+                          setState(() => _activeQuickPay = null);
+                        },
                         decoration: InputDecoration(
-                          labelText: context.l10n.labelOdemeTarihi,
-                          prefixIcon: const Icon(Icons.calendar_today),
+                          labelText: context.l10n.labelOdemeTutari,
+                          hintText: '0,00',
+                          prefixIcon: const Icon(Icons.attach_money),
+                          suffixText: currencySymbol(widget.currency),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          helperText: context.l10n.maksimumFormatmoneyRemaining(
+                              _plainMoney(payoff)),
+                        ),
+                        validator: (value) => validateAmountInput(
+                          value ?? '',
+                          max: payoff,
+                          maxExceededMessage:
+                              moneyIsPositive(outstandingInterest)
+                                  ? context.l10n.odenecekTutardanFazlaOlamaz
+                                  : context.l10n.kalanTutardanFazlaOlamaz,
+                        ),
+                      ),
+
+                      // Mahsup sırası kullanıcıya görünür olmalı: girilen tutarın
+                      // bir kısmı borcu değil faizi kapatıyor.
+                      if (moneyIsPositive(outstandingInterest))
+                        _buildAllocationHint(outstandingInterest),
+
+                      _buildLedgerPayment(cs),
+
+                      const SizedBox(height: 16),
+
+                      // Ödeme Tarihi — defterden seçilen satırın günü kilitlidir.
+                      InkWell(
+                        onTap: _ledgerTx == null ? _selectDate : null,
+                        borderRadius: BorderRadius.circular(12),
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: context.l10n.labelOdemeTarihi,
+                            prefixIcon: const Icon(Icons.calendar_today),
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: Text(
+                            AppFormatters.dateLong.format(_paymentDate),
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Notlar
+                      TextFormField(
+                        controller: _notesController,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          labelText: context.l10n.labelNotOpsiyonel,
+                          hintText: context.l10n.hintOdemeIleIlgiliNotlar,
+                          prefixIcon: const Icon(Icons.note_alt),
                           border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12)),
                         ),
-                        child: Text(
-                          AppFormatters.dateLong.format(_paymentDate),
-                          style: const TextStyle(fontSize: 16),
+                      ),
+
+                      // Taksit Planı (foldable)
+                      if (_debt.termMonths > 1) ...[
+                        const SizedBox(height: 8),
+                        _buildCollapsibleSection(
+                          cs: cs,
+                          title: context.l10n
+                              .taksitPlaniFormat(_debt.termMonths.toString()),
+                          icon: Icons.calendar_month_rounded,
+                          isExpanded: _showInstallmentPlan,
+                          onToggle: () => setState(() =>
+                              _showInstallmentPlan = !_showInstallmentPlan),
+                          child: _buildInstallmentPlanList(isDark),
                         ),
-                      ),
-                    ),
+                      ],
 
-                    const SizedBox(height: 16),
-
-                    // Notlar
-                    TextFormField(
-                      controller: _notesController,
-                      maxLines: 3,
-                      decoration: InputDecoration(
-                        labelText: context.l10n.labelNotOpsiyonel,
-                        hintText: context.l10n.hintOdemeIleIlgiliNotlar,
-                        prefixIcon: const Icon(Icons.note_alt),
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                    ),
-
-                    // Taksit Planı (foldable)
-                    if (_debt.termMonths > 1) ...[
-                      const SizedBox(height: 8),
-                      _buildCollapsibleSection(
-                        cs: cs,
-                        title: context.l10n
-                            .taksitPlaniFormat(_debt.termMonths.toString()),
-                        icon: Icons.calendar_month_rounded,
-                        isExpanded: _showInstallmentPlan,
-                        onToggle: () => setState(
-                            () => _showInstallmentPlan = !_showInstallmentPlan),
-                        child: _buildInstallmentPlanList(isDark),
-                      ),
+                      // Ödeme Geçmişi (foldable)
+                      if (_debt.payments.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        _buildCollapsibleSection(
+                          cs: cs,
+                          title: context.l10n.odemeGecmisiFormat(
+                              _debt.payments.length.toString()),
+                          icon: Icons.history_rounded,
+                          isExpanded: _showPaymentHistory,
+                          onToggle: () => setState(
+                              () => _showPaymentHistory = !_showPaymentHistory),
+                          child: _buildPaymentHistoryList(),
+                        ),
+                      ],
                     ],
-
-                    // Ödeme Geçmişi (foldable)
-                    if (_debt.payments.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      _buildCollapsibleSection(
-                        cs: cs,
-                        title: context.l10n.odemeGecmisiFormat(
-                            _debt.payments.length.toString()),
-                        icon: Icons.history_rounded,
-                        isExpanded: _showPaymentHistory,
-                        onToggle: () => setState(
-                            () => _showPaymentHistory = !_showPaymentHistory),
-                        child: _buildPaymentHistoryList(),
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -578,14 +586,18 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
   // ---------------------------------------------------------------- Actions
 
   Widget _buildActions(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
+    // OverflowBar: dar ekranda iki düğme sığmazsa alt alta (Row'da 69px
+    // taşıyordu).
+    return OverflowBar(
+      alignment: MainAxisAlignment.end,
+      overflowAlignment: OverflowBarAlignment.end,
+      spacing: 8,
+      overflowSpacing: 4,
       children: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
           child: Text(context.l10n.iptal),
         ),
-        const SizedBox(width: 8),
         ElevatedButton.icon(
           onPressed: _handlePayment,
           style: ElevatedButton.styleFrom(
@@ -791,91 +803,121 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
         final index = entry.key;
         final payment = entry.value;
         final adopted = _adoptedPaymentIds.contains(payment.id);
+        // ListTile değil: dar diyalogda (320dp + büyük yazı) önde numara,
+        // sonda iki düğme başlığa ~10dp bırakıyor, tutar "5. / 0 / 0 …" diye
+        // karakter karakter alt alta diziliyordu. Tutar ve tarih tam
+        // genişlikte, düğmeler altlarında sağda.
         return Card(
           margin: const EdgeInsets.only(bottom: 8),
-          child: ListTile(
-            dense: true,
-            leading: CircleAvatar(
-              radius: 16,
-              backgroundColor: Colors.green.shade100,
-              child: Text(
-                context.l10n.index(index + 1),
-                style: TextStyle(
-                  color: Colors.green.shade700,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            title: Text(
-              _money(payment.amount),
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            // Başlıktaki tutar cüzdandan ÇIKAN tam tutar; bunun ne kadarının
-            // borcu değil gecikme faizini kapattığı burada yazar.
-            subtitle: Column(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  moneyIsPositive(payment.overdueInterestPart)
-                      ? context.l10n.odemeIcindeGecikmeFaizi(
-                          AppFormatters.dateShort.format(payment.date),
-                          _money(payment.overdueInterestPart),
-                        )
-                      : AppFormatters.dateShort.format(payment.date),
-                  style: const TextStyle(fontSize: 12),
-                ),
-                if (adopted)
-                  Text(
-                    context.l10n.odemeDefterSatirinaBagli,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Theme.of(context).colorScheme.primary,
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Colors.green.shade100,
+                    child: Text(
+                      context.l10n.index(index + 1),
+                      style: TextStyle(
+                        color: Colors.green.shade700,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-              ],
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (payment.notes != null)
-                  Tooltip(
-                    message: payment.notes!,
-                    child: const Icon(Icons.info_outline, size: 16),
-                  ),
-                // Yanlış girilen bir ödemenin tek çıkış yolu, borcun tamamını
-                // silmekti: deftere yazılan karşılığı sistem işlemi olduğu
-                // için işlemler sayfasından da silinemiyordu.
-                // Satır içi İKİ düğme. Eskiden burada bir açılır menü
-                // vardı (uygulamadaki son açılır menü): diyalogun üstüne
-                // alt sayfa açmak iki katmanlı modal olurdu, o yüzden eylem
-                // sayfasına da taşınamıyordu. İki eylem için menü gereksiz —
-                // doğrudan düğme bir dokunuş kısaltır. Silme onay sorar.
-                IconButton(
-                  key: ValueKey('payment-edit-${payment.id}'),
-                  tooltip: context.l10n.duzenle,
-                  visualDensity: VisualDensity.compact,
-                  constraints:
-                      const BoxConstraints(minWidth: 40, minHeight: 40),
-                  padding: EdgeInsets.zero,
-                  iconSize: 18,
-                  // Benimsenmiş ödemenin tutarı/tarihi bankanın satırından
-                  // gelir (bloc da reddeder).
-                  onPressed: adopted ? null : () => _editPayment(payment),
-                  icon: const Icon(Icons.edit_rounded),
                 ),
-                IconButton(
-                  key: ValueKey('payment-delete-${payment.id}'),
-                  tooltip: context.l10n.sil,
-                  visualDensity: VisualDensity.compact,
-                  constraints:
-                      const BoxConstraints(minWidth: 40, minHeight: 40),
-                  padding: EdgeInsets.zero,
-                  iconSize: 18,
-                  color: Theme.of(context).colorScheme.error,
-                  onPressed: () => _deletePayment(payment),
-                  icon: const Icon(Icons.delete_outline_rounded),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          _money(payment.amount),
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      // Başlıktaki tutar cüzdandan ÇIKAN tam tutar; bunun ne kadarının
+                      // borcu değil gecikme faizini kapattığı burada yazar.
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            moneyIsPositive(payment.overdueInterestPart)
+                                ? context.l10n.odemeIcindeGecikmeFaizi(
+                                    AppFormatters.dateShort
+                                        .format(payment.date),
+                                    _money(payment.overdueInterestPart),
+                                  )
+                                : AppFormatters.dateShort.format(payment.date),
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          if (adopted)
+                            Text(
+                              context.l10n.odemeDefterSatirinaBagli,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                        ],
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (payment.notes != null)
+                              Tooltip(
+                                message: payment.notes!,
+                                child: const Icon(Icons.info_outline, size: 16),
+                              ),
+                            // Yanlış girilen bir ödemenin tek çıkış yolu, borcun tamamını
+                            // silmekti: deftere yazılan karşılığı sistem işlemi olduğu
+                            // için işlemler sayfasından da silinemiyordu.
+                            // Satır içi İKİ düğme. Eskiden burada bir açılır menü
+                            // vardı (uygulamadaki son açılır menü): diyalogun üstüne
+                            // alt sayfa açmak iki katmanlı modal olurdu, o yüzden eylem
+                            // sayfasına da taşınamıyordu. İki eylem için menü gereksiz —
+                            // doğrudan düğme bir dokunuş kısaltır. Silme onay sorar.
+                            IconButton(
+                              key: ValueKey('payment-edit-${payment.id}'),
+                              tooltip: context.l10n.duzenle,
+                              visualDensity: VisualDensity.compact,
+                              constraints: const BoxConstraints(
+                                  minWidth: 40, minHeight: 40),
+                              padding: EdgeInsets.zero,
+                              iconSize: 18,
+                              // Benimsenmiş ödemenin tutarı/tarihi bankanın satırından
+                              // gelir (bloc da reddeder).
+                              onPressed:
+                                  adopted ? null : () => _editPayment(payment),
+                              icon: const Icon(Icons.edit_rounded),
+                            ),
+                            IconButton(
+                              key: ValueKey('payment-delete-${payment.id}'),
+                              tooltip: context.l10n.sil,
+                              visualDensity: VisualDensity.compact,
+                              constraints: const BoxConstraints(
+                                  minWidth: 40, minHeight: 40),
+                              padding: EdgeInsets.zero,
+                              iconSize: 18,
+                              color: Theme.of(context).colorScheme.error,
+                              onPressed: () => _deletePayment(payment),
+                              icon: const Icon(Icons.delete_outline_rounded),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -1027,27 +1069,34 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              color: isDark
-                  ? theme.colorScheme.onSurfaceVariant
-                  : Colors.grey.shade700,
+      // Wrap: sığmazsa tutar alt satıra (sağa) iner. Row'da dar diyalogda
+      // etiket "Kalan" / ":" diye harf harf bölünüyordu.
+      child: SizedBox(
+        width: double.infinity,
+        child: Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 8,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                color: isDark
+                    ? theme.colorScheme.onSurfaceVariant
+                    : Colors.grey.shade700,
+              ),
             ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: isBold ? 16 : 14,
-              fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
-              color: resolvedColor,
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: isBold ? 16 : 14,
+                fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+                color: resolvedColor,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

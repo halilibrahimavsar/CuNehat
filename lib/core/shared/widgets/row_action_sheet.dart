@@ -221,6 +221,7 @@ Future<T?> showRowActionSheet<T>(
     // eylem + başlık 600dp'lik ekranda 29px taşıyordu (ölçüldü). İçerik
     // ayrıca kaydırılabilir — büyük yazı ölçeğinde de taşmaz.
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: builder,
   );

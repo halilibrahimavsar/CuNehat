@@ -1,4 +1,5 @@
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/shared/widgets/amount_font_fit.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
@@ -56,6 +57,14 @@ class AddEntryAmountCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Tutar alanının stili: hem ölçüm (AmountFontFit) hem alan aynı yazıyı
+    // kullanır, ölçülen genişlik çizilenle birebir olsun.
+    final style = TextStyle(
+      fontSize: 40,
+      fontWeight: FontWeight.w800,
+      color: accent,
+      height: 1.0,
+    );
     final cs = Theme.of(context).colorScheme;
 
     return Container(
@@ -89,28 +98,26 @@ class AddEntryAmountCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Flexible(
-                child: TextField(
+                child: AmountFontFit(
                   controller: amountController,
-                  textAlign: TextAlign.right,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: [AmountInputFormatter()],
-                  onChanged: (_) => onChanged(),
-                  cursorColor: accent,
-                  style: TextStyle(
-                    fontSize: 40,
-                    fontWeight: FontWeight.w800,
-                    color: accent,
-                    height: 1.0,
-                  ),
-                  decoration: InputDecoration(
-                    isCollapsed: true,
-                    border: InputBorder.none,
-                    hintText: '0',
-                    hintStyle: TextStyle(
-                      fontSize: 40,
-                      fontWeight: FontWeight.w800,
-                      color: accent.withValues(alpha: 0.25),
+                  style: style,
+                  builder: (context, fontSize) => TextField(
+                    controller: amountController,
+                    textAlign: TextAlign.right,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [AmountInputFormatter()],
+                    onChanged: (_) => onChanged(),
+                    cursorColor: accent,
+                    style: style.copyWith(fontSize: fontSize),
+                    decoration: InputDecoration(
+                      isCollapsed: true,
+                      border: InputBorder.none,
+                      hintText: '0',
+                      hintStyle: style.copyWith(
+                        fontSize: fontSize,
+                        color: accent.withValues(alpha: 0.25),
+                      ),
                     ),
                   ),
                 ),

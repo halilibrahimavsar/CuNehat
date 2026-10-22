@@ -41,6 +41,7 @@ class GoalFormSheet extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) => GoalFormSheet(
         userId: userId,

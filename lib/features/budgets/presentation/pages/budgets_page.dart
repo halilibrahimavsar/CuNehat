@@ -30,6 +30,7 @@ import 'package:cunehat/features/finance_transactions/domain/services/wallet_cat
 import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
+import 'package:cunehat/core/shared/focus.dart';
 
 class BudgetsPage extends StatelessWidget {
   const BudgetsPage({super.key});
@@ -251,29 +252,38 @@ class _BudgetSummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // İkisi de esner (gerekirse alt satıra geçer): Row'da sabit
+          // genişlikteydiler, 320dp + büyük yazıda rozet kartın dışına
+          // kesiliyordu.
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                context.l10n.bUAyToplamHarcama,
-                style: theme.textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.5,
-                  color: scheme.onSurfaceVariant.withValues(alpha: 0.9),
+              Expanded(
+                child: Text(
+                  context.l10n.bUAyToplamHarcama,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.5,
+                    color: scheme.onSurfaceVariant.withValues(alpha: 0.9),
+                  ),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: statusColor.withValues(alpha: 0.3)),
-                ),
-                child: Text(
-                  statusText,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: statusColor,
-                    fontWeight: FontWeight.w900,
+              const SizedBox(width: 8),
+              Flexible(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border:
+                        Border.all(color: statusColor.withValues(alpha: 0.3)),
+                  ),
+                  child: Text(
+                    statusText,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: statusColor,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
               ),
@@ -440,6 +450,7 @@ class _BudgetListItem extends StatelessWidget {
                       ?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
@@ -476,8 +487,12 @@ class _BudgetListItem extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // Wrap: dar ekranda ya da büyük tutarda limit alt satıra iner;
+          // Row'da iki metin boşluksuz yapışıp taşıyordu.
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            spacing: 12,
+            runSpacing: 4,
             children: [
               Text(
                 context.l10n.harcananAppformattersCurrencyFormat(formatMoney(
@@ -497,12 +512,14 @@ class _BudgetListItem extends StatelessWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    context.l10n.limitAppformattersCurrencyFormat(formatMoney(
-                        budget.limitAmount,
-                        currency: context.activeWalletCurrency)),
-                    style: theme.textTheme.bodyMedium
-                        ?.copyWith(color: scheme.onSurfaceVariant),
+                  Flexible(
+                    child: Text(
+                      context.l10n.limitAppformattersCurrencyFormat(formatMoney(
+                          budget.limitAmount,
+                          currency: context.activeWalletCurrency)),
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(color: scheme.onSurfaceVariant),
+                    ),
                   ),
                   const SizedBox(width: 4),
                   Icon(Icons.edit_outlined,
@@ -718,6 +735,7 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
   /// ([_lockReasonFor]) seçiciye taşındı — kilitli satır orada görünür ama
   /// seçilemez.
   Future<void> _pickCategory(FormFieldState<String> field) async {
+    releaseInputFocus();
     final picked = await showCategoryPickerSheet(
       context: context,
       isExpense: true,

@@ -12,6 +12,7 @@ import 'package:cunehat/features/bank_import/presentation/import_category_labels
 import 'package:cunehat/features/bank_import/presentation/widgets/bulk_category_dialog.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_picker_sheet.dart';
+import 'package:cunehat/core/shared/focus.dart';
 
 /// Benzer açıklamalı satırları gruplayıp gruba TEK dokunuşla kategori atatan
 /// sayfa.
@@ -31,6 +32,7 @@ Future<void> showSimilarGroupSheet(BuildContext context) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (_) => BlocProvider<BankImportCubit>.value(
       value: cubit,
@@ -420,6 +422,7 @@ class _SimilarGroupSheetState extends State<SimilarGroupSheet> {
   }
 
   Future<void> _assignToGroup(BankImportReview state, DraftGroup group) async {
+    releaseInputFocus();
     final picked = await showCategoryPickerSheet(
       context: context,
       isExpense: !group.isIncome,

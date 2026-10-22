@@ -82,9 +82,15 @@ void main() {
 
     expect(find.text('60.000,00 ₺'), findsOneWidget);
     // 37.100 + 26.400 − 3.500 = 60.000
-    final line = find.textContaining('Dönem başı 37.100,00 ₺');
-    expect(line, findsOneWidget);
-    final text = tester.widget<Text>(line).data!;
+    expect(find.textContaining('Dönem başı 37.100,00 ₺'), findsOneWidget);
+    // Satır parçalara bölünür (sığmayan parça bütün olarak alta iner);
+    // parçalar birlikte okunur.
+    final text = tester
+        .widgetList<Text>(find.descendant(
+            of: find.byKey(const ValueKey('report-trend-context')),
+            matching: find.byType(Text)))
+        .map((t) => t.data!)
+        .join(' ');
     expect(text, contains('26.400,00 ₺'));
     expect(text, contains('Diğer hareketler'));
     expect(text, contains('3.500,00 ₺'));

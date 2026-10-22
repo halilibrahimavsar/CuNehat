@@ -239,8 +239,7 @@ class DebtListSection extends StatelessWidget {
     try {
       final state = context.watch<WalletBloc>().state;
       return state is WalletLoadedSt &&
-          CardDebtSummarySection.cardsFor(walletId, state.wallets)
-              .isNotEmpty;
+          CardDebtSummarySection.cardsFor(walletId, state.wallets).isNotEmpty;
     } on ProviderNotFoundException {
       return false;
     }
@@ -398,8 +397,10 @@ class DebtListSection extends StatelessWidget {
                     ],
                   ),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                // Tutar sütunu satırın en çok yarısı; sığmazsa küçülür. Sınırsız
+                // dururken 320dp + büyük yazıda adı "Ah / met" diye harfin
+                // ortasından bölüyordu.
+                _AmountColumn(
                   children: [
                     MoneyText(
                       amount: debt.remainingAmount,
@@ -734,8 +735,7 @@ class ReceivableListSection extends StatelessWidget {
                 ],
               ),
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+            _AmountColumn(
               children: [
                 MoneyText(
                   amount: receivable.amount,
@@ -902,6 +902,28 @@ class _EmptyStateCard extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Borç/alacak kartının sağdaki tutar sütunu: en çok satırın yarısı, tutar
+/// sığmazsa küçülür (bkz. `_buildDebtCard`).
+class _AmountColumn extends StatelessWidget {
+  final List<Widget> children;
+
+  const _AmountColumn({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Flexible(
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.topRight,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: children,
+        ),
+      ),
     );
   }
 }

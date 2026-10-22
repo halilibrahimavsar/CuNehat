@@ -174,178 +174,185 @@ class _ModernDrawerState extends State<ModernDrawer>
             child: Column(
               children: [
                 Expanded(
-                  child: ListView(
-                    padding: EdgeInsets.zero,
-                    children: [
-                      _buildAnimatedHeader(localUser, isDark, theme),
-                      const SizedBox(height: 12),
+                  // Liste durum çubuğunun ALTINDA kırpılır: zemin gradyanı
+                  // çubuğun arkasına akmaya devam eder, ama kayan kartlar ve
+                  // menü satırları saatin üstüne binmez (cihazda görüldü).
+                  child: ClipRect(
+                    clipper: _BelowStatusBarClipper(
+                        MediaQuery.paddingOf(context).top),
+                    child: ListView(
+                      padding: EdgeInsets.zero,
+                      children: [
+                        _buildAnimatedHeader(localUser, isDark, theme),
+                        const SizedBox(height: 12),
 
-                      // Active Wallet Summary Card (Hesap - Borç - Birikim)
-                      _buildWalletMetricsSection(theme),
-                      const SizedBox(height: 20),
+                        // Active Wallet Summary Card (Hesap - Borç - Birikim)
+                        _buildWalletMetricsSection(theme),
+                        const SizedBox(height: 20),
 
-                      // Section 1: Finansal Yönetim
-                      _buildSectionHeader(
-                        context.l10n.drawerSectionFinancial,
-                        isDark,
-                        theme,
-                      ),
-                      const SizedBox(height: 6),
-                      _buildAnimatedMenuItem(
-                        index: 0,
-                        icon: Icons.pie_chart_outline_rounded,
-                        title: context.l10n.budgetPlanning,
-                        subtitle: context.l10n.drawerBudgetSubtitle,
-                        gradientColors: const [
-                          Color(0xFF8E2DE2),
-                          Color(0xFF4A00E0),
-                        ],
-                        onTap: () {
-                          Navigator.pop(context);
-                          context.push(AppRoutes.budgets);
-                        },
-                        delay: 50,
-                        isDark: isDark,
-                        theme: theme,
-                      ),
-                      _buildAnimatedMenuItem(
-                        index: 1,
-                        icon: Icons.sync_alt_rounded,
-                        title: context.l10n.recurringTransactions,
-                        subtitle: context.l10n.drawerRecurringSubtitle,
-                        gradientColors: const [
-                          Color(0xFFF2994A),
-                          Color(0xFFF2C94C),
-                        ],
-                        onTap: () {
-                          Navigator.pop(context);
-                          context.push(AppRoutes.recurringTemplates);
-                        },
-                        delay: 100,
-                        isDark: isDark,
-                        theme: theme,
-                        // Onay bekleyen kalem = deftere işlenmemiş gerçek
-                        // gelir/gider. Açılış hatırlatması "Sonra" ile
-                        // susturulabildiğinden kalıcı görünürlük burada.
-                        badgeCount: _pendingCount(context),
-                      ),
-                      _buildAnimatedMenuItem(
-                        index: 2,
-                        icon: Icons.category_rounded,
-                        title: context.l10n.drawerCategoriesTitle,
-                        subtitle: context.l10n.drawerCategoriesSubtitle,
-                        gradientColors: const [
-                          Color(0xFFEE0979),
-                          Color(0xFFFF6A00),
-                        ],
-                        onTap: () {
-                          Navigator.pop(context);
-                          context.push(AppRoutes.categories);
-                        },
-                        delay: 150,
-                        isDark: isDark,
-                        theme: theme,
-                      ),
-                      _buildAnimatedMenuItem(
-                        index: 3,
-                        icon: Icons.document_scanner_rounded,
-                        // `bankStatementSectionHeader` DEĞİL: o metin ayarlar
-                        // sayfasındaki bölüm başlığı için yazıldı ve büyük
-                        // harf ("BANKA EKSTRESİ"). Menüde komşuları başlık
-                        // düzeninde olduğu için tek başına bağırıyordu.
-                        title: context.l10n.drawerBankImportTitle,
-                        subtitle: context.l10n.drawerBankImportSubtitle,
-                        gradientColors: const [
-                          Color(0xFF11998E),
-                          Color(0xFF38EF7D),
-                        ],
-                        onTap: () {
-                          Navigator.pop(context);
-                          context.push(AppRoutes.bankStatementImport);
-                        },
-                        delay: 200,
-                        isDark: isDark,
-                        theme: theme,
-                      ),
-                      // Kapalı bölümler: ana ekranda yer tutmazlar, buradan
-                      // açılırlar. Açılan bölümün satırı kaybolur — artık ana
-                      // ekrandadır.
-                      if (!_sectionEnabled(SliderState.savedMoney))
+                        // Section 1: Finansal Yönetim
+                        _buildSectionHeader(
+                          context.l10n.drawerSectionFinancial,
+                          isDark,
+                          theme,
+                        ),
+                        const SizedBox(height: 6),
+                        _buildAnimatedMenuItem(
+                          index: 0,
+                          icon: Icons.pie_chart_outline_rounded,
+                          title: context.l10n.budgetPlanning,
+                          subtitle: context.l10n.drawerBudgetSubtitle,
+                          gradientColors: const [
+                            Color(0xFF8E2DE2),
+                            Color(0xFF4A00E0),
+                          ],
+                          onTap: () {
+                            Navigator.pop(context);
+                            context.push(AppRoutes.budgets);
+                          },
+                          delay: 50,
+                          isDark: isDark,
+                          theme: theme,
+                        ),
+                        _buildAnimatedMenuItem(
+                          index: 1,
+                          icon: Icons.sync_alt_rounded,
+                          title: context.l10n.recurringTransactions,
+                          subtitle: context.l10n.drawerRecurringSubtitle,
+                          gradientColors: const [
+                            Color(0xFFF2994A),
+                            Color(0xFFF2C94C),
+                          ],
+                          onTap: () {
+                            Navigator.pop(context);
+                            context.push(AppRoutes.recurringTemplates);
+                          },
+                          delay: 100,
+                          isDark: isDark,
+                          theme: theme,
+                          // Onay bekleyen kalem = deftere işlenmemiş gerçek
+                          // gelir/gider. Açılış hatırlatması "Sonra" ile
+                          // susturulabildiğinden kalıcı görünürlük burada.
+                          badgeCount: _pendingCount(context),
+                        ),
+                        _buildAnimatedMenuItem(
+                          index: 2,
+                          icon: Icons.category_rounded,
+                          title: context.l10n.drawerCategoriesTitle,
+                          subtitle: context.l10n.drawerCategoriesSubtitle,
+                          gradientColors: const [
+                            Color(0xFFEE0979),
+                            Color(0xFFFF6A00),
+                          ],
+                          onTap: () {
+                            Navigator.pop(context);
+                            context.push(AppRoutes.categories);
+                          },
+                          delay: 150,
+                          isDark: isDark,
+                          theme: theme,
+                        ),
+                        _buildAnimatedMenuItem(
+                          index: 3,
+                          icon: Icons.document_scanner_rounded,
+                          // `bankStatementSectionHeader` DEĞİL: o metin ayarlar
+                          // sayfasındaki bölüm başlığı için yazıldı ve büyük
+                          // harf ("BANKA EKSTRESİ"). Menüde komşuları başlık
+                          // düzeninde olduğu için tek başına bağırıyordu.
+                          title: context.l10n.drawerBankImportTitle,
+                          subtitle: context.l10n.drawerBankImportSubtitle,
+                          gradientColors: const [
+                            Color(0xFF11998E),
+                            Color(0xFF38EF7D),
+                          ],
+                          onTap: () {
+                            Navigator.pop(context);
+                            context.push(AppRoutes.bankStatementImport);
+                          },
+                          delay: 200,
+                          isDark: isDark,
+                          theme: theme,
+                        ),
+                        // Kapalı bölümler: ana ekranda yer tutmazlar, buradan
+                        // açılırlar. Açılan bölümün satırı kaybolur — artık ana
+                        // ekrandadır.
+                        if (!_sectionEnabled(SliderState.savedMoney))
+                          _buildAnimatedMenuItem(
+                            index: 4,
+                            icon: Icons.savings_outlined,
+                            title: context.l10n.drawerEnableSavingsTitle,
+                            subtitle: context.l10n.drawerEnableSavingsSubtitle,
+                            gradientColors: const [
+                              Color(0xFF10B981),
+                              Color(0xFF059669),
+                            ],
+                            onTap: () => _openSection(SliderState.savedMoney),
+                            delay: 250,
+                            isDark: isDark,
+                            theme: theme,
+                          ),
+                        if (!_sectionEnabled(SliderState.debt))
+                          _buildAnimatedMenuItem(
+                            index: 5,
+                            icon: Icons.account_balance_wallet_outlined,
+                            title: context.l10n.drawerEnableDebtTitle,
+                            subtitle: context.l10n.drawerEnableDebtSubtitle,
+                            gradientColors: const [
+                              Color(0xFFF43F5E),
+                              Color(0xFFBE123C),
+                            ],
+                            onTap: () => _openSection(SliderState.debt),
+                            delay: 300,
+                            isDark: isDark,
+                            theme: theme,
+                          ),
+
+                        const SizedBox(height: 16),
+
+                        // Section 2: Sistem & Ayarlar
+                        _buildSectionHeader(
+                          context.l10n.drawerSectionSystem,
+                          isDark,
+                          theme,
+                        ),
+                        const SizedBox(height: 6),
                         _buildAnimatedMenuItem(
                           index: 4,
-                          icon: Icons.savings_outlined,
-                          title: context.l10n.drawerEnableSavingsTitle,
-                          subtitle: context.l10n.drawerEnableSavingsSubtitle,
+                          icon: Icons.tune_rounded,
+                          title: context.l10n.settings,
+                          subtitle: context.l10n.drawerSettingsSubtitle,
                           gradientColors: const [
-                            Color(0xFF10B981),
-                            Color(0xFF059669),
+                            Color(0xFF2F80ED),
+                            Color(0xFF56CCF2),
                           ],
-                          onTap: () => _openSection(SliderState.savedMoney),
+                          onTap: () {
+                            Navigator.pop(context);
+                            context.push(AppRoutes.settings);
+                          },
                           delay: 250,
                           isDark: isDark,
                           theme: theme,
                         ),
-                      if (!_sectionEnabled(SliderState.debt))
                         _buildAnimatedMenuItem(
                           index: 5,
-                          icon: Icons.account_balance_wallet_outlined,
-                          title: context.l10n.drawerEnableDebtTitle,
-                          subtitle: context.l10n.drawerEnableDebtSubtitle,
+                          icon: Icons.shield_outlined,
+                          title: context.l10n.drawerSecurityTitle,
+                          subtitle: context.l10n.drawerSecuritySubtitle,
                           gradientColors: const [
-                            Color(0xFFF43F5E),
-                            Color(0xFFBE123C),
+                            Color(0xFF667EEA),
+                            Color(0xFF764BA2),
                           ],
-                          onTap: () => _openSection(SliderState.debt),
+                          onTap: () {
+                            Navigator.pop(context);
+                            context.push(AppRoutes.localAuthSettings);
+                          },
                           delay: 300,
                           isDark: isDark,
                           theme: theme,
                         ),
-
-                      const SizedBox(height: 16),
-
-                      // Section 2: Sistem & Ayarlar
-                      _buildSectionHeader(
-                        context.l10n.drawerSectionSystem,
-                        isDark,
-                        theme,
-                      ),
-                      const SizedBox(height: 6),
-                      _buildAnimatedMenuItem(
-                        index: 4,
-                        icon: Icons.tune_rounded,
-                        title: context.l10n.settings,
-                        subtitle: context.l10n.drawerSettingsSubtitle,
-                        gradientColors: const [
-                          Color(0xFF2F80ED),
-                          Color(0xFF56CCF2),
-                        ],
-                        onTap: () {
-                          Navigator.pop(context);
-                          context.push(AppRoutes.settings);
-                        },
-                        delay: 250,
-                        isDark: isDark,
-                        theme: theme,
-                      ),
-                      _buildAnimatedMenuItem(
-                        index: 5,
-                        icon: Icons.shield_outlined,
-                        title: context.l10n.drawerSecurityTitle,
-                        subtitle: context.l10n.drawerSecuritySubtitle,
-                        gradientColors: const [
-                          Color(0xFF667EEA),
-                          Color(0xFF764BA2),
-                        ],
-                        onTap: () {
-                          Navigator.pop(context);
-                          context.push(AppRoutes.localAuthSettings);
-                        },
-                        delay: 300,
-                        isDark: isDark,
-                        theme: theme,
-                      ),
-                      const SizedBox(height: 24),
-                    ],
+                        const SizedBox(height: 24),
+                      ],
+                    ),
                   ),
                 ),
                 _buildDrawerFooter(isDark, theme),
@@ -601,7 +608,9 @@ class _ModernDrawerState extends State<ModernDrawer>
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
-                            maxLines: 1,
+                            // İki satır: dar çekmecede (320dp × %85 + büyük
+                            // yazı) "Maaş hes…" diye kısalıyordu.
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 2),
@@ -676,15 +685,25 @@ class _ModernDrawerState extends State<ModernDrawer>
                               : theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
-                      const Spacer(),
-                      Text(
-                        formatMoney(wallet.balance, currency: wallet.currency),
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: isDark
-                              ? Colors.white
-                              : theme.colorScheme.onSurface,
+                      // Tutar sağa yaslı ve sığmazsa küçülür: 320dp + büyük
+                      // yazıda "Bakiye" ile tutar yapışıyor, büyük bakiyede
+                      // taşıyordu.
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            formatMoney(wallet.balance,
+                                currency: wallet.currency),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: isDark
+                                  ? Colors.white
+                                  : theme.colorScheme.onSurface,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -1010,4 +1029,18 @@ class _ModernDrawerState extends State<ModernDrawer>
       ),
     );
   }
+}
+
+/// Durum çubuğu payının ALTINI bırakır; liste en üstteyken kırpılan bir şey
+/// yoktur (üst bilgi o payı boş bırakır), kayınca içerik çubukta kesilir.
+class _BelowStatusBarClipper extends CustomClipper<Rect> {
+  final double top;
+
+  const _BelowStatusBarClipper(this.top);
+
+  @override
+  Rect getClip(Size size) => Rect.fromLTRB(0, top, size.width, size.height);
+
+  @override
+  bool shouldReclip(_BelowStatusBarClipper oldClipper) => oldClipper.top != top;
 }

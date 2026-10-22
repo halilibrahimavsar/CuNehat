@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/shared/focus.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_controller.dart';
 
 // ============================================================ Date & time
@@ -14,6 +15,7 @@ class WhenRow extends StatelessWidget {
 
   Future<void> _pickDate(BuildContext context) async {
     final current = controller.dateTime.value;
+    releaseInputFocus();
     final picked = await showDatePicker(
       context: context,
       initialDate: current,
@@ -33,9 +35,17 @@ class WhenRow extends StatelessWidget {
 
   Future<void> _pickTime(BuildContext context) async {
     final current = controller.dateTime.value;
+    releaseInputFocus();
     final picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(current),
+      // Uygulama saati her yerde 24 saatlik yazar. Sistemde 24 saat KAPALIYKEN
+      // Türkçe kadran yine 24 saatlik çiziliyor ama metin girişi 12'den büyük
+      // saati reddediyordu ("19" → "Geçerli bir saat girin").
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+        child: child!,
+      ),
     );
     if (picked != null) {
       controller.dateTime.value = DateTime(
@@ -99,18 +109,23 @@ class WhenRow extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
+            // Tarih daha uzun: 3:2. Eşit bölüşümde 320dp + büyük yazıda
+            // tarih "20 Ekim…" diye kesiliyor, yıl görünmüyordu.
             Row(
               children: [
                 Expanded(
+                  flex: 3,
                   child: _WhenPill(
                     icon: Icons.calendar_today_rounded,
                     label: AppFormatters.dateLong.format(when),
+                    compactLabel: AppFormatters.dayMonthYear.format(when),
                     accent: accent,
                     onTap: () => _pickDate(context),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
+                  flex: 2,
                   child: _WhenPill(
                     icon: Icons.schedule_rounded,
                     label: AppFormatters.time.format(when),
@@ -186,12 +201,17 @@ class _DayChip extends StatelessWidget {
 class _WhenPill extends StatelessWidget {
   final IconData icon;
   final String label;
+
+  /// [label] sığmazsa yazılan kısa biçim ("20 Eki 2026"): kesilmiş bir
+  /// "20 Ekim…" yılı gizliyordu.
+  final String? compactLabel;
   final Color accent;
   final VoidCallback onTap;
 
   const _WhenPill({
     required this.icon,
     required this.label,
+    this.compactLabel,
     required this.accent,
     required this.onTap,
   });
@@ -212,16 +232,32 @@ class _WhenPill extends StatelessWidget {
               Icon(icon, size: 18, color: accent),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                child: LayoutBuilder(builder: (context, constraints) {
+                  final style = TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: cs.onSurface,
-                  ),
-                ),
+                  );
+                  var text = label;
+                  if (compactLabel != null) {
+                    final painter = TextPainter(
+                      text: TextSpan(text: label, style: style),
+                      textDirection: Directionality.of(context),
+                      textScaler: MediaQuery.textScalerOf(context),
+                      maxLines: 1,
+                    )..layout();
+                    if (painter.width > constraints.maxWidth) {
+                      text = compactLabel!;
+                    }
+                    painter.dispose();
+                  }
+                  return Text(
+                    text,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: style,
+                  );
+                }),
               ),
             ],
           ),

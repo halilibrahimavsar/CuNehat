@@ -57,6 +57,7 @@ import 'package:cunehat/features/investments/presentation/widgets/cash_pots.dart
 import 'package:cunehat/features/investments/presentation/widgets/contribute_sheet.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
+import 'package:cunehat/core/shared/focus.dart';
 
 /// Satırın bağlanabileceği kayıt türü.
 enum LinkTarget {
@@ -140,6 +141,7 @@ Future<void> startLinkTransactionFlow(
     choice = await showModalBottomSheet<LinkChoice>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) =>
           LinkTargetSheet(transaction: transaction, currency: currency),
@@ -426,7 +428,13 @@ Future<void> _linkDebtPayment(
     emptyText: l10n.baglaBorcYok,
     items: debts,
     label: (d) => d.title.isNotEmpty ? d.title : d.counterparty,
-    detail: (d) => d.counterparty,
+    // Kişi adı başlıkla aynıysa tekrar yazılmaz ("Ahmet / Ahmet"); onun
+    // yerine kalan borç — hangi borca bağlandığını ayırt ettiren bilgi.
+    detail: (d) => [
+      if (d.counterparty.isNotEmpty && d.counterparty != d.title)
+        d.counterparty,
+      formatMoney(d.remainingAmount, currency: currency),
+    ].join(' · '),
   );
   if (debt == null || !context.mounted) return;
 
@@ -541,6 +549,7 @@ Future<void> _linkTransfer(
   final pick = await showModalBottomSheet<_CounterpartPick>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (_) => _CounterpartSheet(
       candidates: candidates,
@@ -624,6 +633,7 @@ Future<void> confirmAndRemoveTransfer(
       currency: await _currencyOfWallet(orphan.walletId),
     );
     if (!host.mounted) return;
+    releaseInputFocus();
     final picked = await showCategoryPickerSheet(
       context: host,
       isExpense: orphan.isExpense,
@@ -800,6 +810,7 @@ Future<T?> _choose<T>(
   return showModalBottomSheet<T>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (sheetContext) => _SheetFrame(
       title: title,

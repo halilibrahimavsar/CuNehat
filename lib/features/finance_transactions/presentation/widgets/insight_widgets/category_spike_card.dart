@@ -65,16 +65,20 @@ class CategorySpikeCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Başlık esner: 320dp + büyük yazıda başlık + yüzde
+                    // rozeti 73px taşıyordu.
                     Row(
                       children: [
-                        Text(
-                          context.l10n.insightSpikeTitle,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppGradients.debt,
+                        Expanded(
+                          child: Text(
+                            context.l10n.insightSpikeTitle,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppGradients.debt,
+                            ),
                           ),
                         ),
-                        const Spacer(),
+                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),

@@ -39,8 +39,12 @@ class DebtDynamicFields extends StatelessWidget {
         color: cs.onSurface.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(18),
       ),
-      child: Row(
-        children: [
+      // Yan yana sığmıyorsa alt alta: 320dp + büyük yazıda iki alanın
+      // etiketi "Vad…" / "Aylı…" diye kesiliyor, ne yazılacağı görünmüyordu.
+      child: LayoutBuilder(builder: (context, constraints) {
+        final minField = MediaQuery.textScalerOf(context).scale(150);
+        final stacked = (constraints.maxWidth - 10) / 2 < minField;
+        final fields = <Widget>[
           Expanded(
             child: FilledEntryField(
               controller: termController,
@@ -55,7 +59,7 @@ class DebtDynamicFields extends StatelessWidget {
             ),
           ),
           if (selectedDebtType == DebtType.bankLoan && isBankLoanMonthly) ...[
-            const SizedBox(width: 10),
+            const SizedBox(width: 10, height: 10),
             Expanded(
               child: FilledEntryField(
                 controller: installmentController,
@@ -71,7 +75,7 @@ class DebtDynamicFields extends StatelessWidget {
               ),
             ),
           ] else if (selectedDebtType != DebtType.personalDebt) ...[
-            const SizedBox(width: 10),
+            const SizedBox(width: 10, height: 10),
             Expanded(
               child: FilledEntryField(
                 controller: interestController,
@@ -90,8 +94,15 @@ class DebtDynamicFields extends StatelessWidget {
               ),
             ),
           ],
-        ],
-      ),
+        ];
+        if (!stacked) return Row(children: fields);
+        return Column(
+          children: [
+            for (final f in fields)
+              if (f is Expanded) f.child else f,
+          ],
+        );
+      }),
     );
   }
 }

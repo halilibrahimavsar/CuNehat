@@ -2543,6 +2543,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bankImportShowRaw => 'Ham metni göster';
 
   @override
+  String get bankImportRawTextTitle => 'PDF\'ten okunan metin';
+
+  @override
   String get bankImportPdfRawTitle => 'PDF metni tanınamadı';
 
   @override

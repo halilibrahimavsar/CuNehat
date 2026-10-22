@@ -419,6 +419,7 @@ void payCreditCard(
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (_) => CardPaySheet(
       card: card,

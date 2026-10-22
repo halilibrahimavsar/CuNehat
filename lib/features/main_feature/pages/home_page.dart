@@ -631,33 +631,40 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           child: _buildAnimatedContent(userId, activeWallet, account),
         ),
         if (_subViewFactory != null)
-          // _navController'a bağlı: closeToMain/navigateToView seçim map'ini
-          // değiştirip notifyListeners çağırınca DynamicSlider.didUpdateWidget
-          // tetiklenir ve knob carousel'i ekranla senkron kalır.
-          AnimatedBuilder(
-            animation: _navController,
-            builder: (context, _) {
-              final bar = SliderButtonView(
-                peekStore: SliderPeekStore(getIt<SharedPreferences>()),
-                controller: _navController.horizontalController,
-                navigationController: _navController,
-                userId: userId,
-                walletState: walletState,
-                subViewFactory: _subViewFactory!,
-                enabledStates: _sections.enabledStates,
-              );
-              // Tanıtım hedefi yalnız KAYDIRICI: sade çubukta anlatılacak
-              // jest yok, her düğme ne yaptığını yazıyla söylüyor.
-              if (_sections.hasOnlyTransactions) return bar;
-              return Showcase.withWidget(
-                key: OnboardingKeys.addActionSlider,
-                container: const OnboardingNavigationHintCard(),
-                targetShapeBorder: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: bar,
-              );
-            },
+          // Klavye açıkken (defterde arama) kaydırıcı klavyenin üstüne
+          // biniyordu: küçük telefonda sonuçlara HİÇ yer kalmıyordu. Offstage
+          // yer kaplamaz ama durumu (topuz konumu) korur.
+          Offstage(
+            offstage: MediaQuery.viewInsetsOf(context).bottom > 0,
+            // _navController'a bağlı: closeToMain/navigateToView seçim
+            // map'ini değiştirip notifyListeners çağırınca
+            // DynamicSlider.didUpdateWidget tetiklenir ve knob carousel'i
+            // ekranla senkron kalır.
+            child: AnimatedBuilder(
+              animation: _navController,
+              builder: (context, _) {
+                final bar = SliderButtonView(
+                  peekStore: SliderPeekStore(getIt<SharedPreferences>()),
+                  controller: _navController.horizontalController,
+                  navigationController: _navController,
+                  userId: userId,
+                  walletState: walletState,
+                  subViewFactory: _subViewFactory!,
+                  enabledStates: _sections.enabledStates,
+                );
+                // Tanıtım hedefi yalnız KAYDIRICI: sade çubukta anlatılacak
+                // jest yok, her düğme ne yaptığını yazıyla söylüyor.
+                if (_sections.hasOnlyTransactions) return bar;
+                return Showcase.withWidget(
+                  key: OnboardingKeys.addActionSlider,
+                  container: const OnboardingNavigationHintCard(),
+                  targetShapeBorder: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: bar,
+                );
+              },
+            ),
           ),
       ],
     );

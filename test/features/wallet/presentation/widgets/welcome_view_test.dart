@@ -297,6 +297,21 @@ void main() {
       });
     }
 
+    // En küçük yaygın telefon: 320×568, yazı 1,3, klavye açık.
+    testWidgets('320×568, yazı 1.3, klavye açık: taşma yok, "Başla" görünür',
+        (tester) async {
+      const keyboard = 260.0;
+      await expectNoLayoutError(
+        tester,
+        '320×568',
+        () => pump(tester,
+            size: const Size(320, 568), textScale: 1.3, keyboard: keyboard),
+      );
+      final rect = tester.getRect(startButton);
+      expect(rect.bottom, lessThanOrEqualTo(568 - keyboard));
+      expect(rect.height, greaterThanOrEqualTo(48));
+    });
+
     testWidgets('dokunma hedefleri en az 48dp', (tester) async {
       await pump(tester);
 
