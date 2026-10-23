@@ -368,8 +368,12 @@ class WalletForecast {
   /// Hız; yeterli kayıt yoksa `null` (bkz. [SpendingPace.fit]).
   final SpendingPace? pace;
 
-  /// Hız bilinmiyorsa: güven kapısı için kaç gün daha kayıt gerektiği.
+  /// Hız bilinmiyorsa: güven kapısına kaç takvim günü kaldığı.
   final int daysUntilPace;
+
+  /// Bugüne kadar en az bir kayıt var mı (sayaç ilk kayıttan işler; kayıt
+  /// yoksa sayaç hiç başlamadı).
+  final bool hasRecords;
 
   /// Ufuktaki olaylar (bugün dahil), tarih sırasıyla.
   final List<ForecastEvent> events;
@@ -400,6 +404,7 @@ class WalletForecast {
     required this.isCard,
     required this.pace,
     required this.daysUntilPace,
+    this.hasRecords = true,
     required this.events,
     required this.overdue,
     required this.path,

@@ -230,14 +230,15 @@ class SpendingPace {
     );
   }
 
-  /// Güven kapısına kaç gün kaldı (0 = açık).
+  /// Güven kapısına kaç TAKVİM günü kaldı (0 = açık), en çok [minDays].
+  /// İleri tarihli bir ilk kayıt sayacı şişirmesin ("39 gün daha" — QA D2):
+  /// gözlem bugünden önce başlayamaz.
   static int daysUntilReady(DateTime? trackingSince, DateTime today,
       {int minDays = minObservedDays}) {
     if (trackingSince == null) return minDays;
     final observed = CardCycle.daysBetween(
         CardCycle.dateOnly(trackingSince), CardCycle.dateOnly(today));
-    final left = minDays - observed;
-    return left < 0 ? 0 : left;
+    return (minDays - observed).clamp(0, minDays);
   }
 
   /// Sıralı listede en yakın sıra yüzdeliği.

@@ -12537,8 +12537,14 @@ abstract class AppLocalizations {
   /// No description provided for @forecastNoPaceBody.
   ///
   /// In tr, this message translates to:
-  /// **'{days, plural, =1{Bir gün daha harcama kaydedince} other{{days} gün daha harcama kaydedince}} günlük harcama hızını hesaplayıp yolculuğu çizerim. Şimdilik yalnız planlı ödemeleri gösteriyorum.'**
+  /// **'{days, plural, =1{Yarın} other{{days} gün sonra}} günlük harcama hızını hesaplayıp yolculuğu çizerim. Şimdilik yalnız planlı ödemeleri gösteriyorum.'**
   String forecastNoPaceBody(int days);
+
+  /// No description provided for @forecastNoPaceBodyNoRecords.
+  ///
+  /// In tr, this message translates to:
+  /// **'İlk harcamanı kaydettikten {days} gün sonra günlük harcama hızını hesaplayıp yolculuğu çizerim. Şimdilik yalnız planlı ödemeleri gösteriyorum.'**
+  String forecastNoPaceBodyNoRecords(int days);
 
   /// No description provided for @forecastPeriodTitle.
   ///

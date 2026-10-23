@@ -7365,10 +7365,15 @@ class AppLocalizationsTr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       days,
       locale: localeName,
-      other: '$days gün daha harcama kaydedince',
-      one: 'Bir gün daha harcama kaydedince',
+      other: '$days gün sonra',
+      one: 'Yarın',
     );
     return '$_temp0 günlük harcama hızını hesaplayıp yolculuğu çizerim. Şimdilik yalnız planlı ödemeleri gösteriyorum.';
+  }
+
+  @override
+  String forecastNoPaceBodyNoRecords(int days) {
+    return 'İlk harcamanı kaydettikten $days gün sonra günlük harcama hızını hesaplayıp yolculuğu çizerim. Şimdilik yalnız planlı ödemeleri gösteriyorum.';
   }
 
   @override

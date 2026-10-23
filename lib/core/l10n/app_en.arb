@@ -4541,8 +4541,16 @@
   "forecastLegendRange": "Likely range",
   "forecastCardPathTitle": "Card balance",
   "forecastNoPaceTitle": "A few more days of records needed",
-  "forecastNoPaceBody": "{days, plural, =1{After one more day of records} other{After {days} more days of records}} I can work out your daily spending pace and draw the path. For now, only planned payments are shown.",
+  "forecastNoPaceBody": "{days, plural, =1{Tomorrow} other{In {days} days}} I can work out your daily spending pace and draw the path. For now, only planned payments are shown.",
   "@forecastNoPaceBody": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "forecastNoPaceBodyNoRecords": "{days} days after your first recorded expense I can work out your daily spending pace and draw the path. For now, only planned payments are shown.",
+  "@forecastNoPaceBodyNoRecords": {
     "placeholders": {
       "days": {
         "type": "int"

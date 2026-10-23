@@ -279,7 +279,11 @@ class _ForecastViewState extends State<ForecastView>
             key: const ValueKey('forecast-no-pace'),
             icon: Icons.hourglass_bottom_rounded,
             title: l10n.forecastNoPaceTitle,
-            lines: [l10n.forecastNoPaceBody(f.daysUntilPace)],
+            lines: [
+              f.hasRecords
+                  ? l10n.forecastNoPaceBody(f.daysUntilPace)
+                  : l10n.forecastNoPaceBodyNoRecords(f.daysUntilPace),
+            ],
           ),
           const SizedBox(height: 12),
         ],

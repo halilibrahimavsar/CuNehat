@@ -4775,8 +4775,16 @@
   "forecastLegendRange": "Olası aralık",
   "forecastCardPathTitle": "Kart borcu",
   "forecastNoPaceTitle": "Tahmin için biraz daha kayıt gerek",
-  "forecastNoPaceBody": "{days, plural, =1{Bir gün daha harcama kaydedince} other{{days} gün daha harcama kaydedince}} günlük harcama hızını hesaplayıp yolculuğu çizerim. Şimdilik yalnız planlı ödemeleri gösteriyorum.",
+  "forecastNoPaceBody": "{days, plural, =1{Yarın} other{{days} gün sonra}} günlük harcama hızını hesaplayıp yolculuğu çizerim. Şimdilik yalnız planlı ödemeleri gösteriyorum.",
   "@forecastNoPaceBody": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "forecastNoPaceBodyNoRecords": "İlk harcamanı kaydettikten {days} gün sonra günlük harcama hızını hesaplayıp yolculuğu çizerim. Şimdilik yalnız planlı ödemeleri gösteriyorum.",
+  "@forecastNoPaceBodyNoRecords": {
     "placeholders": {
       "days": {
         "type": "int"

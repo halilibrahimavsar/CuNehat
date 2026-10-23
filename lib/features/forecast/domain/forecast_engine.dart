@@ -163,6 +163,7 @@ class ForecastEngine {
       pace: pace,
       daysUntilPace:
           pace == null ? SpendingPace.daysUntilReady(trackingSince, today) : 0,
+      hasRecords: trackingSince != null,
       events: events,
       overdue: overdue..sort((a, b) => a.date.compareTo(b.date)),
       path: _path(w, events, pace),
@@ -839,9 +840,13 @@ class ForecastEngine {
     return sum;
   }
 
-  static DateTime? _earliest(List<TransactionEntity> ledger) {
+  /// İlk kaydın günü — yalnız bugüne kadarki kayıtlardan. İleri tarihli
+  /// taksit ya da elle girilmiş gelecek kayıt "kayıt tutmaya başladı"
+  /// sayılmaz (sayaç "39 gün daha" diyordu — QA D2).
+  DateTime? _earliest(List<TransactionEntity> ledger) {
     DateTime? earliest;
     for (final t in ledger) {
+      if (t.date.isAfter(_endOfToday)) continue;
       if (earliest == null || t.date.isBefore(earliest)) earliest = t.date;
     }
     return earliest;

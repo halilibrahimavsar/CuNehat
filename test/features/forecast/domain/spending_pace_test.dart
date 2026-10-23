@@ -52,6 +52,11 @@ void main() {
     expect(SpendingPace.daysUntilReady(since, _today), 3);
     expect(SpendingPace.daysUntilReady(_since, _today), 0);
     expect(SpendingPace.daysUntilReady(null, _today), 14);
+    // İleri tarihli "ilk kayıt" sayacı 14'ün üstüne çıkaramaz (QA D2).
+    expect(
+        SpendingPace.daysUntilReady(
+            _today.add(const Duration(days: 25)), _today),
+        14);
   });
 
   test('pencere ilk kayıttan başlar, DÜNDE biter (bugün yarım gün)', () {

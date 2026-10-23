@@ -204,6 +204,30 @@ void main() {
       expect(f.events.single.date, DateTime(2026, 12, 5));
     });
 
+    // QA D2: ilk kayıt ileri tarihliyse (5 Ara taksiti) sayaç "39 gün daha"
+    // diyordu; ileri tarihli kayıt "kayıt tutmaya başladı" sayılmaz.
+    test('yalnız ileri tarihli kaydı olan cüzdanda sayaç 14 ve kayıt yok', () {
+      final f = _single(WalletForecastInput(
+        wallet: _wallet('w', balance: 5000),
+        ledger: [_tx(DateTime(2026, 12, 5), 500)],
+      ));
+      expect(f.pace, isNull);
+      expect(f.daysUntilPace, 14);
+      expect(f.hasRecords, isFalse);
+    });
+
+    test('sayaç ilk kayıttan takvim günüyle iner, en çok 14', () {
+      final f = _single(WalletForecastInput(
+        wallet: _wallet('w', balance: 5000),
+        ledger: [
+          _tx(DateTime(2026, 11, 5), 100),
+          _tx(DateTime(2026, 12, 5), 500),
+        ],
+      ));
+      expect(f.daysUntilPace, 14 - 5);
+      expect(f.hasRecords, isTrue);
+    });
+
     test('hiç kaydı olmayan YENİ cüzdanda hız yok; kapı 14 gün der', () {
       final f = _single(WalletForecastInput(
         wallet: _wallet('w', balance: 5000),

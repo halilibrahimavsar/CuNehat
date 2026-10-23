@@ -7424,10 +7424,15 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       days,
       locale: localeName,
-      other: 'After $days more days of records',
-      one: 'After one more day of records',
+      other: 'In $days days',
+      one: 'Tomorrow',
     );
     return '$_temp0 I can work out your daily spending pace and draw the path. For now, only planned payments are shown.';
+  }
+
+  @override
+  String forecastNoPaceBodyNoRecords(int days) {
+    return '$days days after your first recorded expense I can work out your daily spending pace and draw the path. For now, only planned payments are shown.';
   }
 
   @override
