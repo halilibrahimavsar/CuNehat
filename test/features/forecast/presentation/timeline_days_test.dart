@@ -47,15 +47,4 @@ void main() {
     expect(d.expectedIn, 700);
     expect((d.planned, d.expected, d.low, d.high), (500, 300, 200, 600));
   });
-
-  test('"Tüm cüzdanlar": olay KENDİ biriminden görüntü birimine çevrilir', () {
-    final days = buildTimelineDays(
-        path,
-        [
-          event(-10, walletId: 'usd'),
-          event(-100),
-        ],
-        rateOf: (e) => e.walletId == 'usd' ? 30 : 1);
-    expect(days.last.out, 10 * 30 + 100);
-  });
 }

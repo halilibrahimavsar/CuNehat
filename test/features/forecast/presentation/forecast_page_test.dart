@@ -30,13 +30,7 @@ final _november =
 
 class _FakeService extends Fake implements ForecastService {
   final ForecastResult result;
-  final Map<String, double> rates;
-  _FakeService(this.result, {this.rates = const {}});
-
-  @override
-  Future<Map<String, double>> ratesTo(
-          String currency, Iterable<String> currencies) async =>
-      rates;
+  _FakeService(this.result);
 
   @override
   Future<ForecastResult> forecast({
@@ -148,6 +142,18 @@ ForecastResult _result(
       WalletForecastInput(
         wallet: _wallet('usd', balance: 100, name: 'Dolar', currency: 'USD'),
         ledger: const [],
+        templates: [_template('Netflix', 15, DateTime(2026, 11, 18))],
+        tempBudgets: [
+          TempBudgetEntity(
+            id: 'holiday',
+            walletId: 'usd',
+            name: 'Tatil',
+            limitAmount: 300,
+            startDate: DateTime(2026, 11, 20),
+            endDate: DateTime(2026, 11, 22),
+            categoryIds: const ['food'],
+          ),
+        ],
       ),
   ];
   return ForecastResult(
@@ -166,7 +172,6 @@ void main() {
   Future<AppLocalizations> pump(WidgetTester tester, ForecastResult result,
       {Size size = const Size(900, 4200),
       double textScale = 1,
-      Map<String, double> rates = const {},
       bool? estimates = false,
       ForecastEstimatesCubit? estimatesCubit,
       bool reveal = false}) async {
@@ -174,8 +179,9 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
     final cubit = ForecastCubit(
-      _FakeService(result, rates: rates),
+      _FakeService(result),
       userId: 'u',
+      walletId: 'w',
       periodOf: () => _november,
       clock: () => _today,
     );
@@ -433,29 +439,23 @@ void main() {
       (const Size(360, 800), 1.5),
       (const Size(320, 568), 1.3),
     ]) {
-      for (final allWallets in [false, true]) {
-        testWidgets(
-            '${size.width.toInt()}×${size.height.toInt()} telefonda (metin '
-            'ölçeği $scale, ${allWallets ? 'tüm cüzdanlar' : 'bu cüzdan'}, '
-            '${estimates ? 'tahmin' : 'plan'}) taşma yok', (tester) async {
-          final l10n = await pump(tester, _result(withUsd: true),
-              size: size, textScale: scale, estimates: estimates);
-          if (allWallets) {
-            await tester.tap(find.text(l10n.forecastScopeAll));
-            await tester.pumpAndSettle();
-          }
-          // Gün paneli de açık olsun (en uzun hâli).
-          final chart = tester.getRect(find.byType(ForecastTimelineChart));
-          await tester.tapAt(Offset(chart.right - 4, chart.top + 20));
+      testWidgets(
+          '${size.width.toInt()}×${size.height.toInt()} telefonda (metin '
+          'ölçeği $scale, ${estimates ? 'tahmin' : 'plan'}) taşma yok',
+          (tester) async {
+        await pump(tester, _result(withUsd: true),
+            size: size, textScale: scale, estimates: estimates);
+        // Gün paneli de açık olsun (en uzun hâli).
+        final chart = tester.getRect(find.byType(ForecastTimelineChart));
+        await tester.tapAt(Offset(chart.right - 4, chart.top + 20));
+        await tester.pumpAndSettle();
+        final list = find.byKey(const ValueKey('forecast-list'));
+        for (var i = 0; i < 14; i++) {
+          await tester.drag(list, const Offset(0, -400));
           await tester.pumpAndSettle();
-          final list = find.byKey(const ValueKey('forecast-list'));
-          for (var i = 0; i < 14; i++) {
-            await tester.drag(list, const Offset(0, -400));
-            await tester.pumpAndSettle();
-          }
-          expect(tester.takeException(), isNull);
-        });
-      }
+        }
+        expect(tester.takeException(), isNull);
+      });
     }
   }
 
@@ -475,40 +475,34 @@ void main() {
     expect(find.text(twoWeeks), findsOneWidget);
   });
 
-  group('tüm cüzdanlar', () {
-    testWidgets(
-        'anahtar birleşik görünüme geçer: birim notu, olay satırında cüzdan '
-        'adı; kuru olmayan cüzdan adıyla dışarıda', (tester) async {
-      final l10n = await pump(tester, _result(withUsd: true));
-
-      await tester.tap(find.text(l10n.forecastScopeAll));
-      await tester.pumpAndSettle();
-
-      expect(find.text(l10n.forecastAllCurrencyNote('TRY')), findsOneWidget);
-      expect(find.text(l10n.forecastExcludedWallets('Dolar')), findsOneWidget);
-      // Kart ödemesi satırı ödeme hesabının adını taşır.
-      expect(find.textContaining('Maaş hesabı'), findsWidgets);
-      // Kart kendi satırıyla değil, ödeme hesabından BİR KEZ.
-      expect(find.text(l10n.forecastEventCardPayment('Bonus')), findsOneWidget);
-    });
-
-    testWidgets('kur varsa dışarıda kalan yok', (tester) async {
-      final l10n =
-          await pump(tester, _result(withUsd: true), rates: const {'USD': 30});
-      await tester.tap(find.text(l10n.forecastScopeAll));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('forecast-excluded')), findsNothing);
-    });
-
-    testWidgets('tek cüzdanda anahtar görünmez', (tester) async {
-      final single = _result();
-      await pump(
-          tester,
-          ForecastResult(
-            wallets: {'w': single.wallets['w']!},
-            categories: single.categories,
-          ));
+  // "Tüm cüzdanlar" tahmini sonraki sürümün tüm cüzdan raporunda; Gelecek
+  // yalnız aktif cüzdanı gösterir.
+  group('yalnız bu cüzdan', () {
+    testWidgets('çok cüzdanda da kapsam seçimi yok', (tester) async {
+      await pump(tester, _result(withUsd: true));
       expect(find.byKey(const ValueKey('forecast-scope')), findsNothing);
+      expect(find.byType(SegmentedButton<Object>), findsNothing);
+      expect(find.text('Tüm cüzdanlar'), findsNothing);
+    });
+
+    testWidgets('başka cüzdanın kalemi ve bütçesi görünmez', (tester) async {
+      await pump(tester, _result(withUsd: true), estimates: true);
+      // Bu cüzdanın tek seferlik bütçesi var, Dolar cüzdanınınki yok.
+      expect(find.text('Gezi'), findsOneWidget);
+      expect(find.text('Tatil'), findsNothing);
+      expect(find.textContaining('Netflix'), findsNothing);
+      expect(find.textContaining('Dolar'), findsNothing);
+    });
+
+    testWidgets('bağlı kart bölümde ve ödemesi bu hesabın kalemi olarak',
+        (tester) async {
+      final l10n = await pump(tester, _result(withUsd: true));
+      expect(
+          find.descendant(
+              of: find.byKey(const ValueKey('forecast-cards-card')),
+              matching: find.text('Bonus')),
+          findsOneWidget);
+      expect(find.text(l10n.forecastEventCardPayment('Bonus')), findsOneWidget);
     });
   });
 }

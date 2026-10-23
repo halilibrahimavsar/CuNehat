@@ -89,6 +89,7 @@ class _ReportTempBudgetSectionState extends State<ReportTempBudgetSection> {
         userId: widget.userId,
         period: widget.periodOf(),
         today: widget.today,
+        walletId: widget.walletId,
       );
       if (!mounted || gen != _generation) return;
       setState(() => _result = result);

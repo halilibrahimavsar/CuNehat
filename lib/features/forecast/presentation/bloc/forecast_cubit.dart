@@ -13,13 +13,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 enum ForecastStatus { loading, ready, failed }
 
-/// Sayfanın kapsamı: aktif cüzdan ya da tüm cüzdanların birleşimi.
-enum ForecastScope { wallet, all }
-
 class ForecastState extends Equatable {
   final ForecastStatus status;
 
-  /// Tüm cüzdanların tahmini (kimliğe göre).
+  /// Sayfanın cüzdanının ve kart cüzdanlarının tahmini (kimliğe göre; bkz.
+  /// [ForecastService.forecast] `walletId`).
   final Map<String, WalletForecast> wallets;
 
   /// Etiketleme için kategoriler.
@@ -27,11 +25,6 @@ class ForecastState extends Equatable {
 
   /// Hesaplandığı gün (gece yarısını geçen oturum bayat kalmasın).
   final DateTime? computedFor;
-
-  final ForecastScope scope;
-
-  /// "Tüm cüzdanlar" için birim → görüntü birimi kurları.
-  final Map<String, double> rates;
 
   /// Tahminin ufku (son gün, dahil) — kullanıcının dönem sonu; bkz.
   /// `forecastHorizonEnd`.
@@ -46,8 +39,6 @@ class ForecastState extends Equatable {
     this.wallets = const {},
     this.categories = const [],
     this.computedFor,
-    this.scope = ForecastScope.wallet,
-    this.rates = const {},
     this.horizonEnd,
     this.revealed = false,
   });
@@ -57,8 +48,6 @@ class ForecastState extends Equatable {
     Map<String, WalletForecast>? wallets,
     List<CategoryEntity>? categories,
     DateTime? computedFor,
-    ForecastScope? scope,
-    Map<String, double>? rates,
     DateTime? horizonEnd,
     bool? revealed,
   }) =>
@@ -67,8 +56,6 @@ class ForecastState extends Equatable {
         wallets: wallets ?? this.wallets,
         categories: categories ?? this.categories,
         computedFor: computedFor ?? this.computedFor,
-        scope: scope ?? this.scope,
-        rates: rates ?? this.rates,
         horizonEnd: horizonEnd ?? this.horizonEnd,
         revealed: revealed ?? this.revealed,
       );
@@ -79,20 +66,20 @@ class ForecastState extends Equatable {
         wallets,
         categories,
         computedFor,
-        scope,
-        rates,
         horizonEnd,
         revealed,
       ];
 }
 
-/// Gelecek sayfasının durumu. Defter ya da bütçe değişince kendini yeniler:
+/// Gelecek sayfasının durumu — yalnız [walletId] cüzdanı ("Tüm cüzdanlar"
+/// tahmini sonraki sürümün tüm cüzdan raporuna kaldı). Defter ya da bütçe değişince kendini yeniler:
 /// sayfa açıkken veri değişirse `initState` yeniden çalışmaz (Rapor'daki
 /// bayat bütçe hatasının dersi). Sayfa gizlenince sökülür (küp yığını gizli
 /// yüzü tutmaz), cubit de onunla kapanır: her açılış tazedir.
 class ForecastCubit extends Cubit<ForecastState> {
   final ForecastService _service;
   final String userId;
+  final String walletId;
 
   /// Dönemi her yüklemede taze sorar: kullanıcı dönem birimini Ayarlar'dan
   /// değiştirmiş olabilir.
@@ -112,6 +99,7 @@ class ForecastCubit extends Cubit<ForecastState> {
   ForecastCubit(
     this._service, {
     required this.userId,
+    required this.walletId,
     required this.periodOf,
     this.previousPeriodOf,
     DateTime Function(DateTime today)? horizonEndOf,
@@ -181,6 +169,7 @@ class ForecastCubit extends Cubit<ForecastState> {
         previousPeriod: previousPeriodOf?.call(),
         today: now,
         horizonDays: CardCycle.daysBetween(today, end),
+        walletId: walletId,
       );
       // Üst üste gelen yenilemelerde yalnız EN SON istek yazar.
       if (isClosed || gen != _generation) return;
@@ -191,38 +180,10 @@ class ForecastCubit extends Cubit<ForecastState> {
         computedFor: today,
         horizonEnd: end,
       ));
-      if (state.scope == ForecastScope.all) await _loadRates();
     } catch (e, st) {
       reportError('Gelecek · tahmin', e, st);
       if (isClosed || gen != _generation) return;
       emit(state.copyWith(status: ForecastStatus.failed));
-    }
-  }
-
-  /// Görüntü birimi: tüm cüzdanlar görünümünde toplamların birimi.
-  String? displayCurrency;
-
-  /// Kapsamı değiştirir; "tüm cüzdanlar"a geçişte kurlar yüklenir.
-  Future<void> setScope(ForecastScope scope, {required String currency}) async {
-    displayCurrency = currency;
-    emit(state.copyWith(scope: scope));
-    if (scope == ForecastScope.all) await _loadRates();
-  }
-
-  Future<void> _loadRates() async {
-    final currency = displayCurrency;
-    if (currency == null) return;
-    final needed = {
-      for (final w in state.wallets.values)
-        if (w.currency != currency) w.currency,
-    };
-    if (needed.isEmpty) return;
-    try {
-      final rates = await _service.ratesTo(currency, needed);
-      if (isClosed) return;
-      emit(state.copyWith(rates: rates));
-    } catch (e, st) {
-      reportError('Gelecek · kurlar', e, st);
     }
   }
 

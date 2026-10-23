@@ -12804,30 +12804,6 @@ abstract class AppLocalizations {
   /// **'Tahmin hesaplanamadı. Aşağı çekip yeniden dene.'**
   String get forecastLoadFailed;
 
-  /// No description provided for @forecastScopeWallet.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bu cüzdan'**
-  String get forecastScopeWallet;
-
-  /// No description provided for @forecastScopeAll.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tüm cüzdanlar'**
-  String get forecastScopeAll;
-
-  /// No description provided for @forecastAllCurrencyNote.
-  ///
-  /// In tr, this message translates to:
-  /// **'Toplamlar {currency} cinsinden; diğer birimler güncel kurla çevrildi. Kart harcaması nakitten son ödeme gününde düşer.'**
-  String forecastAllCurrencyNote(String currency);
-
-  /// No description provided for @forecastExcludedWallets.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kur alınamadı, toplama katılmadı: {names}'**
-  String forecastExcludedWallets(String names);
-
   /// No description provided for @notifForecastCashTitle.
   ///
   /// In tr, this message translates to:

@@ -186,11 +186,13 @@ class ForecastAlertMonitor with WidgetsBindingObserver {
       id: ReminderIds.forecastWarning(warning.key),
       title: title,
       body: body,
-      // Nakit uyarısının günü Gelecek'in ufkunu uzatır (bkz.
-      // [NotificationPayloads.forecastOn]); bütçe satırı ufuktan bağımsız.
-      payload: warning.kind == ForecastWarningKind.cash
-          ? NotificationPayloads.forecastOn(warning.date)
-          : NotificationPayloads.forecast,
+      // Dokunuş uyarının cüzdanına geçer (Gelecek cüzdana özel); nakit
+      // uyarısının günü ufku uzatır (bkz. [NotificationPayloads.forecastFor]),
+      // bütçe satırı ufuktan bağımsız.
+      payload: NotificationPayloads.forecastFor(
+        day: warning.kind == ForecastWarningKind.cash ? warning.date : null,
+        walletId: warning.wallet.walletId,
+      ),
     );
     // Teslim edilemediyse (izin kapalı) "gönderildi" sayılmaz: izin
     // açıldığında olay hâlâ geçerliyse bildirilebilsin.
@@ -261,10 +263,11 @@ class ForecastAlertMonitor with WidgetsBindingObserver {
       title: l10n.notifDigestTitle,
       body: parts.join(' '),
       scheduledDate: at,
-      // "En dar gün" ufkun dışında kalabilir: Gelecek o güne uzasın.
-      payload: lowest == null
-          ? NotificationPayloads.forecast
-          : NotificationPayloads.forecastOn(lowest.day),
+      // Özet bir cüzdanı anlatır: dokunuş o cüzdana geçer (aktif cüzdan
+      // Pazartesi'ye kadar değişebilir). "En dar gün" ufkun dışında
+      // kalabilir: Gelecek o güne uzasın.
+      payload: NotificationPayloads.forecastFor(
+          day: lowest?.day, walletId: w.walletId),
       channel: NotificationChannelKind.motivational,
     );
   }

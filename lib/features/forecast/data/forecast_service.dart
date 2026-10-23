@@ -72,7 +72,9 @@ class ForecastService {
     this._rates,
   );
 
-  /// [currencies] → [currency] kurları ("Tüm cüzdanlar" için). Kuru
+  /// [currencies] → [currency] kurları ("Tüm cüzdanlar" için; şu an
+  /// kullanılmıyor, tüm cüzdan raporu için tutuluyor — bkz.
+  /// `combineForecasts`). Kuru
   /// alınamayan birim haritada YOKTUR (çağıran o cüzdanı dışarıda bırakır).
   /// Önce ağ denenir (önbellek tazeyse ağa çıkmaz), olmazsa bayat önbellek.
   Future<Map<String, double>> ratesTo(

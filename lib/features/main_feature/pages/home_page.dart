@@ -98,6 +98,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   /// Aktif cüzdanın SAHİBİ (kartsa bağlı hesabı). Hesap ↔ kart geçişi aynı
   /// aile içinde kalır; bkz. [_buildLoadedContent].
   String? _currentAccountId;
+
+  /// Gelecek isteği uygulanmayı bekliyor: cüzdanlar yüklenmedi ya da
+  /// bildirimin cüzdanına geçiliyor (bkz. [_tryOpenForecast]).
+  bool _forecastWaiting = false;
+
+  /// Geçişi istenen cüzdan (aynı geçiş ikinci kez gönderilmesin).
+  String? _forecastSwitchTo;
   SubViewFactory? _subViewFactory;
   SliderState? _lastSliderState;
   bool _isPendingDialogShowing = false;
@@ -356,10 +363,73 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       unawaited(_navController.closeToMain());
       return;
     }
+    if (section == TransactionsSection.forecast) {
+      // Elle istek (İçgörü'deki bağlantı) hemen açılır; bildirimden gelen
+      // cüzdan yüklemesini ya da cüzdan geçişini bekleyebilir.
+      if (getIt<HomeNavigationRequests>().peekForecastOpen() == null) {
+        unawaited(_openForecastView());
+        return;
+      }
+      _forecastWaiting = true;
+      _tryOpenForecast();
+      return;
+    }
     // Enum sırası alt görünüm indeksidir (0 = ana görünüm; bkz.
     // `MenuConfigs` → İçgörü 1, Rapor 2).
     unawaited(_navController.navigateToView(section.index,
         sliderState: SliderState.transactions));
+  }
+
+  /// Bekleyen Gelecek isteğini uygular. Gelecek cüzdana özel: bildirim başka
+  /// bir cüzdanınsa önce ona geçilir, Gelecek geçiş TAMAMLANINCA açılır
+  /// ([_buildLoadedContent] yeniden çağırır). Soğuk açılışta cüzdanlar
+  /// yüklenene kadar beklenir: yığın o an boştur ve gezinme sessizce
+  /// boşa giderdi.
+  void _tryOpenForecast() {
+    if (!_forecastWaiting || !mounted) return;
+    final requests = getIt<HomeNavigationRequests>();
+    final request = requests.peekForecastOpen();
+    if (request == null) {
+      // Bekleme bildirim isteğinin ömrünü aştı: düşer. Yoksa saatler sonraki
+      // bir elle cüzdan değişimi Gelecek'i kendiliğinden açardı.
+      _forecastWaiting = false;
+      _forecastSwitchTo = null;
+      return;
+    }
+    final state = context.read<WalletBloc>().state;
+    final loaded = state is WalletLoadedSt ? state : null;
+    final target = request.walletId;
+    switch (forecastOpenAction(
+      targetWalletId: target,
+      walletIds: loaded?.wallets.map((w) => w.id).whereType<String>(),
+      activeWalletId: loaded?.activeWallet?.id,
+    )) {
+      case ForecastOpenAction.wait:
+        return;
+      case ForecastOpenAction.switchWallet:
+        if (_forecastSwitchTo == target) return;
+        _forecastSwitchTo = target;
+        final wallet = loaded!.wallets.firstWhere((w) => w.id == target);
+        context.read<WalletBloc>().add(
+            SetActiveWalletEvent(userId: wallet.userId, walletId: target!));
+      case ForecastOpenAction.open:
+        _forecastWaiting = false;
+        _forecastSwitchTo = null;
+        final taken = requests.takeForecastOpen();
+        if (taken != null) requests.focusForecast(day: taken.day);
+        unawaited(_openForecastView());
+    }
+  }
+
+  /// Gelecek İşlemler'in alt görünümü: başka bir ana bölümdeyken yığında
+  /// yoktur (gezinme sessizce boşa giderdi), önce İşlemler'e geçilir.
+  Future<void> _openForecastView() async {
+    if (_navController.currentSliderState != SliderState.transactions) {
+      await _navController.showMain(SliderState.transactions);
+      if (!mounted) return;
+    }
+    await _navController.navigateToView(TransactionsSection.forecast.index,
+        sliderState: SliderState.transactions);
   }
 
   /// Etkin bölümler değişti (bir bölüm açıldı ya da kapatıldı): gezinme
@@ -511,6 +581,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _handleWalletStateChanges(BuildContext context, WalletState state) {
+    // Bildirimin cüzdanına geçilemedi: Gelecek isteği düşer (hata iletisi
+    // aşağıda); bekleyen istek sonraki bir elle cüzdan değişiminde Gelecek'i
+    // açmasın.
+    if (_forecastSwitchTo != null &&
+        (state is WalletErrorSt ||
+            (state is WalletLoadedSt &&
+                state.error != null &&
+                state.activeWallet?.id != _forecastSwitchTo))) {
+      _forecastWaiting = false;
+      _forecastSwitchTo = null;
+      getIt<HomeNavigationRequests>().takeForecastOpen();
+    }
     if (state is WalletLoadedSt) {
       final msg =
           _resolveWalletMessage(context, state.messageType, state.message);
@@ -590,7 +672,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           _currentAccountId != null && _currentAccountId == nextAccountId;
       _currentWalletId = activeWallet?.id;
       _currentAccountId = nextAccountId;
-      if (!sameFamily) {
+      if (_forecastWaiting) {
+        // Bildirimden Gelecek bekliyor (soğuk açılış ya da bildirimin
+        // cüzdanına geçiş): ana görünüme kapatmak yeni açılan Gelecek'i
+        // kapatırdı; doğrudan oraya gidilir.
+        WidgetsBinding.instance.addPostFrameCallback((_) => _tryOpenForecast());
+      } else if (!sameFamily) {
         // navigateTo → notifyListeners build sırasında patlamasın diye ertele.
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) _navController.onWalletChanged();

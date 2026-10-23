@@ -55,17 +55,43 @@ void main() {
   });
 
   group('Gelecek yükü', () {
-    test('günlü yük günü taşır, saat atılır', () {
-      final p = NotificationPayloads.forecastOn(DateTime(2026, 11, 3, 14, 20));
-      expect(p, 'forecast:2026-11-03');
+    test('günlü + cüzdanlı yük ikisini de taşır, saat atılır', () {
+      final p = NotificationPayloads.forecastFor(
+          day: DateTime(2026, 11, 3, 14, 20), walletId: 'w1');
+      expect(p, 'forecast:2026-11-03:w1');
       expect(NotificationPayloads.isForecast(p), isTrue);
       expect(NotificationPayloads.forecastDay(p), DateTime(2026, 11, 3));
+      expect(NotificationPayloads.forecastWallet(p), 'w1');
+    });
+
+    test('günsüz yük yalnız cüzdanı taşır (bütçe uyarısı)', () {
+      final p = NotificationPayloads.forecastFor(walletId: 'w1');
+      expect(p, 'forecast::w1');
+      expect(NotificationPayloads.isForecast(p), isTrue);
+      expect(NotificationPayloads.forecastDay(p), isNull);
+      expect(NotificationPayloads.forecastWallet(p), 'w1');
+    });
+
+    test('cüzdan kimliğinde iki nokta olsa da bozulmaz', () {
+      final p = NotificationPayloads.forecastFor(
+          day: DateTime(2026, 11, 3), walletId: 'a:b:c');
+      expect(NotificationPayloads.forecastDay(p), DateTime(2026, 11, 3));
+      expect(NotificationPayloads.forecastWallet(p), 'a:b:c');
+    });
+
+    test('eski günlü yük (forecast:2026-11-03) hâlâ çözülür, cüzdanı yok', () {
+      const p = 'forecast:2026-11-03';
+      expect(NotificationPayloads.isForecast(p), isTrue);
+      expect(NotificationPayloads.forecastDay(p), DateTime(2026, 11, 3));
+      expect(NotificationPayloads.forecastWallet(p), isNull);
     });
 
     test('yalın yük (eski bildirimler) Gelecek açar, günü yoktur', () {
       expect(NotificationPayloads.isForecast(NotificationPayloads.forecast),
           isTrue);
       expect(NotificationPayloads.forecastDay(NotificationPayloads.forecast),
+          isNull);
+      expect(NotificationPayloads.forecastWallet(NotificationPayloads.forecast),
           isNull);
     });
 

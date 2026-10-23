@@ -1,5 +1,4 @@
 import 'package:cunehat/config/di/injection.dart';
-import 'package:cunehat/config/theme/money_colors.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/services/budgets_changed_notifier.dart';
@@ -11,7 +10,6 @@ import 'package:cunehat/features/finance_transactions/presentation/category_labe
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/analysis_empty_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_section_header.dart';
 import 'package:cunehat/features/forecast/data/forecast_service.dart';
-import 'package:cunehat/features/forecast/domain/forecast_combiner.dart';
 import 'package:cunehat/features/forecast/domain/forecast_models.dart';
 import 'package:cunehat/features/forecast/domain/forecast_horizon.dart';
 import 'package:cunehat/features/forecast/presentation/bloc/forecast_cubit.dart';
@@ -34,6 +32,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// gösterir; TAHMİN anahtarı hızdan gelen kısmı MOR olarak üstüne ekler.
 /// Tahmin bildiriminden açılınca tahmin o açılış için görünür (bkz.
 /// [ForecastCubit.reveal]).
+///
+/// Yalnız aktif cüzdan: "Tüm cüzdanlar" tahmini sonraki sürümün tüm cüzdan
+/// raporunda (birleştirici hazır, bkz. `combineForecasts`). Başka cüzdanın
+/// bildirimi o cüzdana geçip açar (bkz. `HomeNavigationRequests.openForecast`).
 class ForecastPage extends StatelessWidget {
   final String userId;
   final String walletId;
@@ -47,6 +49,7 @@ class ForecastPage extends StatelessWidget {
       create: (_) => ForecastCubit(
         getIt<ForecastService>(),
         userId: userId,
+        walletId: walletId,
         periodOf: () =>
             filter.periodPreferences.periodContaining(DateTime.now()),
         previousPeriodOf: () {
@@ -176,7 +179,6 @@ class _ForecastViewState extends State<ForecastView>
 
   Widget _content(BuildContext context, ForecastState state, WalletForecast f) {
     final l10n = context.l10n;
-    final theme = Theme.of(context);
     final now = widget.today ?? DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     // Bildirimden açılış tahmini bu ziyaret için gösterir; kalıcı ayar
@@ -192,48 +194,23 @@ class _ForecastViewState extends State<ForecastView>
             : DateTime(f.path.last.day.year, f.path.last.day.month,
                 f.path.last.day.day));
     final horizonDays = f.path.isEmpty ? 0 : f.path.length - 1;
-    final all = state.scope == ForecastScope.all && state.wallets.length > 1;
 
-    // Birleşik görünüm: toplamlar aktif cüzdanın biriminde.
-    final combined = all
-        ? combineForecasts(state.wallets.values,
-            currency: f.currency, rates: state.rates)
-        : null;
-    final view = combined?.asWalletForecast() ?? f;
-    final scopeWallets = combined?.included ?? [f];
-    final names = {
-      for (final w in state.wallets.values) w.walletId: w.walletName
-    };
-    final currencies = {
-      for (final w in state.wallets.values) w.walletId: w.currency,
-    };
-    // Birleşik görünümde olaylar KENDİ biriminde: grafik ve sayılar için
-    // görüntü birimine çevrilir.
-    double rateOf(ForecastEvent e) {
-      final c = currencies[e.walletId] ?? f.currency;
-      return c == f.currency ? 1 : (state.rates[c] ?? 1);
-    }
-
-    // Kartlar: bu hesaba bağlı olanlar ya da kartın kendisi; birleşikte hepsi.
-    final cards = <(String, CardOutlook)>[
-      for (final w in all ? scopeWallets : state.wallets.values)
+    // Kartlar: kartın kendisi ya da bu hesaba bağlı olanlar (kart başka bir
+    // birimde olabilir).
+    final cardWallets = [
+      for (final w in state.wallets.values)
         if (w.card != null &&
-            (all ||
-                w.walletId == f.walletId ||
-                w.card!.paymentWalletId == f.walletId))
-          (w.walletName, w.card!),
+            (w.walletId == f.walletId || w.card!.paymentWalletId == f.walletId))
+          w,
     ];
+    final cards = <(String, CardOutlook)>[
+      for (final w in cardWallets) (w.walletName, w.card!),
+    ];
+    final currencies = {for (final w in cardWallets) w.walletId: w.currency};
     // Gelecek ileriye bakar: bitmiş geçici bütçenin sonucu Rapor'da.
-    List<BudgetOutlook> openBudgets(WalletForecast w) => [
-          for (final b in w.budgets)
-            if (b.status != BudgetOutlookStatus.finished) b,
-        ];
-    final budgetGroups = [
-      for (final w in scopeWallets)
-        if (openBudgets(w).isNotEmpty) (w, openBudgets(w)),
-    ];
-    final goals = [
-      for (final w in scopeWallets) ...w.goals,
+    final budgets = [
+      for (final b in f.budgets)
+        if (b.status != BudgetOutlookStatus.finished) b,
     ];
 
     Widget section(String title, Widget child) => Padding(
@@ -247,9 +224,6 @@ class _ForecastViewState extends State<ForecastView>
             ],
           ),
         );
-
-    MoneyWriter moneyOf(String walletId) => MoneyWriter(
-        currency: currencies[walletId] ?? f.currency, visible: visible);
 
     return ListView(
       key: const ValueKey('forecast-list'),
@@ -279,45 +253,8 @@ class _ForecastViewState extends State<ForecastView>
             context.read<ForecastEstimatesCubit>().set(on);
           },
         ),
-        if (state.wallets.length > 1) ...[
-          const SizedBox(height: 4),
-          SegmentedButton<ForecastScope>(
-            key: const ValueKey('forecast-scope'),
-            showSelectedIcon: false,
-            segments: [
-              ButtonSegment(
-                value: ForecastScope.wallet,
-                label: Text(l10n.forecastScopeWallet),
-              ),
-              ButtonSegment(
-                value: ForecastScope.all,
-                label: Text(l10n.forecastScopeAll),
-              ),
-            ],
-            selected: {state.scope},
-            onSelectionChanged: (s) => context
-                .read<ForecastCubit>()
-                .setScope(s.first, currency: f.currency),
-          ),
-        ],
-        if (combined != null) ...[
-          const SizedBox(height: 8),
-          Text(
-            l10n.forecastAllCurrencyNote(f.currency),
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          ),
-          if (combined.excluded.isNotEmpty)
-            Text(
-              l10n.forecastExcludedWallets(
-                  combined.excluded.map((w) => w.walletName).join(', ')),
-              key: const ValueKey('forecast-excluded'),
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: MoneyColors.expenseText(theme.brightness)),
-            ),
-        ],
         const SizedBox(height: 8),
-        if (estimates && f.pace == null && !f.isCard && combined == null) ...[
+        if (estimates && f.pace == null && !f.isCard) ...[
           AnalysisEmptyCard(
             key: const ValueKey('forecast-no-pace'),
             icon: Icons.hourglass_bottom_rounded,
@@ -327,63 +264,42 @@ class _ForecastViewState extends State<ForecastView>
           const SizedBox(height: 12),
         ],
         ForecastTimelineCard(
-          forecast: view,
+          forecast: f,
           money: money,
           today: today,
           horizonEnd: horizonEnd,
           estimates: estimates,
-          showBand: combined?.hasPace,
-          rateOf: rateOf,
-          walletNames: all ? names : const {},
-          currencyOf: all ? currencies : const {},
         ),
-        if (view.period != null && !view.isCard)
+        if (f.period != null && !f.isCard)
           section(
             l10n.forecastPeriodTitle,
             ForecastPeriodCard(
-              period: view.period!,
+              period: f.period!,
               money: money,
-              hasPace: combined?.hasPace ?? f.pace != null,
+              hasPace: f.pace != null,
               estimates: estimates,
             ),
           ),
-        if (budgetGroups.isNotEmpty)
+        if (budgets.isNotEmpty)
           section(
             l10n.forecastBudgetsTitle,
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (final (w, budgets) in budgetGroups) ...[
-                  if (all)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(4, 4, 4, 8),
-                      child: Text(w.walletName,
-                          style: theme.textTheme.labelLarge?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant)),
-                    ),
-                  ForecastBudgetsCard(
-                    budgets: budgets,
-                    money: moneyOf(w.walletId),
-                    today: today,
-                    categoryLabels: labels,
-                    estimates: estimates,
-                  ),
-                  if (all) const SizedBox(height: 12),
-                ],
-              ],
+            ForecastBudgetsCard(
+              budgets: budgets,
+              money: money,
+              today: today,
+              categoryLabels: labels,
+              estimates: estimates,
             ),
           ),
         section(
           l10n.forecastUpcomingTitle,
           ForecastUpcomingCard(
-            events: view.events,
-            overdue: view.overdue,
+            events: f.events,
+            overdue: f.overdue,
             money: money,
             today: today,
             horizonEnd: horizonEnd,
             estimates: estimates,
-            walletNames: all ? names : const {},
-            currencyOf: all ? currencies : const {},
           ),
         ),
         if (cards.isNotEmpty)
@@ -397,14 +313,13 @@ class _ForecastViewState extends State<ForecastView>
               currencyOf: currencies,
             ),
           ),
-        if (goals.isNotEmpty)
+        if (f.goals.isNotEmpty)
           section(
             l10n.forecastGoalsTitle,
             ForecastGoalsCard(
-              goals: goals,
+              goals: f.goals,
               money: money,
               estimates: estimates,
-              currencyOf: currencies,
             ),
           ),
       ],

@@ -26,21 +26,48 @@ class NotificationPayloads {
   /// Tahmin uyarısı ya da haftalık özet: Gelecek sayfasını açar.
   static const String forecast = 'forecast';
 
-  /// Bildirim bir bakiye gününden söz ediyorsa ("3 Kas civarı eksiye
-  /// düşebilir") yük o günü taşır: Gelecek'in ufku dönem sonunda bitse bile
-  /// o güne uzar. Biçim `forecast:2026-11-03`; yalın [forecast] da geçerli.
-  static String forecastOn(DateTime day) =>
-      '$forecast:${DateTime(day.year, day.month, day.day).toIso8601String().substring(0, 10)}';
+  /// Gelecek'i bildirimin konusuyla açan yük. Gelecek cüzdana özeldir:
+  /// [walletId] verilirse uygulama önce o cüzdana geçer. Bildirim bir bakiye
+  /// gününden söz ediyorsa ("3 Kas civarı eksiye düşebilir") [day] ufku o
+  /// güne uzatır (dönem sonunda bitse bile).
+  ///
+  /// Biçim `forecast:<YYYY-MM-DD>:<walletId>`; boş parça yok sayılır
+  /// (`forecast::w1`). Eski yükler de geçerli: yalın [forecast] ve
+  /// `forecast:2026-11-03`.
+  static String forecastFor({DateTime? day, String? walletId}) {
+    final d = day == null
+        ? ''
+        : DateTime(day.year, day.month, day.day)
+            .toIso8601String()
+            .substring(0, 10);
+    return '$forecast:$d:${walletId ?? ''}';
+  }
 
-  /// [payload] Gelecek'i açan bir yük mü (günlü ya da günsüz)?
+  /// [payload] Gelecek'i açan bir yük mü (yalın ya da parçalı)?
   static bool isForecast(String payload) =>
       payload == forecast || payload.startsWith('$forecast:');
 
-  /// [forecastOn] yükünün günü; günsüz ya da bozuk yükte `null`.
-  static DateTime? forecastDay(String payload) {
+  /// `<gün>` ve `<cüzdan>` parçaları; cüzdan kimliği ikinci `:`'tan sonraki
+  /// HER ŞEY (kimlikte `:` olsa da bozulmaz).
+  static (String, String)? _forecastParts(String payload) {
     if (!payload.startsWith('$forecast:')) return null;
-    final d = DateTime.tryParse(payload.substring(forecast.length + 1));
+    final rest = payload.substring(forecast.length + 1);
+    final i = rest.indexOf(':');
+    return i < 0 ? (rest, '') : (rest.substring(0, i), rest.substring(i + 1));
+  }
+
+  /// Yükün günü; günsüz ya da bozuk yükte `null`.
+  static DateTime? forecastDay(String payload) {
+    final parts = _forecastParts(payload);
+    if (parts == null || parts.$1.isEmpty) return null;
+    final d = DateTime.tryParse(parts.$1);
     return d == null ? null : DateTime(d.year, d.month, d.day);
+  }
+
+  /// Yükün cüzdanı; cüzdansız (eski) yükte `null`.
+  static String? forecastWallet(String payload) {
+    final w = _forecastParts(payload)?.$2;
+    return w == null || w.isEmpty ? null : w;
   }
 }
 

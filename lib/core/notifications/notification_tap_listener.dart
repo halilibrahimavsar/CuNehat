@@ -62,12 +62,14 @@ class _NotificationTapListenerState extends State<NotificationTapListener>
   void _onNotificationTap(String payload) {
     if (!mounted) return;
     if (NotificationPayloads.isForecast(payload)) {
-      // Tahmin uyarısı / haftalık özet → Gelecek sayfası, tahmin o açılış
-      // için görünür ve ufuk bildirimin gününü kapsar. Ana sayfa henüz
-      // kurulmadıysa istek bekletilir (bkz. HomeNavigationRequests).
-      getIt<HomeNavigationRequests>()
-        ..focusForecast(day: NotificationPayloads.forecastDay(payload))
-        ..openSection(TransactionsSection.forecast);
+      // Tahmin uyarısı / haftalık özet → bildirimin cüzdanının Gelecek'i;
+      // tahmin o açılış için görünür ve ufuk bildirimin gününü kapsar. Ana
+      // sayfa henüz kurulmadıysa istek bekletilir (bkz.
+      // HomeNavigationRequests.openForecast).
+      getIt<HomeNavigationRequests>().openForecast(
+        day: NotificationPayloads.forecastDay(payload),
+        walletId: NotificationPayloads.forecastWallet(payload),
+      );
       return;
     }
     if (payload != NotificationPayloads.pendingRecurring) return;

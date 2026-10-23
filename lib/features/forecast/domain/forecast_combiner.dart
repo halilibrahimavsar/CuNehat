@@ -2,6 +2,10 @@ import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/forecast/domain/forecast_models.dart';
 
 /// "Tüm cüzdanlar" tahmini — cüzdan tahminlerinden türetilir.
+///
+/// Şu an KULLANILMIYOR: Gelecek yalnız aktif cüzdanı gösterir. Sonraki
+/// sürümün tüm cüzdan raporu için tutuluyor (kur ve kart ödemesi kuralları
+/// testli).
 class CombinedForecast {
   /// Tutarların birimi (aktif cüzdanınki).
   final String currency;

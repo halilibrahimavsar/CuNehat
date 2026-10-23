@@ -45,7 +45,6 @@ String forecastFullDay(DateTime day) =>
   MoneyWriter money,
   DateTime today, {
   required DateTime horizonEnd,
-  double Function(ForecastEvent e) rateOf = _unitRate,
 }) {
   final card = f.card;
   if (f.isCard && card != null) {
@@ -56,7 +55,7 @@ String forecastFullDay(DateTime day) =>
     );
   }
   final income = f.nextIncome;
-  if (_alreadyNegative(f, rateOf)) {
+  if (_alreadyNegative(f)) {
     // Maaş bugünse "maaştan önce" penceresi boştur: bugünün kendisi.
     final low = f.lowestPoint(until: income?.date) ?? f.path.first;
     return (
@@ -99,20 +98,17 @@ String forecastFullDay(DateTime day) =>
   );
 }
 
-double _unitRate(ForecastEvent e) => 1;
-
 /// Hesap bugünün BAŞINDA zaten ekside mi (ör. KMH)? Yolun ilk noktası bugün
 /// vadeli kalemleri de içerir; bugünkü kira bakiyeyi eksiye itiyorsa bu
 /// "düşüş"tür, "zaten ekside" değil.
-bool _alreadyNegative(
-    WalletForecast f, double Function(ForecastEvent e) rateOf) {
+bool _alreadyNegative(WalletForecast f) {
   if (f.path.isEmpty) return false;
   final first = f.path.first;
   final day = DateTime(first.day.year, first.day.month, first.day.day);
   var opening = first.planned;
   for (final e in f.events) {
     if (DateTime(e.date.year, e.date.month, e.date.day) == day) {
-      opening -= e.knownAmount * rateOf(e);
+      opening -= e.knownAmount;
     }
   }
   return opening < -0.005;
@@ -126,7 +122,6 @@ bool _alreadyNegative(
   MoneyWriter money,
   DateTime today, {
   required DateTime horizonEnd,
-  double Function(ForecastEvent e) rateOf = _unitRate,
 }) {
   final card = f.card;
   if (f.isCard && card != null) {
@@ -150,7 +145,7 @@ bool _alreadyNegative(
   var outCount = 0, inCount = 0;
   var out = 0.0, inn = 0.0;
   for (final e in f.events) {
-    final k = e.knownAmount * rateOf(e);
+    final k = e.knownAmount;
     if (k < -0.005) {
       outCount++;
       out -= k;
@@ -170,7 +165,7 @@ bool _alreadyNegative(
   ];
 
   final income = f.nextIncome;
-  if (_alreadyNegative(f, rateOf)) {
+  if (_alreadyNegative(f)) {
     final low = f.lowestPointOf(until: income?.date, planned: true);
     if (low != null && low.planned < f.path.first.planned - 0.005) {
       details.add(l10n.forecastLowestPoint(
@@ -257,14 +252,10 @@ class TimelineDay {
 }
 
 /// Bakiye yolu + olaylar → gün gün grafik verisi — SAF.
-///
-/// [rateOf]: olayın kendi biriminden görüntü birimine kur ("Tüm cüzdanlar"da
-/// olaylar KENDİ biriminde durur; çubuklar ortak ölçekte çizilmeli).
 List<TimelineDay> buildTimelineDays(
   List<BalancePoint> path,
-  List<ForecastEvent> events, {
-  double Function(ForecastEvent e) rateOf = _unitRate,
-}) {
+  List<ForecastEvent> events,
+) {
   final byDay = <DateTime, List<ForecastEvent>>{};
   for (final e in events) {
     final d = DateTime(e.date.year, e.date.month, e.date.day);
@@ -277,14 +268,13 @@ List<TimelineDay> buildTimelineDays(
         final list = byDay[day] ?? const <ForecastEvent>[];
         var out = 0.0, inn = 0.0, expectedIn = 0.0, estimatedOut = 0.0;
         for (final e in list) {
-          final r = rateOf(e);
-          final k = e.knownAmount * r;
+          final k = e.knownAmount;
           if (k < 0) {
             out -= k;
           } else {
             inn += k;
           }
-          final est = e.estimatedAmount * r;
+          final est = e.estimatedAmount;
           if (est > 0) {
             expectedIn += est;
           } else {
@@ -317,17 +307,6 @@ class ForecastTimelineCard extends StatefulWidget {
   final DateTime horizonEnd;
   final bool estimates;
 
-  /// Olası aralık bandı çizilsin mi; verilmezse cüzdanın hızı varsa.
-  /// Birleşik görünümde hız tek bir cüzdana ait değildir.
-  final bool? showBand;
-
-  /// Olay → görüntü birimi kuru (birleşik görünüm).
-  final double Function(ForecastEvent e) rateOf;
-
-  /// Birleşik görünümde gün panelindeki satırın cüzdan adı ve birimi.
-  final Map<String, String> walletNames;
-  final Map<String, String> currencyOf;
-
   const ForecastTimelineCard({
     super.key,
     required this.forecast,
@@ -335,10 +314,6 @@ class ForecastTimelineCard extends StatefulWidget {
     required this.today,
     required this.horizonEnd,
     required this.estimates,
-    this.showBand,
-    this.rateOf = _unitRate,
-    this.walletNames = const {},
-    this.currencyOf = const {},
   });
 
   @override
@@ -356,7 +331,8 @@ class _ForecastTimelineCardState extends State<ForecastTimelineCard> {
     if (_selected != null && _selected! >= n) _selected = null;
   }
 
-  bool get _band => widget.showBand ?? widget.forecast.pace != null;
+  /// Olası aralık bandı yalnız hız varken anlamlı.
+  bool get _band => widget.forecast.pace != null;
 
   /// Tahmin plandan ayrışıyor mu (hız, bant, beklenen alacak, ekstre payı)?
   bool get _diverges => widget.forecast.path.any((p) =>
@@ -370,16 +346,16 @@ class _ForecastTimelineCardState extends State<ForecastTimelineCard> {
     final f = widget.forecast;
     final violet = MoneyColors.forecastText(theme.brightness);
     final plan = forecastPlanHeadline(l10n, f, widget.money, widget.today,
-        horizonEnd: widget.horizonEnd, rateOf: widget.rateOf);
+        horizonEnd: widget.horizonEnd);
     final estimate = widget.estimates && _diverges
         ? forecastHeadline(l10n, f, widget.money, widget.today,
-            horizonEnd: widget.horizonEnd, rateOf: widget.rateOf)
+            horizonEnd: widget.horizonEnd)
         : null;
     final estimateWarns = estimate?.warning ?? false;
     final accent = plan.warning
         ? MoneyColors.bad
         : (estimateWarns ? MoneyColors.forecast : MoneyColors.netPositive);
-    final days = buildTimelineDays(f.path, f.events, rateOf: widget.rateOf);
+    final days = buildTimelineDays(f.path, f.events);
     final hasExpectedIn = days.any((d) => d.expectedIn > 0.005);
     final compact = MediaQuery.sizeOf(context).height < 700;
 
@@ -498,8 +474,6 @@ class _ForecastTimelineCardState extends State<ForecastTimelineCard> {
             money: widget.money,
             estimates: widget.estimates,
             showEstimate: widget.estimates && _diverges,
-            walletNames: widget.walletNames,
-            currencyOf: widget.currencyOf,
           ),
         ],
       ),
@@ -587,8 +561,6 @@ class _DayPanel extends StatelessWidget {
   final MoneyWriter money;
   final bool estimates;
   final bool showEstimate;
-  final Map<String, String> walletNames;
-  final Map<String, String> currencyOf;
 
   const _DayPanel({
     super.key,
@@ -597,8 +569,6 @@ class _DayPanel extends StatelessWidget {
     required this.money,
     required this.estimates,
     required this.showEstimate,
-    required this.walletNames,
-    required this.currencyOf,
   });
 
   @override
@@ -656,12 +626,7 @@ class _DayPanel extends StatelessWidget {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final c = currencyOf[e.walletId];
-    final m = c == null || c == money.currency
-        ? money
-        : MoneyWriter(currency: c, visible: money.visible);
     final receivable = e.kind == ForecastEventKind.receivable;
-    final wallet = walletNames[e.walletId];
     final title = forecastEventTitle(l10n, e);
     final amount = receivable ? e.amount : e.knownAmount;
     final amountColor = receivable
@@ -676,7 +641,7 @@ class _DayPanel extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              wallet == null ? title : '$title · $wallet',
+              title,
               style: theme.textTheme.bodyMedium,
             ),
           ),
@@ -686,7 +651,7 @@ class _DayPanel extends StatelessWidget {
             children: [
               if (receivable || e.hasKnownPart)
                 Text(
-                  m.withSign(amount),
+                  money.withSign(amount),
                   style: theme.textTheme.bodyMedium?.copyWith(
                       color: amountColor, fontWeight: AppType.strong),
                 ),
@@ -696,7 +661,7 @@ class _DayPanel extends StatelessWidget {
                         color: estimates ? violet : scheme.onSurfaceVariant))
               else if (estimates && e.hasEstimatedPart)
                 Text(
-                  l10n.forecastEstimatedPart(m(e.estimatedAmount.abs())),
+                  l10n.forecastEstimatedPart(money(e.estimatedAmount.abs())),
                   style: theme.textTheme.labelSmall?.copyWith(color: violet),
                 )
               // Kesilmemiş ekstrenin yalnız şimdiye kadarki kısmı: etiketsiz

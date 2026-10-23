@@ -4726,24 +4726,6 @@
   "forecastHowLegacy": "Recurring payments approved before this feature can't be told apart and may be included in the pace.",
   "forecastHowGoals": "Goal estimates only use what you added in the last 90 days; value growth is not counted.",
   "forecastLoadFailed": "Couldn't calculate the outlook. Pull down to try again.",
-  "forecastScopeWallet": "This wallet",
-  "forecastScopeAll": "All wallets",
-  "forecastAllCurrencyNote": "Totals are in {currency}; other currencies are converted at the current rate. Card spending leaves your cash on the due date.",
-  "@forecastAllCurrencyNote": {
-    "placeholders": {
-      "currency": {
-        "type": "String"
-      }
-    }
-  },
-  "forecastExcludedWallets": "No exchange rate, left out of the total: {names}",
-  "@forecastExcludedWallets": {
-    "placeholders": {
-      "names": {
-        "type": "String"
-      }
-    }
-  },
   "notifForecastCashTitle": "Balance heads-up",
   "notifForecastCashBody": "{wallet}: at this rate it could dip below zero around {date}. Details on the Ahead page.",
   "@notifForecastCashBody": {

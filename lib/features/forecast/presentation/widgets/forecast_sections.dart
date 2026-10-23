@@ -517,13 +517,6 @@ class ForecastUpcomingCard extends StatefulWidget {
   /// açıkken tahmini kısım altında mor yazılır.
   final bool estimates;
 
-  /// Tüm cüzdanlar görünümünde olay satırı cüzdan adını da yazar.
-  final Map<String, String> walletNames;
-
-  /// Tüm cüzdanlar görünümünde her olay KENDİ biriminde yazılır (çevrilmiş
-  /// tutar ödenecek tutar değildir); cüzdan → birim.
-  final Map<String, String> currencyOf;
-
   const ForecastUpcomingCard({
     super.key,
     required this.events,
@@ -532,8 +525,6 @@ class ForecastUpcomingCard extends StatefulWidget {
     required this.today,
     required this.horizonEnd,
     required this.estimates,
-    this.walletNames = const {},
-    this.currencyOf = const {},
   });
 
   @override
@@ -633,11 +624,7 @@ class _ForecastUpcomingCardState extends State<ForecastUpcomingCard> {
     final estimates = widget.estimates;
     final receivable = e.kind == ForecastEventKind.receivable;
     final title = forecastEventTitle(l10n, e);
-    final wallet = widget.walletNames[e.walletId];
-    final currency = widget.currencyOf[e.walletId];
-    final money = currency == null || currency == widget.money.currency
-        ? widget.money
-        : MoneyWriter(currency: currency, visible: widget.money.visible);
+    final money = widget.money;
     final t = widget.today;
     final days = CardCycle.daysBetween(
         DateTime(t.year, t.month, t.day), CardCycle.dateOnly(e.date));
@@ -697,7 +684,7 @@ class _ForecastUpcomingCardState extends State<ForecastUpcomingCard> {
       ),
       title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(
-        wallet == null ? date : '$date · $wallet',
+        date,
         style: theme.textTheme.bodySmall?.copyWith(
           color: overdue
               ? MoneyColors.expenseText(theme.brightness)
@@ -878,15 +865,11 @@ class ForecastGoalsCard extends StatelessWidget {
   /// mor.
   final bool estimates;
 
-  /// Hedefin cüzdanı → birim.
-  final Map<String, String> currencyOf;
-
   const ForecastGoalsCard({
     super.key,
     required this.goals,
     required MoneyWriter money,
     required this.estimates,
-    this.currencyOf = const {},
   }) : _money = money;
 
   @override
@@ -895,13 +878,6 @@ class ForecastGoalsCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final violet = MoneyColors.forecastText(theme.brightness);
-    MoneyWriter moneyFor(GoalOutlook g) {
-      final c = currencyOf[g.goal.walletId];
-      return c == null || c == _money.currency
-          ? _money
-          : MoneyWriter(currency: c, visible: _money.visible);
-    }
-
     final monthYear = DateFormat.yMMMM(Intl.defaultLocale);
     return AppCard(
       key: const ValueKey('forecast-goals-card'),
@@ -921,8 +897,8 @@ class ForecastGoalsCard extends StatelessWidget {
                           ?.copyWith(fontWeight: AppType.medium)),
                 ),
                 Text(
-                  '${moneyFor(goals[i])(goals[i].saved)} / '
-                  '${moneyFor(goals[i])(goals[i].goal.targetAmount)}',
+                  '${_money(goals[i].saved)} / '
+                  '${_money(goals[i].goal.targetAmount)}',
                   style: theme.textTheme.bodySmall
                       ?.copyWith(color: scheme.onSurfaceVariant),
                 ),
@@ -932,8 +908,7 @@ class ForecastGoalsCard extends StatelessWidget {
             Text(
               goals[i].reached
                   ? l10n.forecastGoalReached
-                  : l10n.forecastGoalRemaining(
-                      moneyFor(goals[i])(goals[i].remaining)),
+                  : l10n.forecastGoalRemaining(_money(goals[i].remaining)),
               style: theme.textTheme.titleSmall
                   ?.copyWith(fontWeight: AppType.strong),
             ),
@@ -951,8 +926,7 @@ class ForecastGoalsCard extends StatelessWidget {
               ),
             if (!goals[i].reached && goals[i].monthlyContribution > 0)
               Text(
-                l10n.forecastGoalMonthly(
-                    moneyFor(goals[i])(goals[i].monthlyContribution)),
+                l10n.forecastGoalMonthly(_money(goals[i].monthlyContribution)),
                 style: theme.textTheme.bodySmall
                     ?.copyWith(color: scheme.onSurfaceVariant),
               ),

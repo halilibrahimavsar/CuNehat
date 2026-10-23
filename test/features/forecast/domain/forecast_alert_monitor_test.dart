@@ -3,6 +3,7 @@ import 'package:cunehat/core/notifications/notification_constants.dart';
 import 'package:cunehat/core/notifications/notification_localizer.dart';
 import 'package:cunehat/core/notifications/notification_service.dart';
 import 'package:cunehat/core/services/notification_settings_service.dart';
+import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/forecast/data/forecast_service.dart';
@@ -28,8 +29,9 @@ class _MockWallets extends Mock implements WalletRepository {}
 
 class _FakeForecasts extends Fake implements ForecastService {
   double balance;
+  final List<BudgetEntity> budgets;
   int calls = 0;
-  _FakeForecasts(this.balance);
+  _FakeForecasts(this.balance, {this.budgets = const []});
 
   @override
   Future<ForecastResult> forecast({
@@ -73,6 +75,7 @@ class _FakeForecasts extends Fake implements ForecastService {
               anchorDay: 18,
             ),
           ],
+          budgets: budgets,
         ),
       ]),
       categories: const [],
@@ -197,12 +200,28 @@ void main() {
           title: tr.notifForecastCashTitle,
           body: tr.notifForecastCashBody('Maaş hesabı', '18 Kas'),
           // Gün yükte: Gelecek'in ufku dönem sonunda bitse de 18 Kas'ı kapsar.
-          payload: 'forecast:2026-11-18',
+          // Cüzdan yükte: Gelecek cüzdana özel, dokunuş o cüzdana geçer.
+          payload: 'forecast:2026-11-18:w',
         )).called(1);
 
     now = DateTime(2026, 11, 11, 20);
     await monitor.run();
     verifyNoWarning();
+  });
+
+  test('bütçe uyarısı yalnız cüzdanı taşır (ufuk dönem sonunda kalır)',
+      () async {
+    // 100/gün; 1–9 Kas 900 harcandı → 1.500'lük bütçe ~16 Kas'ta dolar.
+    await build(_FakeForecasts(20000, budgets: const [
+      BudgetEntity(categoryId: 'food', walletId: 'w', limitAmount: 1500),
+    ])).run();
+
+    verify(() => notifications.showNotification(
+          id: any(named: 'id'),
+          title: tr.notifForecastBudgetTitle,
+          body: any(named: 'body'),
+          payload: 'forecast::w',
+        )).called(1);
   });
 
   test('günde en fazla BİR uyarı', () async {
@@ -256,8 +275,10 @@ void main() {
     // Haftanın tek planlı ödemesi: 18 Kas kirası.
     expect(captured[7], contains(tr.notifDigestPayments(1, '8.000,00 ₺')));
     expect(captured[8], DateTime(2026, 11, 16, 9));
-    // Özet "en dar gün"den söz ediyor: yük o günü taşır.
+    // Özet "en dar gün"den söz ediyor: yük o günü taşır; anlattığı cüzdanı
+    // da (aktif cüzdan Pazartesi'ye kadar değişebilir).
     expect(NotificationPayloads.forecastDay(captured[9] as String), isNotNull);
+    expect(NotificationPayloads.forecastWallet(captured[9] as String), 'w');
     verify(() => notifications.cancelNotification(ReminderIds.weeklyDigest))
         .called(1);
   });

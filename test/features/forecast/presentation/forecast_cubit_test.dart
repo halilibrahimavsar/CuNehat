@@ -9,9 +9,10 @@ final _today = DateTime(2026, 11, 10, 15);
 final _november =
     DateTimeRange(start: DateTime(2026, 11, 1), end: DateTime(2026, 11, 30));
 
-/// Servise giden ufku kaydeder.
+/// Servise giden ufku ve cüzdanı kaydeder.
 class _RecordingService extends Fake implements ForecastService {
   final horizons = <int>[];
+  final walletIds = <String?>[];
 
   @override
   Future<ForecastResult> forecast({
@@ -23,6 +24,7 @@ class _RecordingService extends Fake implements ForecastService {
     String? walletId,
   }) async {
     horizons.add(horizonDays);
+    walletIds.add(walletId);
     return const ForecastResult(wallets: {}, categories: []);
   }
 }
@@ -36,6 +38,7 @@ void main() {
     final cubit = ForecastCubit(
       service,
       userId: 'u',
+      walletId: 'w1',
       periodOf: () => _november,
       horizonEndOf: (_) => horizon,
       horizonChanges: unitChanges.stream,
@@ -61,6 +64,12 @@ void main() {
     expect(service.horizons, [20]);
     expect(cubit.state.horizonEnd, DateTime(2026, 11, 30));
     expect(cubit.state.revealed, isFalse);
+  });
+
+  test('Gelecek cüzdana özel: servis yalnız sayfanın cüzdanını okur', () async {
+    final cubit = build();
+    await cubit.load();
+    expect(service.walletIds, ['w1']);
   });
 
   test(

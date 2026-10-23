@@ -71,6 +71,32 @@ class HomeNavigationRequests extends ChangeNotifier {
     return p;
   }
 
+  /// Bildirimden Gelecek'i açma isteği: [walletId] aktif değilse ana sayfa
+  /// önce o cüzdana geçer (Gelecek cüzdana özel), sonra Gelecek'i açıp
+  /// [focusForecast]'i bırakır. Ana sayfa yoksa bölüm isteği de bekletilir.
+  void openForecast({DateTime? day, String? walletId, DateTime? now}) {
+    _forecastOpen = ForecastFocusRequest(
+        day: day, walletId: walletId, requestedAt: now ?? DateTime.now());
+    openSection(TransactionsSection.forecast);
+  }
+
+  ForecastFocusRequest? _forecastOpen;
+
+  /// Bekleyen açma isteği (tüketmeden); bayatsa `null`.
+  ForecastFocusRequest? peekForecastOpen({DateTime? now}) {
+    final f = _forecastOpen;
+    if (f == null) return null;
+    final age = (now ?? DateTime.now()).difference(f.requestedAt);
+    return age > forecastFocusTtl ? null : f;
+  }
+
+  /// Bekleyen açma isteğini TÜKETİR.
+  ForecastFocusRequest? takeForecastOpen({DateTime? now}) {
+    final f = peekForecastOpen(now: now);
+    _forecastOpen = null;
+    return f;
+  }
+
   /// Gelecek'i bir tahmin bildiriminden açma isteği. AYRI bildirici: bu
   /// sınıfın kendi dinleyicisi (ana sayfa) her bildirimi "İşlemler'e dön"
   /// sayar. Gelecek kuruluyorsa isteği kurulurken alır; zaten açıksa buradan
@@ -104,9 +130,47 @@ class HomeNavigationRequests extends ChangeNotifier {
 class ForecastFocusRequest {
   /// Bildirimin sözünü ettiği bakiye günü; yoksa `null`.
   final DateTime? day;
+
+  /// Bildirimin cüzdanı ([HomeNavigationRequests.openForecast]); Gelecek
+  /// sayfasına bırakılan odak isteğinde kullanılmaz — sayfa açıldığında
+  /// doğru cüzdan zaten aktiftir.
+  final String? walletId;
   final DateTime requestedAt;
 
-  const ForecastFocusRequest({this.day, required this.requestedAt});
+  const ForecastFocusRequest(
+      {this.day, this.walletId, required this.requestedAt});
+}
+
+/// Bildirimden Gelecek isteğinin sıradaki adımı (bkz. [forecastOpenAction]).
+enum ForecastOpenAction {
+  /// Cüzdanlar henüz yüklenmedi (soğuk açılış) ya da aktif cüzdan yok.
+  wait,
+
+  /// Önce bildirimin cüzdanına geçilmeli.
+  switchWallet,
+
+  /// Gelecek açılabilir.
+  open,
+}
+
+/// Gelecek açma isteğinin sıradaki adımı — SAF (ana sayfa uygular).
+///
+/// [walletIds] yüklü cüzdanlar (`null` = yüklenmedi). Bildirimin cüzdanı
+/// silinmişse aktif cüzdanda açılır.
+ForecastOpenAction forecastOpenAction({
+  required String? targetWalletId,
+  required Iterable<String>? walletIds,
+  required String? activeWalletId,
+}) {
+  if (walletIds == null || activeWalletId == null) {
+    return ForecastOpenAction.wait;
+  }
+  if (targetWalletId == null ||
+      targetWalletId == activeWalletId ||
+      !walletIds.contains(targetWalletId)) {
+    return ForecastOpenAction.open;
+  }
+  return ForecastOpenAction.switchWallet;
 }
 
 /// İşlemler sekmesinin dört yüzü: defter (ana görünüm) ve üç alt görünüm.
