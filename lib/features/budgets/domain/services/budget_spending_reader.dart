@@ -40,7 +40,7 @@ class BudgetSpendingReader {
   }) async {
     final from = DateTime(start.year, start.month, start.day);
     final to = DateTime(end.year, end.month, end.day, 23, 59, 59, 999);
-    final card = await _cardOf(walletId);
+    final card = await cardOf(walletId);
     if (card == null) {
       return _transactions.getTransactions(
         userId: userId,
@@ -91,7 +91,9 @@ class BudgetSpendingReader {
         .fold(0.0, (sum, t) => sum + t.amount));
   }
 
-  Future<CreditCardInfo?> _cardOf(String walletId) async {
+  /// [walletId] kart cüzdanıysa kart bilgisi; değilse (ya da cüzdan deposu
+  /// verilmediyse) `null`.
+  Future<CreditCardInfo?> cardOf(String walletId) async {
     final repo = _wallets;
     if (repo == null) return null;
     try {

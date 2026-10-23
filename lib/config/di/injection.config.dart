@@ -382,6 +382,13 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       dispose: (i) => i.dispose(),
     );
+    gh.factory<_i618.GetTempBudgetsUsecase>(() => _i618.GetTempBudgetsUsecase(
+          gh<_i746.TempBudgetRepository>(),
+          gh<_i543.TransactionsRepository>(),
+          gh<_i896.CategoryRepository>(),
+          gh<_i504.WalletRepository>(),
+          gh<_i788.RecurringTransactionRepository>(),
+        ));
     gh.factory<_i162.GetPendingRecurringTransactionsUsecase>(() =>
         _i162.GetPendingRecurringTransactionsUsecase(
             gh<_i788.RecurringTransactionRepository>()));
@@ -399,12 +406,6 @@ extension GetItInjectableX on _i174.GetIt {
               gh<_i468.ReceivableRepository>(),
               gh<_i149.PlansChangedNotifier>(),
             ));
-    gh.factory<_i618.GetTempBudgetsUsecase>(() => _i618.GetTempBudgetsUsecase(
-          gh<_i746.TempBudgetRepository>(),
-          gh<_i543.TransactionsRepository>(),
-          gh<_i896.CategoryRepository>(),
-          gh<_i504.WalletRepository>(),
-        ));
     gh.factory<_i818.AddInvestmentUseCase>(
         () => _i818.AddInvestmentUseCase(gh<_i589.InvestmentRepository>()));
     gh.factory<_i318.DeleteInvestmentUseCase>(

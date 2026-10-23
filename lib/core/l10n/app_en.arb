@@ -4444,6 +4444,14 @@
       }
     }
   },
+  "tempBudgetDailyAfterPlanned": "{amount} a day after planned items",
+  "@tempBudgetDailyAfterPlanned": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "tempBudgetResultLeft": "{amount} left",
   "@tempBudgetResultLeft": {
     "placeholders": {

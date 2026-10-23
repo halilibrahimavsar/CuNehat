@@ -230,13 +230,18 @@ class TempBudgetCard extends StatelessWidget {
     ];
     const maxChips = 3;
 
-    // Süren bütçede kalanın güne bölünmüşü; bitmişin sonucu zaten rozette.
-    final String? footnote =
-        status == TempBudgetStatus.active && budget.remaining > 0
-            ? l10n.tempBudgetDailyAllowance(formatMoney(
-                budget.remaining / budget.remainingDaysOn(today),
-                currency: currency))
-            : null;
+    // Süren bütçede kalanın (planlılar düşülerek) güne bölünmüşü — Gelecek'in
+    // "sığması için günde en çok" sayısıyla aynı; bitmişin sonucu rozette.
+    final daily = status == TempBudgetStatus.active
+        ? budget.dailyAllowanceOn(today)
+        : null;
+    final String? footnote = daily == null
+        ? null
+        : (budget.plannedAmount > 0.005
+            ? l10n.tempBudgetDailyAfterPlanned(
+                formatMoney(daily, currency: currency))
+            : l10n.tempBudgetDailyAllowance(
+                formatMoney(daily, currency: currency)));
 
     return AppCard(
       key: ValueKey('temp-budget-card-${budget.id}'),

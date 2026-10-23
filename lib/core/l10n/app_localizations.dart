@@ -12426,6 +12426,12 @@ abstract class AppLocalizations {
   /// **'Günde {amount} harcayabilirsin'**
   String tempBudgetDailyAllowance(String amount);
 
+  /// No description provided for @tempBudgetDailyAfterPlanned.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlılar düşülünce günde {amount}'**
+  String tempBudgetDailyAfterPlanned(String amount);
+
   /// No description provided for @tempBudgetResultLeft.
   ///
   /// In tr, this message translates to:

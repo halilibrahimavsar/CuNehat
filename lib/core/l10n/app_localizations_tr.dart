@@ -7286,6 +7286,11 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String tempBudgetDailyAfterPlanned(String amount) {
+    return 'Planlılar düşülünce günde $amount';
+  }
+
+  @override
   String tempBudgetResultLeft(String amount) {
     return '$amount kaldı';
   }

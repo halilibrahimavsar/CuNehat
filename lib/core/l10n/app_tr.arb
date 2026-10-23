@@ -4678,6 +4678,14 @@
       }
     }
   },
+  "tempBudgetDailyAfterPlanned": "Planlılar düşülünce günde {amount}",
+  "@tempBudgetDailyAfterPlanned": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "tempBudgetResultLeft": "{amount} kaldı",
   "@tempBudgetResultLeft": {
     "placeholders": {

@@ -197,6 +197,22 @@ void main() {
         findsOneWidget);
   });
 
+  // QA O7: günlük pay planlı şablonları düşer (Gelecek'le aynı sayı).
+  testWidgets('planlı tutar varsa günlük pay onu düşer ve bunu söyler',
+      (tester) async {
+    when(() => budgets.state).thenReturn(BudgetsLoaded(const [],
+        tempBudgets: [active.copyWith(plannedAmount: 2000)]));
+    final l10n = await pumpPage(tester);
+
+    final card = find.byKey(const ValueKey('temp-budget-card-active'));
+    // (4.000 kalan − 2.000 planlı) / 4 gün = 500.
+    expect(
+        find.descendant(
+            of: card,
+            matching: find.text(l10n.tempBudgetDailyAfterPlanned('500,00 ₺'))),
+        findsOneWidget);
+  });
+
   // Cihazda 320dp + 1,3 yazı ölçeğinde özet rozeti kesiliyor, "Harcanan" ile
   // "Limit" yapışıp taşıyor, tek seferlik kartta ad ile rozet ikisi birden
   // kısalıyordu.

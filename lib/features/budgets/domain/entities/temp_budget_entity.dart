@@ -41,6 +41,12 @@ class TempBudgetEntity extends Equatable {
   /// Aralıktaki harcama (kalıcı değil, okuma anında hesaplanır).
   final double spentAmount;
 
+  /// Bugünden aralık sonuna düşecek, henüz kaydedilmemiş PLANLI giderler
+  /// (düzenli şablonların vadeleri). Kalıcı değil, okuma anında hesaplanır.
+  /// Günlük pay bunu düşer: Gelecek'in "sığması için günde en çok" sayısıyla
+  /// aynı kalsın (QA O7).
+  final double plannedAmount;
+
   const TempBudgetEntity({
     required this.id,
     this.walletId = '',
@@ -50,6 +56,7 @@ class TempBudgetEntity extends Equatable {
     required this.endDate,
     required this.categoryIds,
     this.spentAmount = 0.0,
+    this.plannedAmount = 0.0,
   });
 
   TempBudgetEntity copyWith({
@@ -60,6 +67,7 @@ class TempBudgetEntity extends Equatable {
     DateTime? endDate,
     List<String>? categoryIds,
     double? spentAmount,
+    double? plannedAmount,
   }) {
     return TempBudgetEntity(
       id: id,
@@ -70,6 +78,7 @@ class TempBudgetEntity extends Equatable {
       endDate: endDate ?? this.endDate,
       categoryIds: categoryIds ?? this.categoryIds,
       spentAmount: spentAmount ?? this.spentAmount,
+      plannedAmount: plannedAmount ?? this.plannedAmount,
     );
   }
 
@@ -126,6 +135,16 @@ class TempBudgetEntity extends Equatable {
 
   double get remaining => roundToCents(limitAmount - spentAmount);
 
+  /// Kalan günlerde günlük üst sınır: kalan − planlı, bugün dahil kalan
+  /// güne bölünür. Gelecek'teki `BudgetOutlook.requiredDaily` ile aynı
+  /// formül; pay yoksa (aşıldı, planlılar dolduruyor ya da bitti) `null`.
+  double? dailyAllowanceOn(DateTime today) {
+    final days = remainingDaysOn(today);
+    final room = remaining - plannedAmount;
+    if (days <= 0 || !moneyIsPositive(room)) return null;
+    return roundToCents(room / days);
+  }
+
   double get progress =>
       limitAmount > 0 ? (spentAmount / limitAmount).clamp(0.0, 1.0) : 0.0;
 
@@ -144,5 +163,6 @@ class TempBudgetEntity extends Equatable {
         endDate,
         categoryIds,
         spentAmount,
+        plannedAmount,
       ];
 }
