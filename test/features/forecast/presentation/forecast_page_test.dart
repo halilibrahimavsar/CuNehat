@@ -3,6 +3,8 @@ import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/budgets/domain/entities/temp_budget_entity.dart';
+import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
+import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
@@ -504,5 +506,64 @@ void main() {
           findsOneWidget);
       expect(find.text(l10n.forecastEventCardPayment('Bonus')), findsOneWidget);
     });
+  });
+  // QA K2: gecikmiş ekstre/taksit yolda BUGÜN düşer, listede "Gecikmiş"
+  // başlığında asıl vadesiyle durur. Aynı kredinin iki gecikmiş taksiti
+  // (ikisi de bugün tarihli) ayrı satırdır — anahtar çakışmaz.
+  testWidgets(
+      'gecikmiş ekstre ve iki gecikmiş taksit "Gecikmiş" başlığında, asıl '
+      'vadeleriyle', (tester) async {
+    final loan = DebtEntity(
+      id: 'loan',
+      userId: 'u',
+      walletId: 'w',
+      title: 'İhtiyaç kredisi',
+      counterparty: 'Banka',
+      type: DebtType.bankLoan,
+      calcMode: DebtCalcMode.none,
+      principalAmount: 12000,
+      interestRate: 0,
+      termMonths: 12,
+      startDate: DateTime(2026, 8, 15),
+      expectedTotalAmount: 12000,
+    );
+    final result = ForecastResult(
+      wallets: ForecastEngine(
+        today: _today,
+        period: _november,
+        categories: _categories,
+      ).projectAll([
+        WalletForecastInput(
+          wallet: _wallet('w', balance: 500),
+          ledger: const [],
+          debts: [loan],
+        ),
+        WalletForecastInput(
+          wallet: _wallet('card',
+              balance: -1000,
+              name: 'Bonus',
+              card: const CreditCardInfo(
+                  closingDay: 25, dueDay: 5, paymentWalletId: 'w')),
+          ledger: [_tx(DateTime(2026, 10, 20), 1000, walletId: 'card')],
+        ),
+      ]),
+      categories: _categories,
+    );
+    final l10n = await pump(tester, result);
+
+    expect(tester.takeException(), isNull);
+    expect(find.text(l10n.forecastOverdueTitle), findsOneWidget);
+    for (final key in [
+      'forecast-event-cardPayment-card-2026-11-05T00:00:00.000-w',
+      'forecast-event-debtInstallment-loan-2026-09-15T00:00:00.000-w',
+      'forecast-event-debtInstallment-loan-2026-10-15T00:00:00.000-w',
+    ]) {
+      expect(find.byKey(ValueKey(key)), findsOneWidget, reason: key);
+    }
+    // Sıradaki (zamanında) taksit hafta gruplarında kalır.
+    expect(
+        find.byKey(const ValueKey(
+            'forecast-event-debtInstallment-loan-2026-11-15T00:00:00.000-w')),
+        findsOneWidget);
   });
 }

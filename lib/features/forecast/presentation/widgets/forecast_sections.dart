@@ -541,14 +541,26 @@ class _ForecastUpcomingCardState extends State<ForecastUpcomingCard> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
-    final events = [
+    final shown = [
       for (final e in widget.events)
         if (e.hasKnownPart ||
             e.kind == ForecastEventKind.receivable ||
             (widget.estimates && e.hasEstimatedPart))
           e,
     ];
-    if (events.isEmpty && widget.overdue.isEmpty) {
+    // Gecikmiş ekstre/taksit yolda bugün düşer ama listede "Gecikmiş"
+    // başlığında, asıl vadesiyle durur (bu haftanın ödemesi gibi görünmesin).
+    final events = [
+      for (final e in shown)
+        if (!e.isOverdue) e,
+    ];
+    final overdue = [
+      ...widget.overdue,
+      for (final e in shown)
+        if (e.isOverdue) e,
+    ]..sort((a, b) =>
+        (a.overdueSince ?? a.date).compareTo(b.overdueSince ?? b.date));
+    if (events.isEmpty && overdue.isEmpty) {
       return AppCard(
         key: const ValueKey('forecast-upcoming-card'),
         padding: const EdgeInsets.all(20),
@@ -595,10 +607,10 @@ class _ForecastUpcomingCardState extends State<ForecastUpcomingCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (widget.overdue.isNotEmpty) ...[
+          if (overdue.isNotEmpty) ...[
             header(l10n.forecastOverdueTitle,
                 color: MoneyColors.expenseText(theme.brightness)),
-            for (final e in widget.overdue) _row(context, e, overdue: true),
+            for (final e in overdue) _row(context, e, overdue: true),
           ],
           for (final g in groups.entries) ...[
             header(g.key),
@@ -629,7 +641,7 @@ class _ForecastUpcomingCardState extends State<ForecastUpcomingCard> {
     final days = CardCycle.daysBetween(
         DateTime(t.year, t.month, t.day), CardCycle.dateOnly(e.date));
     final date = overdue
-        ? forecastFullDay(e.date)
+        ? forecastFullDay(e.overdueSince ?? e.date)
         : '${forecastFullDay(e.date)} · ${l10n.forecastDaysAway(days)}';
 
     // Ana tutar: kesin kısım; alacakta beklenen tutar; yalnız tahmini olan
@@ -664,8 +676,10 @@ class _ForecastUpcomingCardState extends State<ForecastUpcomingCard> {
     }
 
     return ListTile(
+      // Gecikmiş olaylar hepsi bugün tarihlidir: aynı kredinin iki gecikmiş
+      // taksiti asıl vadeleriyle ayrışır.
       key: ValueKey('forecast-event-${e.kind.name}-${e.sourceId}-'
-          '${e.date.toIso8601String()}-${e.walletId}'),
+          '${(e.overdueSince ?? e.date).toIso8601String()}-${e.walletId}'),
       dense: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 4),
       leading: CircleAvatar(

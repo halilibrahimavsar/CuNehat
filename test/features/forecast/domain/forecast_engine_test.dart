@@ -6,6 +6,7 @@ import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
+import 'package:cunehat/features/forecast/domain/forecast_alerts.dart';
 import 'package:cunehat/features/forecast/domain/forecast_engine.dart';
 import 'package:cunehat/features/forecast/domain/forecast_models.dart';
 import 'package:cunehat/features/investments/domain/entities/goal_entity.dart';
@@ -346,6 +347,73 @@ void main() {
       expect(_at(card, DateTime(2026, 12, 5)).expected, 0);
     });
 
+    // QA K2: 5 Kas'ta ödenmesi gereken 1.000 ₺ ödenmedi, bugün 10 Kas.
+    // Eskiden yalnız kartın "gecikmiş" listesindeydi: hesabın yolu 500'de
+    // düz gidiyor, nakit uyarısı çıkmıyordu.
+    test(
+        'VADESİ GEÇMİŞ ekstre iki bacağıyla BUGÜN yola düşer; hesap eksiye '
+        'iner ve nakit uyarısı gider', () {
+      final lateDay = DateTime(2026, 11, 10);
+      final all = _engine(today: lateDay, horizon: 30).projectAll([
+        inputs.first,
+        WalletForecastInput(wallet: _wallet('bank', balance: 500), ledger: []),
+      ]);
+      final bank = all['bank']!;
+      final card = all['card']!;
+      expect(card.card!.pendingOverdue, isTrue);
+
+      final pay = bank.events.singleWhere((e) => e.isOverdue);
+      expect(pay.kind, ForecastEventKind.cardPayment);
+      expect(pay.date, lateDay);
+      expect(pay.overdueSince, DateTime(2026, 11, 5));
+      expect(pay.amount, -1000);
+      expect(bank.overdue, isEmpty);
+      expect(bank.currentBalance, 500);
+      expect(bank.path.first.planned, -500);
+      expect(bank.firstNegativeOf(planned: true)!.day, lateDay);
+
+      // Kartın bacağı: borç bugün kapanır (kartın gecikmiş listesi de boş).
+      expect(card.events.singleWhere((e) => e.isOverdue).amount, 1000);
+      expect(card.overdue, isEmpty);
+
+      final warning = detectForecastWarnings([bank], today: lateDay).single;
+      expect(warning.kind, ForecastWarningKind.cash);
+      expect(warning.date, lateDay);
+    });
+
+    test('asgarisi ödenmiş ekstre gecikmiş SAYILMAZ, yola eskisi gibi girmez',
+        () {
+      final lateDay = DateTime(2026, 11, 10);
+      final all = _engine(today: lateDay, horizon: 30).projectAll([
+        WalletForecastInput(
+          wallet: inputs.first.wallet.copyWith(
+            balance: -1300,
+            creditCard: cardInfo.copyWith(
+              lastStatement: CardStatement(
+                closingDate: DateTime(2026, 10, 25),
+                dueDate: DateTime(2026, 11, 5),
+                statementBalance: 1000,
+                minimumPayment: 400,
+                recordedAt: DateTime(2026, 10, 26),
+              ),
+            ),
+          ),
+          ledger: [
+            ...cardLedger,
+            // 4 Kas: asgari ödeme (ekstrenin %40'ı) — kart cüzdanına giriş.
+            _tx(DateTime(2026, 11, 4), 400,
+                walletId: 'card',
+                tag: 'card_payment',
+                income: true,
+                system: true),
+          ],
+        ),
+        WalletForecastInput(wallet: _wallet('bank', balance: 500), ledger: []),
+      ]);
+      expect(all['card']!.card!.pendingOverdue, isFalse);
+      expect(all['bank']!.events.where((e) => e.isOverdue), isEmpty);
+    });
+
     test(
         'dönem gideri kartta ÖDEME gününe göre: 20 Eki harcaması Ekim\'e '
         'değil Kasım\'a sayılır', () {
@@ -493,19 +561,32 @@ void main() {
           ],
         );
 
-    test('ödenmemiş taksit ufuktaysa olay; geçmişte kalmışsa gecikmiş', () {
+    test(
+        'ödenmemiş taksit ufuktaysa olay; geçmişte kalmışsa BUGÜN yola düşer '
+        '(gecikmiş, asıl vadesiyle — QA K2)', () {
       final f = _single(WalletForecastInput(
         wallet: _wallet('w'),
         ledger: const [],
         debts: [loan(1)],
       ));
-      expect(f.overdue.single.date, DateTime(2026, 10, 15));
-      final e = f.events.single;
+      // Gecikmiş listesi yalnız düzenli kalemler içindir.
+      expect(f.overdue, isEmpty);
+      final late = f.events.first;
+      expect(late.date, _today);
+      expect(late.overdueSince, DateTime(2026, 10, 15));
+      expect(late.amount, -1000);
+      expect(late.installmentNo, 2);
+      final e = f.events.last;
       expect(e.kind, ForecastEventKind.debtInstallment);
       expect(e.date, DateTime(2026, 11, 15));
+      expect(e.isOverdue, isFalse);
       expect(e.amount, -1000);
       expect(e.installmentNo, 3);
       expect(e.countsAsSpending, isFalse);
+      // 20.000 → bugün gecikmiş taksit, 15 Kas'ta sıradaki.
+      expect(f.currentBalance, 20000);
+      expect(f.path.first.planned, 19000);
+      expect(_at(f, DateTime(2026, 11, 15)).planned, 18000);
     });
 
     test('hedef: defter katkısının aylık ortalamasıyla varış ayı', () {

@@ -74,6 +74,14 @@ class ForecastEvent {
   /// (gelmemiş para plana katılmaz).
   final double knownAmount;
 
+  /// Vadesi GEÇMİŞ ama hâlâ ödenmemiş kalemin asıl vadesi (kesilmiş ekstre,
+  /// kredi taksidi). Böyle bir olay [date] = bugün ile yola düşer: borç
+  /// ortadan kalkmadı, ödeyen hesaptan bugün ya da yakında çıkacak. Eskiden
+  /// yalnız "gecikmiş" listesinde duruyor, yolu etkilemiyordu — hesap
+  /// "karşılanıyor" diyor, nakit uyarısı gelmiyordu (QA K2). Zamanında
+  /// olaylarda `null`.
+  final DateTime? overdueSince;
+
   const ForecastEvent({
     required this.date,
     required this.amount,
@@ -90,6 +98,7 @@ class ForecastEvent {
     this.installmentNo,
     this.installmentCount,
     double? knownAmount,
+    this.overdueSince,
   })  : pathMin = pathMin ?? amount,
         pathExpected = pathExpected ?? amount,
         pathMax = pathMax ?? amount,
@@ -97,6 +106,9 @@ class ForecastEvent {
             (certainty == ForecastCertainty.known ? amount : 0.0);
 
   bool get isIncome => amount > 0;
+
+  /// Vadesi geçmiş, bugün yola düşen kalem (bkz. [overdueSince]).
+  bool get isOverdue => overdueSince != null;
 
   /// Tahmini kısım (hızdan ya da beklentiden); kesin olayda 0.
   double get estimatedAmount => amount - knownAmount;
@@ -346,7 +358,10 @@ class WalletForecast {
   /// Ufuktaki olaylar (bugün dahil), tarih sırasıyla.
   final List<ForecastEvent> events;
 
-  /// Vadesi geçmiş, ödenmemiş planlı kalemler (bilgi; yola katılmaz).
+  /// Vadesi geçmiş, onay bekleyen DÜZENLİ kalemler (bilgi; yola katılmaz —
+  /// kullanıcı elle ödediyse iki kez düşerdi). Gecikmiş ekstre ve kredi
+  /// taksidi burada DEĞİL, [events] içinde bugün tarihiyle durur (bkz.
+  /// [ForecastEvent.overdueSince]).
   final List<ForecastEvent> overdue;
 
   /// `[0]` = bugünün sonu, `[i]` = bugün + i günün sonu.
@@ -356,6 +371,11 @@ class WalletForecast {
   final List<BudgetOutlook> budgets;
   final CardOutlook? card;
   final List<GoalOutlook> goals;
+
+  /// Şu anki bakiye: bugüne kadarki kayıtlar, bugünün planlı kalemleri ve
+  /// hız payı DÜŞÜLMEDEN (yolun başlangıcı). `null` = bilinmiyor (motor
+  /// dışında kurulan tahmin); okuyan [path]'in ilk noktasına düşer.
+  final double? currentBalance;
 
   const WalletForecast({
     required this.walletId,
@@ -371,6 +391,7 @@ class WalletForecast {
     required this.budgets,
     required this.card,
     required this.goals,
+    this.currentBalance,
   });
 
   double get startBalance => path.isEmpty ? 0 : path.first.expected;

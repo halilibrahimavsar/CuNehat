@@ -154,6 +154,7 @@ CombinedForecast combineForecasts(
         title: e.title,
         sourceId: e.sourceId,
         knownAmount: -e.knownAmount,
+        overdueSince: e.overdueSince,
       );
       orphanEvents.add(out);
       final from = days.indexOf(e.date);

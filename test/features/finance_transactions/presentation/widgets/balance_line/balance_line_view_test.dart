@@ -385,6 +385,49 @@ void main() {
       expect(find.textContaining('25.415,91'), findsWidgets);
     });
 
+    // QA K2: vadesi geçmiş ekstre bugün yola düşer; yarının fişinde
+    // "vadesi bugün" değil "gecikmiş" yazar.
+    testWidgets('gecikmiş ekstre yarının fişinde "gecikmiş" etiketiyle',
+        (tester) async {
+      final late = ForecastEvent(
+        date: DateTime(2026, 10, 22),
+        overdueSince: DateTime(2026, 10, 15),
+        amount: -100,
+        walletId: 'w',
+        kind: ForecastEventKind.cardPayment,
+        certainty: ForecastCertainty.known,
+        title: 'Bonus',
+      );
+      final s = buildBalanceLineSeries(
+        estimates: false,
+        ledger: ledger,
+        currentBalance: 25745.90,
+        period: period,
+        now: now,
+        forecastPath: [
+          BalancePoint(
+              day: DateTime(2026, 10, 22),
+              expected: 25645.90,
+              low: 25645.90,
+              high: 25645.90),
+          BalancePoint(
+              day: DateTime(2026, 10, 23),
+              expected: 25415.91,
+              low: 25415.91,
+              high: 25415.91),
+        ],
+        forecastEvents: [netflix, late],
+      );
+      await tomorrow(tester, s);
+
+      expect(find.text('GECİKMİŞ'), findsOneWidget);
+      expect(find.text('VADESİ BUGÜN'), findsNothing);
+      // Kart ödemesi harcama değil: başlık özeti onu "taşıma" diye ayrı
+      // yazar, fişin planlı çıkış toplamı ise ikisini birlikte (329,99).
+      expect(find.textContaining('329,99'), findsOneWidget);
+      expect(find.textContaining('25.415,91'), findsWidgets);
+    });
+
     testWidgets('alacak satırı bakiyeye katılmaz, toplamda yok',
         (tester) async {
       final ali = ForecastEvent(

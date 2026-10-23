@@ -32,8 +32,10 @@ class ForecastWarning {
 /// Gürültü kapıları bilinçli: uyarı ancak "şimdi bir şey yapılabilir"
 /// diyebiliyorsa anlamlı.
 ///  • Nakit: kart olmayan bir hesabın beklenen yolu [cashWindowDays] içinde
-///    sıfırın altına iniyor VE bugün eksi değil (zaten ekside olan kullanıcı
-///    bunu biliyor) VE maaş o günden önce gelmiyor. Hız yoksa yol yalnız
+///    sıfırın altına iniyor VE şu anki bakiye eksi değil (zaten ekside olan
+///    kullanıcı bunu biliyor) VE maaş o günden önce gelmiyor. Ölçüt yolun
+///    ilk noktası DEĞİL, gerçek bakiye: gecikmiş bir ekstre bugünü eksiye
+///    çekerse kullanıcı "zaten ekside" sayılıp uyarısız kalıyordu. Hız yoksa yol yalnız
 ///    kesin olaylarla çizilir — uyarı yine çalışır, ama tahmine değil plana
 ///    dayanır.
 ///  • Aylık bütçe: hız VAR, dönemin en az [minElapsedDays] günü yaşanmış (ay
@@ -50,7 +52,9 @@ List<ForecastWarning> detectForecastWarnings(
   final day = CardCycle.dateOnly(today);
   final out = <ForecastWarning>[];
   for (final w in wallets) {
-    if (!w.isCard && w.path.isNotEmpty && w.path.first.expected >= 0) {
+    final now =
+        w.currentBalance ?? (w.path.isEmpty ? null : w.path.first.expected);
+    if (!w.isCard && w.path.isNotEmpty && now != null && now >= 0) {
       final neg = w.firstNegative;
       final income = w.nextIncome;
       if (neg != null &&

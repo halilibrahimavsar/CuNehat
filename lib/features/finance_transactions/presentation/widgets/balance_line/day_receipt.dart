@@ -373,11 +373,14 @@ class _DayReceiptState extends State<DayReceipt> {
           amount: e.knownAmount,
           // Bugün vadeli, henüz kaydedilmemiş kalem yarının fişinde durur
           // (bkz. buildBalanceLineSeries): neden burada olduğu yazılır.
+          // Vadesi geçmiş ekstre/taksit de bugün düşer; etiketi "gecikmiş".
           sub: _up(
               context,
-              e.date.isBefore(widget.day.day)
-                  ? l10n.blTagDueToday
-                  : l10n.blTagPlanned),
+              e.isOverdue
+                  ? l10n.forecastOverdueTitle
+                  : (e.date.isBefore(widget.day.day)
+                      ? l10n.blTagDueToday
+                      : l10n.blTagPlanned)),
           color: _amountColor(p, moved: moved, income: e.knownAmount > 0),
         ),
       if (estimates && e.hasEstimatedPart)

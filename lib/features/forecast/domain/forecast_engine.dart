@@ -133,26 +133,14 @@ class ForecastEngine {
     required CardOutlook? card,
     required List<ForecastEvent> extraEvents,
   }) {
-    final overdue = <ForecastEvent>[];
     final events = <ForecastEvent>[
       ..._recurringEvents(w),
       ..._scheduledEvents(w),
-      ..._debtEvents(w, overdue),
+      ..._debtEvents(w),
       ..._receivableEvents(w),
       ...extraEvents,
     ]..sort((a, b) => a.date.compareTo(b.date));
-    overdue.addAll(_overdueRecurring(w));
-    if (card != null && card.pendingOverdue && card.pendingAmount > 0) {
-      overdue.add(ForecastEvent(
-        date: card.pendingDue,
-        amount: -card.pendingAmount,
-        walletId: w.id,
-        kind: ForecastEventKind.cardPayment,
-        certainty: ForecastCertainty.known,
-        title: w.wallet.name,
-        sourceId: w.id,
-      ));
-    }
+    final overdue = _overdueRecurring(w).toList();
 
     return WalletForecast(
       walletId: w.id,
@@ -172,6 +160,7 @@ class ForecastEngine {
       ],
       card: card,
       goals: _goalOutlooks(w, trackingSince).toList(),
+      currentBalance: roundToCents(_startBalance(w)),
     );
   }
 
@@ -244,15 +233,23 @@ class ForecastEngine {
     }
   }
 
-  Iterable<ForecastEvent> _debtEvents(
-      WalletForecastInput w, List<ForecastEvent> overdue) sync* {
+  /// Kredi/borç taksitleri. Vadesi GEÇMİŞ, kalanı olan taksit bugün yola
+  /// düşer ([ForecastEvent.overdueSince]): borç defterden türer (ödeme
+  /// kaydedilince kalan sıfırlanır), yani düzenli kalemdeki çift sayım
+  /// riski burada yok. Gecikmişi yolun dışında tutmak hesabı olduğundan
+  /// zengin gösteriyordu (QA K2).
+  Iterable<ForecastEvent> _debtEvents(WalletForecastInput w) sync* {
     for (final d in w.debts) {
       if (d.isPaid) continue;
       if (d.termMonths <= 1) {
         final due = d.dueDate;
         if (due == null || !moneyIsPositive(d.remainingAmount)) continue;
-        final e = ForecastEvent(
-          date: CardCycle.dateOnly(due),
+        final day = CardCycle.dateOnly(due);
+        if (day.isAfter(_horizonEnd)) continue;
+        final late = day.isBefore(today);
+        yield ForecastEvent(
+          date: late ? today : day,
+          overdueSince: late ? day : null,
           amount: -d.remainingAmount,
           walletId: w.id,
           kind: ForecastEventKind.debtInstallment,
@@ -260,19 +257,16 @@ class ForecastEngine {
           title: d.title,
           sourceId: d.id,
         );
-        if (e.date.isBefore(today)) {
-          overdue.add(e);
-        } else if (!e.date.isAfter(_horizonEnd)) {
-          yield e;
-        }
         continue;
       }
       for (final row in buildInstallmentPlanFor(d, now: today)) {
         if (!moneyIsPositive(row.remainingAmount)) continue;
         final day = CardCycle.dateOnly(row.dueDate);
         if (day.isAfter(_horizonEnd)) break;
-        final e = ForecastEvent(
-          date: day,
+        final late = day.isBefore(today);
+        yield ForecastEvent(
+          date: late ? today : day,
+          overdueSince: late ? day : null,
           amount: -row.remainingAmount,
           walletId: w.id,
           kind: ForecastEventKind.debtInstallment,
@@ -282,11 +276,6 @@ class ForecastEngine {
           installmentNo: row.number,
           installmentCount: d.termMonths,
         );
-        if (day.isBefore(today)) {
-          overdue.add(e);
-        } else {
-          yield e;
-        }
       }
     }
   }
@@ -352,19 +341,25 @@ class ForecastEngine {
   }
 
   /// Kart ödemesinin iki bacağı: kart cüzdanına giriş, ödeme hesabına çıkış.
+  ///
+  /// Vadesi GEÇMİŞ ekstre (gecikmiş) iki bacağıyla bugün yola düşer: borç
+  /// hâlâ orada ve ödeyen hesaptan çıkacak. Asgarisi ödenmiş ekstre
+  /// gecikmiş sayılmaz (`pendingOverdue` false) ve eskisi gibi yola girmez.
   Iterable<ForecastEvent> _cardPaymentEvents(
       WalletForecastInput w, CardOutlook c) sync* {
     final payer = c.paymentWalletId;
     final name = w.wallet.name;
+    final late = c.pendingOverdue && c.pendingDue.isBefore(today);
     if (moneyIsPositive(c.pendingAmount) &&
-        !c.pendingDue.isBefore(today) &&
+        (late || !c.pendingDue.isBefore(today)) &&
         !c.pendingDue.isAfter(_horizonEnd)) {
       for (final (walletId, sign) in [
         (w.id, 1.0),
         if (payer != null) (payer, -1.0)
       ]) {
         yield ForecastEvent(
-          date: c.pendingDue,
+          date: late ? today : c.pendingDue,
+          overdueSince: late ? c.pendingDue : null,
           amount: sign * c.pendingAmount,
           walletId: walletId,
           kind: ForecastEventKind.cardPayment,
@@ -409,15 +404,7 @@ class ForecastEngine {
     List<ForecastEvent> events,
     SpendingPace? pace,
   ) {
-    // Başlangıç: bugünün sonuna kadarki kayıtlar. `wallet.balance` ileri
-    // tarihli kayıtları da içerir (bakiye defterin tamamından türer); onlar
-    // aşağıda kendi günlerinde düşer.
-    var start = w.wallet.balance;
-    for (final t in w.ledger) {
-      if (t.date.isAfter(_endOfToday)) {
-        start -= t.isIncome ? t.amount : -t.amount;
-      }
-    }
+    final start = _startBalance(w);
 
     final byDay = <DateTime, List<ForecastEvent>>{};
     for (final e in events) {
@@ -457,6 +444,19 @@ class ForecastEngine {
       ));
     }
     return points;
+  }
+
+  /// Yolun başlangıcı: bugünün sonuna kadarki kayıtlar. `wallet.balance`
+  /// ileri tarihli kayıtları da içerir (bakiye defterin tamamından türer);
+  /// onlar yolda kendi günlerinde düşer.
+  double _startBalance(WalletForecastInput w) {
+    var start = w.wallet.balance;
+    for (final t in w.ledger) {
+      if (t.date.isAfter(_endOfToday)) {
+        start -= t.isIncome ? t.amount : -t.amount;
+      }
+    }
+    return start;
   }
 
   // ------------------------------------------------------------ dönem sonu
