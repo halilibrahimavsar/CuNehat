@@ -102,6 +102,27 @@ void main() {
         -300);
   });
 
+  // QA K3: USD kartın TRY ödeme hesabına motor bacak yazmaz; birleşikte
+  // ödeme yine nakitten, kartın kuruyla BİR KEZ düşülür.
+  test('birimi farklı ödeme hesabı: ödeme birleşikte kurla bir kez düşer', () {
+    final usd = _card(payer: 'a');
+    final c = combineForecasts(
+      _project([
+        WalletForecastInput(wallet: _wallet('a', 10000), ledger: const []),
+        WalletForecastInput(
+          wallet: usd.wallet.copyWith(currency: 'USD'),
+          ledger: usd.ledger,
+        ),
+      ]).values,
+      currency: 'TRY',
+      rates: {'USD': 30},
+    );
+    expect(_at(c, DateTime(2026, 11, 4)).expected, 10000);
+    expect(_at(c, DateTime(2026, 11, 5)).expected, 10000 - 300 * 30);
+    expect(c.events.where((e) => e.kind == ForecastEventKind.cardPayment),
+        hasLength(1));
+  });
+
   test('kendi cüzdanların arası ileri tarihli transfer toplamı DEĞİŞTİRMEZ',
       () {
     final day = DateTime(2026, 11, 3);

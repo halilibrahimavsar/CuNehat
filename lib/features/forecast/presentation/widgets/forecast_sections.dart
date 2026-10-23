@@ -864,6 +864,20 @@ class ForecastCardsCard extends StatelessWidget {
                     color: MoneyColors.forecastText(theme.brightness),
                     fontWeight: AppType.medium),
               ),
+            // Ödeme hesabı başka birimde: motor ödemeyi o hesaba yazmadı.
+            // Hesabın yolu kartı yok sayıyor — bunu söylemeden geçmek
+            // "karşılanıyor" yanılgısını sessizce geri getirirdi.
+            if (cards[i].$2.payerCurrencyMismatch)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  l10n.forecastCardCurrencyMismatch,
+                  key: ValueKey(
+                      'forecast-card-currency-${cards[i].$2.walletId}'),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                      color: MoneyColors.expenseText(theme.brightness)),
+                ),
+              ),
           ],
         ],
       ),

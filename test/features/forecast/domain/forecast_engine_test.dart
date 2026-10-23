@@ -414,6 +414,37 @@ void main() {
       expect(all['bank']!.events.where((e) => e.isOverdue), isEmpty);
     });
 
+    // QA K3: motor kur bilmez. USD kartın 1.000 USD'lik ekstresi TRY
+    // hesaptan 1.000 ₺ düşüyordu; artık hiç düşmez ve kart bunu bildirir.
+    test('ödeme hesabı farklı birimdeyse ödeme o hesaba YAZILMAZ', () {
+      final usdCard = WalletForecastInput(
+        wallet: _wallet('card',
+                balance: -1700,
+                card: cardInfo,
+                createdAt: DateTime(2026, 10, 1))
+            .copyWith(currency: 'USD'),
+        ledger: cardLedger,
+      );
+      final all = engine.projectAll([usdCard, inputs.last]);
+      final bank = all['bank']!;
+      expect(bank.events.where((e) => e.walletId == 'bank'), isEmpty);
+      expect(bank.path.last.planned, 5000);
+      expect(all['card']!.card!.payerCurrencyMismatch, isTrue);
+      // Kartın kendi bacağı yerinde (borç ödemeyle kapanır).
+      expect(_at(all['card']!, DateTime(2026, 11, 5)).expected, -300);
+
+      // Ödeme hesabı girdide yoksa birimi dışarıdan verilir (servis yalnız
+      // istenen cüzdanı ve kartları okur).
+      final alone = engine.projectAll([usdCard], currencies: {'bank': 'TRY'});
+      expect(alone['card']!.card!.payerCurrencyMismatch, isTrue);
+    });
+
+    test('aynı birimde bayrak kapalı, ödeme eskisi gibi hesaba düşer', () {
+      final all = engine.projectAll(inputs);
+      expect(all['card']!.card!.payerCurrencyMismatch, isFalse);
+      expect(all['bank']!.events, isNotEmpty);
+    });
+
     test(
         'dönem gideri kartta ÖDEME gününe göre: 20 Eki harcaması Ekim\'e '
         'değil Kasım\'a sayılır', () {

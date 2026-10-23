@@ -2874,6 +2874,8 @@
   "kkCevirAciklama": "Geçmişi ve bakiyesiyle birlikte kart olur; seçtiğin cüzdanın içine taşınır.",
   "kkBagliCuzdanGerekli": "Kartın bağlı olacağı cüzdanı seç.",
   "kkBagliCuzdanAciklama": "Kart bu cüzdanın içinde görünür; \"Öde\" de varsayılan olarak buradan öder.",
+  "kkOdemeBirimFarkli": "Bu cüzdan kartla aynı para biriminde değil; kart ödemesi tahminde bu cüzdana yansıtılmaz.",
+  "kkOdemeBirimYok": "Kartla aynı para biriminde bir cüzdan yok; kart kendi başına durur.",
   "kkCuzdanKartliSilinemez": "{name} cüzdanına bağlı {count} kredi kartı var. Önce kartları sil ya da başka bir cüzdana bağla.",
   "kkCuzdanaBagla": "Bir cüzdana bağla",
   "@kkCuzdanKartliSilinemez": {
@@ -4902,6 +4904,7 @@
       }
     }
   },
+  "forecastCardCurrencyMismatch": "Ödeme hesabı farklı para biriminde; ödeme o hesabın tahminine yansıtılmadı.",
   "forecastCardPending": "Kesilmiş ekstreden kalan {amount} · son ödeme {date}",
   "@forecastCardPending": {
     "placeholders": {

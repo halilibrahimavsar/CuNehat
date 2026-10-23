@@ -174,7 +174,10 @@ class ForecastService {
         previousPeriod: previousPeriod,
         horizonDays: horizonDays,
         categories: categories,
-      ).projectAll(inputs),
+      ).projectAll(inputs, currencies: {
+        for (final w in wallets)
+          if (w.id != null) w.id!: w.currency,
+      }),
       categories: categories,
     );
   }

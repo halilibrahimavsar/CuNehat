@@ -2813,6 +2813,8 @@
   "kkCevirAciklama": "It becomes a card with its history and balance, moved inside the wallet you picked.",
   "kkBagliCuzdanGerekli": "Pick the wallet this card belongs to.",
   "kkBagliCuzdanAciklama": "The card shows up inside this wallet, and \"Pay\" pays from here by default.",
+  "kkOdemeBirimFarkli": "This wallet uses a different currency than the card; card payments aren't reflected in its forecast.",
+  "kkOdemeBirimYok": "No wallet shares the card's currency; the card stands on its own.",
   "kkCuzdanKartliSilinemez": "{name} has {count} credit card(s). Delete them or move them to another wallet first.",
   "kkCuzdanaBagla": "Attach to a wallet",
   "kkKartEklendi": "Credit card added",
@@ -4668,6 +4670,7 @@
       }
     }
   },
+  "forecastCardCurrencyMismatch": "The paying wallet uses another currency; this payment isn't reflected in its forecast.",
   "forecastCardPending": "Left on the closed statement {amount} · due {date}",
   "@forecastCardPending": {
     "placeholders": {

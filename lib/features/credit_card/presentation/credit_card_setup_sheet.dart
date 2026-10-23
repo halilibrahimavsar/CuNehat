@@ -148,21 +148,61 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
 
   DateTime get _today => widget.today ?? DateTime.now();
 
-  List<WalletEntity> get _payers => [
-        for (final w in widget.wallets)
-          if (w.id != null && w.id != _target?.id && !w.isCreditCard) w,
-      ];
+  /// Bağlı (ödeyen) cüzdan adayları. Yeni kart ödeyenin birimini alır; ama
+  /// çevrilen ya da düzenlenen kart KENDİ birimini korur ve onu yalnız aynı
+  /// birimdeki cüzdan ödeyebilir: tahmin kur bilmez, 1.000 USD'lik ekstreyi
+  /// TRY hesaptan 1.000 ₺ düşüyordu (QA K3). Düzenlemede kayıtlı, birimi
+  /// farklı eski bağ listede KALIR — kart sessizce cüzdanından kopmasın;
+  /// altında uyarı çıkar.
+  List<WalletEntity> get _payers {
+    final target = _target;
+    final saved = widget.wallet?.creditCard?.paymentWalletId;
+    return [
+      for (final w in widget.wallets)
+        if (w.id != null &&
+            w.id != target?.id &&
+            !w.isCreditCard &&
+            (target == null || w.currency == target.currency || w.id == saved))
+          w,
+    ];
+  }
+
+  /// Seçili bağlı cüzdan kartla aynı birimde değil (yalnız düzenlemede
+  /// korunan eski bağ olabilir).
+  bool get _payerCurrencyDiffers {
+    final target = _target;
+    if (target == null) return false;
+    final payer =
+        widget.wallets.where((w) => w.id == _paymentWalletId).firstOrNull;
+    return payer != null && payer.currency != target.currency;
+  }
+
+  /// Birim süzgeci yüzünden hiç aday kalmadı (başka düz cüzdan var ama
+  /// hiçbiri kartın biriminde değil).
+  bool get _noPayerInCurrency =>
+      _target != null &&
+      _payers.isEmpty &&
+      widget.wallets
+          .any((w) => w.id != null && w.id != _target?.id && !w.isCreditCard);
 
   /// Karta çevrilebilecek cüzdanlar: düz, bağlı cüzdan olarak seçili
-  /// olmayan ve kendi kartı olmayan (kart kartın sahibi olamaz).
-  List<WalletEntity> get _convertible => [
-        for (final w in widget.wallets)
-          if (w.id != null &&
-              !w.isCreditCard &&
-              w.id != _paymentWalletId &&
-              cardsOf(w.id, widget.wallets).isEmpty)
-            w,
-      ];
+  /// olmayan ve kendi kartı olmayan (kart kartın sahibi olamaz). Bağlı
+  /// cüzdan seçiliyse yalnız onun birimindekiler (bkz. [_payers]).
+  List<WalletEntity> get _convertible {
+    final ownerCurrency = widget.wallets
+        .where((w) => w.id == _paymentWalletId)
+        .firstOrNull
+        ?.currency;
+    return [
+      for (final w in widget.wallets)
+        if (w.id != null &&
+            !w.isCreditCard &&
+            w.id != _paymentWalletId &&
+            cardsOf(w.id, widget.wallets).isEmpty &&
+            (ownerCurrency == null || w.currency == ownerCurrency))
+          w,
+    ];
+  }
 
   @override
   void initState() {
@@ -237,7 +277,8 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
     setState(() {
       _target = picked;
       _prefill();
-      _paymentWalletId = owner;
+      // Bağlı cüzdan yeni hedefin biriminde değilse seçim düşer.
+      _paymentWalletId = _payers.any((p) => p.id == owner) ? owner : null;
     });
   }
 
@@ -692,7 +733,26 @@ class _CreditCardSetupSheetState extends State<CreditCardSetupSheet> {
                             child: Text(l10n.kkBagliCuzdanAciklama,
                                 style: theme.textTheme.bodySmall),
                           ),
+                          if (_payerCurrencyDiffers)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4, left: 4),
+                              child: Text(
+                                l10n.kkOdemeBirimFarkli,
+                                key: const ValueKey('kk-owner-currency'),
+                                style: theme.textTheme.bodySmall
+                                    ?.copyWith(color: theme.colorScheme.error),
+                              ),
+                            ),
                         ],
+                        if (_noPayerInCurrency)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4, left: 4),
+                            child: Text(
+                              l10n.kkOdemeBirimYok,
+                              key: const ValueKey('kk-owner-none'),
+                              style: theme.textTheme.bodySmall,
+                            ),
+                          ),
                         if (!_isEdit) ...[
                           // Temel olmayan alanlar katlanır (yeni kartta 9 alan
                           // birden kalabalıktı); ayarlarda hep açık.

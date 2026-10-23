@@ -134,7 +134,13 @@ CombinedForecast combineForecasts(
     final card = w.card;
     if (!w.isCard || card == null) continue;
     final payer = card.paymentWalletId;
-    if (payer != null && includedIds.contains(payer)) continue;
+    // Birimi farklı ödeme hesabının yolunda bu ödeme yok (motor yazmaz):
+    // birleşikte nakitten burada, kartın kuruyla düşülür.
+    if (payer != null &&
+        includedIds.contains(payer) &&
+        !card.payerCurrencyMismatch) {
+      continue;
+    }
     final r = rateOf(w)!;
     for (final e in w.events) {
       if (e.kind != ForecastEventKind.cardPayment &&

@@ -90,7 +90,17 @@ class ForecastEngine {
 
   /// Tüm cüzdanları projeler. Kart ödemeleri kartın ÖDEME HESABINA da çıkış
   /// olarak yazılır: hesabın yolculuğu "kart var diye param var" sanmasın.
-  Map<String, WalletForecast> projectAll(List<WalletForecastInput> inputs) {
+  ///
+  /// [currencies]: cüzdan → birim, girdide OLMAYAN cüzdanlar için (servis
+  /// yalnız istenen cüzdanı ve kartları okur; kartın ödeme hesabı girdide
+  /// olmayabilir). Birimi farklı ödeme hesabına ödeme bacağı yazılmaz —
+  /// motor kur bilmez ve 1.000 USD'yi 1.000 ₺ diye düşerdi.
+  Map<String, WalletForecast> projectAll(List<WalletForecastInput> inputs,
+      {Map<String, String> currencies = const {}}) {
+    final currencyOf = {
+      ...currencies,
+      for (final w in inputs) w.id: w.wallet.currency,
+    };
     final paces = <String, SpendingPace?>{};
     final since = <String, DateTime?>{};
     for (final w in inputs) {
@@ -107,7 +117,10 @@ class ForecastEngine {
     for (final w in inputs) {
       final card = w.wallet.creditCard;
       if (card == null) continue;
-      final outlook = _cardOutlook(w, paces[w.id]);
+      final payerCurrency = currencyOf[card.paymentWalletId];
+      final outlook = _cardOutlook(w, paces[w.id],
+          payerCurrencyMismatch:
+              payerCurrency != null && payerCurrency != w.wallet.currency);
       cards[w.id] = outlook;
       for (final e in _cardPaymentEvents(w, outlook)) {
         addEvent(e);
@@ -304,7 +317,8 @@ class ForecastEngine {
 
   // ------------------------------------------------------------------- kart
 
-  CardOutlook _cardOutlook(WalletForecastInput w, SpendingPace? pace) {
+  CardOutlook _cardOutlook(WalletForecastInput w, SpendingPace? pace,
+      {bool payerCurrencyMismatch = false}) {
     final card = w.wallet.creditCard!;
     final status = computeCardStatus(
       card: card,
@@ -337,6 +351,7 @@ class ForecastEngine {
       paceUntilClosing: roundToCents(paceDays),
       paceUntilClosingLow: roundToCents(paceDays * (pace?.lowRatio ?? 1)),
       paceUntilClosingHigh: roundToCents(paceDays * (pace?.highRatio ?? 1)),
+      payerCurrencyMismatch: payerCurrencyMismatch,
     );
   }
 
@@ -347,7 +362,8 @@ class ForecastEngine {
   /// gecikmiş sayılmaz (`pendingOverdue` false) ve eskisi gibi yola girmez.
   Iterable<ForecastEvent> _cardPaymentEvents(
       WalletForecastInput w, CardOutlook c) sync* {
-    final payer = c.paymentWalletId;
+    // Birimi farklı ödeme hesabına bacak yazılmaz (bkz. [projectAll]).
+    final payer = c.payerCurrencyMismatch ? null : c.paymentWalletId;
     final name = w.wallet.name;
     final late = c.pendingOverdue && c.pendingDue.isBefore(today);
     if (moneyIsPositive(c.pendingAmount) &&

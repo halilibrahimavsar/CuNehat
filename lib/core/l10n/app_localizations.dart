@@ -9204,6 +9204,18 @@ abstract class AppLocalizations {
   /// **'Kart bu cüzdanın içinde görünür; \"Öde\" de varsayılan olarak buradan öder.'**
   String get kkBagliCuzdanAciklama;
 
+  /// No description provided for @kkOdemeBirimFarkli.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu cüzdan kartla aynı para biriminde değil; kart ödemesi tahminde bu cüzdana yansıtılmaz.'**
+  String get kkOdemeBirimFarkli;
+
+  /// No description provided for @kkOdemeBirimYok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartla aynı para biriminde bir cüzdan yok; kart kendi başına durur.'**
+  String get kkOdemeBirimYok;
+
   /// No description provided for @kkCuzdanKartliSilinemez.
   ///
   /// In tr, this message translates to:
@@ -12701,6 +12713,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kesim {closing} · son ödeme {due}'**
   String forecastCardClosingDue(String closing, String due);
+
+  /// No description provided for @forecastCardCurrencyMismatch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme hesabı farklı para biriminde; ödeme o hesabın tahminine yansıtılmadı.'**
+  String get forecastCardCurrencyMismatch;
 
   /// No description provided for @forecastCardPending.
   ///

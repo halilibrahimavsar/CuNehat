@@ -5232,6 +5232,14 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kart bu cüzdanın içinde görünür; \"Öde\" de varsayılan olarak buradan öder.';
 
   @override
+  String get kkOdemeBirimFarkli =>
+      'Bu cüzdan kartla aynı para biriminde değil; kart ödemesi tahminde bu cüzdana yansıtılmaz.';
+
+  @override
+  String get kkOdemeBirimYok =>
+      'Kartla aynı para biriminde bir cüzdan yok; kart kendi başına durur.';
+
+  @override
   String kkCuzdanKartliSilinemez(String name, int count) {
     return '$name cüzdanına bağlı $count kredi kartı var. Önce kartları sil ya da başka bir cüzdana bağla.';
   }
@@ -7471,6 +7479,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String forecastCardClosingDue(String closing, String due) {
     return 'Kesim $closing · son ödeme $due';
   }
+
+  @override
+  String get forecastCardCurrencyMismatch =>
+      'Ödeme hesabı farklı para biriminde; ödeme o hesabın tahminine yansıtılmadı.';
 
   @override
   String forecastCardPending(String amount, String date) {

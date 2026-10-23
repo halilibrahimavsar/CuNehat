@@ -43,11 +43,13 @@ WalletEntity _wallet(
   CreditCardInfo? card,
   DateTime? createdAt,
   double? opening,
+  String currency = 'TRY',
 }) =>
     WalletEntity(
       id: id,
       userId: 'u',
       name: name,
+      currency: currency,
       balance: balance,
       debt: 0,
       credit: 0,
@@ -187,6 +189,81 @@ void main() {
       final event = verify(() => bloc.add(captureAny())).captured.single
           as CreateWalletEvent;
       expect(event.wallet.colorHex, isNot('0xFF37474F'));
+    });
+
+    // QA K3: tahmin kur bilmez. Kendi birimini koruyan (çevrilen ya da
+    // düzenlenen) kartı yalnız aynı birimdeki cüzdan öder.
+    group('bağlı cüzdan kartla aynı birimde', () {
+      testWidgets(
+          'çevirmede bağlı cüzdan seçiliyse yalnız onun birimindeki cüzdanlar '
+          'çevrilebilir', (tester) async {
+        tall(tester);
+        await tester.pumpWidget(app(CreditCardSetupSheet(
+          userId: 'u',
+          wallets: [
+            _wallet('bank'),
+            _wallet('old', name: 'Eski TRY'),
+            _wallet('usd', name: 'Dolar', currency: 'USD'),
+          ],
+          defaultCurrency: 'TRY',
+          ownerWalletId: 'bank',
+        )));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('kk-convert-link')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Eski TRY'), findsOneWidget);
+        expect(find.text('Dolar'), findsNothing);
+      });
+
+      testWidgets(
+          'düzenlemede birimi farklı ESKİ bağ korunur ve uyarı çıkar; başka '
+          'birimdeki diğer cüzdan seçilemez', (tester) async {
+        tall(tester);
+        final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+        final card = _wallet('c',
+            name: 'Dolar Kart',
+            currency: 'USD',
+            card: const CreditCardInfo(
+                closingDay: 15, dueDay: 25, paymentWalletId: 'bank'));
+        await tester.pumpWidget(app(CreditCardSetupSheet(
+          userId: 'u',
+          wallets: [
+            _wallet('bank'),
+            _wallet('cash', name: 'Nakit'),
+            _wallet('usd', name: 'Dolar Hesap', currency: 'USD'),
+            card,
+          ],
+          wallet: card,
+          defaultCurrency: 'TRY',
+        )));
+        await tester.pumpAndSettle();
+
+        expect(find.text(l10n.kkOdemeBirimFarkli), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('kk-owner-c')));
+        await tester.pumpAndSettle();
+        expect(find.text('Dolar Hesap'), findsWidgets);
+        expect(find.text('Nakit'), findsNothing);
+      });
+
+      testWidgets('kartın biriminde cüzdan yoksa bunu söyler', (tester) async {
+        tall(tester);
+        final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+        final card = _wallet('c',
+            name: 'Dolar Kart',
+            currency: 'USD',
+            card: const CreditCardInfo(closingDay: 15, dueDay: 25));
+        await tester.pumpWidget(app(CreditCardSetupSheet(
+          userId: 'u',
+          wallets: [_wallet('bank'), card],
+          wallet: card,
+          defaultCurrency: 'TRY',
+        )));
+        await tester.pumpAndSettle();
+
+        expect(find.text(l10n.kkOdemeBirimYok), findsOneWidget);
+        expect(find.byKey(const ValueKey('kk-owner-c')), findsNothing);
+      });
     });
 
     testWidgets('bağlı cüzdan seçilmeden kaydedilmez', (tester) async {

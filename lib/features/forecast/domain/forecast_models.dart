@@ -291,6 +291,11 @@ class CardOutlook {
   final double paceUntilClosingLow;
   final double paceUntilClosingHigh;
 
+  /// Ödeme hesabı kartla AYNI birimde değil: ödeme o hesabın yoluna
+  /// yansıtılmaz (1.000 USD ekstre TRY hesaptan 1.000 ₺ düşüyordu — QA K3).
+  /// Arayüz kartın altında bunu söyler.
+  final bool payerCurrencyMismatch;
+
   const CardOutlook({
     required this.walletId,
     required this.paymentWalletId,
@@ -304,6 +309,7 @@ class CardOutlook {
     required this.paceUntilClosing,
     required this.paceUntilClosingLow,
     required this.paceUntilClosingHigh,
+    this.payerCurrencyMismatch = false,
   });
 
   /// Ekstrenin kesin kısmı: kesimden bugüne yazılan + kesime kadar düşecek

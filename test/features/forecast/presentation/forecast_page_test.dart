@@ -566,4 +566,33 @@ void main() {
             'forecast-event-debtInstallment-loan-2026-11-15T00:00:00.000-w')),
         findsOneWidget);
   });
+  // QA K3: birimi farklı kartın ödemesi hesabın yoluna yazılmaz; kartlar
+  // bölümü bunu söyler.
+  testWidgets('birimi farklı bağlı kartın altında "yansıtılmadı" notu',
+      (tester) async {
+    final result = ForecastResult(
+      wallets: ForecastEngine(
+        today: _today,
+        period: _november,
+        categories: _categories,
+      ).projectAll([
+        WalletForecastInput(wallet: _wallet('w'), ledger: const []),
+        WalletForecastInput(
+          wallet: _wallet('card',
+              balance: -1000,
+              name: 'Dolar Kart',
+              currency: 'USD',
+              card: const CreditCardInfo(
+                  closingDay: 25, dueDay: 15, paymentWalletId: 'w')),
+          ledger: [_tx(DateTime(2026, 10, 20), 1000, walletId: 'card')],
+        ),
+      ]),
+      categories: _categories,
+    );
+    final l10n = await pump(tester, result);
+
+    expect(find.byKey(const ValueKey('forecast-card-currency-card')),
+        findsOneWidget);
+    expect(find.text(l10n.forecastCardCurrencyMismatch), findsOneWidget);
+  });
 }

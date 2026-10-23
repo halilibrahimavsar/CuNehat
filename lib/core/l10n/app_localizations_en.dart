@@ -5266,6 +5266,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'The card shows up inside this wallet, and \"Pay\" pays from here by default.';
 
   @override
+  String get kkOdemeBirimFarkli =>
+      'This wallet uses a different currency than the card; card payments aren\'t reflected in its forecast.';
+
+  @override
+  String get kkOdemeBirimYok =>
+      'No wallet shares the card\'s currency; the card stands on its own.';
+
+  @override
   String kkCuzdanKartliSilinemez(String name, int count) {
     return '$name has $count credit card(s). Delete them or move them to another wallet first.';
   }
@@ -7530,6 +7538,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String forecastCardClosingDue(String closing, String due) {
     return 'Closes $closing · due $due';
   }
+
+  @override
+  String get forecastCardCurrencyMismatch =>
+      'The paying wallet uses another currency; this payment isn\'t reflected in its forecast.';
 
   @override
   String forecastCardPending(String amount, String date) {
