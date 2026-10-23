@@ -10,6 +10,7 @@ import 'package:cunehat/features/debt_and_receivable/presentation/pages/debt_and
 import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_page.dart';
 import 'package:cunehat/features/investments/presentation/pages/investment_money_page.dart';
 import 'package:cunehat/features/main_feature/controllers/home_navigation_controller.dart';
+import 'package:cunehat/features/main_feature/controllers/forecast_open_flow.dart';
 import 'package:cunehat/features/main_feature/controllers/home_navigation_requests.dart';
 import 'package:cunehat/features/main_feature/factories/sub_view_factory.dart';
 import 'package:cunehat/features/main_feature/pages/modern_appbar.dart';
@@ -99,12 +100,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   /// aile içinde kalır; bkz. [_buildLoadedContent].
   String? _currentAccountId;
 
-  /// Gelecek isteği uygulanmayı bekliyor: cüzdanlar yüklenmedi ya da
-  /// bildirimin cüzdanına geçiliyor (bkz. [_tryOpenForecast]).
-  bool _forecastWaiting = false;
-
-  /// Geçişi istenen cüzdan (aynı geçiş ikinci kez gönderilmesin).
-  String? _forecastSwitchTo;
+  /// Bildirimden Gelecek açma akışı (bkz. [ForecastOpenFlow]).
+  late final ForecastOpenFlow _forecastFlow = ForecastOpenFlow(
+    getIt<HomeNavigationRequests>(),
+    switchWallet: _switchForecastWallet,
+    open: () => unawaited(_openForecastView()),
+  );
   SubViewFactory? _subViewFactory;
   SliderState? _lastSliderState;
   bool _isPendingDialogShowing = false;
@@ -370,8 +371,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         unawaited(_openForecastView());
         return;
       }
-      _forecastWaiting = true;
-      _tryOpenForecast();
+      final loaded = _loadedWallets();
+      _forecastFlow.begin(
+        walletIds: loaded?.wallets.map((w) => w.id).whereType<String>(),
+        activeWalletId: loaded?.activeWallet?.id,
+      );
       return;
     }
     // Enum sırası alt görünüm indeksidir (0 = ana görünüm; bkz.
@@ -380,45 +384,31 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         sliderState: SliderState.transactions));
   }
 
-  /// Bekleyen Gelecek isteğini uygular. Gelecek cüzdana özel: bildirim başka
-  /// bir cüzdanınsa önce ona geçilir, Gelecek geçiş TAMAMLANINCA açılır
-  /// ([_buildLoadedContent] yeniden çağırır). Soğuk açılışta cüzdanlar
-  /// yüklenene kadar beklenir: yığın o an boştur ve gezinme sessizce
-  /// boşa giderdi.
-  void _tryOpenForecast() {
-    if (!_forecastWaiting || !mounted) return;
-    final requests = getIt<HomeNavigationRequests>();
-    final request = requests.peekForecastOpen();
-    if (request == null) {
-      // Bekleme bildirim isteğinin ömrünü aştı: düşer. Yoksa saatler sonraki
-      // bir elle cüzdan değişimi Gelecek'i kendiliğinden açardı.
-      _forecastWaiting = false;
-      _forecastSwitchTo = null;
-      return;
-    }
+  WalletLoadedSt? _loadedWallets() {
     final state = context.read<WalletBloc>().state;
-    final loaded = state is WalletLoadedSt ? state : null;
-    final target = request.walletId;
-    switch (forecastOpenAction(
-      targetWalletId: target,
+    return state is WalletLoadedSt ? state : null;
+  }
+
+  /// Bekleyen Gelecek isteğinin sıradaki adımı ([_buildLoadedContent]
+  /// cüzdan değişince çağırır; bkz. [ForecastOpenFlow]).
+  void _tryOpenForecast() {
+    if (!mounted) return;
+    final loaded = _loadedWallets();
+    _forecastFlow.step(
       walletIds: loaded?.wallets.map((w) => w.id).whereType<String>(),
       activeWalletId: loaded?.activeWallet?.id,
-    )) {
-      case ForecastOpenAction.wait:
-        return;
-      case ForecastOpenAction.switchWallet:
-        if (_forecastSwitchTo == target) return;
-        _forecastSwitchTo = target;
-        final wallet = loaded!.wallets.firstWhere((w) => w.id == target);
-        context.read<WalletBloc>().add(
-            SetActiveWalletEvent(userId: wallet.userId, walletId: target!));
-      case ForecastOpenAction.open:
-        _forecastWaiting = false;
-        _forecastSwitchTo = null;
-        final taken = requests.takeForecastOpen();
-        if (taken != null) requests.focusForecast(day: taken.day);
-        unawaited(_openForecastView());
-    }
+    );
+  }
+
+  /// Bildirimin cüzdanına geç (Gelecek cüzdana özel).
+  void _switchForecastWallet(String walletId) {
+    if (!mounted) return;
+    final wallet =
+        _loadedWallets()?.wallets.where((w) => w.id == walletId).firstOrNull;
+    if (wallet == null) return;
+    context
+        .read<WalletBloc>()
+        .add(SetActiveWalletEvent(userId: wallet.userId, walletId: walletId));
   }
 
   /// Gelecek İşlemler'in alt görünümü: başka bir ana bölümdeyken yığında
@@ -584,14 +574,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     // Bildirimin cüzdanına geçilemedi: Gelecek isteği düşer (hata iletisi
     // aşağıda); bekleyen istek sonraki bir elle cüzdan değişiminde Gelecek'i
     // açmasın.
-    if (_forecastSwitchTo != null &&
+    final switchingTo = _forecastFlow.switchingTo;
+    if (switchingTo != null &&
         (state is WalletErrorSt ||
             (state is WalletLoadedSt &&
                 state.error != null &&
-                state.activeWallet?.id != _forecastSwitchTo))) {
-      _forecastWaiting = false;
-      _forecastSwitchTo = null;
-      getIt<HomeNavigationRequests>().takeForecastOpen();
+                state.activeWallet?.id != switchingTo))) {
+      _forecastFlow.fail();
     }
     if (state is WalletLoadedSt) {
       final msg =
@@ -672,7 +661,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           _currentAccountId != null && _currentAccountId == nextAccountId;
       _currentWalletId = activeWallet?.id;
       _currentAccountId = nextAccountId;
-      if (_forecastWaiting) {
+      if (_forecastFlow.waiting) {
         // Bildirimden Gelecek bekliyor (soğuk açılış ya da bildirimin
         // cüzdanına geçiş): ana görünüme kapatmak yeni açılan Gelecek'i
         // kapatırdı; doğrudan oraya gidilir.
