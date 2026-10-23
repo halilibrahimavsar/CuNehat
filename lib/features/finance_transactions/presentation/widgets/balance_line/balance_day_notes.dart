@@ -103,7 +103,12 @@ List<DayNote> buildDayNotes({
     if (pace != null) notes.add(pace);
   }
 
-  if (day.moved != 0) notes.add(const MovedNote());
+  // Not, günde para taşıma SATIRI var mı diye karar verir — net toplama
+  // değil: aynı gün eşit giriş/çıkış (net 0) yine taşımadır, kuruş altı
+  // kayan nokta artığı ise taşıma değildir (QA D1).
+  if (day.items.any((e) => !isSpendingMovement(e.transaction))) {
+    notes.add(const MovedNote());
+  }
 
   final expenses = [
     for (final e in day.items)

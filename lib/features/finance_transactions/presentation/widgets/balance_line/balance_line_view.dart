@@ -446,7 +446,7 @@ class _BalanceLineViewState extends State<BalanceLineView> {
         parts = [
           if (day.expense > 0) part(day.expense, true, l10n.blDeltaSpend),
           if (day.income > 0) part(day.income, false, l10n.blDeltaIncome),
-          if (day.moved != 0)
+          if (day.moved.abs() > 0.005)
             part(day.moved.abs(), day.moved < 0, l10n.blDeltaMoved),
         ];
         if (parts.isEmpty) {
@@ -457,7 +457,7 @@ class _BalanceLineViewState extends State<BalanceLineView> {
       parts = [
         if (day.expense > 0) part(day.expense, true, l10n.blDeltaSpend),
         if (day.income > 0) part(day.income, false, l10n.blDeltaIncome),
-        if (day.moved != 0)
+        if (day.moved.abs() > 0.005)
           part(day.moved.abs(), day.moved < 0, l10n.blDeltaMoved),
       ];
       if (parts.isEmpty) parts.add(Text(l10n.blDeltaNone, style: muted));

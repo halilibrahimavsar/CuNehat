@@ -24,6 +24,7 @@ TransactionEntity _tx(String id, DateTime date, double amount,
         {String title = 'Kayıt',
         String tag = 'cat-market',
         bool income = false,
+        bool system = false,
         int? no,
         int? count}) =>
     TransactionEntity(
@@ -37,6 +38,7 @@ TransactionEntity _tx(String id, DateTime date, double amount,
       type: income ? TransactionTypeModel.income : TransactionTypeModel.expense,
       installmentNo: no,
       installmentCount: count,
+      isSystem: system,
     );
 
 void main() {
@@ -277,6 +279,33 @@ void main() {
 
   // QA O6: güncellemeyle varsayılan görünüm değişti; listeye dönüş yazılı
   // ve bir kerelik şerit bunu söyler.
+  // QA D1: net taşıma kuruş altıysa fişte "PARA TAŞIMA 0,00" satırı yok.
+  testWidgets('kuruş altı taşıma artığı fişte satır çizmez', (tester) async {
+    final moved = buildLedger(transactions: [
+      _tx('a', DateTime(2026, 10, 22, 9), 0.1,
+          income: true, tag: 'Transfer', system: true),
+      _tx('b', DateTime(2026, 10, 22, 10), 0.2,
+          income: true, tag: 'Transfer', system: true),
+      _tx('c', DateTime(2026, 10, 22, 11), 0.3, tag: 'Transfer', system: true),
+      // Ayrı gün, kuruşta tam taşıma: satır çizilir (eşik bunu yutmaz).
+      _tx('d', DateTime(2026, 10, 21, 11), 50, tag: 'Transfer', system: true),
+    ], currentBalance: 100);
+    await pump(tester,
+        s: buildBalanceLineSeries(
+            estimates: false,
+            ledger: moved,
+            currentBalance: 100,
+            period: period,
+            now: now));
+
+    expect(find.text('PARA TAŞIMA'), findsNothing);
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.byKey(const ValueKey('bl-prev')));
+    await tester.pumpAndSettle();
+    expect(find.text('PARA TAŞIMA'), findsOneWidget);
+  });
+
   group('tanıtım şeridi ve liste düğmesi', () {
     testWidgets('liste düğmesi yazılıdır; şerit yalnız istenirse çizilir',
         (tester) async {

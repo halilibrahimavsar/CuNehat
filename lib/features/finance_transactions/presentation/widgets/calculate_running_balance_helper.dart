@@ -1,3 +1,4 @@
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 
 class TransactionWithBalance {
@@ -57,12 +58,13 @@ List<TransactionWithBalance> calculateRunningBalance(
       balanceAfter: runningBalance,
     ));
 
-    // Calculate balance BEFORE this transaction
-    if (transaction.isIncome) {
-      runningBalance -= transaction.amount;
-    } else {
-      runningBalance += transaction.amount;
-    }
+    // Calculate balance BEFORE this transaction. Her adım kuruşa
+    // yuvarlanır: geriye doğru zincir kayan nokta artığı biriktiriyordu
+    // (300 ara bakiyenin 274'ü 7,499999999999998 gibi) — gösterimde
+    // görünmüyor ama eşik karşılaştırmalarını kırılgan yapıyordu (QA D1).
+    runningBalance = roundToCents(transaction.isIncome
+        ? runningBalance - transaction.amount
+        : runningBalance + transaction.amount);
   }
 
   return result;

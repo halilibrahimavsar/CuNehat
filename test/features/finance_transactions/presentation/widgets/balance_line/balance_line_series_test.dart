@@ -1,4 +1,5 @@
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/presentation/transaction_filtering.dart';
@@ -119,6 +120,41 @@ void main() {
 
       expect(day.expense, 60);
       expect(day.moved, -400);
+    });
+
+    // QA D1: aynı gün +0,1 +0,2 −0,3 taşıma kayan noktada 5,55e-17 kalır;
+    // "PARA TAŞIMA 0,00" satırı çizilir, oysa eşit giriş/çıkışta not hiç
+    // çıkmıyordu. Zincir de kuruş artığı biriktiriyordu.
+    test(
+        'kuruş altı taşıma artığı taşıma TOPLAMI değildir ama günde taşıma '
+        'satırı varsa not çıkar; zincir kuruşta tam', () {
+      final ledger = buildLedger(transactions: [
+        _tx('a', DateTime(2026, 10, 20, 9), 0.1, income: true, system: true),
+        _tx('b', DateTime(2026, 10, 20, 10), 0.2, income: true, system: true),
+        _tx('c', DateTime(2026, 10, 20, 11), 0.3, system: true),
+        for (var i = 0; i < 40; i++)
+          _tx('x$i', DateTime(2026, 9, 1 + i % 28, 12, i), 7.49),
+      ], currentBalance: 1000);
+
+      for (final e in ledger) {
+        expect(e.balanceAfter, roundToCents(e.balanceAfter),
+            reason: e.transaction.id);
+      }
+      final day = buildBalanceLineSeries(
+              estimates: true,
+              ledger: ledger,
+              currentBalance: 1000,
+              period: period,
+              now: now)
+          .days[19];
+      expect(day.moved.abs() < 0.005, isTrue);
+      expect(
+          buildDayNotes(
+                  day: day,
+                  dailyExpense: const {},
+                  firstRecord: DateTime(2026, 9, 1))
+              .whereType<MovedNote>(),
+          hasLength(1));
     });
 
     test('gelecek günler TAHMİNDEN gelir; ileri tarihli satır defterden düşmez',

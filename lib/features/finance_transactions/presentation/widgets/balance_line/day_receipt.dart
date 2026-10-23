@@ -696,7 +696,8 @@ class _DayReceiptState extends State<DayReceipt> {
         row(_up(context, l10n.blTotalSpend), day.expense, isExpense: true),
       if (day.income > 0)
         row(_up(context, l10n.blTotalIncome), day.income, isExpense: false),
-      if (day.moved != 0)
+      // Kuruş altı artık "PARA TAŞIMA 0,00" satırı çizmesin.
+      if (day.moved.abs() > 0.005)
         row(_up(context, l10n.blTotalMoved), day.moved.abs(),
             isExpense: day.moved < 0),
     ];
