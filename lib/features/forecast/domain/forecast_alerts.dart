@@ -1,3 +1,4 @@
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/forecast/domain/forecast_models.dart';
 import 'package:cunehat/features/wallet/domain/card_cycle.dart';
 
@@ -111,10 +112,16 @@ class WeeklyDigest {
   /// Dönem sonu beklenen gider (hız yoksa `null`).
   final double? expectedExpense;
 
-  /// Maaşa (yoksa ufka) kadar en dar gün.
+  /// Maaşa (yoksa ufka) kadar en dar gün — beklenen yoldan (bildirime
+  /// dokununca Gelecek tahmini gösterir, aynı sayı görünsün).
   final BalancePoint? lowest;
 
-  /// Önümüzdeki 7 günün planlı ÇIKIŞLARI.
+  /// [lowest] hızdan beklenen harcamayı içeriyor mu: metin "~" ile yazar.
+  /// Hız yokken beklenen yol plandır.
+  final bool lowestIsEstimate;
+
+  /// Önümüzdeki 7 günün planlı ÇIKIŞLARI — yalnız KESİN kısım. Kesilmemiş
+  /// ekstrenin hız payı "planlı ödeme" değildir (QA O4).
   final int paymentCount;
   final double paymentTotal;
 
@@ -123,6 +130,7 @@ class WeeklyDigest {
     required this.lowest,
     required this.paymentCount,
     required this.paymentTotal,
+    this.lowestIsEstimate = false,
   });
 
   bool get isEmpty =>
@@ -139,8 +147,9 @@ WeeklyDigest buildWeeklyDigest(WalletForecast w, {required DateTime from}) {
     if (e.isIncome || e.date.isBefore(start) || !e.date.isBefore(end)) {
       continue;
     }
+    if (!e.hasKnownPart) continue;
     count++;
-    total += -e.amount;
+    total += -e.knownAmount;
   }
   final period = w.period;
   return WeeklyDigest(
@@ -152,8 +161,9 @@ WeeklyDigest buildWeeklyDigest(WalletForecast w, {required DateTime from}) {
     lowest: w.isCard || (w.pace == null && w.events.isEmpty)
         ? null
         : w.lowestPoint(until: w.nextIncome?.date),
+    lowestIsEstimate: w.pace != null,
     paymentCount: count,
-    paymentTotal: total,
+    paymentTotal: roundToCents(total),
   );
 }
 

@@ -5022,6 +5022,17 @@
       }
     }
   },
+  "notifDigestLowestEstimated": "En dar gün {date}: ~{amount}.",
+  "@notifDigestLowestEstimated": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "notifDigestPayments": "{count, plural, =1{Bu hafta 1 planlı ödeme: {total}.} other{Bu hafta {count} planlı ödeme: {total}.}}",
   "@notifDigestPayments": {
     "placeholders": {

@@ -254,7 +254,9 @@ class ForecastAlertMonitor with WidgetsBindingObserver {
       if (digest.expectedExpense != null)
         l10n.notifDigestExpense(money(digest.expectedExpense!)),
       if (lowest != null)
-        l10n.notifDigestLowest(
+        (digest.lowestIsEstimate
+                ? l10n.notifDigestLowestEstimated
+                : l10n.notifDigestLowest)(
             AppFormatters.dayMonth.format(lowest.day), money(lowest.expected)),
       digest.paymentCount == 0
           ? l10n.notifDigestNoPayments

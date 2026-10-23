@@ -227,9 +227,58 @@ void main() {
       expect(d.paymentTotal, 8000);
       expect(d.expectedExpense, isNotNull);
       expect(d.lowest, isNotNull);
+      // Hız var: en dar gün beklenen yoldan, metin "~" ile yazar.
+      expect(d.lowestIsEstimate, isTrue);
 
       final none = buildWeeklyDigest(f, from: DateTime(2026, 11, 23, 9));
       expect(none.paymentCount, 0);
+    });
+    // QA O4: "planlı ödeme" toplamına kesilmemiş ekstrenin HIZ payı
+    // karışıyordu; yalnız kesin kısım sayılır, yalnız tahmini olay sayılmaz.
+    test('planlı ödeme toplamı yalnız KESİN kısım', () {
+      final day = DateTime(2026, 11, 18);
+      ForecastEvent event(
+              double amount, double known, ForecastEventKind kind) =>
+          ForecastEvent(
+            date: day,
+            amount: amount,
+            walletId: 'w',
+            kind: kind,
+            certainty: known == amount
+                ? ForecastCertainty.known
+                : ForecastCertainty.expected,
+            title: 'x',
+            knownAmount: known,
+          );
+      final w = WalletForecast(
+        walletId: 'w',
+        walletName: 'Hesap',
+        currency: 'TRY',
+        isCard: false,
+        pace: null,
+        daysUntilPace: 14,
+        events: [
+          event(-500, -300, ForecastEventKind.cardStatementEstimate),
+          event(-200, 0, ForecastEventKind.cardStatementEstimate),
+          event(-1000, -1000, ForecastEventKind.debtInstallment),
+        ],
+        overdue: const [],
+        path: [
+          BalancePoint(
+              day: DateTime(2026, 11, 16),
+              expected: 5000,
+              low: 5000,
+              high: 5000),
+        ],
+        period: null,
+        budgets: const [],
+        card: null,
+        goals: const [],
+      );
+      final d = buildWeeklyDigest(w, from: DateTime(2026, 11, 16, 9));
+      expect(d.paymentCount, 2);
+      expect(d.paymentTotal, 1300);
+      expect(d.lowestIsEstimate, isFalse);
     });
   });
 }

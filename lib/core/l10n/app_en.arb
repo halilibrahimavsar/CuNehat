@@ -4788,6 +4788,17 @@
       }
     }
   },
+  "notifDigestLowestEstimated": "Tightest day {date}: ~{amount}.",
+  "@notifDigestLowestEstimated": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "notifDigestPayments": "{count, plural, =1{1 planned payment this week: {total}.} other{{count} planned payments this week: {total}.}}",
   "@notifDigestPayments": {
     "placeholders": {

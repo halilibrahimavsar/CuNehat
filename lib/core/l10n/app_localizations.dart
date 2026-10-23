@@ -12876,6 +12876,12 @@ abstract class AppLocalizations {
   /// **'En dar gün {date}: {amount}.'**
   String notifDigestLowest(String date, String amount);
 
+  /// No description provided for @notifDigestLowestEstimated.
+  ///
+  /// In tr, this message translates to:
+  /// **'En dar gün {date}: ~{amount}.'**
+  String notifDigestLowestEstimated(String date, String amount);
+
   /// No description provided for @notifDigestPayments.
   ///
   /// In tr, this message translates to:

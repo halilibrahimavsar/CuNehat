@@ -7657,6 +7657,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String notifDigestLowestEstimated(String date, String amount) {
+    return 'Tightest day $date: ~$amount.';
+  }
+
+  @override
   String notifDigestPayments(int count, String total) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
