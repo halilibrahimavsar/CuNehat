@@ -4798,6 +4798,15 @@
       }
     }
   },
+  "forecastPeriodCardPayments": "Bağlı kartların ödemesi: {amount}",
+  "@forecastPeriodCardPayments": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastPeriodCardNote": "Kart harcaması kartın kendisinde sayılır; bu tutar dönem içinde bu hesaptan çıkacak ödemedir.",
   "forecastBudgetsTitle": "Bütçe gidişatı",
   "forecastBudgetFillsOn": "Bu hızla {date} dolar",
   "@forecastBudgetFillsOn": {

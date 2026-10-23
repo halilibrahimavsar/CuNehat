@@ -7389,6 +7389,15 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String forecastPeriodCardPayments(String amount) {
+    return 'Bağlı kartların ödemesi: $amount';
+  }
+
+  @override
+  String get forecastPeriodCardNote =>
+      'Kart harcaması kartın kendisinde sayılır; bu tutar dönem içinde bu hesaptan çıkacak ödemedir.';
+
+  @override
   String get forecastBudgetsTitle => 'Bütçe gidişatı';
 
   @override

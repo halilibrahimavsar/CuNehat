@@ -595,4 +595,35 @@ void main() {
         findsOneWidget);
     expect(find.text(l10n.forecastCardCurrencyMismatch), findsOneWidget);
   });
+  // QA O5: kart harcaması hesabın giderinde değil; hesaptan çıkacak kart
+  // ödemesi dönem kartında ayrıca yazar.
+  testWidgets('dönem kartı bağlı kartın ödemesini ayrı satırda yazar',
+      (tester) async {
+    final l10n = await pump(tester, _result());
+
+    final row = find.byKey(const ValueKey('forecast-period-card-payments'));
+    expect(row, findsOneWidget);
+    expect(tester.widget<Text>(row).data,
+        l10n.forecastPeriodCardPayments('1.000,00 ₺'));
+    expect(find.text(l10n.forecastPeriodCardNote), findsOneWidget);
+  });
+
+  testWidgets('bağlı kartı olmayan hesapta satır yok', (tester) async {
+    final result = ForecastResult(
+      wallets: ForecastEngine(
+        today: _today,
+        period: _november,
+        categories: _categories,
+      ).projectAll([
+        WalletForecastInput(
+            wallet: _wallet('w'), ledger: [_tx(DateTime(2026, 11, 8), 100)]),
+      ]),
+      categories: _categories,
+    );
+    await pump(tester, result);
+
+    expect(find.byKey(const ValueKey('forecast-period-card')), findsOneWidget);
+    expect(find.byKey(const ValueKey('forecast-period-card-payments')),
+        findsNothing);
+  });
 }

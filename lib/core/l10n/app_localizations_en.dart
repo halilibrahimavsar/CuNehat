@@ -7448,6 +7448,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String forecastPeriodCardPayments(String amount) {
+    return 'Linked card payments: $amount';
+  }
+
+  @override
+  String get forecastPeriodCardNote =>
+      'Card spending is counted on the card itself; this is what leaves this account for it during the period.';
+
+  @override
   String get forecastBudgetsTitle => 'Budget outlook';
 
   @override

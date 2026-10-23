@@ -28,12 +28,21 @@ class ForecastPeriodCard extends StatelessWidget {
   final bool hasPace;
   final bool estimates;
 
+  /// Dönemin kalanında bu hesaptan çıkacak bağlı kart ödemeleri: kesin
+  /// kısım ve hızla beklenen. Kart harcaması kartın kendi döneminde sayılır,
+  /// yani hesabın "gider"ine girmez — ağırlıkla kartla harcayan kullanıcı
+  /// bu tutarı hiçbir yerde göremiyordu (QA O5). 0 ise satır yok.
+  final double cardPayments;
+  final double cardPaymentsExpected;
+
   const ForecastPeriodCard({
     super.key,
     required this.period,
     required this.money,
     required this.hasPace,
     required this.estimates,
+    this.cardPayments = 0,
+    this.cardPaymentsExpected = 0,
   });
 
   @override
@@ -139,6 +148,27 @@ class ForecastPeriodCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               l10n.forecastPreviousPeriod(money(p.previousExpense!)),
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+          ],
+          if (cardPayments > 0.005 ||
+              (estimates && cardPaymentsExpected > 0.005)) ...[
+            const Divider(height: 28),
+            Text(
+              l10n.forecastPeriodCardPayments(money(cardPayments)),
+              key: const ValueKey('forecast-period-card-payments'),
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(fontWeight: AppType.medium),
+            ),
+            if (estimates && cardPaymentsExpected - cardPayments > 0.005)
+              Text(
+                l10n.forecastEstimatedTotal(money(cardPaymentsExpected)),
+                style: theme.textTheme.bodySmall?.copyWith(color: violet),
+              ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.forecastPeriodCardNote,
               style: theme.textTheme.bodySmall
                   ?.copyWith(color: scheme.onSurfaceVariant),
             ),

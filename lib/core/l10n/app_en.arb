@@ -4564,6 +4564,15 @@
       }
     }
   },
+  "forecastPeriodCardPayments": "Linked card payments: {amount}",
+  "@forecastPeriodCardPayments": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "forecastPeriodCardNote": "Card spending is counted on the card itself; this is what leaves this account for it during the period.",
   "forecastBudgetsTitle": "Budget outlook",
   "forecastBudgetFillsOn": "At this pace, full by {date}",
   "@forecastBudgetFillsOn": {

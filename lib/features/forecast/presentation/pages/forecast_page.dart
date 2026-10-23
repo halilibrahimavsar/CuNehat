@@ -211,6 +211,22 @@ class _ForecastViewState extends State<ForecastView>
       for (final w in cardWallets) (w.walletName, w.card!),
     ];
     final currencies = {for (final w in cardWallets) w.walletId: w.currency};
+    // Bu hesaptan dönem sonuna kadar çıkacak kart ödemeleri (kart
+    // harcaması hesabın giderinde değil, kartın kendisinde sayılır).
+    var cardPayments = 0.0;
+    var cardPaymentsExpected = 0.0;
+    final periodEnd = f.period?.end;
+    for (final e in f.events) {
+      if (periodEnd == null || e.date.isAfter(periodEnd)) continue;
+      if (e.walletId != f.walletId || e.amount >= 0) continue;
+      if (e.kind != ForecastEventKind.cardPayment &&
+          e.kind != ForecastEventKind.cardStatementEstimate) {
+        continue;
+      }
+      cardPayments -= e.knownAmount;
+      cardPaymentsExpected -= e.pathExpected;
+    }
+
     // Gelecek ileriye bakar: bitmiş geçici bütçenin sonucu Rapor'da.
     final budgets = [
       for (final b in f.budgets)
@@ -282,6 +298,8 @@ class _ForecastViewState extends State<ForecastView>
               money: money,
               hasPace: f.pace != null,
               estimates: estimates,
+              cardPayments: cardPayments,
+              cardPaymentsExpected: cardPaymentsExpected,
             ),
           ),
         if (budgets.isNotEmpty)

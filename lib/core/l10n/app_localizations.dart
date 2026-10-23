@@ -12570,6 +12570,18 @@ abstract class AppLocalizations {
   /// **'Önceki dönem: {amount}'**
   String forecastPreviousPeriod(String amount);
 
+  /// No description provided for @forecastPeriodCardPayments.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlı kartların ödemesi: {amount}'**
+  String forecastPeriodCardPayments(String amount);
+
+  /// No description provided for @forecastPeriodCardNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart harcaması kartın kendisinde sayılır; bu tutar dönem içinde bu hesaptan çıkacak ödemedir.'**
+  String get forecastPeriodCardNote;
+
   /// No description provided for @forecastBudgetsTitle.
   ///
   /// In tr, this message translates to:
