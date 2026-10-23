@@ -7964,7 +7964,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String forecastPlanHeadlineNegative(String date) {
-    return 'Planned payments take you below zero $date';
+    return 'Planned payments take you below zero by $date';
   }
 
   @override
@@ -8044,13 +8044,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get forecastPlannedExpense => 'Planned spending';
+  String get forecastPlannedExpense => 'Total spending';
 
   @override
   String get forecastPlannedIncome => 'Income';
 
   @override
-  String get forecastPlannedNet => 'Planned net';
+  String get forecastPlannedNet => 'Net';
 
   @override
   String forecastEstimatedTotal(String amount) {
@@ -8059,7 +8059,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String forecastBudgetPlannedFillsOn(String date) {
-    return 'Planned items fill it $date';
+    return 'Planned items fill it by $date';
   }
 
   @override
@@ -8163,4 +8163,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get forecastChartNoDay => 'no day selected';
+
+  @override
+  String get forecastEstimatesTemporaryDesc =>
+      'The notification is based on the estimate; shown for this visit';
+
+  @override
+  String get blTagDueToday => 'Due today';
+
+  @override
+  String get forecastPlanHeadlineBelowZero => 'Your balance is below zero now';
+
+  @override
+  String forecastHeadlineBelowZeroLowest(String date, String amount) {
+    return 'At this pace, lowest $date: $amount';
+  }
 }

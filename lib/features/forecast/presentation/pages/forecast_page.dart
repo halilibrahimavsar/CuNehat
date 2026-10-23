@@ -6,7 +6,6 @@ import 'package:cunehat/core/services/budgets_changed_notifier.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/features/credit_card/presentation/card_context_rail.dart';
-import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
 import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/analysis_empty_card.dart';
@@ -20,6 +19,7 @@ import 'package:cunehat/features/forecast/presentation/bloc/forecast_estimates_c
 import 'package:cunehat/features/forecast/presentation/widgets/forecast_estimates_switch.dart';
 import 'package:cunehat/features/forecast/presentation/widgets/forecast_sections.dart';
 import 'package:cunehat/features/forecast/presentation/widgets/forecast_timeline_card.dart';
+import 'package:cunehat/features/main_feature/controllers/home_navigation_requests.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -32,6 +32,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 ///
 /// İki katman: PLAN (varsayılan) yalnız kesin kalemleri tarihleriyle
 /// gösterir; TAHMİN anahtarı hızdan gelen kısmı MOR olarak üstüne ekler.
+/// Tahmin bildiriminden açılınca tahmin o açılış için görünür (bkz.
+/// [ForecastCubit.reveal]).
 class ForecastPage extends StatelessWidget {
   final String userId;
   final String walletId;
@@ -59,14 +61,23 @@ class ForecastPage extends StatelessWidget {
             forecastHorizonEnd(filter.periodPreferences, today),
         transactions: getIt<TransactionsChangedNotifier>(),
         budgets: getIt<BudgetsChangedNotifier>(),
-      )..load(),
-      // Ayarlar'da dönem birimi değişince ufuk bayat kalmasın.
-      child: BlocListener<TransactionFilterCubit, CombinedFilter>(
-        listener: (context, _) =>
-            context.read<ForecastCubit>().refreshIfStale(),
-        child: ForecastView(walletId: walletId),
-      ),
+        // Ayarlar'da dönem birimi değişince ufuk bayat kalmasın — süzgeç
+        // özel bir aralıktayken durumu değişmez, bu yüzden ayrı akış.
+        horizonChanges: filter.periodPreferencesChanges,
+      ).._start(),
+      child: ForecastView(walletId: walletId),
     );
+  }
+}
+
+extension on ForecastCubit {
+  /// İlk yükleme; bildirimden açılıştaysa tahmin görünür ve ufuk bildirimin
+  /// gününe uzamış olarak (tek yükleme).
+  void _start() {
+    final focus = getIt.isRegistered<HomeNavigationRequests>()
+        ? getIt<HomeNavigationRequests>().takeForecastFocus()
+        : null;
+    focus == null ? load() : reveal(until: focus.day);
   }
 }
 
@@ -90,16 +101,31 @@ class ForecastView extends StatefulWidget {
 
 class _ForecastViewState extends State<ForecastView>
     with WidgetsBindingObserver {
+  HomeNavigationRequests? _requests;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Sayfa zaten açıkken gelen tahmin bildirimi (kurulurken gelen istek
+    // ForecastPage'de alınır).
+    if (getIt.isRegistered<HomeNavigationRequests>()) {
+      _requests = getIt<HomeNavigationRequests>()
+        ..forecastFocus.addListener(_onFocusRequest);
+    }
   }
 
   @override
   void dispose() {
+    _requests?.forecastFocus.removeListener(_onFocusRequest);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _onFocusRequest() {
+    final focus = _requests?.takeForecastFocus();
+    if (focus == null || !mounted) return;
+    context.read<ForecastCubit>().reveal(until: focus.day);
   }
 
   /// Uygulamaya dönüşte (ertesi sabah) dünün tahmini gösterilmesin.
@@ -153,7 +179,10 @@ class _ForecastViewState extends State<ForecastView>
     final theme = Theme.of(context);
     final now = widget.today ?? DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final estimates = widget.estimates ?? context.forecastEstimates;
+    // Bildirimden açılış tahmini bu ziyaret için gösterir; kalıcı ayar
+    // değişmez.
+    final setting = context.forecastEstimates;
+    final estimates = widget.estimates ?? (setting || state.revealed);
     final visible = context.amountsVisible;
     final money = MoneyWriter(currency: f.currency, visible: visible);
     final labels = buildCategoryLabelMap(state.categories);
@@ -242,7 +271,14 @@ class _ForecastViewState extends State<ForecastView>
             ),
           ],
         ),
-        const ForecastEstimatesSwitch(),
+        ForecastEstimatesSwitch(
+          value: estimates,
+          temporary: state.revealed && !setting,
+          onChanged: (on) {
+            if (!on) context.read<ForecastCubit>().endReveal();
+            context.read<ForecastEstimatesCubit>().set(on);
+          },
+        ),
         if (state.wallets.length > 1) ...[
           const SizedBox(height: 4),
           SegmentedButton<ForecastScope>(

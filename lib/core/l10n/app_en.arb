@@ -5011,7 +5011,7 @@
       }
     }
   },
-  "forecastPlanHeadlineNegative": "Planned payments take you below zero {date}",
+  "forecastPlanHeadlineNegative": "Planned payments take you below zero by {date}",
   "@forecastPlanHeadlineNegative": {
     "placeholders": {
       "date": {
@@ -5100,9 +5100,9 @@
       }
     }
   },
-  "forecastPlannedExpense": "Planned spending",
+  "forecastPlannedExpense": "Total spending",
   "forecastPlannedIncome": "Income",
-  "forecastPlannedNet": "Planned net",
+  "forecastPlannedNet": "Net",
   "forecastEstimatedTotal": "With estimate ~{amount}",
   "@forecastEstimatedTotal": {
     "placeholders": {
@@ -5111,7 +5111,7 @@
       }
     }
   },
-  "forecastBudgetPlannedFillsOn": "Planned items fill it {date}",
+  "forecastBudgetPlannedFillsOn": "Planned items fill it by {date}",
   "@forecastBudgetPlannedFillsOn": {
     "placeholders": {
       "date": {
@@ -5213,5 +5213,19 @@
       }
     }
   },
-  "forecastChartNoDay": "no day selected"
+  "forecastChartNoDay": "no day selected",
+  "forecastEstimatesTemporaryDesc": "The notification is based on the estimate; shown for this visit",
+  "blTagDueToday": "Due today",
+  "forecastPlanHeadlineBelowZero": "Your balance is below zero now",
+  "forecastHeadlineBelowZeroLowest": "At this pace, lowest {date}: {amount}",
+  "@forecastHeadlineBelowZeroLowest": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

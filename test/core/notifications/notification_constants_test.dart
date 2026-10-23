@@ -53,4 +53,29 @@ void main() {
       );
     });
   });
+
+  group('Gelecek yükü', () {
+    test('günlü yük günü taşır, saat atılır', () {
+      final p = NotificationPayloads.forecastOn(DateTime(2026, 11, 3, 14, 20));
+      expect(p, 'forecast:2026-11-03');
+      expect(NotificationPayloads.isForecast(p), isTrue);
+      expect(NotificationPayloads.forecastDay(p), DateTime(2026, 11, 3));
+    });
+
+    test('yalın yük (eski bildirimler) Gelecek açar, günü yoktur', () {
+      expect(NotificationPayloads.isForecast(NotificationPayloads.forecast),
+          isTrue);
+      expect(NotificationPayloads.forecastDay(NotificationPayloads.forecast),
+          isNull);
+    });
+
+    test('başka yükler ve bozuk gün', () {
+      expect(
+          NotificationPayloads.isForecast(
+              NotificationPayloads.pendingRecurring),
+          isFalse);
+      expect(NotificationPayloads.isForecast('forecasts'), isFalse);
+      expect(NotificationPayloads.forecastDay('forecast:yarın'), isNull);
+    });
+  });
 }

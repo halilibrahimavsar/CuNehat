@@ -7986,13 +7986,13 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get forecastPlannedExpense => 'Planlı gider';
+  String get forecastPlannedExpense => 'Toplam gider';
 
   @override
   String get forecastPlannedIncome => 'Gelir';
 
   @override
-  String get forecastPlannedNet => 'Planlı net';
+  String get forecastPlannedNet => 'Net';
 
   @override
   String forecastEstimatedTotal(String amount) {
@@ -8106,4 +8106,19 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get forecastChartNoDay => 'gün seçilmedi';
+
+  @override
+  String get forecastEstimatesTemporaryDesc =>
+      'Bildirim tahmine dayanıyor; bu açılışta gösteriliyor';
+
+  @override
+  String get blTagDueToday => 'Vadesi bugün';
+
+  @override
+  String get forecastPlanHeadlineBelowZero => 'Bakiye şu an ekside';
+
+  @override
+  String forecastHeadlineBelowZeroLowest(String date, String amount) {
+    return 'Bu gidişle en dip $date: $amount';
+  }
 }

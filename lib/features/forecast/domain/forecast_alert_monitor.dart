@@ -186,7 +186,11 @@ class ForecastAlertMonitor with WidgetsBindingObserver {
       id: ReminderIds.forecastWarning(warning.key),
       title: title,
       body: body,
-      payload: NotificationPayloads.forecast,
+      // Nakit uyarısının günü Gelecek'in ufkunu uzatır (bkz.
+      // [NotificationPayloads.forecastOn]); bütçe satırı ufuktan bağımsız.
+      payload: warning.kind == ForecastWarningKind.cash
+          ? NotificationPayloads.forecastOn(warning.date)
+          : NotificationPayloads.forecast,
     );
     // Teslim edilemediyse (izin kapalı) "gönderildi" sayılmaz: izin
     // açıldığında olay hâlâ geçerliyse bildirilebilsin.
@@ -257,7 +261,10 @@ class ForecastAlertMonitor with WidgetsBindingObserver {
       title: l10n.notifDigestTitle,
       body: parts.join(' '),
       scheduledDate: at,
-      payload: NotificationPayloads.forecast,
+      // "En dar gün" ufkun dışında kalabilir: Gelecek o güne uzasın.
+      payload: lowest == null
+          ? NotificationPayloads.forecast
+          : NotificationPayloads.forecastOn(lowest.day),
       channel: NotificationChannelKind.motivational,
     );
   }

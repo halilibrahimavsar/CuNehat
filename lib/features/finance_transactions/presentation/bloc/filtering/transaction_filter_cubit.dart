@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cunehat/features/finance_transactions/domain/period_preferences.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/transaction_period.dart';
@@ -59,6 +61,14 @@ class TransactionFilterCubit extends Cubit<CombinedFilter> {
 
   PeriodPreferences get periodPreferences => _unitPrefs;
 
+  final StreamController<PeriodPreferences> _unitChanges =
+      StreamController<PeriodPreferences>.broadcast();
+
+  /// Dönem birimi değişti. Durum akışından AYRI: kullanıcı özel bir aralığa
+  /// bakarken birim değişince süzgecin dönemi (ve durumu) aynı kalır, ama
+  /// birime bağlı yüzeyler (Gelecek'in ufku) yine de haber almalı.
+  Stream<PeriodPreferences> get periodPreferencesChanges => _unitChanges.stream;
+
   /// İçinde bulunulan "varsayılan" dönem: kart bağlamında ekstre, değilse
   /// kullanıcının biriminde bugünü içeren dönem.
   DateTimeRange basePeriod({DateTime? now}) =>
@@ -73,6 +83,7 @@ class TransactionFilterCubit extends Cubit<CombinedFilter> {
     final wasDefault = isDefaultPeriod;
     _unitPrefs = prefs;
     if (wasDefault) setPeriod(basePeriod());
+    _unitChanges.add(prefs);
   }
 
   /// "Bugüne dön": birim döneminde bugünün birim dönemi, özel aralıkta aynı
@@ -255,5 +266,11 @@ class TransactionFilterCubit extends Cubit<CombinedFilter> {
       ),
       dataFilter: defaults.dataFilter,
     ));
+  }
+
+  @override
+  Future<void> close() async {
+    await _unitChanges.close();
+    return super.close();
   }
 }

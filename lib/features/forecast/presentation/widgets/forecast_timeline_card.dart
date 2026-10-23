@@ -37,13 +37,15 @@ String forecastFullDay(DateTime day) =>
 ///
 /// Öncelik: (1) maaştan ÖNCE eksiye düşüş, (2) sıradaki maaşa kadar yetiyor
 /// mu, (3) ufuk boyunca yetiyor mu. Kart cüzdanında borç zaten eksidir; o
-/// zaman cümle ekstre tahminidir.
+/// zaman cümle ekstre tahminidir. Hesap ZATEN ekside ise "eksiye düşüyor"
+/// yanlış olur: en dip gün söylenir.
 ({String headline, String? detail, bool warning}) forecastHeadline(
   AppLocalizations l10n,
   WalletForecast f,
   MoneyWriter money,
   DateTime today, {
   required DateTime horizonEnd,
+  double Function(ForecastEvent e) rateOf = _unitRate,
 }) {
   final card = f.card;
   if (f.isCard && card != null) {
@@ -54,6 +56,17 @@ String forecastFullDay(DateTime day) =>
     );
   }
   final income = f.nextIncome;
+  if (_alreadyNegative(f, rateOf)) {
+    // Maaş bugünse "maaştan önce" penceresi boştur: bugünün kendisi.
+    final low = f.lowestPoint(until: income?.date) ?? f.path.first;
+    return (
+      headline: l10n.forecastHeadlineBelowZeroLowest(
+          forecastDayLabel(l10n, low.day, today, inline: true),
+          money(low.expected)),
+      detail: null,
+      warning: true,
+    );
+  }
   final negative = f.firstNegative;
   if (negative != null &&
       (income == null || negative.day.isBefore(income.date))) {
@@ -87,6 +100,23 @@ String forecastFullDay(DateTime day) =>
 }
 
 double _unitRate(ForecastEvent e) => 1;
+
+/// Hesap bugünün BAŞINDA zaten ekside mi (ör. KMH)? Yolun ilk noktası bugün
+/// vadeli kalemleri de içerir; bugünkü kira bakiyeyi eksiye itiyorsa bu
+/// "düşüş"tür, "zaten ekside" değil.
+bool _alreadyNegative(
+    WalletForecast f, double Function(ForecastEvent e) rateOf) {
+  if (f.path.isEmpty) return false;
+  final first = f.path.first;
+  final day = DateTime(first.day.year, first.day.month, first.day.day);
+  var opening = first.planned;
+  for (final e in f.events) {
+    if (DateTime(e.date.year, e.date.month, e.date.day) == day) {
+      opening -= e.knownAmount * rateOf(e);
+    }
+  }
+  return opening < -0.005;
+}
 
 /// PLAN manşeti — yalnız kesin kalemler (hız yok). Sayfanın birincil
 /// cevabı: tahmin açılsa da değişmez.
@@ -140,6 +170,19 @@ double _unitRate(ForecastEvent e) => 1;
   ];
 
   final income = f.nextIncome;
+  if (_alreadyNegative(f, rateOf)) {
+    final low = f.lowestPointOf(until: income?.date, planned: true);
+    if (low != null && low.planned < f.path.first.planned - 0.005) {
+      details.add(l10n.forecastLowestPoint(
+          forecastDayLabel(l10n, low.day, today, inline: true),
+          money(low.planned)));
+    }
+    return (
+      headline: l10n.forecastPlanHeadlineBelowZero,
+      details: details,
+      warning: true,
+    );
+  }
   final negative = f.firstNegativeOf(planned: true);
   if (negative != null &&
       (income == null || negative.day.isBefore(income.date))) {
@@ -330,7 +373,7 @@ class _ForecastTimelineCardState extends State<ForecastTimelineCard> {
         horizonEnd: widget.horizonEnd, rateOf: widget.rateOf);
     final estimate = widget.estimates && _diverges
         ? forecastHeadline(l10n, f, widget.money, widget.today,
-            horizonEnd: widget.horizonEnd)
+            horizonEnd: widget.horizonEnd, rateOf: widget.rateOf)
         : null;
     final estimateWarns = estimate?.warning ?? false;
     final accent = plan.warning
@@ -655,7 +698,14 @@ class _DayPanel extends StatelessWidget {
                 Text(
                   l10n.forecastEstimatedPart(m(e.estimatedAmount.abs())),
                   style: theme.textTheme.labelSmall?.copyWith(color: violet),
-                ),
+                )
+              // Kesilmemiş ekstrenin yalnız şimdiye kadarki kısmı: etiketsiz
+              // tutar kesinleşmiş ekstre gibi okunuyordu (yaklaşanlar
+              // listesiyle aynı dil).
+              else if (e.kind == ForecastEventKind.cardStatementEstimate)
+                Text(l10n.forecastSoFarShort,
+                    style: theme.textTheme.labelSmall
+                        ?.copyWith(color: scheme.onSurfaceVariant)),
             ],
           ),
         ],

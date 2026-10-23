@@ -196,7 +196,8 @@ void main() {
           id: ReminderIds.forecastWarning('cash:w:2026-11'),
           title: tr.notifForecastCashTitle,
           body: tr.notifForecastCashBody('Maaş hesabı', '18 Kas'),
-          payload: NotificationPayloads.forecast,
+          // Gün yükte: Gelecek'in ufku dönem sonunda bitse de 18 Kas'ı kapsar.
+          payload: 'forecast:2026-11-18',
         )).called(1);
 
     now = DateTime(2026, 11, 11, 20);
@@ -241,19 +242,22 @@ void main() {
           title: captureAny(named: 'title'),
           body: captureAny(named: 'body'),
           scheduledDate: captureAny(named: 'scheduledDate'),
-          payload: NotificationPayloads.forecast,
+          payload: captureAny(named: 'payload'),
           channel: NotificationChannelKind.motivational,
         )).captured;
-    expect(captured, hasLength(8));
+    expect(captured, hasLength(10));
     // Önce "kayıt yok" yedeği (her durumda), sonra asıl özet.
     expect(captured[0], ReminderIds.weeklyDigestStale);
     expect(captured[1], tr.notifDigestStaleTitle);
     expect(captured[3], DateTime(2026, 11, 23, 9));
-    expect(captured[4], ReminderIds.weeklyDigest);
-    expect(captured[5], tr.notifDigestTitle);
+    expect(captured[4], NotificationPayloads.forecast);
+    expect(captured[5], ReminderIds.weeklyDigest);
+    expect(captured[6], tr.notifDigestTitle);
     // Haftanın tek planlı ödemesi: 18 Kas kirası.
-    expect(captured[6], contains(tr.notifDigestPayments(1, '8.000,00 ₺')));
-    expect(captured[7], DateTime(2026, 11, 16, 9));
+    expect(captured[7], contains(tr.notifDigestPayments(1, '8.000,00 ₺')));
+    expect(captured[8], DateTime(2026, 11, 16, 9));
+    // Özet "en dar gün"den söz ediyor: yük o günü taşır.
+    expect(NotificationPayloads.forecastDay(captured[9] as String), isNotNull);
     verify(() => notifications.cancelNotification(ReminderIds.weeklyDigest))
         .called(1);
   });

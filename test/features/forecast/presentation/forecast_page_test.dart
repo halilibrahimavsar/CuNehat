@@ -1,3 +1,4 @@
+import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
@@ -11,6 +12,7 @@ import 'package:cunehat/features/forecast/presentation/bloc/forecast_cubit.dart'
 import 'package:cunehat/features/forecast/presentation/bloc/forecast_estimates_cubit.dart';
 import 'package:cunehat/features/forecast/presentation/pages/forecast_page.dart';
 import 'package:cunehat/features/forecast/presentation/widgets/forecast_timeline_card.dart';
+import 'package:cunehat/features/main_feature/controllers/home_navigation_requests.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_frequency_enum.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_transaction_entity.dart';
 import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
@@ -166,7 +168,8 @@ void main() {
       double textScale = 1,
       Map<String, double> rates = const {},
       bool? estimates = false,
-      ForecastEstimatesCubit? estimatesCubit}) async {
+      ForecastEstimatesCubit? estimatesCubit,
+      bool reveal = false}) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -193,7 +196,8 @@ void main() {
       ),
       home: MultiBlocProvider(
         providers: [
-          BlocProvider.value(value: cubit..load()),
+          BlocProvider.value(
+              value: reveal ? (cubit..reveal()) : (cubit..load())),
           if (estimatesCubit != null) BlocProvider.value(value: estimatesCubit),
         ],
         child: ForecastView(walletId: 'w', today: _today, estimates: estimates),
@@ -357,6 +361,57 @@ void main() {
           findsOneWidget);
       expect(find.byKey(const ValueKey('forecast-period-estimate')),
           findsOneWidget);
+    });
+  });
+
+  group('tahmin bildiriminden açılış', () {
+    Future<ForecastEstimatesCubit> setting() async {
+      SharedPreferences.setMockInitialValues({});
+      final c = ForecastEstimatesCubit(await SharedPreferences.getInstance());
+      addTearDown(c.close);
+      return c;
+    }
+
+    testWidgets(
+        'tahmin BU AÇILIŞ için görünür ve nedeni yazar; anahtarı kapatmak '
+        'onu bitirir, kalıcı ayar hiç değişmez', (tester) async {
+      final estimates = await setting();
+      final l10n = await pump(tester, _result(),
+          estimates: null, estimatesCubit: estimates, reveal: true);
+
+      expect(find.byKey(const ValueKey('forecast-headline-estimate')),
+          findsOneWidget);
+      expect(find.byKey(const ValueKey('forecast-budget-estimate-food')),
+          findsOneWidget);
+      expect(find.text(l10n.forecastEstimatesTemporaryDesc), findsOneWidget);
+      expect(estimates.state, isFalse);
+
+      await tester.tap(find.byKey(const ValueKey('forecast-estimates-switch')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('forecast-headline-estimate')),
+          findsNothing);
+      expect(find.text(l10n.forecastEstimatesOffDesc), findsOneWidget);
+      expect(estimates.state, isFalse);
+    });
+
+    testWidgets('sayfa AÇIKKEN gelen bildirim isteği tahmini gösterir',
+        (tester) async {
+      final requests = HomeNavigationRequests();
+      getIt.registerSingleton<HomeNavigationRequests>(requests);
+      addTearDown(() => getIt.unregister<HomeNavigationRequests>());
+      final estimates = await setting();
+      await pump(tester, _result(), estimates: null, estimatesCubit: estimates);
+      expect(find.byKey(const ValueKey('forecast-headline-estimate')),
+          findsNothing);
+
+      requests.focusForecast();
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('forecast-headline-estimate')),
+          findsOneWidget);
+      expect(requests.takeForecastFocus(), isNull, reason: 'istek tüketildi');
+      expect(estimates.state, isFalse);
     });
   });
 

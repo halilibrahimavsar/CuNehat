@@ -13449,7 +13449,7 @@ abstract class AppLocalizations {
   /// No description provided for @forecastPlannedExpense.
   ///
   /// In tr, this message translates to:
-  /// **'Planlı gider'**
+  /// **'Toplam gider'**
   String get forecastPlannedExpense;
 
   /// No description provided for @forecastPlannedIncome.
@@ -13461,7 +13461,7 @@ abstract class AppLocalizations {
   /// No description provided for @forecastPlannedNet.
   ///
   /// In tr, this message translates to:
-  /// **'Planlı net'**
+  /// **'Net'**
   String get forecastPlannedNet;
 
   /// No description provided for @forecastEstimatedTotal.
@@ -13607,6 +13607,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'gün seçilmedi'**
   String get forecastChartNoDay;
+
+  /// No description provided for @forecastEstimatesTemporaryDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bildirim tahmine dayanıyor; bu açılışta gösteriliyor'**
+  String get forecastEstimatesTemporaryDesc;
+
+  /// No description provided for @blTagDueToday.
+  ///
+  /// In tr, this message translates to:
+  /// **'Vadesi bugün'**
+  String get blTagDueToday;
+
+  /// No description provided for @forecastPlanHeadlineBelowZero.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye şu an ekside'**
+  String get forecastPlanHeadlineBelowZero;
+
+  /// No description provided for @forecastHeadlineBelowZeroLowest.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu gidişle en dip {date}: {amount}'**
+  String forecastHeadlineBelowZeroLowest(String date, String amount);
 }
 
 class _AppLocalizationsDelegate

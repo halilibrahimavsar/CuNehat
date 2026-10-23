@@ -10,7 +10,24 @@ class ForecastEstimatesSwitch extends StatelessWidget {
   /// Ayarlar'da: uzun açıklama (ufuk ve bildirimler) ve ikon.
   final bool settings;
 
-  const ForecastEstimatesSwitch({super.key, this.settings = false});
+  /// Gösterilen değer; verilmezse kalıcı ayar. Gelecek ETKİN değeri verir:
+  /// bildirimden açılışta tahmin ayar kapalıyken de görünür.
+  final bool? value;
+
+  /// Tahmin yalnız bu açılış için açık (bildirimden): alt yazı nedenini
+  /// söyler.
+  final bool temporary;
+
+  /// Verilmezse kalıcı ayarı yazar.
+  final ValueChanged<bool>? onChanged;
+
+  const ForecastEstimatesSwitch({
+    super.key,
+    this.settings = false,
+    this.value,
+    this.temporary = false,
+    this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +39,7 @@ class ForecastEstimatesSwitch extends StatelessWidget {
     }
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final on = context.forecastEstimates;
+    final on = value ?? context.forecastEstimates;
     final violet = MoneyColors.forecastText(theme.brightness);
     return SwitchListTile(
       key: const ValueKey('forecast-estimates-switch'),
@@ -33,12 +50,14 @@ class ForecastEstimatesSwitch extends StatelessWidget {
       title: Text(l10n.forecastEstimatesTitle),
       subtitle: Text(settings
           ? l10n.forecastEstimatesSettingDesc
-          : (on
-              ? l10n.forecastEstimatesOnDesc
-              : l10n.forecastEstimatesOffDesc)),
+          : temporary
+              ? l10n.forecastEstimatesTemporaryDesc
+              : (on
+                  ? l10n.forecastEstimatesOnDesc
+                  : l10n.forecastEstimatesOffDesc)),
       value: on,
       activeTrackColor: MoneyColors.forecast,
-      onChanged: cubit.set,
+      onChanged: onChanged ?? cubit.set,
     );
   }
 }

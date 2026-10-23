@@ -25,6 +25,23 @@ class NotificationPayloads {
 
   /// Tahmin uyarısı ya da haftalık özet: Gelecek sayfasını açar.
   static const String forecast = 'forecast';
+
+  /// Bildirim bir bakiye gününden söz ediyorsa ("3 Kas civarı eksiye
+  /// düşebilir") yük o günü taşır: Gelecek'in ufku dönem sonunda bitse bile
+  /// o güne uzar. Biçim `forecast:2026-11-03`; yalın [forecast] da geçerli.
+  static String forecastOn(DateTime day) =>
+      '$forecast:${DateTime(day.year, day.month, day.day).toIso8601String().substring(0, 10)}';
+
+  /// [payload] Gelecek'i açan bir yük mü (günlü ya da günsüz)?
+  static bool isForecast(String payload) =>
+      payload == forecast || payload.startsWith('$forecast:');
+
+  /// [forecastOn] yükünün günü; günsüz ya da bozuk yükte `null`.
+  static DateTime? forecastDay(String payload) {
+    if (!payload.startsWith('$forecast:')) return null;
+    final d = DateTime.tryParse(payload.substring(forecast.length + 1));
+    return d == null ? null : DateTime(d.year, d.month, d.day);
+  }
 }
 
 /// Android bildirim kanalları. Ayrı kanal = kullanıcı sistem ayarlarından

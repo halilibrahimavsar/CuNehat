@@ -5334,9 +5334,9 @@
       }
     }
   },
-  "forecastPlannedExpense": "Planlı gider",
+  "forecastPlannedExpense": "Toplam gider",
   "forecastPlannedIncome": "Gelir",
-  "forecastPlannedNet": "Planlı net",
+  "forecastPlannedNet": "Net",
   "forecastEstimatedTotal": "Tahminle ~{amount}",
   "@forecastEstimatedTotal": {
     "placeholders": {
@@ -5447,5 +5447,19 @@
       }
     }
   },
-  "forecastChartNoDay": "gün seçilmedi"
+  "forecastChartNoDay": "gün seçilmedi",
+  "forecastEstimatesTemporaryDesc": "Bildirim tahmine dayanıyor; bu açılışta gösteriliyor",
+  "blTagDueToday": "Vadesi bugün",
+  "forecastPlanHeadlineBelowZero": "Bakiye şu an ekside",
+  "forecastHeadlineBelowZeroLowest": "Bu gidişle en dip {date}: {amount}",
+  "@forecastHeadlineBelowZeroLowest": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -43,8 +43,7 @@ void main() {
 
   group('ay', () {
     test('15\'inde başlayan ay 15–14; yıl devri doğru', () {
-      const p =
-          PeriodPreferences(unit: PeriodUnit.month, monthStartDay: 15);
+      const p = PeriodPreferences(unit: PeriodUnit.month, monthStartDay: 15);
       expectRange(p.periodContaining(DateTime(2026, 9, 25)),
           DateTime(2026, 9, 15), DateTime(2026, 10, 14));
       expectRange(p.periodContaining(DateTime(2026, 9, 3)),
@@ -55,7 +54,8 @@ void main() {
 
     test('varsayılan (1\'i) takvim ayıdır', () {
       expectRange(
-          PeriodPreferences.calendarMonth.periodContaining(DateTime(2026, 2, 9)),
+          PeriodPreferences.calendarMonth
+              .periodContaining(DateTime(2026, 2, 9)),
           DateTime(2026, 2, 1),
           DateTime(2026, 2, 28));
     });
@@ -66,7 +66,8 @@ void main() {
     var r = p.periodContaining(DateTime(2026, 1, 30)); // 28 Oca – 27 Şub
     for (var i = 0; i < 14; i++) {
       final next = p.step(r, 1);
-      expect(dayOf(next.start), DateTime(r.end.year, r.end.month, r.end.day + 1));
+      expect(
+          dayOf(next.start), DateTime(r.end.year, r.end.month, r.end.day + 1));
       r = next;
     }
     final back = p.step(r, -14);
@@ -76,7 +77,8 @@ void main() {
   group('kalıcılık', () {
     test('yaz → oku aynı tercihi verir', () async {
       SharedPreferences.setMockInitialValues({});
-      final store = PeriodPreferencesStore(await SharedPreferences.getInstance());
+      final store =
+          PeriodPreferencesStore(await SharedPreferences.getInstance());
       final p = PeriodPreferences(
         unit: PeriodUnit.biweek,
         weekStart: DateTime.wednesday,
@@ -94,14 +96,15 @@ void main() {
         PeriodPreferencesStore.monthStartDayKey: 31,
         PeriodPreferencesStore.biweekAnchorKey: 'x',
       });
-      final store = PeriodPreferencesStore(await SharedPreferences.getInstance());
+      final store =
+          PeriodPreferencesStore(await SharedPreferences.getInstance());
       expect(store.read(), PeriodPreferences.calendarMonth);
     });
   });
 
   group('süzgeç (TransactionFilterCubit)', () {
-    const wed = PeriodPreferences(
-        unit: PeriodUnit.week, weekStart: DateTime.wednesday);
+    const wed =
+        PeriodPreferences(unit: PeriodUnit.week, weekStart: DateTime.wednesday);
 
     test('varsayılan dönemdeyken tercih uygulanır; oklar birimle kayar', () {
       final cubit = TransactionFilterCubit()..usePeriodPreferences(wed);
@@ -122,6 +125,29 @@ void main() {
       final cubit = TransactionFilterCubit()..setPeriod(custom);
       cubit.usePeriodPreferences(wed);
       expect(cubit.period.start, DateTime(2025, 3, 3));
+    });
+
+    test(
+        'birim değişimi özel aralıktayken de AYRI akıştan duyurulur '
+        '(Gelecek ufku bayat kalmasın); aynı tercih duyurulmaz', () async {
+      final custom = DateTimeRange(
+          start: DateTime(2025, 3, 3), end: DateTime(2025, 3, 20, 23, 59, 59));
+      final cubit = TransactionFilterCubit()..setPeriod(custom);
+      addTearDown(cubit.close);
+      final heard = <PeriodPreferences>[];
+      final sub = cubit.periodPreferencesChanges.listen(heard.add);
+      addTearDown(sub.cancel);
+      final states = <Object>[];
+      final stateSub = cubit.stream.listen(states.add);
+      addTearDown(stateSub.cancel);
+
+      cubit.usePeriodPreferences(wed);
+      cubit.usePeriodPreferences(wed);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(heard, [wed]);
+      // Süzgecin durumu değişmedi: eski dinleyici (durum akışı) duymazdı.
+      expect(states, isEmpty);
     });
 
     test('temizle kullanıcının birimine döner', () {

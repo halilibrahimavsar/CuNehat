@@ -70,6 +70,43 @@ class HomeNavigationRequests extends ChangeNotifier {
     _period = null;
     return p;
   }
+
+  /// Gelecek'i bir tahmin bildiriminden açma isteği. AYRI bildirici: bu
+  /// sınıfın kendi dinleyicisi (ana sayfa) her bildirimi "İşlemler'e dön"
+  /// sayar. Gelecek kuruluyorsa isteği kurulurken alır; zaten açıksa buradan
+  /// dinler.
+  final ValueNotifier<ForecastFocusRequest?> forecastFocus =
+      ValueNotifier(null);
+
+  /// Bayat istek düşer: bildirim Gelecek'i hiç açamadıysa (ör. bölüm o an
+  /// yoktu) sonraki ELLE açılış tahmini kendiliğinden göstermemeli. Süre PIN
+  /// kilidini açmaya yetecek kadar uzun.
+  static const Duration forecastFocusTtl = Duration(minutes: 10);
+
+  void focusForecast({DateTime? day, DateTime? now}) => forecastFocus.value =
+      ForecastFocusRequest(day: day, requestedAt: now ?? DateTime.now());
+
+  /// Bekleyen Gelecek isteğini TÜKETİR (bir kez uygulanır).
+  ForecastFocusRequest? takeForecastFocus({DateTime? now}) {
+    final f = forecastFocus.value;
+    if (f == null) return null;
+    forecastFocus.value = null;
+    final age = (now ?? DateTime.now()).difference(f.requestedAt);
+    return age > forecastFocusTtl ? null : f;
+  }
+}
+
+/// Gelecek'i bildirimden açma isteği: tahmin O AÇILIŞ için görünür (kalıcı
+/// ayar değişmez), ufuk [day]'i kapsar — bildirim tahmine dayanır ve
+/// "Ayrıntısı Gelecek sayfasında" der; varsayılan plan görünümü ve dönem
+/// sonu ufku onu göstermiyordu.
+@immutable
+class ForecastFocusRequest {
+  /// Bildirimin sözünü ettiği bakiye günü; yoksa `null`.
+  final DateTime? day;
+  final DateTime requestedAt;
+
+  const ForecastFocusRequest({this.day, required this.requestedAt});
 }
 
 /// İşlemler sekmesinin dört yüzü: defter (ana görünüm) ve üç alt görünüm.

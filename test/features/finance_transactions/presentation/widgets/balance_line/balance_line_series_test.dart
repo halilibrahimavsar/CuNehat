@@ -462,6 +462,55 @@ void main() {
       expect(s.days[22].estimatedSpend, 30 + 20);
     });
 
+    test(
+        'bugün vadeli, kaydedilmemiş kalem YARININ fişine taşınır: '
+        'bugün + giriş − çıkış = yarının gün sonu (iki modda)', () {
+      // Gün başı 1.000; bugün vadeli 200 kira yolun bugününde düşer.
+      final today = DateTime(2026, 10, 22);
+      final tomorrow = DateTime(2026, 10, 23);
+      final rent = ForecastEvent(
+        date: today,
+        amount: -200,
+        walletId: 'w',
+        kind: ForecastEventKind.recurringExpense,
+        certainty: ForecastCertainty.known,
+        title: 'Kira',
+        countsAsSpending: true,
+      );
+      for (final estimates in [false, true]) {
+        final s = buildBalanceLineSeries(
+          estimates: estimates,
+          ledger: const [],
+          currentBalance: 1000,
+          period: DateTimeRange(start: today, end: DateTime(2026, 10, 24)),
+          now: now,
+          forecastPath: [
+            BalancePoint(
+                day: today,
+                expected: 770,
+                low: 770,
+                high: 770,
+                planned: 800,
+                paceSpend: 30),
+            BalancePoint(
+                day: tomorrow,
+                expected: 720,
+                low: 700,
+                high: 740,
+                planned: 800,
+                paceSpend: 50),
+          ],
+          forecastEvents: [rent],
+        );
+        final t = s.days[0], m = s.days[1];
+        expect(t.balance, 1000, reason: 'bugün defterden');
+        expect(m.events.single.title, 'Kira');
+        expect(m.expense, 200);
+        expect(t.balance! - m.expense - m.estimatedSpend, m.balance,
+            reason: 'estimates=$estimates');
+      }
+    });
+
     test('ölçek planlı çizgiyi de kapsar', () {
       final (lo, hi) = build(true).valueRange!;
       expect(lo, lessThanOrEqualTo(20));

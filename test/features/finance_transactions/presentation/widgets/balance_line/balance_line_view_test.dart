@@ -341,6 +341,50 @@ void main() {
       expect(find.textContaining('aralık'), findsOneWidget);
     });
 
+    testWidgets(
+        'bugün vadeli, kaydedilmemiş kalem yarının fişinde "vadesi bugün" '
+        'etiketiyle; toplam gün sonuyla tutar', (tester) async {
+      final bill = ForecastEvent(
+        date: DateTime(2026, 10, 22),
+        amount: -100,
+        walletId: 'w',
+        kind: ForecastEventKind.recurringExpense,
+        certainty: ForecastCertainty.known,
+        title: 'Fatura',
+        countsAsSpending: true,
+      );
+      // Fatura yolun BUGÜNÜNDE düşer (25.645,90); bugünün bakiyesi defterden
+      // (25.745,90). Eskiden yarının fişi faturayı hiç yazmıyordu.
+      final s = buildBalanceLineSeries(
+        estimates: false,
+        ledger: ledger,
+        currentBalance: 25745.90,
+        period: period,
+        now: now,
+        forecastPath: [
+          BalancePoint(
+              day: DateTime(2026, 10, 22),
+              expected: 25645.90,
+              low: 25645.90,
+              high: 25645.90),
+          BalancePoint(
+              day: DateTime(2026, 10, 23),
+              expected: 25415.91,
+              low: 25415.91,
+              high: 25415.91),
+        ],
+        forecastEvents: [netflix, bill],
+      );
+      await tomorrow(tester, s);
+
+      expect(find.text('Fatura'), findsOneWidget);
+      expect(find.text('VADESİ BUGÜN'), findsOneWidget);
+      // 229,99 + 100 = 329,99 (başlıktaki gün özeti + fiş toplamı);
+      // 25.745,90 − 329,99 = 25.415,91.
+      expect(find.textContaining('329,99'), findsNWidgets(2));
+      expect(find.textContaining('25.415,91'), findsWidgets);
+    });
+
     testWidgets('alacak satırı bakiyeye katılmaz, toplamda yok',
         (tester) async {
       final ali = ForecastEvent(

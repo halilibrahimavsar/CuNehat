@@ -37,7 +37,8 @@ class BalanceDay {
   /// akışıyla okunur. Gelecekte boş.
   final List<TransactionWithBalance> items;
 
-  /// Günün planlı/tahmini hareketleri (yalnız gelecekte).
+  /// Günün planlı/tahmini hareketleri (yalnız gelecekte). Yarında bugün
+  /// vadeli, henüz kaydedilmemiş kalemler de durur (tarihi günden önce).
   final List<ForecastEvent> events;
 
   /// Harcama evreninde gelir/gider; para taşıma [moved]'da işaretli durur
@@ -143,6 +144,12 @@ double signedAmount(TransactionWithBalance e) =>
 /// kurulur: bakiye `planned`, bant yok, olaylar kesin kısmıyla (kesin kısmı
 /// olmayan tahmin düşer; beklenen alacak bilgi olarak kalır ama toplamlara
 /// girmez). Açıkken beklenen yol + bant + günün hız payı.
+///
+/// BUGÜN vadeli ama henüz kaydedilmemiş kalemler (onay bekleyen düzenli
+/// işlem, kredi taksidi, ekstre ödemesi) tahmin yolunun bugününde düşer;
+/// bugünün bakiyesi ise defterden gelir. Bu kalemler YARININ fişine taşınır
+/// (bugünün kalan hız payı gibi): yoksa yarının gün sonu fişte hiçbir
+/// satırla açıklanmayan bir farkla düşüyordu.
 BalanceLineSeries buildBalanceLineSeries({
   required List<TransactionWithBalance> ledger,
   required double currentBalance,
@@ -195,7 +202,10 @@ BalanceLineSeries buildBalanceLineSeries({
 
     if (day.isAfter(today)) {
       final p = pathByDay[day];
-      final all = eventsByDay[day] ?? const <ForecastEvent>[];
+      final all = [
+        if (day == tomorrow) ...?eventsByDay[today],
+        ...?eventsByDay[day],
+      ];
       final events = estimates
           ? all
           : [
