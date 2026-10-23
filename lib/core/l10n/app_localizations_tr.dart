@@ -7536,7 +7536,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get forecastHowIncome =>
-      'Gelir yalnız düzenli işlemlerden (maaş gibi) eklenir; düzensiz gelir tahmin edilmez.';
+      'Gelir yalnız düzenli işlemlerden (maaş gibi) ve ileri tarihli gelir kayıtlarından eklenir; düzensiz gelir tahmin edilmez.';
 
   @override
   String get forecastHowReceivable =>

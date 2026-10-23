@@ -240,6 +240,7 @@ class ForecastEngine {
         sourceId: t.id,
         tag: t.tag,
         countsAsSpending: !t.isIncome && isSpendingMovement(t),
+        countsAsIncome: t.isIncome && isSpendingMovement(t),
         installmentNo: t.installmentNo,
         installmentCount: t.installmentCount,
       );
@@ -515,7 +516,7 @@ class ForecastEngine {
     var knownExpense = 0.0;
     var knownIncome = 0.0;
     for (final e in _plannedUntil(w, events, pe)) {
-      if (e.kind == ForecastEventKind.recurringIncome) {
+      if (e.countsAsIncome) {
         if (!e.date.isAfter(pe)) knownIncome += e.amount;
       } else if (e.countsAsSpending && inPeriod(e.date)) {
         knownExpense += -e.amount;

@@ -4723,7 +4723,7 @@
       }
     }
   },
-  "forecastHowIncome": "Income is only added from recurring items (like salary); irregular income is not guessed.",
+  "forecastHowIncome": "Income is only added from recurring items (like salary) and future-dated income entries; irregular income is not guessed.",
   "forecastHowReceivable": "Expected receivables are not added to the balance line, only to the top of the likely range.",
   "forecastHowRange": "The likely range comes from how much your weekly spending has varied recently.",
   "forecastHowCard": "Card spending leaves your balance on the due date; a statement that hasn't closed yet is an estimate.",

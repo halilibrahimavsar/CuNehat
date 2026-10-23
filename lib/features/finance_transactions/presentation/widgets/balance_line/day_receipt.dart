@@ -323,8 +323,7 @@ class _DayReceiptState extends State<DayReceipt> {
   List<Widget> _eventRows(
       BuildContext context, ForecastEvent e, ReceiptPalette p, TextStyle base) {
     final l10n = context.l10n;
-    final moved =
-        !e.countsAsSpending && e.kind != ForecastEventKind.recurringIncome;
+    final moved = !e.countsAsSpending && !e.countsAsIncome;
     final title = forecastEventTitle(l10n, e);
     final estimates = widget.estimates;
 

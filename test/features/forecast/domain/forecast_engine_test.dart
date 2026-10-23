@@ -479,6 +479,30 @@ void main() {
       expect(p.expectedNet, 30000 - 11200);
     });
 
+    // QA O1: elle girilmiş ileri tarihli gelir de planlı gelirdir (ileri
+    // tarihli gider zaten planlı giderdi). Kart ödemesine gelen sistem
+    // girişi (para taşıma) gelir sayılmaz.
+    test('ileri tarihli elle GELİR dönem gelirine girer; sistem girişi girmez',
+        () {
+      final f = _single(WalletForecastInput(
+        wallet: _wallet('w', balance: 20000 + 30000 - 500 + 1000),
+        ledger: [
+          _tx(DateTime(2026, 11, 20), 30000, tag: 'salary', income: true),
+          _tx(DateTime(2026, 11, 15), 500),
+          _tx(DateTime(2026, 11, 18), 1000,
+              tag: 'Transfer', income: true, system: true),
+        ],
+      ));
+      final p = f.period!;
+      expect(p.knownIncome, 30000);
+      expect(p.knownExpense, 500);
+      expect(p.plannedNet, 30000 - 500);
+      final salary = f.events.firstWhere((e) => e.amount == 30000);
+      expect(salary.countsAsIncome, isTrue);
+      final transfer = f.events.firstWhere((e) => e.amount == 1000);
+      expect(transfer.countsAsIncome, isFalse);
+    });
+
     test('dönem bugünü içermiyorsa dönem tahmini YOK', () {
       final f = _single(
         WalletForecastInput(wallet: _wallet('w'), ledger: _daily()),

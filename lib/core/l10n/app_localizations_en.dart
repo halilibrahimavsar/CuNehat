@@ -7596,7 +7596,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get forecastHowIncome =>
-      'Income is only added from recurring items (like salary); irregular income is not guessed.';
+      'Income is only added from recurring items (like salary) and future-dated income entries; irregular income is not guessed.';
 
   @override
   String get forecastHowReceivable =>

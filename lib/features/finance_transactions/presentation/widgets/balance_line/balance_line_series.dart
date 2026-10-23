@@ -220,7 +220,7 @@ BalanceLineSeries buildBalanceLineSeries({
         if (a == 0) continue;
         if (e.countsAsSpending) {
           expense -= a;
-        } else if (a > 0 && e.kind == ForecastEventKind.recurringIncome) {
+        } else if (a > 0 && e.countsAsIncome) {
           income += a;
         } else {
           moved += a;

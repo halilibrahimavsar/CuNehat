@@ -64,6 +64,13 @@ class ForecastEvent {
   /// değildir (harcama kart satırında ya da borcun kendisinde sayıldı).
   final bool countsAsSpending;
 
+  /// Rapor evreninde GELİR sayılır mı: düzenli gelir (maaş) ve ileri
+  /// tarihli, sistem dışı gelir kaydı. Eskiden yalnız şablon gelir
+  /// sayılıyordu: elle girilmiş 20 Kas maaşı dönem sonu gelirine girmiyor,
+  /// fişte "para taşıma" görünüyordu — ileri tarihli GİDER ise giriyordu
+  /// (QA O1).
+  final bool countsAsIncome;
+
   /// Taksit satırında "3/6" gösterimi için.
   final int? installmentNo;
   final int? installmentCount;
@@ -95,11 +102,14 @@ class ForecastEvent {
     this.sourceId,
     this.tag,
     this.countsAsSpending = false,
+    bool? countsAsIncome,
     this.installmentNo,
     this.installmentCount,
     double? knownAmount,
     this.overdueSince,
-  })  : pathMin = pathMin ?? amount,
+  })  : countsAsIncome =
+            countsAsIncome ?? kind == ForecastEventKind.recurringIncome,
+        pathMin = pathMin ?? amount,
         pathExpected = pathExpected ?? amount,
         pathMax = pathMax ?? amount,
         knownAmount = knownAmount ??

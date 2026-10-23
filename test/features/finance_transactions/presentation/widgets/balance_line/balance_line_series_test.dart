@@ -164,6 +164,39 @@ void main() {
           reason: 'tahmini olmayan gelecek gün uydurulmaz');
     });
 
+    // QA O1: elle girilmiş ileri tarihli gelir fişte GELİR'dir, para
+    // taşıma değil.
+    test('ileri tarihli gelir gelecekte gelir sayılır, taşıma değil', () {
+      final s = buildBalanceLineSeries(
+        estimates: false,
+        ledger: buildLedger(transactions: const [], currentBalance: 900),
+        currentBalance: 900,
+        period: period,
+        now: now,
+        forecastPath: [
+          BalancePoint(
+              day: DateTime(2026, 10, 25),
+              expected: 30900,
+              low: 30900,
+              high: 30900),
+        ],
+        forecastEvents: [
+          ForecastEvent(
+            date: DateTime(2026, 10, 25),
+            amount: 30000,
+            walletId: 'w',
+            kind: ForecastEventKind.scheduled,
+            certainty: ForecastCertainty.known,
+            title: 'Maaş',
+            countsAsIncome: true,
+          ),
+        ],
+      );
+      final d25 = s.days[24];
+      expect(d25.income, 30000);
+      expect(d25.moved, 0);
+    });
+
     test('geçmiş dönemde bugün yok; açılış seçimi son gün', () {
       final s = buildBalanceLineSeries(
         estimates: true,

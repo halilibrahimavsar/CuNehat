@@ -4957,7 +4957,7 @@
       }
     }
   },
-  "forecastHowIncome": "Gelir yalnız düzenli işlemlerden (maaş gibi) eklenir; düzensiz gelir tahmin edilmez.",
+  "forecastHowIncome": "Gelir yalnız düzenli işlemlerden (maaş gibi) ve ileri tarihli gelir kayıtlarından eklenir; düzensiz gelir tahmin edilmez.",
   "forecastHowReceivable": "Beklenen alacaklar bakiye çizgisine katılmaz, yalnız olası aralığın üst ucuna.",
   "forecastHowRange": "Olası aralık, son haftaların harcamasının ne kadar dalgalandığından gelir.",
   "forecastHowCard": "Kart harcaması bakiyeden son ödeme gününde düşer; kesilmemiş ekstre tahminidir.",

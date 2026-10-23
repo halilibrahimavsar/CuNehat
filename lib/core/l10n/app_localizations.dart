@@ -12789,7 +12789,7 @@ abstract class AppLocalizations {
   /// No description provided for @forecastHowIncome.
   ///
   /// In tr, this message translates to:
-  /// **'Gelir yalnız düzenli işlemlerden (maaş gibi) eklenir; düzensiz gelir tahmin edilmez.'**
+  /// **'Gelir yalnız düzenli işlemlerden (maaş gibi) ve ileri tarihli gelir kayıtlarından eklenir; düzensiz gelir tahmin edilmez.'**
   String get forecastHowIncome;
 
   /// No description provided for @forecastHowReceivable.
