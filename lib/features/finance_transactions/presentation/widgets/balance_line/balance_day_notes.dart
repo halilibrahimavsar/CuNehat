@@ -100,7 +100,12 @@ List<DayNote> buildDayNotes({
 
   if (day.expense > 0) {
     final pace = _paceOf(day, dailyExpense, firstRecord);
-    if (pace != null) notes.add(pace);
+    // Bugün yarım bir gündür: tam günlerin ortalamasıyla kıyaslanınca sabah
+    // açan kullanıcı "ortalamanın %80 altında" görüyordu (QA D3). Bugün için
+    // yalnız ŞİMDİDEN ortalamanın belirgin üstündeyse söylenir.
+    if (pace != null && (!day.isToday || (!pace.isNear && pace.percent > 0))) {
+      notes.add(pace);
+    }
   }
 
   // Not, günde para taşıma SATIRI var mı diye karar verir — net toplama

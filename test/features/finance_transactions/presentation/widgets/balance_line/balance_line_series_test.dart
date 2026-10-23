@@ -275,6 +275,39 @@ void main() {
       expect(notes.whereType<PaceNote>().single.percent, 50);
     });
 
+    // QA D3: bugün yarım bir gündür; sabah "ortalamanın %70 altında" demek
+    // anlamsız. Bugün için yalnız ortalamanın belirgin ÜSTÜ söylenir.
+    test('bugün için yalnız ortalamanın üstü söylenir; geçmiş gün değişmez',
+        () {
+      List<DayNote> notesFor(double todaySpend, {int day = 22}) {
+        final txs = [
+          _tx('ilk', DateTime(2026, 9, 1, 9), 70),
+          for (final d in [2, 5, 9, 14])
+            _tx('p$d', DateTime(2026, 10, d, 9), 70),
+          _tx('x', DateTime(2026, 10, day, 9), todaySpend),
+        ];
+        final ledger = buildLedger(transactions: txs, currentBalance: 1000);
+        final s = buildBalanceLineSeries(
+            estimates: true,
+            ledger: ledger,
+            currentBalance: 1000,
+            period: period,
+            now: now);
+        return buildDayNotes(
+          day: dayOf(s, day),
+          dailyExpense: dailyExpenseOf(ledger),
+          firstRecord: DateTime(2026, 9, 1),
+        );
+      }
+
+      // Bugün (22 Eki), ortalama 10: 3 harcandı → not yok.
+      expect(notesFor(3).whereType<PaceNote>(), isEmpty);
+      // Bugün 15 → %50 üstünde: söylenir.
+      expect(notesFor(15).whereType<PaceNote>().single.percent, 50);
+      // Geçmiş gün (20 Eki) 3 → %70 altında: eskisi gibi söylenir.
+      expect(notesFor(3, day: 20).whereType<PaceNote>().single.percent, -70);
+    });
+
     test('kısa geçmişte ortalama ilk kayıttan beri hesaplanır, 28 güne değil',
         () {
       // 5 günlük cüzdan, her gün 100. 28'e bölünseydi ortalama ~18 olur ve
