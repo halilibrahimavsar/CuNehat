@@ -2,6 +2,7 @@ import 'package:cunehat/core/services/budgets_changed_notifier.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/budgets/domain/repositories/budget_repository.dart';
+import 'package:cunehat/features/budgets/domain/repositories/temp_budget_repository.dart';
 import 'package:cunehat/features/budgets/domain/usecases/delete_budget_usecase.dart';
 import 'package:cunehat/features/budgets/domain/usecases/get_budgets_usecase.dart';
 import 'package:cunehat/features/budgets/domain/usecases/save_budget_usecase.dart';
@@ -25,6 +26,8 @@ class MockTransactionsRepository extends Mock
     implements TransactionsRepository {}
 
 class MockWalletRepository extends Mock implements WalletRepository {}
+
+class MockTempBudgetRepository extends Mock implements TempBudgetRepository {}
 
 void main() {
   late MockBudgetRepository mockBudgetRepo;
@@ -119,8 +122,9 @@ void main() {
             expense('new', thisMonth, 200),
           ]));
 
-      final result = await GetBudgetsUsecase(mockBudgetRepo,
-          mockTransactionsRepo, mockCategoryRepo, wallets)('u', 'card');
+      final result = await GetBudgetsUsecase(
+              mockBudgetRepo, mockTransactionsRepo, mockCategoryRepo, wallets)(
+          'u', 'card');
 
       final budgets = result.getOrElse(() => const []);
       expect(budgets.single.spentAmount, 300);
@@ -430,6 +434,26 @@ void main() {
 
       expect(result, const Right<Failure, void>(null));
       verify(() => mockBudgetRepo.deleteBudget('wallet_123', 'Food')).called(1);
+    });
+  });
+  // QA O2: işlemler taşınarak silinen kategori, tek seferlik bütçede hedefle
+  // değişir — hedef depoya iletilir.
+  group('DeleteBudgetsForCategoryUsecase', () {
+    test('taşıma hedefi tek seferlik bütçe deposuna iletilir', () async {
+      final temp = MockTempBudgetRepository();
+      when(() => mockBudgetRepo.deleteBudgetsForCategory('f'))
+          .thenAnswer((_) async => const Right(null));
+      when(() => temp.removeCategoryFromTempBudgets('f',
+              replacementId: any(named: 'replacementId')))
+          .thenAnswer((_) async => const Right(null));
+
+      final result = await DeleteBudgetsForCategoryUsecase(
+              mockBudgetRepo, temp, budgetsChangedNotifier)
+          .call('f', replacementId: 'm');
+
+      expect(result.isRight(), isTrue);
+      verify(() => temp.removeCategoryFromTempBudgets('f', replacementId: 'm'))
+          .called(1);
     });
   });
 }

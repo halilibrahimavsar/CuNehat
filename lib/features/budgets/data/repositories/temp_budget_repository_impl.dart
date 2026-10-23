@@ -71,10 +71,10 @@ class TempBudgetRepositoryImpl implements TempBudgetRepository {
   }
 
   @override
-  Future<Either<Failure, void>> removeCategoryFromTempBudgets(
-      String categoryId) async {
+  Future<Either<Failure, void>> removeCategoryFromTempBudgets(String categoryId,
+      {String? replacementId}) async {
     try {
-      await _local.removeCategory(categoryId);
+      await _local.removeCategory(categoryId, replacementId: replacementId);
       return const Right(null);
     } catch (e, st) {
       debugPrint('Temp budget remove-category error: $e\n$st');

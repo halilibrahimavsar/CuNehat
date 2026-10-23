@@ -24,6 +24,8 @@ class DeleteBudgetUsecase {
 ///
 /// Tek seferlik bütçelerde kategori yalnız LİSTEDEN düşer; listesi boşalan
 /// bütçe silinir (bkz. `TempBudgetLocalDataSource.removeCategory`).
+/// İşlemler [replacementId]'ye taşındıysa tek seferlik bütçede kategorinin
+/// yerini o alır (aylık bütçe kategori başınadır, o yine silinir).
 @injectable
 class DeleteBudgetsForCategoryUsecase {
   final BudgetRepository repository;
@@ -33,9 +35,11 @@ class DeleteBudgetsForCategoryUsecase {
   DeleteBudgetsForCategoryUsecase(
       this.repository, this.tempRepository, this.budgetsChangedNotifier);
 
-  Future<Either<Failure, void>> call(String categoryId) async {
+  Future<Either<Failure, void>> call(String categoryId,
+      {String? replacementId}) async {
     final result = await repository.deleteBudgetsForCategory(categoryId);
-    final temp = await tempRepository.removeCategoryFromTempBudgets(categoryId);
+    final temp = await tempRepository.removeCategoryFromTempBudgets(categoryId,
+        replacementId: replacementId);
     budgetsChangedNotifier.notify();
     return result.isLeft() ? result : temp;
   }

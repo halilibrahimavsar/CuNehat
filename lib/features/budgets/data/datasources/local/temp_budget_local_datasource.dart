@@ -59,15 +59,24 @@ class TempBudgetLocalDataSource {
   /// Kategori silinirken: kategori her bütçenin listesinden düşer; listesi
   /// boşalan bütçe silinir (hiçbir şey saymayan bir bütçe "0 / 15.000 ·
   /// sığıyor" diye yalan söylerdi).
-  Future<void> removeCategory(String categoryId) async {
+  ///
+  /// [replacementId] verilirse (kategorinin işlemleri oraya TAŞINDI) silinen
+  /// kategorinin yerini o alır: işlemler artık orada, bütçe onları saymaya
+  /// devam etmeli. Eskiden bütçe sessizce siliniyor ya da biten bütçenin
+  /// "aştı" sonucu geriye dönük "kaldı"ya dönüyordu (QA O2). Hedef listede
+  /// zaten varsa ikinci kez eklenmez; atası seçiliyse de sorun yok —
+  /// harcama alt ağaçların BİRLEŞİMİNDEN sayılır.
+  Future<void> removeCategory(String categoryId,
+      {String? replacementId}) async {
     final box = await _box;
     for (final key in box.keys.toList(growable: false)) {
       final model = box.get(key);
       if (model == null || !model.categoryIds.contains(categoryId)) continue;
-      final rest = [
-        for (final id in model.categoryIds)
-          if (id != categoryId) id,
-      ];
+      final rest = <String>[];
+      for (final id in model.categoryIds) {
+        final next = id == categoryId ? replacementId : id;
+        if (next != null && !rest.contains(next)) rest.add(next);
+      }
       if (rest.isEmpty) {
         await box.delete(key);
       } else {

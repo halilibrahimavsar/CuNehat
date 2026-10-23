@@ -100,7 +100,9 @@ class DeleteCategoryUseCase {
     // Bütçe alt ağacın HER kimliği için ayrı ayrı temizlenir; ana kategorinin
     // bütçesini silip çocuğunkini bırakmak hayalet bütçe demekti.
     for (final id in subtree) {
-      final result = await deleteBudgetsForCategory(id);
+      // Tek seferlik bütçe taşınan işlemleri saymaya hedefle devam eder.
+      final result =
+          await deleteBudgetsForCategory(id, replacementId: reassignToId);
       final budgetFailure = result.fold<Failure?>((f) => f, (_) => null);
       if (budgetFailure != null) return Left(budgetFailure);
     }

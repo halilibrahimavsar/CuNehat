@@ -79,7 +79,8 @@ void main() {
         .thenAnswer((_) async => const Right(0));
     when(() => recurring.retagTemplates(any(), any()))
         .thenAnswer((_) async => const Right(0));
-    when(() => deleteBudgets(any())).thenAnswer((_) async => const Right(null));
+    when(() => deleteBudgets(any(), replacementId: any(named: 'replacementId')))
+        .thenAnswer((_) async => const Right(null));
   });
 
   tearDown(() => notifier.dispose());
@@ -111,12 +112,14 @@ void main() {
     verify(() => recurring.retagTemplates({'f', 'f-e', 'f-d'}, 'm')).called(1);
   });
 
-  test('bütçe alt ağacın HER kimliği için temizlenir', () async {
+  test(
+      'bütçe alt ağacın HER kimliği için temizlenir; tek seferlik bütçe '
+      'taşıma hedefini alır (QA O2)', () async {
     await usecase(categoryId: 'f', reassignToId: 'm');
 
-    verify(() => deleteBudgets('f')).called(1);
-    verify(() => deleteBudgets('f-e')).called(1);
-    verify(() => deleteBudgets('f-d')).called(1);
+    verify(() => deleteBudgets('f', replacementId: 'm')).called(1);
+    verify(() => deleteBudgets('f-e', replacementId: 'm')).called(1);
+    verify(() => deleteBudgets('f-d', replacementId: 'm')).called(1);
   });
 
   test('işlem varken hedef verilmezse REDDEDİLİR ve hiçbir şey silinmez',
@@ -180,7 +183,7 @@ void main() {
   });
 
   test('bütçe temizliği başarısız olursa kategori SİLİNMEZ', () async {
-    when(() => deleteBudgets('f-e'))
+    when(() => deleteBudgets('f-e', replacementId: any(named: 'replacementId')))
         .thenAnswer((_) async => const Left(CacheFailure('bütçe silinemedi')));
 
     final result = await usecase(categoryId: 'f', reassignToId: 'm');

@@ -19,6 +19,7 @@ abstract class TempBudgetRepository {
   Future<Either<Failure, void>> deleteTempBudgetsForWallet(String walletId);
 
   /// Kategori silinirken: kategori listelerden düşer, boşalan bütçe silinir.
-  Future<Either<Failure, void>> removeCategoryFromTempBudgets(
-      String categoryId);
+  /// [replacementId] verilirse (işlemler oraya taşındı) yerini o alır.
+  Future<Either<Failure, void>> removeCategoryFromTempBudgets(String categoryId,
+      {String? replacementId});
 }

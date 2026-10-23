@@ -91,4 +91,23 @@ void main() {
     expect(all['two']!.name, 'Tatil two');
     expect(all['other']!.categoryIds, ['c']);
   });
+  // QA O2: kategorinin işlemleri başka kategoriye taşınınca tek seferlik
+  // bütçe o kategoriyi saymaya devam eder — sessizce silinmez, biten
+  // bütçenin sonucu geriye dönük değişmez.
+  test(
+      'işlemler taşınarak silinince yerini hedef alır; tek kategorili bütçe '
+      'silinmez; hedef zaten varsa ikinci kez eklenmez', () async {
+    await source.put(model('trip', cats: ['seyahat', 'yeme']));
+    await source.put(model('one', cats: ['seyahat']));
+    await source.put(model('dup', cats: ['seyahat', 'diger']));
+
+    await source.removeCategory('seyahat', replacementId: 'diger');
+
+    final all = {for (final m in await source.getAll()) m.id: m};
+    expect(all.keys, unorderedEquals(['trip', 'one', 'dup']));
+    expect(all['trip']!.categoryIds, ['diger', 'yeme']);
+    expect(all['one']!.categoryIds, ['diger']);
+    expect(all['dup']!.categoryIds, ['diger']);
+    expect(all['trip']!.limitAmount, 1500.5);
+  });
 }
