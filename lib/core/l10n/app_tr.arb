@@ -4641,6 +4641,7 @@
   "tempBudgetLimitLabel": "Limit (aralığın tamamı)",
   "tempBudgetCategoriesLabel": "Sayılan kategoriler",
   "tempBudgetCategoriesHint": "Alt kategorileri de sayılır.",
+  "tempBudgetCardPaymentDayHint": "Kart harcaması ödeme gününe sayılır.",
   "tempBudgetAddCategory": "Kategori ekle",
   "tempBudgetCategoriesRequired": "En az bir kategori seç",
   "tempBudgetCategoryCovered": "{parent} zaten seçili; alt kategorisi ayrıca sayılmaz.",

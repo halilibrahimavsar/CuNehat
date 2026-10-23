@@ -7294,6 +7294,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tempBudgetCategoriesHint => 'Subcategories are counted too.';
 
   @override
+  String get tempBudgetCardPaymentDayHint =>
+      'Card spending counts on its payment day.';
+
+  @override
   String get tempBudgetAddCategory => 'Add category';
 
   @override

@@ -366,6 +366,17 @@ class TempBudgetCard extends StatelessWidget {
                 ),
             ],
           ),
+          // Kart cüzdanında harcama ödeme gününe sayılır: tatilde kartla
+          // yapılan harcama bu bütçede görünmeyebilir — nedeni kartta yazsın.
+          if (context.walletById(walletId)?.isCreditCard ?? false) ...[
+            const SizedBox(height: 6),
+            Text(
+              l10n.tempBudgetCardPaymentDayHint,
+              key: ValueKey('temp-budget-card-hint-${budget.id}'),
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+          ],
         ],
       ),
     );
@@ -449,6 +460,9 @@ class _TempBudgetFormSheetState extends State<TempBudgetFormSheet> {
   DateTimeRange? _range;
 
   bool get _isEdit => widget.editing != null;
+
+  bool get _onCard =>
+      context.walletById(widget.walletId)?.isCreditCard ?? false;
 
   @override
   void initState() {
@@ -679,7 +693,15 @@ class _TempBudgetFormSheetState extends State<TempBudgetFormSheet> {
                       builder: (field) => InputDecorator(
                         decoration: InputDecoration(
                           labelText: l10n.tempBudgetCategoriesLabel,
-                          helperText: l10n.tempBudgetCategoriesHint,
+                          // Kart cüzdanında harcama ödeme gününe sayılır
+                          // (aylık bütçe ve Rapor ile aynı kural): tatilde
+                          // kartla yapılan harcama ödemesi aralığa düşerse
+                          // sayılır. Kullanıcı bunu formda görsün.
+                          helperText: _onCard
+                              ? '${l10n.tempBudgetCategoriesHint} '
+                                  '${l10n.tempBudgetCardPaymentDayHint}'
+                              : l10n.tempBudgetCategoriesHint,
+                          helperMaxLines: 3,
                           border: const OutlineInputBorder(),
                           errorText: field.errorText,
                         ),

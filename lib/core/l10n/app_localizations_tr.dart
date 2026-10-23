@@ -7235,6 +7235,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get tempBudgetCategoriesHint => 'Alt kategorileri de sayılır.';
 
   @override
+  String get tempBudgetCardPaymentDayHint =>
+      'Kart harcaması ödeme gününe sayılır.';
+
+  @override
   String get tempBudgetAddCategory => 'Kategori ekle';
 
   @override

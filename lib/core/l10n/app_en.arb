@@ -4407,6 +4407,7 @@
   "tempBudgetLimitLabel": "Limit (whole range)",
   "tempBudgetCategoriesLabel": "Counted categories",
   "tempBudgetCategoriesHint": "Subcategories are counted too.",
+  "tempBudgetCardPaymentDayHint": "Card spending counts on its payment day.",
   "tempBudgetAddCategory": "Add category",
   "tempBudgetCategoriesRequired": "Pick at least one category",
   "tempBudgetCategoryCovered": "{parent} is already selected; its subcategory is counted with it.",

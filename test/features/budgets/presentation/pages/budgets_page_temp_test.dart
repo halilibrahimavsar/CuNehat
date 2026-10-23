@@ -15,6 +15,8 @@ import 'package:cunehat/features/budgets/presentation/pages/budgets_page.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/wallet_category_service.dart';
+import 'package:cunehat/features/wallet/domain/entities/credit_card_info.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -328,5 +330,51 @@ void main() {
     await tester.pumpAndSettle();
 
     verify(() => budgets.add(const DeleteTempBudgetEvent('active'))).called(1);
+  });
+  // K1 (QA 23 Eki): kart cüzdanında harcama ÖDEME gününe sayılır — kural
+  // aynı kalır ama kullanıcı bunu kartta ve formda görür.
+  group('kart cüzdanı notu', () {
+    WalletEntity wallet({CreditCardInfo? card}) => WalletEntity(
+          id: 'w',
+          userId: 'u',
+          name: 'Kart',
+          balance: 0,
+          debt: 0,
+          credit: 0,
+          investment: 0,
+          colorHex: '0xFF2196F3',
+          iconName: 'wallet',
+          createdAt: DateTime(2026, 1, 1),
+          openingBalance: 0,
+          creditCard: card,
+        );
+
+    testWidgets('kart cüzdanında kartta ve formda not var', (tester) async {
+      final w = wallet(
+          card: const CreditCardInfo(
+              closingDay: 25, dueDay: 12, paymentWalletId: 'bank'));
+      when(() => wallets.state).thenReturn(WalletLoadedSt([w], w));
+      final l10n = await pumpPage(tester);
+
+      expect(find.byKey(const ValueKey('temp-budget-card-hint-active')),
+          findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('temp-budget-card-active')));
+      await tester.pumpAndSettle();
+      expect(
+          find.textContaining(l10n.tempBudgetCardPaymentDayHint), findsWidgets);
+    });
+
+    testWidgets('düz cüzdanda not yok', (tester) async {
+      final w = wallet();
+      when(() => wallets.state).thenReturn(WalletLoadedSt([w], w));
+      final l10n = await pumpPage(tester);
+
+      expect(find.byKey(const ValueKey('temp-budget-card-hint-active')),
+          findsNothing);
+      await tester.tap(find.byKey(const ValueKey('temp-budget-card-active')));
+      await tester.pumpAndSettle();
+      expect(
+          find.textContaining(l10n.tempBudgetCardPaymentDayHint), findsNothing);
+    });
   });
 }

@@ -12372,6 +12372,12 @@ abstract class AppLocalizations {
   /// **'Alt kategorileri de sayılır.'**
   String get tempBudgetCategoriesHint;
 
+  /// No description provided for @tempBudgetCardPaymentDayHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart harcaması ödeme gününe sayılır.'**
+  String get tempBudgetCardPaymentDayHint;
+
   /// No description provided for @tempBudgetAddCategory.
   ///
   /// In tr, this message translates to:
