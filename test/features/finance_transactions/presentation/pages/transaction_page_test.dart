@@ -1230,6 +1230,46 @@ void main() {
       expect(prefs.getString(LedgerViewStore.key), LedgerView.balanceLine.name);
     });
 
+    // QA O6: listesi "kaybolan" kullanıcıya bir kez söylenir.
+    testWidgets('tanıtım şeridi bir kez: kapatınca kalıcı olarak gider',
+        (tester) async {
+      seed([txMarket, txFatura]);
+      await pumpPage(tester);
+      final prefs = getIt<SharedPreferences>();
+
+      expect(find.byKey(const ValueKey('bl-intro')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('bl-intro-close')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('bl-intro')), findsNothing);
+      expect(prefs.getBool(LedgerViewStore.introKey), isTrue);
+      // Görünüm tercihi değişmedi.
+      expect(prefs.getString(LedgerViewStore.key), isNull);
+    });
+
+    testWidgets('görünümü bir kez elle seçmiş kullanıcıya şerit çıkmaz',
+        (tester) async {
+      await getIt<SharedPreferences>()
+          .setString(LedgerViewStore.key, LedgerView.balanceLine.name);
+      seed([txMarket, txFatura]);
+      await pumpPage(tester);
+
+      expect(find.byType(BalanceLineView), findsOneWidget);
+      expect(find.byKey(const ValueKey('bl-intro')), findsNothing);
+    });
+
+    testWidgets('şeritteki "Listeye dön" listeye geçer ve tercihi yazar',
+        (tester) async {
+      seed([txMarket, txFatura]);
+      await pumpPage(tester);
+      final prefs = getIt<SharedPreferences>();
+
+      await tester.tap(find.byKey(const ValueKey('bl-intro-list')));
+      await tester.pumpAndSettle();
+      expect(find.byType(BalanceLineView), findsNothing);
+      expect(prefs.getString(LedgerViewStore.key), LedgerView.list.name);
+      expect(prefs.getBool(LedgerViewStore.introKey), isTrue);
+    });
+
     testWidgets('arama etkinken sonuçlar LİSTEDE; aramayı silince geri döner',
         (tester) async {
       seed([txMarket, txFatura]);

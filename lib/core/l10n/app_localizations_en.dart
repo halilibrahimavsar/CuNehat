@@ -7769,6 +7769,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get blShowLine => 'Balance line';
 
   @override
+  String get blShowListShort => 'List';
+
+  @override
+  String get blIntro =>
+      'New view: the balance line. Tap a day to see its receipt.';
+
+  @override
+  String get blIntroToList => 'Back to list';
+
+  @override
   String get blPrevDay => 'Previous day';
 
   @override

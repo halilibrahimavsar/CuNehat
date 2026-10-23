@@ -158,6 +158,10 @@ class _TransactionsViewState extends State<_TransactionsView> {
   /// Görünüm: bakiye hattı (varsayılan) ya da liste. Cihaz tercihi.
   LedgerView _view = LedgerView.balanceLine;
 
+  /// Bakiye hattı tanıtım şeridi görüldü mü (bkz. [LedgerViewStore]).
+  /// Tercih deposu yoksa (yalıtılmış testler) gösterilmez.
+  bool _introSeen = true;
+
   /// Bakiye hattının gelecek günleri: aktif cüzdanın tahmini. Dönem bugünü
   /// aşmıyorsa hiç istenmez.
   WalletForecast? _forecast;
@@ -199,7 +203,9 @@ class _TransactionsViewState extends State<_TransactionsView> {
     context.read<TransactionFilterCubit>().bindWallet(widget.wallet.id);
     _syncStatementCycle();
     if (getIt.isRegistered<SharedPreferences>()) {
-      _view = LedgerViewStore(getIt<SharedPreferences>()).read();
+      final store = LedgerViewStore(getIt<SharedPreferences>());
+      _view = store.read();
+      _introSeen = store.introSeen();
     }
     _selection.addListener(_onSelectionChanged);
     if (getIt.isRegistered<BudgetsChangedNotifier>()) {
@@ -470,9 +476,20 @@ class _TransactionsViewState extends State<_TransactionsView> {
 
   void _setView(LedgerView view) {
     if (_view == view) return;
-    setState(() => _view = view);
+    setState(() {
+      _view = view;
+      _introSeen = true;
+    });
     if (getIt.isRegistered<SharedPreferences>()) {
       unawaited(LedgerViewStore(getIt<SharedPreferences>()).write(view));
+    }
+  }
+
+  void _dismissIntro() {
+    if (_introSeen) return;
+    setState(() => _introSeen = true);
+    if (getIt.isRegistered<SharedPreferences>()) {
+      unawaited(LedgerViewStore(getIt<SharedPreferences>()).markIntroSeen());
     }
   }
 
@@ -916,6 +933,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
               forecastLoading: _forecastLoading,
               onAddForDay: (day) => _addForDay(day, mode),
               onShowList: () => _setView(LedgerView.list),
+              onDismissIntro: _introSeen ? null : _dismissIntro,
               onJumpToToday: periodHasToday ? null : cubit.jumpToToday,
             ),
           ),

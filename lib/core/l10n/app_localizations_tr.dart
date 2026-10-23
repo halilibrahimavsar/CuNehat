@@ -7709,6 +7709,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get blShowLine => 'Bakiye hattı';
 
   @override
+  String get blShowListShort => 'Liste';
+
+  @override
+  String get blIntro =>
+      'Yeni görünüm: bakiye hattı. Bir güne dokun, o günün fişini gör.';
+
+  @override
+  String get blIntroToList => 'Listeye dön';
+
+  @override
   String get blPrevDay => 'Önceki gün';
 
   @override

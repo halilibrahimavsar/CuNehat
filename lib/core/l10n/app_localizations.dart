@@ -13056,6 +13056,24 @@ abstract class AppLocalizations {
   /// **'Bakiye hattı'**
   String get blShowLine;
 
+  /// No description provided for @blShowListShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste'**
+  String get blShowListShort;
+
+  /// No description provided for @blIntro.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni görünüm: bakiye hattı. Bir güne dokun, o günün fişini gör.'**
+  String get blIntro;
+
+  /// No description provided for @blIntroToList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Listeye dön'**
+  String get blIntroToList;
+
   /// No description provided for @blPrevDay.
   ///
   /// In tr, this message translates to:

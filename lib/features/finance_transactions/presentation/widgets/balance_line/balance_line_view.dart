@@ -38,6 +38,10 @@ class BalanceLineView extends StatefulWidget {
   final ValueChanged<DateTime> onAddForDay;
   final VoidCallback onShowList;
 
+  /// Verilirse üstte bir kerelik tanıtım şeridi çizilir ("Listeye dön" ve
+  /// kapat); ikisi de bunu çağırır (görüldü).
+  final VoidCallback? onDismissIntro;
+
   /// Dönem bugünü KAPSAMIYORSA "Bugün" düğmesinin eylemi (dönemi bugüne
   /// taşır). Kapsıyorsa düğme bugünü seçer, bu kullanılmaz.
   final VoidCallback? onJumpToToday;
@@ -56,6 +60,7 @@ class BalanceLineView extends StatefulWidget {
     required this.onShowList,
     this.forecastLoading = false,
     this.onJumpToToday,
+    this.onDismissIntro,
     this.now,
   });
 
@@ -136,6 +141,10 @@ class _BalanceLineViewState extends State<BalanceLineView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (widget.onDismissIntro != null) ...[
+            _intro(context),
+            const SizedBox(height: 10),
+          ],
           _header(context, day),
           const SizedBox(height: 12),
           BalanceLineChart(
@@ -201,6 +210,43 @@ class _BalanceLineViewState extends State<BalanceLineView> {
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Güncellemeyle gelen görünüm değişikliğini söyleyen tek seferlik şerit:
+  /// liste kaybolmadı, bir dokunuş uzakta.
+  Widget _intro(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Container(
+      key: const ValueKey('bl-intro'),
+      padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
+      decoration: BoxDecoration(
+        color: scheme.primary.withValues(alpha: 0.08),
+        borderRadius: AppRadius.controlAll,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(l10n.blIntro, style: theme.textTheme.bodySmall),
+          ),
+          TextButton(
+            key: const ValueKey('bl-intro-list'),
+            onPressed: () {
+              widget.onDismissIntro?.call();
+              widget.onShowList();
+            },
+            child: Text(l10n.blIntroToList),
+          ),
+          IconButton(
+            key: const ValueKey('bl-intro-close'),
+            tooltip: l10n.kapat,
+            onPressed: widget.onDismissIntro,
+            icon: const Icon(Icons.close_rounded, size: 18),
           ),
         ],
       ),
@@ -284,12 +330,22 @@ class _BalanceLineViewState extends State<BalanceLineView> {
                 ),
                 child: Text(l10n.blRelToday),
               ),
-            IconButton(
-              key: const ValueKey('bl-show-list'),
-              tooltip: l10n.blShowList,
-              onPressed: widget.onShowList,
-              icon: const Icon(Icons.view_list_rounded),
-              color: scheme.onSurfaceVariant,
+            // Yazılı düğme: yalnız ikonken listeye dönüş yolu bulunmuyordu
+            // (QA O6).
+            Tooltip(
+              message: l10n.blShowList,
+              child: TextButton.icon(
+                key: const ValueKey('bl-show-list'),
+                onPressed: widget.onShowList,
+                icon: const Icon(Icons.view_list_rounded, size: 18),
+                label: Text(l10n.blShowListShort),
+                style: TextButton.styleFrom(
+                  foregroundColor: scheme.onSurfaceVariant,
+                  minimumSize: const Size(0, 40),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
             ),
           ],
         ),

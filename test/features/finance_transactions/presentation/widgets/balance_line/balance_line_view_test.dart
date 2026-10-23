@@ -95,6 +95,8 @@ void main() {
     BalanceLineSeries? s,
     Size size = const Size(400, 1400),
     double textScale = 1,
+    VoidCallback? onDismissIntro,
+    VoidCallback? onShowList,
   }) async {
     SharedPreferences.setMockInitialValues({});
     tester.view.physicalSize = size;
@@ -131,7 +133,8 @@ void main() {
                 },
                 categoryIcons: const {},
                 onAddForDay: (d) => added = d,
-                onShowList: () {},
+                onShowList: onShowList ?? () {},
+                onDismissIntro: onDismissIntro,
                 now: now,
               ),
             ),
@@ -270,6 +273,43 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('aralık'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  // QA O6: güncellemeyle varsayılan görünüm değişti; listeye dönüş yazılı
+  // ve bir kerelik şerit bunu söyler.
+  group('tanıtım şeridi ve liste düğmesi', () {
+    testWidgets('liste düğmesi yazılıdır; şerit yalnız istenirse çizilir',
+        (tester) async {
+      await pump(tester);
+      expect(
+          find.descendant(
+              of: find.byKey(const ValueKey('bl-show-list')),
+              matching: find.text('Liste')),
+          findsOneWidget);
+      expect(find.byKey(const ValueKey('bl-intro')), findsNothing);
+    });
+
+    testWidgets('kapat yalnız görüldü der; "Listeye dön" listeye de geçer',
+        (tester) async {
+      var dismissed = 0;
+      var shown = 0;
+      await pump(tester,
+          onDismissIntro: () => dismissed++, onShowList: () => shown++);
+      expect(find.byKey(const ValueKey('bl-intro')), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('bl-intro-close')));
+      expect((dismissed, shown), (1, 0));
+
+      await tester.tap(find.byKey(const ValueKey('bl-intro-list')));
+      expect((dismissed, shown), (2, 1));
+    });
+
+    testWidgets('320×568 + yazı 1,3: şerit ve düğme taşmaz', (tester) async {
+      await loadRealRoboto();
+      await pump(tester,
+          size: const Size(320, 568), textScale: 1.3, onDismissIntro: () {});
+      expect(tester.takeException(), isNull);
+    });
   });
 
   group('plan / tahmin', () {
