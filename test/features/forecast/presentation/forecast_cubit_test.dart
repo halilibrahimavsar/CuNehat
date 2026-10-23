@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cunehat/core/services/plans_changed_notifier.dart';
 import 'package:cunehat/features/forecast/data/forecast_service.dart';
 import 'package:cunehat/features/forecast/presentation/bloc/forecast_cubit.dart';
 import 'package:flutter/material.dart';
@@ -87,6 +88,29 @@ void main() {
     await settle();
     expect(service.horizons, [20, 5]);
     expect(cubit.state.horizonEnd, DateTime(2026, 11, 15));
+  });
+
+  // QA O3: şablon, borç ya da kart ayarı defteri değiştirmez ama planı
+  // değiştirir — Gelecek açıkken tazelenmeli.
+  test('plan değişince (şablon, borç, kart ayarı) yeniden hesaplar', () async {
+    final plans = PlansChangedNotifier();
+    addTearDown(plans.dispose);
+    final cubit = ForecastCubit(
+      service,
+      userId: 'u',
+      walletId: 'w1',
+      periodOf: () => _november,
+      horizonEndOf: (_) => horizon,
+      plans: plans,
+      clock: () => _today,
+    );
+    addTearDown(cubit.close);
+    await cubit.load();
+    expect(service.horizons, hasLength(1));
+
+    plans.notify();
+    await settle();
+    expect(service.horizons, hasLength(2));
   });
 
   group('bildirimden açılış (reveal)', () {

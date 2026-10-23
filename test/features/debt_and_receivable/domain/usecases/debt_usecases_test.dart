@@ -1,5 +1,6 @@
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:cunehat/core/error/failure.dart';
+import 'package:cunehat/core/services/plans_changed_notifier.dart';
 import 'package:cunehat/core/services/reminder_sync_service.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/repositories/debt_repository.dart';
@@ -137,6 +138,30 @@ void main() {
 
       expect(result, const Left<Failure, void>(failure));
       verifyNever(() => mockReminderSync.syncDebt(any()));
+    });
+  });
+
+  // QA O3: borç planı değişince açık tahmin yüzeyleri tazelenir.
+  group('plan değişimi yayını', () {
+    test('kayıt başarılıysa yayar, başarısızsa yaymaz', () async {
+      final plans = PlansChangedNotifier();
+      addTearDown(plans.dispose);
+      var count = 0;
+      final sub = plans.stream.listen((_) => count++);
+      addTearDown(sub.cancel);
+      final add = AddDebtUseCase(mockRepo, mockReminderSync, plans);
+
+      when(() => mockRepo.addDebt(any()))
+          .thenAnswer((_) async => const Right(null));
+      await add(testDebt);
+      await Future<void>.delayed(Duration.zero);
+      expect(count, 1);
+
+      when(() => mockRepo.addDebt(any()))
+          .thenAnswer((_) async => const Left(CacheFailure('x')));
+      await add(testDebt);
+      await Future<void>.delayed(Duration.zero);
+      expect(count, 1);
     });
   });
 

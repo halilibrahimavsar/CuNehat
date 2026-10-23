@@ -1,5 +1,6 @@
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
+import 'package:cunehat/core/services/plans_changed_notifier.dart';
 import 'package:cunehat/core/services/reminder_sync_service.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/repositories/debt_repository.dart';
@@ -20,7 +21,10 @@ class AddDebtUseCase {
   final DebtRepository repository;
   final ReminderSyncService reminderSync;
 
-  AddDebtUseCase(this.repository, this.reminderSync);
+  /// Plan değişti: tahmin yüzeyleri tazelensin (bkz. [PlansChangedNotifier]).
+  final PlansChangedNotifier? plans;
+
+  AddDebtUseCase(this.repository, this.reminderSync, [this.plans]);
 
   Future<Either<Failure, void>> call(DebtEntity debt) async {
     if (debt.id == null || debt.id!.isEmpty) {
@@ -33,6 +37,7 @@ class AddDebtUseCase {
       (_) async {},
       (_) => reminderSync.syncDebt(debt),
     );
+    if (result.isRight()) plans?.notify();
 
     return result;
   }
@@ -43,7 +48,10 @@ class UpdateDebtUseCase {
   final DebtRepository repository;
   final ReminderSyncService reminderSync;
 
-  UpdateDebtUseCase(this.repository, this.reminderSync);
+  /// Plan değişti: tahmin yüzeyleri tazelensin (bkz. [PlansChangedNotifier]).
+  final PlansChangedNotifier? plans;
+
+  UpdateDebtUseCase(this.repository, this.reminderSync, [this.plans]);
 
   Future<Either<Failure, void>> call(DebtEntity debt) async {
     if (debt.id == null || debt.id!.isEmpty) {
@@ -58,6 +66,7 @@ class UpdateDebtUseCase {
       (_) async {},
       (_) => reminderSync.syncDebt(debt),
     );
+    if (result.isRight()) plans?.notify();
 
     return result;
   }
@@ -68,7 +77,10 @@ class DeleteDebtUseCase {
   final DebtRepository repository;
   final ReminderSyncService reminderSync;
 
-  DeleteDebtUseCase(this.repository, this.reminderSync);
+  /// Plan değişti: tahmin yüzeyleri tazelensin (bkz. [PlansChangedNotifier]).
+  final PlansChangedNotifier? plans;
+
+  DeleteDebtUseCase(this.repository, this.reminderSync, [this.plans]);
 
   Future<Either<Failure, void>> call(String id) async {
     final result = await repository.deleteDebt(id);
@@ -76,6 +88,7 @@ class DeleteDebtUseCase {
       (_) async {},
       (_) => reminderSync.cancelDebtReminders(id),
     );
+    if (result.isRight()) plans?.notify();
     return result;
   }
 }

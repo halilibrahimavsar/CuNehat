@@ -1,3 +1,4 @@
+import 'package:cunehat/core/services/plans_changed_notifier.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
@@ -294,6 +295,30 @@ void main() {
       verify(() => mockRepository.updateWallet(testWallet)).called(1);
       verifyNoMoreInteractions(mockRepository);
     });
+  });
+
+  // QA O3: kart ayarı (kesim günü, bağlı cüzdan, ekstre beyanı) cüzdanın
+  // içinde durur; değişince tahmin tazelenir.
+  test('WalletUpdateUseCase başarıda plan değişimini yayar, hatada yaymaz',
+      () async {
+    final plans = PlansChangedNotifier();
+    addTearDown(plans.dispose);
+    var count = 0;
+    final sub = plans.stream.listen((_) => count++);
+    addTearDown(sub.cancel);
+    final update = WalletUpdateUseCase(mockRepository, plans);
+
+    when(() => mockRepository.updateWallet(testWallet))
+        .thenAnswer((_) async => const Right(null));
+    await update(testWallet);
+    await Future<void>.delayed(Duration.zero);
+    expect(count, 1);
+
+    when(() => mockRepository.updateWallet(testWallet))
+        .thenAnswer((_) async => const Left(ServerFailure('x')));
+    await update(testWallet);
+    await Future<void>.delayed(Duration.zero);
+    expect(count, 1);
   });
 
   group('WalletSetActiveUseCase', () {

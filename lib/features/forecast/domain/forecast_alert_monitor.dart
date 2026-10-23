@@ -8,6 +8,7 @@ import 'package:cunehat/core/notifications/notification_constants.dart';
 import 'package:cunehat/core/notifications/notification_localizer.dart';
 import 'package:cunehat/core/notifications/notification_service.dart';
 import 'package:cunehat/core/services/budgets_changed_notifier.dart';
+import 'package:cunehat/core/services/plans_changed_notifier.dart';
 import 'package:cunehat/core/services/notification_settings_service.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
@@ -75,11 +76,14 @@ class ForecastAlertMonitor with WidgetsBindingObserver {
     this._wallets,
     this._visibility,
     TransactionsChangedNotifier transactions,
-    BudgetsChangedNotifier budgets,
-  )   : _clock = DateTime.now,
+    BudgetsChangedNotifier budgets, [
+    PlansChangedNotifier? plans,
+  ])  : _clock = DateTime.now,
         debounce = const Duration(seconds: 2) {
     _subs.add(transactions.stream.listen((_) => schedule()));
     _subs.add(budgets.stream.listen((_) => schedule()));
+    // Yeni kredi ya da kart ayarı nakit uyarısını değiştirebilir.
+    if (plans != null) _subs.add(plans.stream.listen((_) => schedule()));
     WidgetsBinding.instance.addObserver(this);
     // Açılışta bir tur: özetin yedeği ileri kaysın, kapanmış ayar planı
     // temizlesin.

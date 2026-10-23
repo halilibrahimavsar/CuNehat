@@ -1,5 +1,6 @@
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
+import 'package:cunehat/core/services/plans_changed_notifier.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
 import 'package:dartz/dartz.dart';
@@ -9,7 +10,12 @@ import 'package:injectable/injectable.dart';
 @injectable
 class WalletCreateUseCase {
   final WalletRepository repository;
-  WalletCreateUseCase(this.repository);
+
+  /// Kart ayarı (kesim/son ödeme, bağlı cüzdan, ekstre beyanı) cüzdanın
+  /// içinde durur ve tahmine girer: değişince tahmin tazelensin (bkz.
+  /// [PlansChangedNotifier]). Bakiye senkronu bu yoldan GEÇMEZ.
+  final PlansChangedNotifier? plans;
+  WalletCreateUseCase(this.repository, [this.plans]);
 
   /// Yeni cüzdan **küratörlü** doğar: `categoryIds` verilmemişse boş kümeye
   /// (`const []`) düşer.
@@ -31,7 +37,9 @@ class WalletCreateUseCase {
     final walletWithId = withDefaults.id == null || withDefaults.id!.isEmpty
         ? withDefaults.copyWith(id: UidGenerator.generateV7())
         : withDefaults;
-    return await repository.createWallet(walletWithId);
+    final result = await repository.createWallet(walletWithId);
+    if (result.isRight()) plans?.notify();
+    return result;
   }
 }
 
@@ -39,10 +47,13 @@ class WalletCreateUseCase {
 @injectable
 class WalletDeleteUseCase {
   final WalletRepository repository;
-  WalletDeleteUseCase(this.repository);
+  final PlansChangedNotifier? plans;
+  WalletDeleteUseCase(this.repository, [this.plans]);
 
   Future<Either<Failure, void>> call(String walletId) async {
-    return await repository.deleteWallet(walletId);
+    final result = await repository.deleteWallet(walletId);
+    if (result.isRight()) plans?.notify();
+    return result;
   }
 }
 
@@ -72,14 +83,21 @@ class WalletWatchUseCase {
 @injectable
 class WalletUpdateUseCase {
   final WalletRepository repository;
-  WalletUpdateUseCase(this.repository);
+
+  /// Kart ayarı (kesim/son ödeme, bağlı cüzdan, ekstre beyanı) cüzdanın
+  /// içinde durur ve tahmine girer: değişince tahmin tazelensin (bkz.
+  /// [PlansChangedNotifier]). Bakiye senkronu bu yoldan GEÇMEZ.
+  final PlansChangedNotifier? plans;
+  WalletUpdateUseCase(this.repository, [this.plans]);
 
   Future<Either<Failure, void>> call(WalletEntity wallet) async {
     if (wallet.id == null) {
       return Left(
           ValidationFailure('Wallet ID cannot be null for update operation'));
     }
-    return await repository.updateWallet(wallet);
+    final result = await repository.updateWallet(wallet);
+    if (result.isRight()) plans?.notify();
+    return result;
   }
 }
 

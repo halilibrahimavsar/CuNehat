@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cunehat/core/error/error_handling.dart';
 import 'package:cunehat/core/services/budgets_changed_notifier.dart';
+import 'package:cunehat/core/services/plans_changed_notifier.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/features/forecast/data/forecast_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
@@ -105,6 +106,7 @@ class ForecastCubit extends Cubit<ForecastState> {
     DateTime Function(DateTime today)? horizonEndOf,
     TransactionsChangedNotifier? transactions,
     BudgetsChangedNotifier? budgets,
+    PlansChangedNotifier? plans,
     Stream<Object?>? horizonChanges,
     DateTime Function()? clock,
   })  : _clock = clock ?? DateTime.now,
@@ -114,6 +116,9 @@ class ForecastCubit extends Cubit<ForecastState> {
       _subs.add(transactions.stream.listen((_) => load()));
     }
     if (budgets != null) _subs.add(budgets.stream.listen((_) => load()));
+    // Şablon, borç, alacak ya da kart ayarı değişti: defter değişmese de
+    // plan değişti.
+    if (plans != null) _subs.add(plans.stream.listen((_) => load()));
     // Dönem birimi değişti (Ayarlar sayfa açıkken üstüne itilir): ufuk
     // değiştiyse yeniden hesapla.
     if (horizonChanges != null) {

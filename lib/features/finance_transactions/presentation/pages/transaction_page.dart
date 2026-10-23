@@ -14,6 +14,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/config/feature_flags.dart';
 import 'package:cunehat/core/error/error_handling.dart';
 import 'package:cunehat/core/services/budgets_changed_notifier.dart';
+import 'package:cunehat/core/services/plans_changed_notifier.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'package:cunehat/core/messaging/deletion_undo_message.dart';
@@ -166,9 +167,10 @@ class _TransactionsViewState extends State<_TransactionsView> {
 
   /// Tahminin defterde görünmeyen girdileri (bütçe, şablon, borç) başka
   /// ekranda değişebilir; artınca tahmin anahtarı değişir ve yeniden istenir.
-  /// Bütçe değişiminde ve uygulamaya dönüşte artar.
+  /// Bütçe ya da plan değişiminde ve uygulamaya dönüşte artar.
   int _forecastEpoch = 0;
   StreamSubscription<void>? _budgetsSub;
+  StreamSubscription<void>? _plansSub;
   AppLifecycleListener? _lifecycle;
 
   /// Gece yarısı: "bugün" (seçili gün, kesikli çizginin başı) yeniden
@@ -202,6 +204,13 @@ class _TransactionsViewState extends State<_TransactionsView> {
     _selection.addListener(_onSelectionChanged);
     if (getIt.isRegistered<BudgetsChangedNotifier>()) {
       _budgetsSub = getIt<BudgetsChangedNotifier>()
+          .stream
+          .listen((_) => _invalidateForecast());
+    }
+    // Şablon, borç ya da kart ayarı: defter değişmez ama hattın geleceği
+    // değişir (QA O3).
+    if (getIt.isRegistered<PlansChangedNotifier>()) {
+      _plansSub = getIt<PlansChangedNotifier>()
           .stream
           .listen((_) => _invalidateForecast());
     }
@@ -296,6 +305,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
     }
     _categoriesSub?.cancel();
     _budgetsSub?.cancel();
+    _plansSub?.cancel();
     _lifecycle?.dispose();
     _midnight?.cancel();
     _collapse.dispose();

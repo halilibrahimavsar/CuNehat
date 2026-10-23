@@ -1,5 +1,6 @@
 // lib/features/recurring_transactions/domain/usecases/delete_recurring_transaction_usecase.dart
 
+import 'package:cunehat/core/services/plans_changed_notifier.dart';
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 import 'package:cunehat/core/error/failure.dart';
@@ -11,7 +12,11 @@ class DeleteRecurringTransactionUsecase {
   final RecurringTransactionRepository repository;
   final ReminderSyncService reminderSync;
 
-  DeleteRecurringTransactionUsecase(this.repository, this.reminderSync);
+  /// Plan değişti: tahmin yüzeyleri tazelensin (bkz. [PlansChangedNotifier]).
+  final PlansChangedNotifier? plans;
+
+  DeleteRecurringTransactionUsecase(this.repository, this.reminderSync,
+      [this.plans]);
 
   Future<Either<Failure, void>> call(String id) async {
     final result = await repository.deleteTemplate(id);
@@ -19,6 +24,7 @@ class DeleteRecurringTransactionUsecase {
       (_) async {},
       (_) => reminderSync.cancelRecurringReminder(id),
     );
+    if (result.isRight()) plans?.notify();
     return result;
   }
 }
@@ -31,7 +37,11 @@ class DeleteRecurringTemplatesForWalletUsecase {
   final RecurringTransactionRepository repository;
   final ReminderSyncService reminderSync;
 
-  DeleteRecurringTemplatesForWalletUsecase(this.repository, this.reminderSync);
+  /// Plan değişti: tahmin yüzeyleri tazelensin (bkz. [PlansChangedNotifier]).
+  final PlansChangedNotifier? plans;
+
+  DeleteRecurringTemplatesForWalletUsecase(this.repository, this.reminderSync,
+      [this.plans]);
 
   Future<Either<Failure, void>> call(String walletId) async {
     final res = await repository.getAllTemplates();
@@ -45,6 +55,7 @@ class DeleteRecurringTemplatesForWalletUsecase {
             (_) => reminderSync.cancelRecurringReminder(t.id),
           );
         }
+        plans?.notify();
         return const Right(null);
       },
     );

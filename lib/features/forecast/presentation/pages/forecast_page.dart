@@ -2,6 +2,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/services/budgets_changed_notifier.dart';
+import 'package:cunehat/core/services/plans_changed_notifier.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/features/credit_card/presentation/card_context_rail.dart';
@@ -64,6 +65,9 @@ class ForecastPage extends StatelessWidget {
             forecastHorizonEnd(filter.periodPreferences, today),
         transactions: getIt<TransactionsChangedNotifier>(),
         budgets: getIt<BudgetsChangedNotifier>(),
+        plans: getIt.isRegistered<PlansChangedNotifier>()
+            ? getIt<PlansChangedNotifier>()
+            : null,
         // Ayarlar'da dönem birimi değişince ufuk bayat kalmasın — süzgeç
         // özel bir aralıktayken durumu değişmez, bu yüzden ayrı akış.
         horizonChanges: filter.periodPreferencesChanges,

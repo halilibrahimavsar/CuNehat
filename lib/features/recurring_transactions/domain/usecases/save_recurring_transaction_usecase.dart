@@ -1,5 +1,6 @@
 // lib/features/recurring_transactions/domain/usecases/save_recurring_transaction_usecase.dart
 
+import 'package:cunehat/core/services/plans_changed_notifier.dart';
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 import 'package:cunehat/core/error/failure.dart';
@@ -17,7 +18,11 @@ class SaveRecurringTransactionUsecase {
   final RecurringTransactionRepository repository;
   final ReminderSyncService reminderSync;
 
-  SaveRecurringTransactionUsecase(this.repository, this.reminderSync);
+  /// Plan değişti: tahmin yüzeyleri tazelensin (bkz. [PlansChangedNotifier]).
+  final PlansChangedNotifier? plans;
+
+  SaveRecurringTransactionUsecase(this.repository, this.reminderSync,
+      [this.plans]);
 
   Future<Either<Failure, void>> call(
       RecurringTransactionEntity template) async {
@@ -27,6 +32,7 @@ class SaveRecurringTransactionUsecase {
       (_) async {},
       (_) => reminderSync.syncRecurringTemplate(template),
     );
+    if (result.isRight()) plans?.notify();
 
     return result;
   }
